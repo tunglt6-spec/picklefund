@@ -120,28 +120,28 @@ export function SuperPayments() {
           <p className="mb-3 flex items-center gap-2 text-sm font-semibold [color:var(--pf-text)]"><Clock size={16} className="[color:var(--pf-color-warning)]" />Chờ xác nhận ({pending.length}) — CLB báo đã chuyển khoản</p>
           <ul className="space-y-2">
             {pending.map((r) => (
-              <li key={r.orderCode} className="flex flex-wrap items-center gap-3 rounded-xl border px-3 py-2.5 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold [color:var(--pf-text)]">{r.club.name} · {PLAN[r.planTier] ?? r.planTier} {r.months ? `${r.months} tháng` : ''}</p>
-                  <p className="text-xs [color:var(--pf-color-muted)]">{METHOD[r.method ?? ''] ?? '—'}{r.reference ? ` · ${r.reference}` : ''}{r.note ? ` · ${r.note}` : ''} · ngày chuyển {r.paidAt ? new Date(r.paidAt).toLocaleDateString('vi-VN') : '—'}</p>
+              <li key={r.orderCode} className="grid grid-cols-1 items-center gap-3 rounded-xl border px-4 py-3 [border-color:var(--pf-border)] [background:var(--pf-surface)] md:grid-cols-[minmax(0,1fr)_210px_220px]">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold [color:var(--pf-text)]">{r.club.name} · {PLAN[r.planTier] ?? r.planTier} {r.months ? `${r.months} tháng` : ''}</p>
+                  <p className="mt-0.5 truncate text-xs [color:var(--pf-color-muted)]">{METHOD[r.method ?? ''] ?? '—'}{r.reference ? ` · ${r.reference}` : ''}{r.note ? ` · ${r.note}` : ''} · ngày chuyển {r.paidAt ? new Date(r.paidAt).toLocaleDateString('vi-VN') : '—'}</p>
+                  {amounts[r.orderCode] != null && amounts[r.orderCode] !== r.amount && (
+                    <p className="mt-0.5 text-[11px] [color:var(--pf-color-warning)]">CLB khai {formatVND(r.amount)}</p>
+                  )}
                 </div>
-                <div className="flex flex-col items-end">
-                  <label htmlFor={`amt-${r.orderCode}`} className="text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Số tiền thực nhận (đ)</label>
+                <div>
+                  <label htmlFor={`amt-${r.orderCode}`} className="mb-1 block text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Số tiền thực nhận (đ)</label>
                   <input
                     id={`amt-${r.orderCode}`}
                     type="number"
                     min={0}
                     value={amounts[r.orderCode] ?? r.amount}
                     onChange={(e) => setAmounts((m) => ({ ...m, [r.orderCode]: Math.max(0, Number(e.target.value) || 0) }))}
-                    className="h-9 w-36 rounded-xl border px-2 text-right text-sm font-bold tabular-nums [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)] focus:outline-none focus:[border-color:var(--pf-primary)]"
+                    className="h-10 w-full rounded-xl border px-3 text-right text-sm font-bold tabular-nums [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)] focus:outline-none focus:[border-color:var(--pf-primary)]"
                   />
-                  {amounts[r.orderCode] != null && amounts[r.orderCode] !== r.amount && (
-                    <span className="mt-0.5 text-[11px] [color:var(--pf-color-warning)]">CLB khai {formatVND(r.amount)}</span>
-                  )}
                 </div>
-                <div className="flex gap-2">
-                  <button disabled={busyCode === r.orderCode} onClick={() => act(r.orderCode, 'confirm')} className="inline-flex h-9 items-center gap-1 rounded-xl px-3 text-xs font-semibold text-white disabled:opacity-50" style={{ background: 'var(--pf-primary)' }}><Check size={14} />Xác nhận</button>
-                  <button disabled={busyCode === r.orderCode} onClick={() => act(r.orderCode, 'reject')} className="inline-flex h-9 items-center gap-1 rounded-xl border px-3 text-xs font-semibold [color:var(--pf-color-danger)] border-[color:var(--pf-border)] disabled:opacity-50"><X size={14} />Từ chối</button>
+                <div className="grid grid-cols-2 gap-2 md:self-end">
+                  <button disabled={busyCode === r.orderCode} onClick={() => act(r.orderCode, 'confirm')} className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-white disabled:opacity-50" style={{ background: 'var(--pf-primary)' }}><Check size={15} />Xác nhận</button>
+                  <button disabled={busyCode === r.orderCode} onClick={() => act(r.orderCode, 'reject')} className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border px-3 text-sm font-semibold [color:var(--pf-color-danger)] border-[color:var(--pf-border)] disabled:opacity-50"><X size={15} />Từ chối</button>
                 </div>
               </li>
             ))}
