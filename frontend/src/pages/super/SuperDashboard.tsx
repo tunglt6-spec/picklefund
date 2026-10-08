@@ -305,6 +305,16 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
       setPendList(r.data?.data ?? [])
     } catch { setPendList([]); toast.error('Không tải được danh sách chờ duyệt') } finally { setPendLoading(false) }
   }, [])
+  const todos: { key: string; count: number | string; title: string; sub?: string; cta?: string; to?: string; onClick?: () => void }[] = []
+  if ((fin?.pendingExpenses ?? 0) > 0) todos.push({ key: 'exp', count: fin.pendingExpenses, title: 'Khoản chi chờ duyệt', sub: 'Toàn nền tảng', cta: 'Xem & duyệt', onClick: () => void openPending() })
+  if ((fin?.overdueCount ?? 0) > 0) todos.push({ key: 'debt', count: fin.overdueCount, title: 'Công nợ quá hạn', sub: vnd(fin.overdueAmount), cta: 'Xem CLB', to: '/super/clubs' })
+  if ((k?.suspendedClubs ?? 0) > 0) todos.push({ key: 'susp', count: k.suspendedClubs, title: 'CLB đang bị khóa', cta: 'Xem CLB', to: '/super/clubs' })
+  if ((biz?.subscription?.expired ?? 0) > 0) todos.push({ key: 'expd', count: biz.subscription.expired, title: 'Gói dịch vụ đã hết hạn', cta: 'Xem CLB', to: '/super/clubs' })
+  if ((biz?.subscription?.expiringSoon ?? 0) > 0) todos.push({ key: 'soon', count: biz.subscription.expiringSoon, title: 'Gói dịch vụ sắp hết hạn', cta: 'Xem CLB', to: '/super/clubs' })
+  if ((infra?.queue?.pending ?? 0) > 0) todos.push({ key: 'queue', count: infra.queue.pending, title: 'Việc AI/workflow chờ duyệt', sub: `wf ${infra.queue.workflows} · ai ${infra.queue.aiActions}`, cta: 'Nhật ký', to: '/super/audit-logs' })
+  if ((infra?.queue?.notificationsFailed ?? 0) > 0) todos.push({ key: 'noti', count: infra.queue.notificationsFailed, title: 'Thông báo gửi lỗi', cta: 'Nhật ký', to: '/super/audit-logs' })
+  if (infra?.backup && !infra.backup.success) todos.push({ key: 'bk', count: '!', title: 'Sao lưu gần nhất bị lỗi', cta: 'Chạy lại', onClick: () => void onRunBackup() })
+  if ((infra?.disk?.pct ?? 0) >= 75) todos.push({ key: 'disk', count: `${infra.disk.pct}%`, title: 'Dung lượng đĩa cao', sub: `${infra.disk.usedGb}/${infra.disk.totalGb} GB` })
 
   return (
     <>
@@ -459,6 +469,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
 
       {/* Cảnh báo + Xếp hạng */}
       <div className="mt-6 grid gap-4 lg:grid-cols-2 lg:items-start">
+        <div className="grid gap-4">
         <ChartCard title="Cảnh báo điều hành" subtitle="Sắp theo mức độ nghiêm trọng">
           {data.alerts?.length ? (
             <ul className="space-y-2">
@@ -479,6 +490,33 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
             </div>}
           <MaikaNote review={review} k="alerts" />
         </ChartCard>
+
+        <ChartCard title="Việc cần xử lý" subtitle="Tổng hợp từ dữ liệu hệ thống · ưu tiên trên xuống">
+          {todos.length ? (
+            <ul className="space-y-2">
+              {todos.map((t) => (
+                <li key={t.key} className="sa-rank-row flex items-center gap-3 rounded-xl p-2.5">
+                  <span className="flex h-9 min-w-9 shrink-0 items-center justify-center rounded-xl px-2 text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)' }}>{t.count}</span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold [color:var(--pf-text)]">{t.title}</p>
+                    {t.sub && <p className="text-xs [color:var(--pf-color-muted)]">{t.sub}</p>}
+                  </div>
+                  {t.onClick ? (
+                    <button type="button" onClick={t.onClick} className="shrink-0 text-xs font-semibold [color:var(--pf-primary-text)]">{t.cta} →</button>
+                  ) : t.to ? (
+                    <Link to={t.to} className="shrink-0 text-xs font-semibold [color:var(--pf-primary-text)]">{t.cta} →</Link>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="sa-rank-row flex items-center gap-3 rounded-xl p-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: 'color-mix(in srgb, var(--pf-primary) 14%, transparent)', color: 'var(--pf-primary)' }}><ShieldCheck size={18} /></span>
+              <div className="min-w-0"><p className="text-sm font-semibold [color:var(--pf-text)]">Không có việc tồn đọng</p><p className="text-xs [color:var(--pf-color-muted)]">Mọi hạng mục đều đã xử lý.</p></div>
+            </div>
+          )}
+        </ChartCard>
+        </div>
 
         <ChartCard title="Bảng xếp hạng điều hành" subtitle="Top CLB & hiệu quả AI">
           {lb ? (
