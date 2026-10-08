@@ -108,7 +108,7 @@ export function AuditLogs() {
         actions={rows.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} /> : undefined}
       />
 
-      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="pf-kpi-row mb-4">
         <MetricCard compact icon={<CalendarDays size={16} />} label="Sự kiện hôm nay" value={kToday.toLocaleString('vi-VN')} />
         <MetricCard compact icon={<Activity size={16} />} label="Đang xem" value={rows.length.toLocaleString('vi-VN')} sub={`Tối đa ${LOG_LIMIT} bản ghi gần nhất`} />
         <MetricCard compact icon={<Users size={16} />} label="Người thực hiện" value={kUsers.toLocaleString('vi-VN')} />

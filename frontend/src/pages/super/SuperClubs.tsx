@@ -436,7 +436,7 @@ export function SuperClubs() {
     return t > Date.now() && t - Date.now() <= 30 * 86400000
   }).length
   const kpiRow = (
-    <div className={`grid grid-cols-2 gap-3 sm:grid-cols-3 ${kExpiring > 0 ? 'lg:grid-cols-7' : 'lg:grid-cols-6'}`}>
+    <div className="pf-kpi-row">
       <MetricCard compact icon={<Building2 size={16} />} label="Tổng CLB" value={clubs.length.toLocaleString('vi-VN')} />
       <MetricCard compact icon={<Activity size={16} />} label="Đang hoạt động" value={kActive.toLocaleString('vi-VN')} sub={`${clubs.length ? Math.round((kActive / clubs.length) * 100) : 0}% tổng CLB`} />
       <MetricCard compact icon={<Lock size={16} />} label="Bị khóa" value={kSuspended.toLocaleString('vi-VN')} tone={kSuspended > 0 ? 'warning' : undefined} />

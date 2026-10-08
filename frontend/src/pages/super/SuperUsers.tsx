@@ -117,7 +117,7 @@ export function SuperUsers() {
     <PageShell maxWidth={1760}>
       <PageHeader title="Quản lý người dùng" subtitle={`${users.length} tài khoản toàn hệ thống`} />
 
-      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="pf-kpi-row mb-4">
         <MetricCard compact label="Tổng tài khoản" value={users.length.toLocaleString('vi-VN')} icon={<Users size={16} />} sub={`${new Set(users.map((u) => u.club).filter(Boolean)).size} CLB`} />
         <MetricCard compact label="Đang hoạt động" value={activeCount.toLocaleString('vi-VN')} icon={<UserCheck size={16} />} sub={`${users.length ? Math.round((activeCount / users.length) * 100) : 0}% tổng tài khoản`} />
         <MetricCard compact label="Bị khóa" value={(users.length - activeCount).toLocaleString('vi-VN')} icon={<UserX size={16} />} tone={users.length - activeCount > 0 ? 'warning' : undefined} />
