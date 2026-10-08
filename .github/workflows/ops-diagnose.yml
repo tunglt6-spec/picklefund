@@ -16,6 +16,9 @@ jobs:
           command_timeout: 5m
           script: |
             echo "=== df ==="; df -h / | tail -1; docker system df
+            echo "=== du top ==="; du -xsh /var/lib/docker /var/lib/containerd /var/log /opt/picklefund /root /home /var/lib/postgresql /tmp 2>/dev/null | sort -rh
+            echo "=== containerd top ==="; du -xh --max-depth=3 /var/lib/containerd 2>/dev/null | sort -rh | head -6
+            echo "=== journal ==="; journalctl --disk-usage
             DB=$(docker ps --format '{{.Names}}' | grep -i db | head -1)
             Q() { docker exec "$DB" sh -c "psql -U \${POSTGRES_USER:-picklefund} -d \${POSTGRES_DB:-picklefund} -At -F ' | ' -c \"$1\""; }
             echo "=== queue ==="; Q "select (select count(*) from workflow_runs where status in ('PENDING','RUNNING','WAITING_APPROVAL')) wf, (select count(*) from ai_actions where status in ('PENDING_APPROVAL','RETRY_PENDING')) ai, (select count(*) from ai_actions where status='EXPIRED') expired"
