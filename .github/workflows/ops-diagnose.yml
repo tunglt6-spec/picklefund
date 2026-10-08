@@ -21,6 +21,7 @@ jobs:
             echo "=== journal ==="; journalctl --disk-usage
             DB=$(docker ps --format '{{.Names}}' | grep -i db | head -1)
             Q() { docker exec "$DB" sh -c "psql -U \${POSTGRES_USER:-picklefund} -d \${POSTGRES_DB:-picklefund} -At -F ' | ' -c \"$1\""; }
+            echo "=== migration ==="; Q "select migration_name, finished_at is not null as ok from _prisma_migrations order by started_at desc limit 2"; Q "select unnest(enum_range(null::\"PaymentGateway\"))"; Q "select column_name from information_schema.columns where table_name='payment_orders' and column_name in ('method','months','reference','note')"
             echo "=== queue ==="; Q "select (select count(*) from workflow_runs where status in ('PENDING','RUNNING','WAITING_APPROVAL')) wf, (select count(*) from ai_actions where status in ('PENDING_APPROVAL','RETRY_PENDING')) ai, (select count(*) from ai_actions where status='EXPIRED') expired"
             echo "=== pending by type ==="; Q "select status, trigger_type, count(*), min(created_at)::date from workflow_runs where status in ('PENDING','RUNNING','WAITING_APPROVAL') group by 1,2 order by 3 desc"
             echo "=== images ==="; docker images --format '{{.Repository}}:{{.Tag}} {{.Size}} {{.CreatedSince}}' | head -20
