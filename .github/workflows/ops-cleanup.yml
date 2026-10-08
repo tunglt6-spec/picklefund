@@ -20,5 +20,5 @@ jobs:
             mkdir -p /etc/systemd/journald.conf.d
             printf '[Journal]\nSystemMaxUse=300M\nMaxRetentionSec=14day\n' > /etc/systemd/journald.conf.d/picklefund.conf
             systemctl restart systemd-journald || true
-            docker image prune -f
+            docker image prune -a -f --filter "until=1h"
             echo "=== sau ==="; df -h / | tail -1; journalctl --disk-usage
