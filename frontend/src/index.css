@@ -742,24 +742,3 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
 }
 [data-sa-look] div[style*='linear-gradient(180deg'] .mt-auto > div > p:first-child { font-size: 11px; font-weight: 600; color: var(--pf-color-muted); }
 [data-sa-look] div[style*='linear-gradient(180deg'] .mt-auto > div > p:last-child { font-size: 1rem; font-weight: 700; color: color-mix(in srgb, var(--pf-text) 82%, var(--pf-surface)); }
-
-/* ══ Lưới chấm bi (dot grid): nền trang → thẻ, chấm theo MÀU NHÓM của từng thẻ; thẻ có màu nền nhạt (bớt trắng) ══ */
-[data-sa-look] {
-  background-image: radial-gradient(color-mix(in srgb, var(--pf-primary) 22%, transparent) 1.1px, transparent 1.4px);
-  background-size: 20px 20px;
-  border-radius: 24px; padding: 6px 4px 12px;
-}
-[data-sa-look] .pf-stat-card, [data-sa-look] div[style*='linear-gradient(180deg'] {
-  background-color: color-mix(in srgb, var(--sa-accent) 11%, color-mix(in srgb, var(--pf-surface) 72%, transparent)) !important;
-  background-image:
-    radial-gradient(color-mix(in srgb, var(--sa-accent) 28%, transparent) 1.1px, transparent 1.5px),
-    var(--pf-sheen) !important;
-  background-size: 14px 14px, 100% 100% !important;
-  background-position: 0 0, 0 0 !important;
-}
-[data-sa-look] .pf-stat-card[data-hi] { background-color: color-mix(in srgb, var(--pf-color-warning) 13%, color-mix(in srgb, var(--pf-surface) 72%, transparent)) !important; }
-[data-sa-look] section > div:first-child h2 { text-shadow: 0 1px 0 var(--pf-glass-hi); }
-[data-theme='dark'] [data-sa-look] { background-image: radial-gradient(rgb(255 255 255 / 0.10) 1.1px, transparent 1.4px); }
-[data-theme='dark'] [data-sa-look] .pf-stat-card, [data-theme='dark'] [data-sa-look] div[style*='linear-gradient(180deg'] {
-  background-color: color-mix(in srgb, var(--sa-accent) 14%, color-mix(in srgb, var(--pf-surface) 70%, transparent)) !important;
-}
