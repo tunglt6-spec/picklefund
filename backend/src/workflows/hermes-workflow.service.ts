@@ -355,7 +355,7 @@ export class HermesWorkflowService {
    * với Approval Center (vốn tự auto-expire AiAction). Trước đây run set WAITING_APPROVAL một lần rồi
    * treo mãi dù action con đã xử lý → KPI lệch (35 vs 0).
    */
-  private async resolveStaleApprovalRuns(clubId: string): Promise<void> {
+  async resolveStaleApprovalRuns(clubId: string): Promise<void> {
     const waiting = await this.prisma.workflowRun.findMany({
       where: { clubId, status: 'WAITING_APPROVAL' as never },
       select: { id: true, resultJson: true },

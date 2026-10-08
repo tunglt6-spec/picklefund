@@ -6,6 +6,7 @@ import { HermesSchedulerService } from './hermes-scheduler.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { AiActionsModule } from '../ai-actions/ai-actions.module';
 import { AidoModule } from '../aido/aido.module';
+import { ApprovalHousekeepingScheduler } from './approval-housekeeping.scheduler';
 
 @Module({
   imports: [PrismaModule, AiActionsModule, AidoModule],
@@ -14,6 +15,7 @@ import { AidoModule } from '../aido/aido.module';
     HermesWorkflowService,
     HermesEventPublisher,
     HermesSchedulerService,
+    ApprovalHousekeepingScheduler,
   ],
   // Business module import WorkflowsModule để publish domain event (Epic 7).
   exports: [HermesEventPublisher],

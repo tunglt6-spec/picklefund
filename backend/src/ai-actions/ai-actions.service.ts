@@ -219,7 +219,7 @@ export class AiActionsService {
    * để trạng thái luôn cập nhật mà KHÔNG cần bật scheduler. Bọc try/catch — lỗi (vd enum
    * chưa migrate xong) KHÔNG được chặn việc đọc danh sách.
    */
-  private async expireStale(clubId: string): Promise<void> {
+  async expireStale(clubId: string): Promise<void> {
     const cutoff = new Date(Date.now() - this.approvalTtlHours() * 3_600_000);
     try {
       await this.prisma.aiAction.updateMany({
