@@ -1244,6 +1244,8 @@ enum PaymentGateway {
   MOCK
   MOMO
   VNPAY
+  // Super Admin ghi nhận thủ công (chuyển khoản/tiền mặt ngoài cổng)
+  MANUAL
 }
 
 model Subscription {
@@ -1284,6 +1286,11 @@ model PaymentOrder {
   paidAt            DateTime?          @map("paid_at")
   expiresAt         DateTime?          @map("expires_at")
   createdById       String?            @map("created_by_id")
+  // Ghi nhận thủ công (gateway=MANUAL): hình thức thu, số tháng gia hạn, mã tham chiếu giao dịch, ghi chú
+  method            String?            @db.VarChar(30)
+  months            Int?
+  reference         String?            @db.VarChar(120)
+  note              String?
   invoice           Invoice?
   createdAt         DateTime           @default(now()) @map("created_at")
   updatedAt         DateTime           @updatedAt @map("updated_at")

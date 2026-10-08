@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Users,
   Settings, Building2,
-  Bell, ScrollText, Receipt, ListOrdered,
+  Bell, ScrollText, Receipt, ListOrdered, CreditCard,
   Trophy, Sparkles, CalendarDays, Wallet, Award, Cpu, MessageSquare, BadgeCheck,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
@@ -31,6 +31,7 @@ const superAdminNav: NavItem[] = [
   { label: 'Tổng quan',    icon: <LayoutDashboard size={18} />, to: '/super/dashboard', desc: 'Bảng điều khiển hệ thống' },
   { label: 'Quản lý CLB',  icon: <Building2 size={18} />,       to: '/super/clubs',     desc: 'Danh sách & chi tiết CLB' },
   { label: 'Người dùng',   icon: <Users size={18} />,           to: '/super/users',     desc: 'Tài khoản toàn hệ thống' },
+  { label: 'Thanh toán gói', icon: <CreditCard size={18} />,    to: '/super/payments',  desc: 'Gia hạn & chi phí CLB' },
   { label: 'Audit Logs',   icon: <ScrollText size={18} />,      to: '/super/audit-logs', desc: 'Nhật ký kiểm toán' },
   { label: 'Cài đặt',     icon: <Settings size={18} />,         to: '/super/settings',  desc: 'Cấu hình hệ thống' },
 ]

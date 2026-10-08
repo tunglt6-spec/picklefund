@@ -4,7 +4,8 @@ import { SkipThrottle } from '@nestjs/throttler';
 import type { PaymentGateway } from '@prisma/client';
 import { BillingService } from './billing.service';
 import { BillingCheckoutService } from './billing-checkout.service';
-import { CreateOrderDto } from './billing.dto';
+import { CreateOrderDto, RecordManualPaymentDto } from './billing.dto';
+import { BillingManualService } from './billing-manual.service';
 import { CurrentUser, Public, Roles } from '../common/decorators';
 import type { JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
@@ -17,6 +18,7 @@ export class BillingController {
   constructor(
     private svc: BillingService,
     private checkout: BillingCheckoutService,
+    private manual: BillingManualService,
   ) {}
 
   @Get('plans')
@@ -83,6 +85,26 @@ export class BillingController {
   @Get('gateway')
   gatewayStatus() {
     return ok(this.checkout.gatewayStatus());
+  }
+
+  /** SUPER_ADMIN: lịch sử thanh toán gói toàn nền tảng + tổng hợp. */
+  @Roles('SUPER_ADMIN')
+  @Get('manual-payments')
+  async listPayments(@Query('clubId') clubId?: string, @Query('from') from?: string, @Query('to') to?: string, @Query('take') take?: string) {
+    return ok(await this.manual.list({ clubId, from, to, take: Number(take) || undefined }));
+  }
+
+  /** SUPER_ADMIN: ghi nhận thanh toán/gia hạn gói thủ công cho 1 CLB. */
+  @Roles('SUPER_ADMIN')
+  @Post('manual-payments')
+  async recordPayment(@CurrentUser() user: JwtUser, @Body() dto: RecordManualPaymentDto) {
+    return ok(await this.manual.record(user.userId, dto), 'Đã ghi nhận thanh toán');
+  }
+
+  @Roles('SUPER_ADMIN')
+  @Post('manual-payments/:orderCode/void')
+  async voidPayment(@CurrentUser() user: JwtUser, @Param('orderCode') orderCode: string) {
+    return ok(await this.manual.voidPayment(user.userId, orderCode), 'Đã hủy ghi nhận');
   }
 
   @Roles('CLUB_ADMIN', 'SUPER_ADMIN')

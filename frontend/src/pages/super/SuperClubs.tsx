@@ -6,6 +6,7 @@ import { PageShell, PageHeader, StatusBadge, ExportActions, ErrorState, runExpor
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
+import { RecordPlanPaymentModal } from '../../components/super/RecordPlanPaymentModal'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import type { Club, ServicePlan } from '../../types'
 import toast from 'react-hot-toast'
@@ -65,6 +66,7 @@ export function SuperClubs() {
   const [clubs, setClubs] = useState<Club[]>([])
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
+  const [payClub, setPayClub] = useState<Club | null>(null)
   const [form, setForm] = useState({
     name: '', code: '', address: '', contactEmail: '', contactPhone: '',
     adminUsername: '', adminEmail: '', adminPassword: '',
@@ -329,6 +331,16 @@ export function SuperClubs() {
     </Modal>
   )
 
+  const payModal = (
+    <RecordPlanPaymentModal
+      open={!!payClub}
+      onClose={() => setPayClub(null)}
+      clubs={clubs.map(c => ({ id: c.id, name: c.name, plan: c.plan, planExpiresAt: c.planExpiresAt ?? null }))}
+      clubId={payClub?.id}
+      onDone={loadClubs}
+    />
+  )
+
   const actionConfirmModal = (
     <Modal
       open={!!pendingAction}
@@ -504,6 +516,9 @@ export function SuperClubs() {
                 <div className="text-xs [color:var(--pf-color-muted)]"><span className="font-semibold [color:var(--pf-text)]">{club._count?.fundPeriods ?? 0}</span> kỳ</div>
                 <PlanSelect club={club} onClick={e => e.stopPropagation()} onChange={(p) => setPendingAction({ club, kind: 'plan', nextPlan: p })} />
                 <div className="flex items-center gap-2 ml-auto">
+                  <button onClick={e => { e.stopPropagation(); setPayClub(club) }} aria-label="Gia hạn gói" className="p-2 rounded-lg [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)]">
+                    <CreditCard size={14} />
+                  </button>
                   <button onClick={e => { e.stopPropagation(); openEdit(club) }} className="p-2 rounded-lg [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)]">
                     <Pencil size={14} />
                   </button>
@@ -530,6 +545,7 @@ export function SuperClubs() {
         {deleteModal}
         {rolesModal}
         {actionConfirmModal}
+        {payModal}
       </div>
     )
   }
@@ -598,6 +614,9 @@ export function SuperClubs() {
                       <button className="p-1.5 rounded [color:var(--pf-color-info)] hover:[background:var(--pf-color-info-soft)]" title="Xem chi tiết" onClick={() => navigate(`/super/clubs/${club.id}`)}>
                         <Eye size={15} />
                       </button>
+                      <button className="[color:var(--pf-primary-text)] p-1.5 rounded hover:[background:var(--pf-primary-soft)]" title="Gia hạn / ghi nhận thanh toán gói" aria-label="Gia hạn gói" onClick={() => setPayClub(club)}>
+                        <CreditCard size={15} />
+                      </button>
                       <button className="[color:var(--pf-primary-text)] hover:[color:var(--pf-primary-text)] p-1.5 rounded hover:[background:var(--pf-primary-soft)]" title="Sửa thông tin" onClick={() => openEdit(club)}>
                         <Pencil size={15} />
                       </button>
@@ -629,6 +648,7 @@ export function SuperClubs() {
       {deleteModal}
       {rolesModal}
       {actionConfirmModal}
+      {payModal}
     </PageShell>
   )
 }

@@ -85,6 +85,7 @@ const Onboarding = lz(() => import('./pages/super/Onboarding'), 'Onboarding')
 const SuperClubDetail = lz(() => import('./pages/super/SuperClubDetail'), 'SuperClubDetail')
 const SuperUsers = lz(() => import('./pages/super/SuperUsers'), 'SuperUsers')
 const AuditLogs = lz(() => import('./pages/super/AuditLogs'), 'AuditLogs')
+const SuperPayments = lz(() => import('./pages/super/SuperPayments'), 'SuperPayments')
 const SuperSettings = lz(() => import('./pages/super/SuperSettings'), 'SuperSettings')
 
 // Club Admin pages
@@ -265,6 +266,7 @@ export default function App() {
             <Route path="/super/clubs" element={<SuperClubs />} />
             <Route path="/super/clubs/:id" element={<SuperClubDetail />} />
             <Route path="/super/users" element={<SuperUsers />} />
+            <Route path="/super/payments" element={<SuperPayments />} />
             <Route path="/super/audit-logs" element={<AuditLogs />} />
             <Route path="/super/settings" element={<SuperSettings />} />
 

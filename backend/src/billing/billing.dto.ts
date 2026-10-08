@@ -1,4 +1,4 @@
-import { IsEnum, IsObject, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsEnum, IsIn, IsInt, IsNumber, IsObject, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 import type { BillingCycle, ServicePlan } from '@prisma/client';
 
 export class CreateOrderDto {
@@ -16,4 +16,31 @@ export class CreateOrderDto {
   @IsOptional()
   @IsObject()
   billingInfo?: Record<string, unknown>;
+}
+
+export const MANUAL_METHODS = ['BANK_TRANSFER', 'CASH', 'EWALLET', 'OTHER'] as const;
+export type ManualMethod = (typeof MANUAL_METHODS)[number];
+
+/** Super Admin ghi nhận thanh toán/gia hạn gói thủ công cho 1 CLB. */
+export class RecordManualPaymentDto {
+  @IsString() @MaxLength(64) clubId!: string;
+
+  @IsEnum({ STARTER: 'STARTER', PRO: 'PRO', CLUB_PLUS: 'CLUB_PLUS' })
+  planTier!: ServicePlan;
+
+  /** Số tháng gia hạn (1–36). */
+  @IsInt() @Min(1) @Max(36) months!: number;
+
+  /** Số tiền thực thu (VND, ≥ 0). */
+  @IsNumber() @Min(0) @Max(1_000_000_000) amount!: number;
+
+  @IsIn([...MANUAL_METHODS]) method!: ManualMethod;
+
+  /** Ngày thu thực tế (ISO yyyy-mm-dd); mặc định hôm nay. */
+  @IsOptional() @IsString() @MaxLength(32) paidAt?: string;
+
+  /** Mã giao dịch ngân hàng / số biên lai — chống ghi trùng. */
+  @IsOptional() @IsString() @MaxLength(120) reference?: string;
+
+  @IsOptional() @IsString() @MaxLength(500) note?: string;
 }
