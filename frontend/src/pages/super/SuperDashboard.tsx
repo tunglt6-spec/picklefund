@@ -463,7 +463,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
           {data.alerts?.length ? (
             <ul className="space-y-2">
               {data.alerts.map((a: any, i: number) => (
-                <li key={i} className="flex items-start gap-2 rounded-xl border p-2.5 [border-color:var(--pf-border)]">
+                <li key={i} className="sa-rank-row flex items-start gap-2 rounded-xl p-2.5">
                   <StatusBadge tone={a.severity === 'critical' ? 'danger' : a.severity === 'high' ? 'warning' : 'info'}>{a.severity === 'critical' ? 'Critical' : a.severity === 'high' ? 'High' : 'Medium'}</StatusBadge>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium [color:var(--pf-text)]">{a.title}</p>
@@ -497,8 +497,8 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
           {audit.length ? (
             <ul>
               {audit.map((e: any) => (
-                <li key={e.id} className="flex items-center gap-3 border-b py-2 text-sm [border-color:var(--pf-border)] last:border-0">
-                  <StatusBadge tone="neutral">{e.action}</StatusBadge>
+                <li key={e.id} className="sa-log-row flex items-center gap-3 rounded-xl px-2.5 py-2 text-sm">
+                  <StatusBadge tone="ai">{e.action}</StatusBadge>
                   <span className="min-w-0 flex-1 truncate [color:var(--pf-text)]">{e.resource}{e.detail ? ` — ${e.detail}` : ''}</span>
                   <span className="hidden shrink-0 sm:inline [color:var(--pf-color-muted)]">{e.user?.username ?? '—'}{e.club?.name ? ` · ${e.club.name}` : ''}</span>
                   <span className="shrink-0 [color:var(--pf-color-muted)]">{new Date(e.createdAt).toLocaleString('vi-VN')}</span>
@@ -598,19 +598,21 @@ function AgentCard({ name, role, icon, rows }: { name: string; role: string; ico
 
 function RankList({ title, rows, fmt }: { title: string; rows: any[]; fmt: (v: number) => string }) {
   return (
-    <div>
-      <p className="mb-1.5 text-xs font-bold uppercase tracking-wider [color:var(--pf-color-muted)]">{title}</p>
+    <div className="min-w-0">
+      <p className="mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider [color:var(--pf-primary-text)]">
+        <span className="h-1.5 w-1.5 rounded-full" style={{ background: 'var(--pf-primary)' }} />{title}
+      </p>
       {rows?.length ? (
-        <ol className="space-y-1">
+        <ol className="space-y-1.5">
           {rows.map((r, i) => (
-            <li key={r.clubId ?? i} className="flex items-center gap-2 text-sm">
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs font-bold [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">{i + 1}</span>
-              <span className="min-w-0 flex-1 truncate [color:var(--pf-text)]">{r.name}</span>
-              <span className="shrink-0 font-semibold [color:var(--pf-text)]">{fmt(r.value)}</span>
+            <li key={r.clubId ?? i} className="sa-rank-row flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-sm">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white" style={{ background: i === 0 ? 'linear-gradient(135deg,#6D5DFB,#5B4BE8)' : 'color-mix(in srgb, var(--pf-primary) 45%, var(--pf-surface))' }}>{i + 1}</span>
+              <span className="min-w-0 flex-1 truncate font-medium [color:var(--pf-text)]">{r.name}</span>
+              <span className="shrink-0 font-bold tabular-nums [color:var(--pf-primary-text)]">{fmt(r.value)}</span>
             </li>
           ))}
         </ol>
-      ) : <p className="text-xs [color:var(--pf-color-muted)]">—</p>}
+      ) : <p className="rounded-xl px-2.5 py-1.5 text-xs [color:var(--pf-color-muted)] sa-rank-row">Chưa có dữ liệu</p>}
     </div>
   )
 }
