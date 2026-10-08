@@ -725,3 +725,20 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
 [data-sa-look] div[style*='linear-gradient(180deg'] { padding: 12px 14px !important; }
 [data-sa-look] .pf-stat-cell { padding-top: 6px; padding-bottom: 6px; }
 [data-sa-look] .grid.auto-rows-fr { gap: 10px; }
+/* Chữ dịu hơn: bớt đen đậm + thu nhỏ */
+[data-sa-look] .pf-stat-card:not([data-hi]) > p.mt-auto { font-size: 1.0625rem; font-weight: 700; color: color-mix(in srgb, var(--pf-text) 84%, var(--pf-surface)); }
+[data-sa-look] .pf-stat-card[data-hi] > p.mt-auto { font-size: 1.0625rem; font-weight: 700; }
+[data-sa-look] .pf-stat-card > div:first-child > p { font-size: 10px; font-weight: 600; letter-spacing: 0.07em; }
+[data-sa-look] .pf-stat-card > p.mt-0\.5 { font-size: 11.5px; }
+[data-sa-look] section h2 { font-size: 0.9375rem; font-weight: 700; color: color-mix(in srgb, var(--pf-text) 88%, var(--pf-surface)); }
+[data-sa-look] div[style*='linear-gradient(180deg'] .text-sm.font-extrabold { font-size: 0.875rem; font-weight: 700; color: color-mix(in srgb, var(--pf-text) 86%, var(--pf-surface)); }
+
+/* Ô nhỏ trong thẻ AIDO: NỔI BẬT hơn nền thẻ lớn (trắng đục + viền màu nhóm + bóng đổ rõ) */
+[data-sa-look] div[style*='linear-gradient(180deg'] .mt-auto > div {
+  background-color: color-mix(in srgb, var(--pf-surface) 94%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sa-accent) 26%, var(--pf-glass-border));
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 var(--pf-glass-hi), 0 10px 18px -10px color-mix(in srgb, var(--sa-accent) 55%, rgb(15 23 42 / 0.35)), 0 2px 4px rgb(15 23 42 / 0.08);
+}
+[data-sa-look] div[style*='linear-gradient(180deg'] .mt-auto > div > p:first-child { font-size: 11px; font-weight: 600; color: var(--pf-color-muted); }
+[data-sa-look] div[style*='linear-gradient(180deg'] .mt-auto > div > p:last-child { font-size: 1rem; font-weight: 700; color: color-mix(in srgb, var(--pf-text) 82%, var(--pf-surface)); }
