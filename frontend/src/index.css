@@ -673,3 +673,37 @@ input[type='date'], input[type='time'], input[type='datetime-local'], input[type
 }
 input[type='date']::-webkit-date-and-time-value, input[type='time']::-webkit-date-and-time-value,
 input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::-webkit-date-and-time-value { text-align: left; min-width: 0; }
+
+/* ══ SUPER ADMIN — 2 phương án giao diện (data-sa-look) ═════════════════════════
+   Vấn đề cũ: mỗi thẻ có quầng tím + bóng + icon nhiều màu + thẻ nhấn nền tím lẫn thẻ trắng → rối.
+   A "Dịu"  : nền phẳng, 1 màu thương hiệu, icon đồng nhất, cảnh báo chỉ đổi màu số/viền.
+   B "Sổ cái": thẻ phẳng + vạch trái màu THEO NHÓM (mỗi khu 1 màu, đồng nhất trong khu), số lớn. */
+[data-sa-look] .pf-stat-card, [data-sa-look] .pf-stat-cell {
+  -webkit-backdrop-filter: none; backdrop-filter: none; background-image: none; transform: none !important;
+}
+[data-sa-look] .pf-stat-card { border-radius: 14px; background-color: var(--pf-surface); border: 1px solid var(--pf-border); box-shadow: 0 1px 2px rgb(15 23 42 / 0.05); }
+[data-sa-look] .pf-stat-card:hover { box-shadow: 0 6px 16px -8px rgb(15 23 42 / 0.16); }
+[data-sa-look] .pf-stat-cell { background-color: var(--pf-surface-muted); border: 1px solid var(--pf-border-soft); box-shadow: none; }
+[data-sa-look] .pf-stat-card[data-hi], [data-sa-look] .pf-stat-cell[data-hi] { background-color: var(--pf-surface); border-color: var(--pf-border); }
+
+/* A — Dịu: icon đơn sắc xám-tím nhạt, không quầng sáng */
+[data-sa-look='calm'] .pf-stat-card > div:first-child > span { background: var(--pf-surface-muted) !important; color: var(--pf-color-muted) !important; }
+[data-sa-look='calm'] .pf-stat-card[data-hi] { border-color: color-mix(in srgb, var(--pf-color-warning) 55%, var(--pf-border)); box-shadow: inset 3px 0 0 var(--pf-color-warning); }
+[data-sa-look='calm'] .pf-stat-card[data-hi] > div:first-child > span { color: var(--pf-color-warning) !important; background: var(--pf-color-warning-soft) !important; }
+
+/* B — Sổ cái: mỗi khu 1 màu nhấn; vạch trái + icon cùng màu khu */
+[data-sa-look='ledger'] { --sa-accent: #6D5DFB; }
+[data-sa-look='ledger'] section:nth-of-type(1) { --sa-accent: #0E9F6E; }
+[data-sa-look='ledger'] section:nth-of-type(2) { --sa-accent: #6D5DFB; }
+[data-sa-look='ledger'] section:nth-of-type(3) { --sa-accent: #0891B2; }
+[data-sa-look='ledger'] section:nth-of-type(4) { --sa-accent: #64748B; }
+[data-sa-look='ledger'] section:nth-of-type(5) { --sa-accent: #D97706; }
+[data-sa-look='ledger'] section:nth-of-type(n+6) { --sa-accent: #6D5DFB; }
+[data-sa-look='ledger'] .pf-stat-card { border-left: 4px solid var(--sa-accent); border-radius: 10px; box-shadow: none; }
+[data-sa-look='ledger'] .pf-stat-card > div:first-child > span { background: color-mix(in srgb, var(--sa-accent) 12%, var(--pf-surface)) !important; color: var(--sa-accent) !important; }
+[data-sa-look='ledger'] .pf-stat-card > div:first-child > p { color: var(--pf-color-muted); }
+[data-sa-look='ledger'] .pf-stat-card[data-hi] { border-left-color: var(--pf-color-warning); }
+[data-sa-look='ledger'] .pf-stat-card[data-hi] > div:first-child > span { background: var(--pf-color-warning-soft) !important; color: var(--pf-color-warning) !important; }
+/* Thẻ AIDO (nền gradient inline) — đồng bộ với thẻ KPI trong cả 2 phương án */
+[data-sa-look] div[style*='linear-gradient(180deg'] { background: var(--pf-surface) !important; border-color: var(--pf-border) !important; box-shadow: 0 1px 2px rgb(15 23 42 / 0.05) !important; border-radius: 14px !important; }
+[data-sa-look='ledger'] div[style*='linear-gradient(180deg'] { border-left: 4px solid var(--sa-accent) !important; box-shadow: none !important; border-radius: 10px !important; }

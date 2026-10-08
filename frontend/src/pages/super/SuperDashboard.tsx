@@ -104,6 +104,10 @@ export function SuperDashboard() {
   const [pdfLoading, setPdfLoading] = useState(false)
   const [review, setReview] = useState<{ sections: any; byAi: boolean } | null>(null)
   const [reviewLoading, setReviewLoading] = useState(false)
+  const [look, setLook] = useState<'calm' | 'ledger'>(() => {
+    try { return localStorage.getItem('pf-super-look') === 'ledger' ? 'ledger' : 'calm' } catch { return 'calm' }
+  })
+  const pickLook = (v: 'calm' | 'ledger') => { setLook(v); try { localStorage.setItem('pf-super-look', v) } catch { /* bỏ qua */ } }
 
   useEffect(() => {
     api.get('/clubs', { params: { limit: 200 } })
@@ -218,6 +222,13 @@ export function SuperDashboard() {
             <option value="">Tất cả CLB</option>
             {clubs.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
+          <div role="group" aria-label="Kiểu giao diện" className="inline-flex h-10 items-center rounded-full border p-0.5 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
+            {([['calm', 'Dịu'], ['ledger', 'Sổ cái']] as const).map(([k, l]) => (
+              <button key={k} type="button" onClick={() => pickLook(k)} aria-pressed={look === k}
+                className={`h-full rounded-full px-3 text-sm font-semibold transition-colors ${look === k ? 'text-white' : '[color:var(--pf-color-muted)]'}`}
+                style={look === k ? { background: 'var(--pf-primary)' } : undefined}>{l}</button>
+            ))}
+          </div>
           <button onClick={load} disabled={loading} className="inline-flex h-10 items-center gap-1.5 rounded-full border px-3 text-sm font-semibold [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60">
             <RefreshCw size={15} className={loading ? 'animate-spin' : ''} /> Làm mới
           </button>
@@ -234,7 +245,7 @@ export function SuperDashboard() {
           {Array.from({ length: 12 }).map((_, i) => <div key={i} className="pf-glass h-24 rounded-2xl pf-skeleton" />)}
         </div>
       ) : data ? (
-        <div className={loading ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
+        <div data-sa-look={look} className={loading ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
           <Body data={data} audit={audit} rangeLabel={rangeLabel} review={review} reviewLoading={reviewLoading} onRunReview={runReview} onSelfTest={selfTestAi} onRunBackup={async () => {
             const t = toast.loading('Đang sao lưu…')
             try { const r = await api.post('/backup/run'); const st = r.data?.data; toast.success(st?.success ? 'Sao lưu thành công' : `Sao lưu lỗi: ${st?.error ?? '—'}`, { id: t }); load() }
