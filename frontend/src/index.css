@@ -674,10 +674,9 @@ input[type='date'], input[type='time'], input[type='datetime-local'], input[type
 input[type='date']::-webkit-date-and-time-value, input[type='time']::-webkit-date-and-time-value,
 input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::-webkit-date-and-time-value { text-align: left; min-width: 0; }
 
-/* ══ SUPER ADMIN — 2 phương án giao diện (data-sa-look) ═════════════════════════
+/* ══ SUPER ADMIN — giao diện "Sổ cái" (data-sa-look) ═════════════════════════
    Vấn đề cũ: mỗi thẻ có quầng tím + bóng + icon nhiều màu + thẻ nhấn nền tím lẫn thẻ trắng → rối.
-   A "Dịu"  : nền phẳng, 1 màu thương hiệu, icon đồng nhất, cảnh báo chỉ đổi màu số/viền.
-   B "Sổ cái": thẻ phẳng + vạch trái màu THEO NHÓM (mỗi khu 1 màu, đồng nhất trong khu), số lớn. */
+   "Sổ cái": thẻ phẳng + vạch trái màu THEO NHÓM (mỗi khu 1 màu, đồng nhất trong khu), số lớn. */
 [data-sa-look] .pf-stat-card, [data-sa-look] .pf-stat-cell {
   -webkit-backdrop-filter: none; backdrop-filter: none; background-image: none; transform: none !important;
 }
@@ -686,12 +685,7 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
 [data-sa-look] .pf-stat-cell { background-color: var(--pf-surface-muted); border: 1px solid var(--pf-border-soft); box-shadow: none; }
 [data-sa-look] .pf-stat-card[data-hi], [data-sa-look] .pf-stat-cell[data-hi] { background-color: var(--pf-surface); border-color: var(--pf-border); }
 
-/* A — Dịu: icon đơn sắc xám-tím nhạt, không quầng sáng */
-[data-sa-look='calm'] .pf-stat-card > div:first-child > span { background: var(--pf-surface-muted) !important; color: var(--pf-color-muted) !important; }
-[data-sa-look='calm'] .pf-stat-card[data-hi] { border-color: color-mix(in srgb, var(--pf-color-warning) 55%, var(--pf-border)); box-shadow: inset 3px 0 0 var(--pf-color-warning); }
-[data-sa-look='calm'] .pf-stat-card[data-hi] > div:first-child > span { color: var(--pf-color-warning) !important; background: var(--pf-color-warning-soft) !important; }
-
-/* B — Sổ cái: mỗi khu 1 màu nhấn; vạch trái + icon cùng màu khu */
+/* Sổ cái: mỗi khu 1 màu nhấn; vạch trái + icon cùng màu khu */
 [data-sa-look='ledger'] { --sa-accent: #6D5DFB; }
 [data-sa-look='ledger'] section:nth-of-type(1) { --sa-accent: #0E9F6E; }
 [data-sa-look='ledger'] section:nth-of-type(2) { --sa-accent: #6D5DFB; }
