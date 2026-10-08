@@ -148,7 +148,7 @@ export function SuperUsers() {
         ) : filtered.length === 0 ? (
           <EmptyState icon={<Users size={24} />} title="Không có tài khoản" description={users.length === 0 ? 'Chưa tải được dữ liệu.' : 'Không tìm thấy tài khoản phù hợp.'} />
         ) : (
-          <DataTable columns={columns} rows={filtered} rowKey={(u) => u.id} />
+          <DataTable className="pf-compact-table" columns={columns} rows={filtered} rowKey={(u) => u.id} />
         )}
       </div>
 

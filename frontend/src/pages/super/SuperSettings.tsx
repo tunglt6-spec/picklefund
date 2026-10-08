@@ -196,7 +196,7 @@ export function SuperSettings() {
   }
 
   if (loading) return (
-    <PageShell maxWidth={880}>
+    <PageShell maxWidth={1280}>
       <div className="flex items-center justify-center py-24">
         <div className="h-8 w-8 rounded-full border-2 [border-color:var(--pf-primary)] border-t-transparent animate-spin" />
       </div>
@@ -204,7 +204,7 @@ export function SuperSettings() {
   )
 
   return (
-    <PageShell maxWidth={880}>
+    <PageShell maxWidth={1280}>
       <PageHeader
         title="Cài đặt hệ thống"
         subtitle="Cấu hình toàn bộ nền tảng PickleFund"

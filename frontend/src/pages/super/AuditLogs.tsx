@@ -125,7 +125,7 @@ export function AuditLogs() {
         ) : rows.length === 0 ? (
           <EmptyState icon={<ScrollText size={24} />} title="Chưa có nhật ký" description="Hoạt động quản trị sẽ xuất hiện tại đây." />
         ) : (
-          <DataTable columns={columns} rows={rows} rowKey={(l) => l.id} />
+          <DataTable className="pf-compact-table" columns={columns} rows={rows} rowKey={(l) => l.id} />
         )}
       </ChartCard>
     </PageShell>

@@ -407,7 +407,7 @@ export function SuperClubDetail() {
   }
 
   return (
-    <PageShell maxWidth={1280}>
+    <PageShell maxWidth={1760}>
       <PageHeader
         title={club.name}
         subtitle={`Mã: ${club.code} · ${club._count?.members ?? members.length} thành viên`}
@@ -466,23 +466,23 @@ export function SuperClubDetail() {
               <table className="pf-rows w-full text-sm">
                 <thead className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
                   <tr>
-                    <th scope="col" className="text-left px-4 py-3 font-semibold [color:var(--pf-text)]">Tên đăng nhập</th>
-                    <th scope="col" className="text-left px-4 py-3 font-semibold [color:var(--pf-text)]">Email</th>
-                    <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Vai trò</th>
-                    <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Trạng thái</th>
+                    <th scope="col" className="text-left px-3 py-2 font-semibold [color:var(--pf-text)]">Tên đăng nhập</th>
+                    <th scope="col" className="text-left px-3 py-2 font-semibold [color:var(--pf-text)]">Email</th>
+                    <th scope="col" className="text-center px-3 py-2 font-semibold [color:var(--pf-text)]">Vai trò</th>
+                    <th scope="col" className="text-center px-3 py-2 font-semibold [color:var(--pf-text)]">Trạng thái</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[color:var(--pf-border-soft)]">
                   {members.map(m => (
                     <tr key={m.id} className="hover:[background:var(--pf-surface-muted)]">
-                      <td className="px-4 py-3 font-medium [color:var(--pf-text)]">{m.username}</td>
-                      <td className="px-4 py-3 [color:var(--pf-color-muted)]">{m.email}</td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-3 py-2 font-medium [color:var(--pf-text)]">{m.username}</td>
+                      <td className="px-3 py-2 [color:var(--pf-color-muted)]">{m.email}</td>
+                      <td className="px-3 py-2 text-center">
                         <span className="inline-block text-xs px-2.5 py-1 rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] font-medium">
                           {ROLE_LABEL[m.role] ?? m.role}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-3 py-2 text-center">
                         <StatusBadge tone={m.isActive ? 'success' : 'neutral'} dot>
                           {m.isActive ? 'Hoạt động' : 'Tắt'}
                         </StatusBadge>

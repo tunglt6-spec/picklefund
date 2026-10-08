@@ -796,3 +796,7 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
 [data-sa-look] .sa-rank-row p.text-sm, [data-sa-look] .sa-log-row { color: color-mix(in srgb, var(--pf-text) 80%, var(--pf-surface)); }
 [data-sa-look] .pf-stat-card:not([data-hi]) > p.mt-auto, [data-sa-look] .pf-stat-card[data-hi] > p.mt-auto { font-weight: 600; }
 [data-sa-look] div[style*='linear-gradient(180deg'] .mt-auto > div > p:last-child { font-weight: 600; }
+
+/* Bảng gọn cho các màn Super Admin: đệm ô nhỏ, hàng sát hơn */
+.pf-compact-table table.pf-rows { border-spacing: 0 6px; }
+.pf-compact-table table.pf-rows th, .pf-compact-table table.pf-rows td { padding: 8px 12px; }
