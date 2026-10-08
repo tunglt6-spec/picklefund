@@ -87,6 +87,7 @@ export function SuperUsers() {
     { value: 'MEMBER_VIEW', label: 'Thành Viên' },
   ]
   const countBy = (r: Role) => users.filter((u) => u.role === r).length
+  const activeCount = users.filter((u) => u.isActive).length
 
   const columns: Column<UserRow>[] = [
     { key: 'username', header: 'Tài khoản', className: 'font-mono text-xs font-semibold', render: (u) => u.username },
@@ -116,11 +117,13 @@ export function SuperUsers() {
     <PageShell maxWidth={1760}>
       <PageHeader title="Quản lý người dùng" subtitle={`${users.length} tài khoản toàn hệ thống`} />
 
-      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <MetricCard label="Super Admin" value={countBy('SUPER_ADMIN')} icon={<Shield size={16} />} tone="brand" />
-        <MetricCard label="Club Admin" value={countBy('CLUB_ADMIN')} icon={<UserCheck size={16} />} tone="info" />
-        <MetricCard label="Thủ Quỹ" value={countBy('CLUB_TREASURER')} icon={<UserCheck size={16} />} tone="success" />
-        <MetricCard label="Thành Viên" value={countBy('MEMBER_VIEW')} icon={<Users size={16} />} tone="neutral" />
+      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <MetricCard compact label="Tổng tài khoản" value={users.length.toLocaleString('vi-VN')} icon={<Users size={16} />} sub={`${new Set(users.map((u) => u.club).filter(Boolean)).size} CLB`} />
+        <MetricCard compact label="Đang hoạt động" value={activeCount.toLocaleString('vi-VN')} icon={<UserCheck size={16} />} sub={`${users.length ? Math.round((activeCount / users.length) * 100) : 0}% tổng tài khoản`} />
+        <MetricCard compact label="Bị khóa" value={(users.length - activeCount).toLocaleString('vi-VN')} icon={<UserX size={16} />} tone={users.length - activeCount > 0 ? 'warning' : undefined} />
+        <MetricCard compact label="Super Admin" value={countBy('SUPER_ADMIN')} icon={<Shield size={16} />} />
+        <MetricCard compact label="Quản trị CLB" value={(countBy('CLUB_ADMIN') + countBy('CLUB_TREASURER')).toLocaleString('vi-VN')} icon={<UserCheck size={16} />} sub={`${countBy('CLUB_ADMIN')} Admin · ${countBy('CLUB_TREASURER')} Thủ quỹ`} />
+        <MetricCard compact label="Thành viên" value={countBy('MEMBER_VIEW')} icon={<Users size={16} />} />
       </div>
 
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
