@@ -821,3 +821,12 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
 .pf-compact-table table td .text-xs { color: var(--pf-color-muted); }
 .pf-compact-table table td .tabular-nums, .pf-compact-table table td.tabular-nums { font-variant-numeric: tabular-nums; }
 .pf-compact-table table td select { font-size: 12px; }
+
+/* Ô nhỏ trong thẻ AIDO: CÙNG font/cỡ chữ với thẻ KPI (nhãn 10px in hoa, số 17px đậm vừa) */
+[data-sa-look] div[style*='linear-gradient(180deg'] .mt-auto > div > p:first-child {
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.07em; line-height: 1.2; color: var(--pf-color-muted);
+}
+[data-sa-look] div[style*='linear-gradient(180deg'] .mt-auto > div > p:last-child {
+  font-size: 1.0625rem; font-weight: 600; line-height: 1.25; margin-top: 3px; color: color-mix(in srgb, var(--pf-text) 84%, var(--pf-surface));
+}
+[data-sa-look] div[style*='linear-gradient(180deg'] .text-sm.font-extrabold { font-size: 0.9375rem; font-weight: 600; }
