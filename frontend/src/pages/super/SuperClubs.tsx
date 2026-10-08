@@ -578,7 +578,7 @@ export function SuperClubs() {
         </div>
 
         {clubsError && clubs.length === 0 && <ErrorState onRetry={loadClubs} />}
-        <div className="pf-glass-strong rounded-2xl overflow-x-auto" style={{ boxShadow: 'var(--pf-shadow)' }}>
+        <div className="pf-glass-strong pf-compact-table rounded-2xl overflow-x-auto" style={{ boxShadow: 'var(--pf-shadow)' }}>
           <table className="pf-rows w-full min-w-[720px] text-sm [border-spacing:0_6px]">
             <thead className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
               <tr>

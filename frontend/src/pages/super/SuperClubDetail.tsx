@@ -463,7 +463,7 @@ export function SuperClubDetail() {
             members.length === 0 ? (
               <div className="text-center py-12 [color:var(--pf-color-muted)] text-sm">Chưa có thành viên nào</div>
             ) : (
-              <table className="pf-rows w-full text-sm">
+              <div className="pf-compact-table"><table className="pf-rows w-full text-sm">
                 <thead className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
                   <tr>
                     <th scope="col" className="text-left px-3 py-2 font-semibold [color:var(--pf-text)]">Tên đăng nhập</th>
@@ -490,7 +490,7 @@ export function SuperClubDetail() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             )
           ) : (
             <div className="p-5">{billingPanel}</div>
