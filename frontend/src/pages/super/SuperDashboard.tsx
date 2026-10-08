@@ -458,7 +458,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
       </Section>
 
       {/* Cảnh báo + Xếp hạng */}
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
+      <div className="mt-6 grid gap-4 lg:grid-cols-2 lg:items-start">
         <ChartCard title="Cảnh báo điều hành" subtitle="Sắp theo mức độ nghiêm trọng">
           {data.alerts?.length ? (
             <ul className="space-y-2">
@@ -473,7 +473,10 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
                 </li>
               ))}
             </ul>
-          ) : <EmptyState icon={<ShieldCheck size={22} />} title="Không có cảnh báo" description="Hệ thống đang ổn định." />}
+          ) : <div className="sa-rank-row flex items-center gap-3 rounded-xl p-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: 'color-mix(in srgb, var(--pf-primary) 14%, transparent)', color: 'var(--pf-primary)' }}><ShieldCheck size={18} /></span>
+              <div className="min-w-0"><p className="text-sm font-semibold [color:var(--pf-text)]">Không có cảnh báo</p><p className="text-xs [color:var(--pf-color-muted)]">Hệ thống đang ổn định.</p></div>
+            </div>}
           <MaikaNote review={review} k="alerts" />
         </ChartCard>
 
