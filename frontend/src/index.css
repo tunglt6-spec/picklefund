@@ -756,3 +756,10 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
 }
 [data-sa-look] .pf-stat-card[data-hi] { background-color: color-mix(in srgb, var(--pf-color-warning) 7%, color-mix(in srgb, var(--pf-surface) 34%, transparent)) !important; }
 [data-sa-look] div[style*='linear-gradient(180deg'] .mt-auto > div { border-width: 1.5px; border-color: color-mix(in srgb, var(--sa-accent) 40%, var(--pf-glass-border)); }
+
+/* Đồng bộ MỘT màu thương hiệu (trắng–tím) cho mọi thẻ; cảnh báo chỉ đổi màu chữ số, không đổi viền/icon/nền */
+[data-sa-look], [data-sa-look] section:nth-of-type(n), [data-sa-look] .pf-stat-card[data-hi] { --sa-accent: var(--pf-primary); }
+[data-sa-look] .pf-stat-card, [data-sa-look] .pf-stat-card[data-hi], [data-sa-look] div[style*='linear-gradient(180deg'] {
+  background-color: color-mix(in srgb, var(--pf-primary) 5%, color-mix(in srgb, var(--pf-surface) 40%, transparent)) !important;
+}
+[data-sa-look] .pf-stat-card[data-hi] > div:first-child > span { background: color-mix(in srgb, var(--pf-primary) 14%, transparent) !important; color: var(--pf-primary) !important; }
