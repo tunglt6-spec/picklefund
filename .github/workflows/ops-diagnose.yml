@@ -15,16 +15,8 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           command_timeout: 5m
           script: |
-            echo "=== df ==="; df -h /
-            echo "=== docker system df ==="; docker system df
-            echo "=== top dirs /opt/picklefund ==="; du -sh /opt/picklefund/* 2>/dev/null | sort -rh | head -8
-            echo "=== backups ==="; ls -1 /opt/picklefund/backups 2>/dev/null | wc -l; du -sh /opt/picklefund/backups 2>/dev/null
-            echo "=== /var top ==="; du -xsh /var/lib/docker /var/log /var/lib/containerd /tmp 2>/dev/null
-            echo "=== container logs size ==="; du -sh /var/lib/docker/containers/*/*-json.log 2>/dev/null | sort -rh | head -5
-            echo "=== images ==="; docker images --format '{{.Repository}}:{{.Tag}} {{.Size}} {{.CreatedSince}}' | head -20
-            DB=$(docker ps --format '{{.Names}}' | grep -i db | head -1)
-            Q() { docker exec "$DB" sh -c "psql -U \${POSTGRES_USER:-picklefund} -d \${POSTGRES_DB:-picklefund} -At -F ' | ' -c \"$1\""; }
-            echo "=== workflow_runs pending ==="; Q "select status, trigger_type, count(*), min(created_at)::date, max(created_at)::date from workflow_runs where status in ('PENDING','RUNNING','WAITING_APPROVAL') group by 1,2 order by 3 desc"
-            echo "=== ai_actions pending ==="; Q "select status, action_type, requested_by_ai, count(*), min(created_at)::date, max(created_at)::date from ai_actions where status in ('PENDING_APPROVAL','RETRY_PENDING') group by 1,2,3 order by 4 desc"
-            echo "=== pending older than 7d ==="; Q "select (select count(*) from workflow_runs where status in ('PENDING','RUNNING','WAITING_APPROVAL') and created_at < now() - interval '7 days') as wf_old, (select count(*) from ai_actions where status in ('PENDING_APPROVAL','RETRY_PENDING') and created_at < now() - interval '7 days') as ai_old"
-            echo "=== db size ==="; Q "select pg_size_pretty(pg_database_size(current_database()))"; Q "select relname, pg_size_pretty(pg_total_relation_size(oid)) from pg_class where relkind='r' order by pg_total_relation_size(oid) desc limit 8"
+            echo "=== /var/log top ==="; du -xh --max-depth=2 /var/log 2>/dev/null | sort -rh | head -12
+            echo "=== journal ==="; journalctl --disk-usage 2>&1
+            echo "=== unused images (dangling + not used by containers) ==="; docker images -f dangling=true --format '{{.ID}} {{.Size}}'; docker image ls --format '{{.Repository}}:{{.Tag}} {{.ID}}' | head -0
+            echo "=== containers ==="; docker ps --format '{{.Names}} {{.Image}}'
+            echo "=== expire logic in code? ==="; grep -rn "EXPIRED" /opt/picklefund/backend/src --include=*.ts -l 2>/dev/null | head -5
