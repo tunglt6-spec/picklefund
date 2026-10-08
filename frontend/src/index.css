@@ -785,3 +785,14 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
 [data-sa-look] .sa-log-row { border: 1px solid transparent; transition: background-color .15s, border-color .15s; }
 [data-sa-look] .sa-log-row:hover { background-color: color-mix(in srgb, var(--pf-surface) 90%, transparent); border-color: color-mix(in srgb, var(--pf-primary) 22%, var(--pf-glass-border)); }
 [data-sa-look] .sa-log-row > span:last-child, [data-sa-look] .sa-log-row > span:nth-last-child(2) { font-variant-numeric: tabular-nums; font-size: 12.5px; }
+
+/* Giảm độ đậm chữ toàn bộ Trung tâm điều hành (Super Admin) */
+[data-sa-look] .font-extrabold, [data-sa-look] .font-bold { font-weight: 600; }
+[data-sa-look] .font-semibold { font-weight: 500; }
+[data-sa-look] .font-medium { font-weight: 400; }
+[data-sa-look] section.pf-glass > header h3 { font-weight: 600; }
+[data-sa-look] section h2 { font-weight: 600; }
+[data-sa-look] .sa-rank-row .truncate, [data-sa-look] .sa-log-row .truncate { color: color-mix(in srgb, var(--pf-text) 80%, var(--pf-surface)); }
+[data-sa-look] .sa-rank-row p.text-sm, [data-sa-look] .sa-log-row { color: color-mix(in srgb, var(--pf-text) 80%, var(--pf-surface)); }
+[data-sa-look] .pf-stat-card:not([data-hi]) > p.mt-auto, [data-sa-look] .pf-stat-card[data-hi] > p.mt-auto { font-weight: 600; }
+[data-sa-look] div[style*='linear-gradient(180deg'] .mt-auto > div > p:last-child { font-weight: 600; }
