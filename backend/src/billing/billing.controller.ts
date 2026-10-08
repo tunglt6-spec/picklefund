@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, NotFoundException, Param, Post, Query, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import type { PaymentGateway } from '@prisma/client';
@@ -6,6 +7,7 @@ import { BillingService } from './billing.service';
 import { BillingCheckoutService } from './billing-checkout.service';
 import { ConfirmManualPaymentDto, CreateOrderDto, RecordManualPaymentDto, RejectManualPaymentDto, RequestManualPaymentDto } from './billing.dto';
 import { BillingManualService } from './billing-manual.service';
+import { PlanRenewalReminderService } from './plan-renewal-reminder.service';
 import { CurrentUser, Public, Roles } from '../common/decorators';
 import type { JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
@@ -19,6 +21,7 @@ export class BillingController {
     private svc: BillingService,
     private checkout: BillingCheckoutService,
     private manual: BillingManualService,
+    private renewal: PlanRenewalReminderService,
   ) {}
 
   @Get('plans')
@@ -99,6 +102,38 @@ export class BillingController {
   @Post('manual-payments')
   async recordPayment(@CurrentUser() user: JwtUser, @Body() dto: RecordManualPaymentDto) {
     return ok(await this.manual.record(user.userId, dto), 'Đã ghi nhận thanh toán');
+  }
+
+  private clampMonths(v?: string): number {
+    const n = Math.round(Number(v) || 1);
+    return Math.min(Math.max(n, 1), 36);
+  }
+
+  /** CLB Admin: thông tin chuyển khoản gia hạn (tài khoản nhận của Super Admin + số tiền gợi ý + nội dung). */
+  @Roles('CLUB_ADMIN')
+  @Get('renewal-info')
+  async renewalInfo(@CurrentUser() user: JwtUser, @Query('months') months?: string) {
+    const info = await this.renewal.renewalInfo(user.clubId as string, this.clampMonths(months));
+    return ok(info);
+  }
+
+  /** CLB Admin: ảnh QR chuyển khoản gia hạn (tạo ở máy chủ, cùng origin). */
+  @Roles('CLUB_ADMIN')
+  @Get('renewal-qr')
+  async renewalQr(@CurrentUser() user: JwtUser, @Res() res: Response, @Query('months') months?: string) {
+    const buf = await this.renewal.renewalQr(user.clubId as string, this.clampMonths(months));
+    if (!buf) throw new NotFoundException('Chưa có thông tin tài khoản nhận hoặc không tạo được mã QR');
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'private, max-age=300');
+    res.end(buf);
+  }
+
+  /** SUPER_ADMIN: chạy nhắc gia hạn ngay (toàn bộ CLB đến mốc, hoặc 1 CLB). Tôn trọng chống nhắc trùng theo mốc. */
+  @Roles('SUPER_ADMIN')
+  @Post('renewal-reminders/run')
+  async runRenewal(@Body() body: { clubId?: string }) {
+    if (body?.clubId !== undefined && typeof body.clubId !== 'string') throw new BadRequestException('clubId không hợp lệ');
+    return ok(await this.renewal.run(body?.clubId || undefined));
   }
 
   /** CLB Admin: gửi yêu cầu xác nhận khoản đã chuyển khoản (chờ Super Admin duyệt mới có hiệu lực). */

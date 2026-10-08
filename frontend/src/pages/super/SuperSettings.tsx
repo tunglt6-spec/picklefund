@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { confirmDialog, promptDialog } from '../../components/ui/ConfirmHost'
-import { Save, Shield, Globe, Bell, Database, KeyRound, Eye, EyeOff, CheckCircle } from 'lucide-react'
+import { Save, Shield, Globe, Bell, Database, KeyRound, Eye, EyeOff, CheckCircle, CalendarClock } from 'lucide-react'
 import { PageShell, PageHeader } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
 import { useAuthStore } from '../../store/authStore'
@@ -19,6 +19,12 @@ type Settings = {
   registrationOpen: boolean
   requireEmailVerification: boolean
   superTelegramChatId: string
+  renewalEnabled: boolean
+  renewalCadence: string
+  bankCode: string
+  bankAccount: string
+  bankName: string
+  contact: string
 }
 
 const DEFAULTS: Settings = {
@@ -33,6 +39,12 @@ const DEFAULTS: Settings = {
   registrationOpen: true,
   requireEmailVerification: false,
   superTelegramChatId: '',
+  renewalEnabled: false,
+  renewalCadence: 'BOTH',
+  bankCode: '',
+  bankAccount: '',
+  bankName: '',
+  contact: '',
 }
 
 function fromApi(raw: Record<string, string>): Settings {
@@ -48,6 +60,12 @@ function fromApi(raw: Record<string, string>): Settings {
     registrationOpen: raw.registrationOpen !== 'false',
     requireEmailVerification: raw.requireEmailVerification === 'true',
     superTelegramChatId: raw.superTelegramChatId ?? DEFAULTS.superTelegramChatId,
+    renewalEnabled: raw.renewal_reminder_enabled === 'true',
+    renewalCadence: raw.renewal_reminder_cadence || 'BOTH',
+    bankCode: raw.platform_bank_code ?? '',
+    bankAccount: raw.platform_bank_account_number ?? '',
+    bankName: raw.platform_bank_account_name ?? '',
+    contact: raw.platform_contact ?? '',
   }
 }
 
@@ -64,6 +82,12 @@ function toApi(s: Settings): Record<string, string> {
     registrationOpen: String(s.registrationOpen),
     requireEmailVerification: String(s.requireEmailVerification),
     superTelegramChatId: s.superTelegramChatId,
+    renewal_reminder_enabled: String(s.renewalEnabled),
+    renewal_reminder_cadence: s.renewalCadence,
+    platform_bank_code: s.bankCode.trim().toUpperCase(),
+    platform_bank_account_number: s.bankAccount.trim(),
+    platform_bank_account_name: s.bankName.trim().toUpperCase(),
+    platform_contact: s.contact.trim(),
   }
 }
 
@@ -108,6 +132,23 @@ export function SuperSettings() {
   const [saving, setSaving] = useState(false)
   const [settings, setSettings] = useState<Settings>(DEFAULTS)
   const [tgBusy, setTgBusy] = useState(false)
+  const [renewBusy, setRenewBusy] = useState(false)
+
+  /** Lưu cấu hình rồi chạy nhắc gia hạn ngay cho mọi CLB đến mốc (chống nhắc trùng theo mốc). */
+  const runRenewalNow = async () => {
+    setRenewBusy(true)
+    const t = toast.loading('Đang quét và gửi nhắc gia hạn…')
+    try {
+      await api.put('/system-settings', toApi(settings))
+      const res = await api.post('/billing/renewal-reminders/run', {})
+      const d = res.data?.data
+      toast.dismiss(t)
+      toast.success(`Đã nhắc ${d?.reminded ?? 0}/${d?.clubs ?? 0} CLB — chuông ${d?.sent?.inApp ?? 0}, email ${d?.sent?.email ?? 0}, Telegram ${d?.sent?.telegram ?? 0}${d?.failed ? `, lỗi ${d.failed}` : ''}`, { duration: 7000 })
+    } catch (e: any) {
+      toast.dismiss(t)
+      toast.error(e?.response?.data?.message ?? 'Chạy nhắc gia hạn thất bại')
+    } finally { setRenewBusy(false) }
+  }
 
   /** Tách 1 chat id dùng chung khỏi mọi CLB + xóa pref trùng (chấm dứt việc nhiều CLB chung 1 chat). */
   const detachSharedChat = async () => {
@@ -257,6 +298,34 @@ export function SuperSettings() {
                   Tách chat dùng chung khỏi CLB
                 </button>
               </div>
+            </div>
+          </div>
+        </Section>
+
+        <Section icon={<CalendarClock size={14} className="[color:var(--pf-primary-text)]" />} title="Nhắc gia hạn gói tự động">
+          <div className="space-y-4">
+            <Toggle label="Tự động nhắc gia hạn" desc="Mỗi sáng 08:30: CLB trả phí đủ tháng/quý kể từ ngày mở tài khoản và gói sắp hết hạn (≤35 ngày) hoặc đã hết hạn sẽ được nhắc qua chuông, email, Telegram kèm mã QR"
+              value={settings.renewalEnabled} onChange={v => setSettings(p => ({ ...p, renewalEnabled: v }))} />
+            <div>
+              <label htmlFor="ss-cadence" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Mốc nhắc</label>
+              <select id="ss-cadence" className="input-base" value={settings.renewalCadence} onChange={e => setSettings(p => ({ ...p, renewalCadence: e.target.value }))}>
+                <option value="BOTH">Mỗi tháng (mốc quý đề nghị gia hạn 3 tháng)</option>
+                <option value="MONTH">Mỗi tháng</option>
+                <option value="QUARTER">Chỉ mỗi quý</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <S id="bankCode" label="Mã ngân hàng nhận" value={settings.bankCode} onChange={v => setSettings(p => ({ ...p, bankCode: v }))} placeholder="VD: TPB, VCB, MB" />
+              <S id="bankAcc" label="Số tài khoản" value={settings.bankAccount} onChange={v => setSettings(p => ({ ...p, bankAccount: v }))} />
+              <S id="bankName" label="Chủ tài khoản" value={settings.bankName} onChange={v => setSettings(p => ({ ...p, bankName: v }))} placeholder="TÊN KHÔNG DẤU" />
+            </div>
+            <S id="contact" label="Liên hệ hỗ trợ (hiện trong thông báo)" value={settings.contact} onChange={v => setSettings(p => ({ ...p, contact: v }))} placeholder="VD: Zalo/SĐT/email của Super Admin" />
+            <div className="flex flex-wrap items-center gap-3">
+              <button type="button" onClick={runRenewalNow} disabled={renewBusy || !settings.bankCode || !settings.bankAccount || !settings.bankName}
+                className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold [color:var(--pf-primary-text)] border-[color:var(--pf-border)] disabled:opacity-50">
+                {renewBusy ? 'Đang gửi…' : 'Lưu và chạy nhắc ngay'}
+              </button>
+              <p className="text-xs [color:var(--pf-color-muted)]">Thông báo gửi tới Admin của từng CLB; mỗi mốc chỉ nhắc 1 lần. Cần điền đủ tài khoản nhận mới gửi được.</p>
             </div>
           </div>
         </Section>

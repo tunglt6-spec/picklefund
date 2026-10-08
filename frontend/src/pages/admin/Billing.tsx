@@ -7,6 +7,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import toast from 'react-hot-toast'
 import { RecordPlanPaymentModal } from '../../components/super/RecordPlanPaymentModal'
+import { RenewalQrCard } from './billing/RenewalQrCard'
 import { CheckoutModal, type CheckoutPlan } from './billing/CheckoutModal'
 import { ReferralCard } from './billing/ReferralCard'
 import { exportBillingReceiptPDF } from '../../lib/export'
@@ -340,6 +341,8 @@ export function Billing() {
               </button>
             </div>
           )}
+
+          <RenewalQrCard />
 
           {/* Báo đã chuyển khoản gia hạn (chờ Super Admin xác nhận) */}
           <div className="pf-glass flex flex-wrap items-center justify-between gap-3 rounded-xl p-4">

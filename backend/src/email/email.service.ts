@@ -41,7 +41,7 @@ export class EmailService {
     opts?: {
       replyTo?: string;
       fromName?: string;
-      attachments?: Array<{ filename: string; content: Buffer }>;
+      attachments?: Array<{ filename: string; content: Buffer; cid?: string; contentType?: string }>;
     },
   ): Promise<boolean> {
     if (!this.transporter) return false;
