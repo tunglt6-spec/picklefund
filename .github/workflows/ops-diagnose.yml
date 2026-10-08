@@ -15,8 +15,9 @@ jobs:
           port: ${{ secrets.VPS_PORT || 22 }}
           command_timeout: 5m
           script: |
-            echo "=== /var/log top ==="; du -xh --max-depth=2 /var/log 2>/dev/null | sort -rh | head -12
-            echo "=== journal ==="; journalctl --disk-usage 2>&1
-            echo "=== unused images (dangling + not used by containers) ==="; docker images -f dangling=true --format '{{.ID}} {{.Size}}'; docker image ls --format '{{.Repository}}:{{.Tag}} {{.ID}}' | head -0
-            echo "=== containers ==="; docker ps --format '{{.Names}} {{.Image}}'
-            echo "=== expire logic in code? ==="; grep -rn "EXPIRED" /opt/picklefund/backend/src --include=*.ts -l 2>/dev/null | head -5
+            echo "=== df ==="; df -h / | tail -1; docker system df
+            DB=$(docker ps --format '{{.Names}}' | grep -i db | head -1)
+            Q() { docker exec "$DB" sh -c "psql -U \${POSTGRES_USER:-picklefund} -d \${POSTGRES_DB:-picklefund} -At -F ' | ' -c \"$1\""; }
+            echo "=== queue ==="; Q "select (select count(*) from workflow_runs where status in ('PENDING','RUNNING','WAITING_APPROVAL')) wf, (select count(*) from ai_actions where status in ('PENDING_APPROVAL','RETRY_PENDING')) ai, (select count(*) from ai_actions where status='EXPIRED') expired"
+            echo "=== pending by type ==="; Q "select status, trigger_type, count(*), min(created_at)::date from workflow_runs where status in ('PENDING','RUNNING','WAITING_APPROVAL') group by 1,2 order by 3 desc"
+            echo "=== images ==="; docker images --format '{{.Repository}}:{{.Tag}} {{.Size}} {{.CreatedSince}}' | head -20
