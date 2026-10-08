@@ -674,30 +674,42 @@ input[type='date'], input[type='time'], input[type='datetime-local'], input[type
 input[type='date']::-webkit-date-and-time-value, input[type='time']::-webkit-date-and-time-value,
 input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::-webkit-date-and-time-value { text-align: left; min-width: 0; }
 
-/* ══ SUPER ADMIN — giao diện "Sổ cái" (data-sa-look) ═════════════════════════
-   Vấn đề cũ: mỗi thẻ có quầng tím + bóng + icon nhiều màu + thẻ nhấn nền tím lẫn thẻ trắng → rối.
-   "Sổ cái": thẻ phẳng + vạch trái màu THEO NHÓM (mỗi khu 1 màu, đồng nhất trong khu), số lớn. */
-[data-sa-look] .pf-stat-card, [data-sa-look] .pf-stat-cell {
-  -webkit-backdrop-filter: none; backdrop-filter: none; background-image: none; transform: none !important;
-}
-[data-sa-look] .pf-stat-card { border-radius: 14px; background-color: var(--pf-surface); border: 1px solid var(--pf-border); box-shadow: 0 1px 2px rgb(15 23 42 / 0.05); }
-[data-sa-look] .pf-stat-card:hover { box-shadow: 0 6px 16px -8px rgb(15 23 42 / 0.16); }
-[data-sa-look] .pf-stat-cell { background-color: var(--pf-surface-muted); border: 1px solid var(--pf-border-soft); box-shadow: none; }
-[data-sa-look] .pf-stat-card[data-hi], [data-sa-look] .pf-stat-cell[data-hi] { background-color: var(--pf-surface); border-color: var(--pf-border); }
+/* ══ SUPER ADMIN — Liquid Glass luxury (data-sa-look) ═══════════════════════════
+   Cùng ngôn ngữ kính của toàn app (token --pf-glass-*): thẻ bán trong suốt + blur + sheen + viền sáng 2 lớp.
+   Quy tắc dịu mắt: 1 kiểu thẻ duy nhất; màu chỉ ở 2 chỗ — chip icon + đường sáng mảnh cạnh trên, theo NHÓM
+   (mỗi khu 1 màu nhạt, đồng nhất trong khu); cảnh báo chỉ đổi màu số + đường sáng cam. Không quầng tím, không thẻ nền tím đặc. */
+[data-sa-look] { --sa-accent: #6D5DFB; }
+[data-sa-look] section:nth-of-type(1) { --sa-accent: #10B981; }
+[data-sa-look] section:nth-of-type(2) { --sa-accent: #6D5DFB; }
+[data-sa-look] section:nth-of-type(3) { --sa-accent: #06B6D4; }
+[data-sa-look] section:nth-of-type(4) { --sa-accent: #64748B; }
+[data-sa-look] section:nth-of-type(5) { --sa-accent: #F59E0B; }
+[data-sa-look] section:nth-of-type(n+6) { --sa-accent: #6D5DFB; }
 
-/* Sổ cái: mỗi khu 1 màu nhấn; vạch trái + icon cùng màu khu */
-[data-sa-look='ledger'] { --sa-accent: #6D5DFB; }
-[data-sa-look='ledger'] section:nth-of-type(1) { --sa-accent: #0E9F6E; }
-[data-sa-look='ledger'] section:nth-of-type(2) { --sa-accent: #6D5DFB; }
-[data-sa-look='ledger'] section:nth-of-type(3) { --sa-accent: #0891B2; }
-[data-sa-look='ledger'] section:nth-of-type(4) { --sa-accent: #64748B; }
-[data-sa-look='ledger'] section:nth-of-type(5) { --sa-accent: #D97706; }
-[data-sa-look='ledger'] section:nth-of-type(n+6) { --sa-accent: #6D5DFB; }
-[data-sa-look='ledger'] .pf-stat-card { border-left: 4px solid var(--sa-accent); border-radius: 10px; box-shadow: none; }
-[data-sa-look='ledger'] .pf-stat-card > div:first-child > span { background: color-mix(in srgb, var(--sa-accent) 12%, var(--pf-surface)) !important; color: var(--sa-accent) !important; }
-[data-sa-look='ledger'] .pf-stat-card > div:first-child > p { color: var(--pf-color-muted); }
-[data-sa-look='ledger'] .pf-stat-card[data-hi] { border-left-color: var(--pf-color-warning); }
-[data-sa-look='ledger'] .pf-stat-card[data-hi] > div:first-child > span { background: var(--pf-color-warning-soft) !important; color: var(--pf-color-warning) !important; }
-/* Thẻ AIDO (nền gradient inline) — đồng bộ với thẻ KPI trong cả 2 phương án */
-[data-sa-look] div[style*='linear-gradient(180deg'] { background: var(--pf-surface) !important; border-color: var(--pf-border) !important; box-shadow: 0 1px 2px rgb(15 23 42 / 0.05) !important; border-radius: 14px !important; }
-[data-sa-look='ledger'] div[style*='linear-gradient(180deg'] { border-left: 4px solid var(--sa-accent) !important; box-shadow: none !important; border-radius: 10px !important; }
+[data-sa-look] .pf-stat-card, [data-sa-look] div[style*='linear-gradient(180deg'] {
+  background-color: color-mix(in srgb, var(--pf-surface) 58%, transparent) !important;
+  background-image: var(--pf-sheen) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%);
+  border: 1px solid var(--pf-glass-border) !important;
+  border-radius: 20px !important;
+  box-shadow: inset 0 1px 0 var(--pf-glass-hi), inset 0 2px 0 color-mix(in srgb, var(--sa-accent) 50%, transparent), inset 0 -1px 0 var(--pf-glass-lo), 0 1px 1px rgb(15 23 42 / 0.04), 0 14px 30px -16px rgb(15 23 42 / 0.22) !important;
+  transform: none !important;
+}
+@media (hover: hover) { [data-sa-look] .pf-stat-card:hover { box-shadow: inset 0 1px 0 var(--pf-glass-hi), inset 0 2px 0 var(--sa-accent), 0 22px 40px -18px color-mix(in srgb, var(--sa-accent) 38%, rgb(15 23 42 / 0.3)) !important; } }
+[data-sa-look] .pf-stat-card[data-hi] { --sa-accent: var(--pf-color-warning); }
+
+[data-sa-look] .pf-stat-cell {
+  background-color: color-mix(in srgb, var(--pf-surface) 52%, transparent); background-image: none;
+  -webkit-backdrop-filter: none; backdrop-filter: none; transform: none !important;
+  border: 1px solid var(--pf-glass-border); border-radius: 14px;
+  box-shadow: inset 0 1px 0 var(--pf-glass-hi), 0 4px 10px -6px rgb(15 23 42 / 0.16);
+}
+[data-sa-look] .pf-stat-cell[data-hi] { background-color: color-mix(in srgb, var(--sa-accent) 8%, color-mix(in srgb, var(--pf-surface) 52%, transparent)); }
+
+[data-sa-look] .pf-stat-card > div:first-child > span {
+  background: color-mix(in srgb, var(--sa-accent) 14%, transparent) !important; color: var(--sa-accent) !important;
+  box-shadow: inset 0 1px 0 var(--pf-glass-hi);
+}
+[data-sa-look] .pf-stat-card > div:first-child > p { color: var(--pf-color-muted); letter-spacing: 0.06em; }
+[data-sa-look] section > div:first-child > span { color: var(--sa-accent) !important; }
+[data-glass='off'] [data-sa-look] .pf-stat-card, [data-sa-look][data-glass='off'] .pf-stat-card { background-color: var(--pf-surface) !important; background-image: none !important; backdrop-filter: none; -webkit-backdrop-filter: none; }
