@@ -510,7 +510,7 @@ export function SuperClubs() {
   }
 
   return (
-    <PageShell maxWidth={1280}>
+    <PageShell maxWidth={1760}>
       <PageHeader
         title="Quản lý CLB"
         subtitle={`${clubs.length} câu lạc bộ trong hệ thống`}
@@ -523,7 +523,7 @@ export function SuperClubs() {
         }
       />
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         <div className="relative">
           <Search size={16} className="absolute left-3 top-2.5 [color:var(--pf-color-muted)]" />
           <input
@@ -537,37 +537,37 @@ export function SuperClubs() {
 
         {clubsError && clubs.length === 0 && <ErrorState onRetry={loadClubs} />}
         <div className="pf-glass-strong rounded-2xl overflow-x-auto" style={{ boxShadow: 'var(--pf-shadow)' }}>
-          <table className="pf-rows w-full min-w-[720px] text-sm">
+          <table className="pf-rows w-full min-w-[720px] text-sm [border-spacing:0_6px]">
             <thead className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
               <tr>
-                <th scope="col" className="text-left px-4 py-3 font-semibold [color:var(--pf-text)]">Tên CLB</th>
-                <th scope="col" className="text-left px-4 py-3 font-semibold [color:var(--pf-text)]">Địa chỉ</th>
-                <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Thành viên</th>
-                <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Kỳ quỹ</th>
-                <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Gói</th>
-                <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Trạng thái</th>
-                <th scope="col" className="text-center px-4 py-3 font-semibold [color:var(--pf-text)]">Hành động</th>
+                <th scope="col" className="text-left px-3 py-2 font-semibold [color:var(--pf-text)]">Tên CLB</th>
+                <th scope="col" className="text-left px-3 py-2 font-semibold [color:var(--pf-text)]">Địa chỉ</th>
+                <th scope="col" className="text-center px-3 py-2 font-semibold [color:var(--pf-text)]">Thành viên</th>
+                <th scope="col" className="text-center px-3 py-2 font-semibold [color:var(--pf-text)]">Kỳ quỹ</th>
+                <th scope="col" className="text-center px-3 py-2 font-semibold [color:var(--pf-text)]">Gói</th>
+                <th scope="col" className="text-center px-3 py-2 font-semibold [color:var(--pf-text)]">Trạng thái</th>
+                <th scope="col" className="text-center px-3 py-2 font-semibold [color:var(--pf-text)]">Hành động</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[color:var(--pf-border-soft)]">
               {filtered.map(club => (
                 <tr key={club.id} className="hover:[background:var(--pf-surface-muted)] transition-colors">
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-2">
                     <div className="font-semibold [color:var(--pf-text)]">{club.name}</div>
                     <div className="text-xs [color:var(--pf-color-muted)]">{club.code} · {club.contactEmail}</div>
                   </td>
-                  <td className="px-4 py-3 [color:var(--pf-color-muted)]">{club.address || '—'}</td>
-                  <td className="px-4 py-3 text-center font-semibold [color:var(--pf-text)]">{club._count?.members}</td>
-                  <td className="px-4 py-3 text-center font-semibold [color:var(--pf-text)]">{club._count?.fundPeriods}</td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-3 py-2 [color:var(--pf-color-muted)]">{club.address || '—'}</td>
+                  <td className="px-3 py-2 text-center font-semibold [color:var(--pf-text)]">{club._count?.members}</td>
+                  <td className="px-3 py-2 text-center font-semibold [color:var(--pf-text)]">{club._count?.fundPeriods}</td>
+                  <td className="px-3 py-2 text-center">
                     <PlanSelect club={club} onChange={(p) => setPendingAction({ club, kind: 'plan', nextPlan: p })} />
                   </td>
-                  <td className="px-4 py-3 text-center">
+                  <td className="px-3 py-2 text-center">
                     <StatusBadge tone={club.status === 'active' ? 'success' : 'warning'} dot>
                       {club.status === 'active' ? 'Hoạt động' : 'Bị khóa'}
                     </StatusBadge>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-2">
                     <div className="flex items-center justify-center gap-1">
                       <button className="p-1.5 rounded [color:var(--pf-color-info)] hover:[background:var(--pf-color-info-soft)]" title="Xem chi tiết" onClick={() => navigate(`/super/clubs/${club.id}`)}>
                         <Eye size={15} />
