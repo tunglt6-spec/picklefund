@@ -274,7 +274,7 @@ p{orphans:3;widows:3}
 .cover .gcard .s{font-size:${pt(TYPE.caption)};color:var(--muted);margin-top:${mm(1)}}
 .cover .cv-foot{display:flex;justify-content:space-between;font-size:${pt(TYPE.caption)};color:var(--muted);border-top:${mm(PAGE.border)} solid ${rgba(B.brandDeep, 0.3)};padding-top:${mm(SPACE.s2)}}
 /* ===== MỤC LỤC (trang 2) ===== */
-.toc{margin-bottom:${mm(SPACE.s4)}}
+.toc{margin-bottom:${mm(SPACE.s4)};page-break-after:always;break-after:page}
 .toc-eyb{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;font-weight:700;color:var(--brandInk);margin-bottom:${mm(1)}}
 .toc-h{font-size:${pt(TYPE.h1)};font-weight:700;color:var(--brandInk);margin-bottom:${mm(1)}}
 .toc-sub{font-size:${pt(TYPE.table)};color:var(--muted);margin-bottom:${mm(SPACE.s3)}}
@@ -285,7 +285,7 @@ p{orphans:3;widows:3}
 .toc-t{font-size:${pt(TYPE.h2)};font-weight:700;color:var(--ink)}
 .toc-d{font-size:${pt(TYPE.table)};color:var(--muted);margin-top:${mm(0.5)}}
 /* ===== SECTION — nội dung chảy liền ===== */
-.sect{padding:0;margin:0 0 ${mm(SPACE.s3)};page-break-inside:auto}
+.sect{padding:0;margin:0 0 ${mm(SPACE.s3)};page-break-inside:auto;page-break-before:always;break-before:page}
 .sect h2+*{break-before:avoid}
 .sect h2{font-size:${pt(TYPE.h2)};font-weight:700;color:var(--brandInk);text-transform:uppercase;letter-spacing:.2pt;margin-bottom:${mm(SPACE.s2)};padding:${mm(0.6)} 0 ${mm(SPACE.s1)} ${mm(2.5)};border-left:${mm(1.2)} solid var(--brand);border-bottom:${mm(PAGE.border)} solid var(--brandBorder);page-break-after:avoid;break-after:avoid}
 .k,.rank,.tbl thead,.tbl tr,.grid4,.grid3,.grid2,.grid5{page-break-inside:avoid;break-inside:avoid}
@@ -352,7 +352,7 @@ p{orphans:3;widows:3}
 .maika-body p{font-size:${pt(TYPE.body)};color:var(--ink);line-height:1.6;margin-bottom:${mm(SPACE.s1)};break-inside:avoid;page-break-inside:avoid}
 .maika-body p:last-child{margin-bottom:0}
 /* ===== TRANG KẾT ===== */
-.concl{margin-top:${mm(SPACE.s4)}}
+.concl{margin-top:${mm(SPACE.s4)};page-break-before:always;break-before:page}
 .concl-eyb{font-size:${pt(TYPE.label)};letter-spacing:.3pt;text-transform:uppercase;font-weight:700;color:var(--muted);margin-bottom:${mm(1)}}
 .concl-h{font-size:${pt(TYPE.h1)};font-weight:700;color:var(--brandInk);margin-bottom:${mm(SPACE.s3)}}
 .concl-intro{background-color:var(--acc-t);border:var(--g-rim);box-shadow:inset ${mm(1.4)} 0 0 var(--brand),${accSh};border-radius:var(--g-r);padding:${mm(SPACE.s2)} ${mm(SPACE.s3)} ${mm(SPACE.s2)} ${mm(SPACE.s3 + 1)};margin-bottom:${mm(SPACE.s4)};page-break-inside:auto}
