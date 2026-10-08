@@ -3,7 +3,7 @@
  * tổng hợp doanh thu, ghi nhận gia hạn thủ công, hủy bản ghi nhập nhầm.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { Plus, Wallet, CalendarDays, Receipt, Landmark, Ban } from 'lucide-react'
+import { Plus, Wallet, CalendarDays, Receipt, Landmark, Ban, Check, X, Clock } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
 import { PageShell, PageHeader, FilterBar, DataTable, StatusBadge, MetricCard, LoadingState, EmptyState, ErrorState, type Column } from '../../components/shared'
@@ -16,6 +16,7 @@ interface Row {
   orderCode: string; club: { id: string; name: string; code: string }; planTier: string; billingCycle: string; months: number | null
   amount: number; gateway: string; method: string | null; reference: string | null; note: string | null; paidAt: string | null; invoiceNumber: string | null
 }
+interface Pending { orderCode: string; club: { id: string; name: string; code: string }; planTier: string; months: number | null; amount: number; method: string | null; reference: string | null; note: string | null; paidAt: string | null; createdAt: string }
 interface Summary { total: number; count: number; thisMonthTotal: number; thisMonthCount: number; byGateway: { gateway: string; total: number; count: number }[] }
 
 const PLAN: Record<string, string> = { STARTER: 'Starter', PRO: 'Pro', CLUB_PLUS: 'Enterprise' }
@@ -33,6 +34,8 @@ export function SuperPayments() {
   const [open, setOpen] = useState(false)
   const [toVoid, setToVoid] = useState<Row | null>(null)
   const [voiding, setVoiding] = useState(false)
+  const [pending, setPending] = useState<Pending[]>([])
+  const [busyCode, setBusyCode] = useState<string | null>(null)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -42,7 +45,20 @@ export function SuperPayments() {
       .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, [clubId])
-  useEffect(() => { load() }, [load])
+  const loadPending = useCallback(() => {
+    api.get('/billing/manual-payments/pending').then((r) => setPending(r.data?.data ?? [])).catch(() => setPending([]))
+  }, [])
+  useEffect(() => { load(); loadPending() }, [load, loadPending])
+  const act = async (code: string, kind: 'confirm' | 'reject') => {
+    setBusyCode(code)
+    try {
+      await api.post(`/billing/manual-payments/${code}/${kind}`, {})
+      toast.success(kind === 'confirm' ? 'Đã xác nhận — gói của CLB đã được gia hạn' : 'Đã từ chối yêu cầu')
+      load(); loadPending()
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Xử lý thất bại')
+    } finally { setBusyCode(null) }
+  }
   useEffect(() => {
     api.get('/clubs', { params: { limit: 200 } })
       .then((r) => setClubs((r.data?.data ?? []).map((c: any) => ({ id: c.id, name: c.name, plan: c.plan, planExpiresAt: c.planExpiresAt }))))
@@ -95,6 +111,27 @@ export function SuperPayments() {
         <MetricCard compact icon={<Landmark size={16} />} label="Ghi nhận thủ công" value={formatVND(manualTotal?.total ?? 0)} sub={`${manualTotal?.count ?? 0} giao dịch`} />
         <MetricCard compact icon={<Receipt size={16} />} label="TB / giao dịch" value={formatVND(summary && summary.count ? Math.round(summary.total / summary.count) : 0)} />
       </div>
+
+      {pending.length > 0 && (
+        <div className="pf-glass mb-4 rounded-[16px] p-4">
+          <p className="mb-3 flex items-center gap-2 text-sm font-semibold [color:var(--pf-text)]"><Clock size={16} className="[color:var(--pf-color-warning)]" />Chờ xác nhận ({pending.length}) — CLB báo đã chuyển khoản</p>
+          <ul className="space-y-2">
+            {pending.map((r) => (
+              <li key={r.orderCode} className="flex flex-wrap items-center gap-3 rounded-xl border px-3 py-2.5 [border-color:var(--pf-border)] [background:var(--pf-surface)]">
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold [color:var(--pf-text)]">{r.club.name} · {PLAN[r.planTier] ?? r.planTier} {r.months ? `${r.months} tháng` : ''}</p>
+                  <p className="text-xs [color:var(--pf-color-muted)]">{METHOD[r.method ?? ''] ?? '—'}{r.reference ? ` · ${r.reference}` : ''}{r.note ? ` · ${r.note}` : ''} · ngày chuyển {r.paidAt ? new Date(r.paidAt).toLocaleDateString('vi-VN') : '—'}</p>
+                </div>
+                <span className="text-sm font-bold tabular-nums [color:var(--pf-text)]">{formatVND(r.amount)}</span>
+                <div className="flex gap-2">
+                  <button disabled={busyCode === r.orderCode} onClick={() => act(r.orderCode, 'confirm')} className="inline-flex h-9 items-center gap-1 rounded-xl px-3 text-xs font-semibold text-white disabled:opacity-50" style={{ background: 'var(--pf-primary)' }}><Check size={14} />Xác nhận</button>
+                  <button disabled={busyCode === r.orderCode} onClick={() => act(r.orderCode, 'reject')} className="inline-flex h-9 items-center gap-1 rounded-xl border px-3 text-xs font-semibold [color:var(--pf-color-danger)] border-[color:var(--pf-border)] disabled:opacity-50"><X size={14} />Từ chối</button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
         <FilterBar className="flex-1" searchValue={search} onSearchChange={setSearch} searchPlaceholder="Tìm CLB, mã giao dịch, ghi chú…" />

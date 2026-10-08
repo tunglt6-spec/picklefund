@@ -17,8 +17,10 @@ const today = () => new Date().toISOString().slice(0, 10)
 const fmt = (n: number) => n.toLocaleString('vi-VN')
 
 /** Super Admin ghi nhận thanh toán / gia hạn gói cho 1 CLB (thu ngoài cổng thanh toán). */
-export function RecordPlanPaymentModal({ open, onClose, clubs, clubId: presetClubId, onDone }: {
+export function RecordPlanPaymentModal({ open, onClose, clubs, clubId: presetClubId, onDone, mode = 'record' }: {
   open: boolean; onClose: () => void; clubs: ClubOption[]; clubId?: string; onDone: () => void
+  /** record = Super Admin ghi trực tiếp; request = CLB Admin gửi yêu cầu chờ Super Admin xác nhận. */
+  mode?: 'record' | 'request'
 }) {
   const [plans, setPlans] = useState<PlanInfo[]>([])
   const [clubId, setClubId] = useState('')
@@ -64,8 +66,14 @@ export function RecordPlanPaymentModal({ open, onClose, clubs, clubId: presetClu
     if (!clubId) { toast.error('Chọn CLB'); return }
     setBusy(true)
     try {
-      await api.post('/billing/manual-payments', { clubId, planTier, months, amount, method, paidAt, reference: reference.trim() || undefined, note: note.trim() || undefined })
-      toast.success('Đã ghi nhận thanh toán và gia hạn gói')
+      const body = { planTier, months, amount, method, paidAt, reference: reference.trim() || undefined, note: note.trim() || undefined }
+      if (mode === 'request') {
+        await api.post('/billing/manual-requests', body)
+        toast.success('Đã gửi yêu cầu — chờ Super Admin xác nhận')
+      } else {
+        await api.post('/billing/manual-payments', { clubId, ...body })
+        toast.success('Đã ghi nhận thanh toán và gia hạn gói')
+      }
       onDone()
       onClose()
     } catch (e: any) {
@@ -77,7 +85,7 @@ export function RecordPlanPaymentModal({ open, onClose, clubs, clubId: presetClu
   const input = 'w-full rounded-xl border px-3 py-2 text-sm [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)] focus:outline-none focus:[border-color:var(--pf-primary)]'
 
   return (
-    <Modal open={open} onClose={onClose} title="Ghi nhận thanh toán gói" subtitle="Gia hạn / nâng cấp gói cho CLB (thu ngoài cổng)" size="md">
+    <Modal open={open} onClose={onClose} title={mode === 'request' ? 'Báo đã chuyển khoản gia hạn gói' : 'Ghi nhận thanh toán gói'} subtitle={mode === 'request' ? 'Gửi thông tin chuyển khoản — Super Admin đối chiếu và xác nhận để kích hoạt gói' : 'Gia hạn / nâng cấp gói cho CLB (thu ngoài cổng)'} size="md">
       <div className="space-y-3">
         <div>
           <label className={label} htmlFor="rpp-club">CLB</label>
@@ -141,7 +149,7 @@ export function RecordPlanPaymentModal({ open, onClose, clubs, clubId: presetClu
         )}
         <div className="flex justify-end gap-2 pt-1">
           <Button variant="outline" onClick={onClose}>Hủy</Button>
-          <Button onClick={submit} disabled={busy || !clubId}>{busy ? 'Đang ghi…' : 'Ghi nhận thanh toán'}</Button>
+          <Button onClick={submit} disabled={busy || !clubId || (mode === 'request' && amount <= 0)}>{busy ? 'Đang gửi…' : mode === 'request' ? 'Gửi yêu cầu xác nhận' : 'Ghi nhận thanh toán'}</Button>
         </div>
       </div>
     </Modal>

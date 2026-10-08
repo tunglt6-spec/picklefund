@@ -4,7 +4,7 @@ import { SkipThrottle } from '@nestjs/throttler';
 import type { PaymentGateway } from '@prisma/client';
 import { BillingService } from './billing.service';
 import { BillingCheckoutService } from './billing-checkout.service';
-import { CreateOrderDto, RecordManualPaymentDto } from './billing.dto';
+import { ConfirmManualPaymentDto, CreateOrderDto, RecordManualPaymentDto, RejectManualPaymentDto, RequestManualPaymentDto } from './billing.dto';
 import { BillingManualService } from './billing-manual.service';
 import { CurrentUser, Public, Roles } from '../common/decorators';
 import type { JwtUser } from '../common/decorators';
@@ -99,6 +99,31 @@ export class BillingController {
   @Post('manual-payments')
   async recordPayment(@CurrentUser() user: JwtUser, @Body() dto: RecordManualPaymentDto) {
     return ok(await this.manual.record(user.userId, dto), 'Đã ghi nhận thanh toán');
+  }
+
+  /** CLB Admin: gửi yêu cầu xác nhận khoản đã chuyển khoản (chờ Super Admin duyệt mới có hiệu lực). */
+  @Roles('CLUB_ADMIN')
+  @Post('manual-requests')
+  async requestPayment(@CurrentUser() user: JwtUser, @Body() dto: RequestManualPaymentDto) {
+    return ok(await this.manual.requestPayment(user.userId, user.clubId as string, dto), 'Đã gửi yêu cầu, chờ Super Admin xác nhận');
+  }
+
+  @Roles('SUPER_ADMIN')
+  @Get('manual-payments/pending')
+  async listPending() {
+    return ok(await this.manual.listPending());
+  }
+
+  @Roles('SUPER_ADMIN')
+  @Post('manual-payments/:orderCode/confirm')
+  async confirmRequest(@CurrentUser() user: JwtUser, @Param('orderCode') orderCode: string, @Body() dto: ConfirmManualPaymentDto) {
+    return ok(await this.manual.confirmRequest(user.userId, orderCode, dto.amount), 'Đã xác nhận thanh toán');
+  }
+
+  @Roles('SUPER_ADMIN')
+  @Post('manual-payments/:orderCode/reject')
+  async rejectRequest(@CurrentUser() user: JwtUser, @Param('orderCode') orderCode: string, @Body() dto: RejectManualPaymentDto) {
+    return ok(await this.manual.rejectRequest(user.userId, orderCode, dto.reason), 'Đã từ chối yêu cầu');
   }
 
   @Roles('SUPER_ADMIN')

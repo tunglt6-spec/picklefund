@@ -44,3 +44,22 @@ export class RecordManualPaymentDto {
 
   @IsOptional() @IsString() @MaxLength(500) note?: string;
 }
+
+/** CLB Admin gửi yêu cầu xác nhận khoản đã chuyển khoản gia hạn gói (clubId lấy từ JWT, không nhận từ client). */
+export class RequestManualPaymentDto {
+  @IsEnum({ STARTER: 'STARTER', PRO: 'PRO', CLUB_PLUS: 'CLUB_PLUS' }) planTier!: ServicePlan;
+  @IsInt() @Min(1) @Max(36) months!: number;
+  @IsNumber() @Min(1) @Max(1_000_000_000) amount!: number;
+  @IsIn([...MANUAL_METHODS]) method!: ManualMethod;
+  @IsOptional() @IsString() @MaxLength(32) paidAt?: string;
+  @IsOptional() @IsString() @MaxLength(120) reference?: string;
+  @IsOptional() @IsString() @MaxLength(500) note?: string;
+}
+
+export class ConfirmManualPaymentDto {
+  @IsOptional() @IsNumber() @Min(0) @Max(1_000_000_000) amount?: number;
+}
+
+export class RejectManualPaymentDto {
+  @IsOptional() @IsString() @MaxLength(200) reason?: string;
+}

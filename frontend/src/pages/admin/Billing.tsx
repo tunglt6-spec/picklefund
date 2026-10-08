@@ -6,6 +6,7 @@ import { useBrandingStore } from '../../store/brandingStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import toast from 'react-hot-toast'
+import { RecordPlanPaymentModal } from '../../components/super/RecordPlanPaymentModal'
 import { CheckoutModal, type CheckoutPlan } from './billing/CheckoutModal'
 import { ReferralCard } from './billing/ReferralCard'
 import { exportBillingReceiptPDF } from '../../lib/export'
@@ -92,6 +93,7 @@ export function Billing() {
   const [orders, setOrders] = useState<OrderRow[]>([])
   const [loading, setLoading] = useState(true)
   const [checkout, setCheckout] = useState<CheckoutPlan | null>(null)
+  const [reportOpen, setReportOpen] = useState(false)
   const [receiptBusyId, setReceiptBusyId] = useState<string | null>(null) // chống bấm đúp tải biên nhận
 
   const fetchAll = useCallback(async () => {
@@ -339,6 +341,15 @@ export function Billing() {
             </div>
           )}
 
+          {/* Báo đã chuyển khoản gia hạn (chờ Super Admin xác nhận) */}
+          <div className="pf-glass flex flex-wrap items-center justify-between gap-3 rounded-xl p-4">
+            <div className="min-w-0">
+              <p className="text-sm font-semibold [color:var(--pf-text)]">Đã chuyển khoản gia hạn gói?</p>
+              <p className="text-xs [color:var(--pf-color-muted)]">Gửi thông tin chuyển khoản để Super Admin đối chiếu và gia hạn gói cho CLB.</p>
+            </div>
+            <button onClick={() => setReportOpen(true)} className="inline-flex h-10 items-center rounded-xl px-4 text-sm font-semibold text-white" style={{ background: 'var(--pf-primary)' }}>Báo đã chuyển khoản</button>
+          </div>
+
           {/* Lịch sử thanh toán */}
           {orders.length > 0 && (
             <div className="pf-glass rounded-xl p-5 md:p-6">
@@ -349,7 +360,7 @@ export function Billing() {
               <div className="space-y-1">
                 {orders.slice(0, 8).map(o => {
                   const paid = o.status === 'PAID'
-                  const stLabel = paid ? 'Đã thanh toán' : o.status === 'PENDING' ? 'Chờ thanh toán' : o.status === 'FAILED' ? 'Thất bại' : o.status
+                  const stLabel = paid ? 'Đã thanh toán' : o.status === 'PENDING' ? (o.gateway === 'MANUAL' ? 'Chờ Super Admin xác nhận' : 'Chờ thanh toán') : o.status === 'FAILED' ? 'Thất bại' : o.status
                   return (
                     <div key={o.orderCode} className="flex items-center justify-between gap-3 py-2 border-b border-[color:var(--pf-border)] last:border-0">
                       <div className="min-w-0">
@@ -376,6 +387,8 @@ export function Billing() {
           )}
         </>
       )}
+
+      <RecordPlanPaymentModal open={reportOpen} onClose={() => setReportOpen(false)} mode="request" clubs={[{ id: 'self', name: clubName, plan: currentTier, planExpiresAt: sub?.expiresAt ?? null }]} clubId="self" onDone={() => { void fetchAll() }} />
 
       {checkout && (
         <CheckoutModal

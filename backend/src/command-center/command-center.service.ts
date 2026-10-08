@@ -99,10 +99,13 @@ export class CommandCenterService {
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const quarterStart = new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1);
     const yearStart = new Date(now.getFullYear(), 0, 1);
-    const [revToday, revMonth, revQuarter, revYear, revRange, upgradesInRange, cancellationsInRange] = await Promise.all([
+    const revManualWindow = (s: Date, e: Date) =>
+      this.prisma.paymentOrder.aggregate({ _sum: { amount: true }, where: { status: 'PAID', gateway: 'MANUAL', paidAt: { gte: s, lte: e }, ...scope } });
+    const [revToday, revMonth, revQuarter, revYear, revRange, upgradesInRange, cancellationsInRange, revMonthManual, revYearManual] = await Promise.all([
       revWindow(dayStart, now), revWindow(monthStart, now), revWindow(quarterStart, now), revWindow(yearStart, now), revWindow(start, end),
       this.prisma.paymentOrder.count({ where: { status: 'PAID', paidAt: { gte: start, lte: end }, ...scope } }),
       this.prisma.subscription.count({ where: { cancelledAt: { gte: start, lte: end }, ...scope } }),
+      revManualWindow(monthStart, now), revManualWindow(yearStart, now),
     ]);
 
     // ── Khối 3: Tài chính tổng hợp (thu đã xác nhận / chi approved|paid) ──
@@ -127,12 +130,14 @@ export class CommandCenterService {
       months.push({ label: `${s.getMonth() + 1}/${s.getFullYear()}`, start: s, end: e });
     }
     const trendRows = await Promise.all(months.map(async (m) => {
-      const [inc, exp, rev] = await Promise.all([
+      const [inc, exp, rev, revManual] = await Promise.all([
         this.prisma.fundContribution.aggregate({ _sum: { amount: true }, where: { isConfirmed: true, paymentDate: { gte: m.start, lt: m.end }, ...scope } }),
         this.prisma.livingExpense.aggregate({ _sum: { amount: true }, where: { status: { in: ['approved', 'paid'] }, expenseDate: { gte: m.start, lt: m.end }, ...scope } }),
         this.prisma.paymentOrder.aggregate({ _sum: { amount: true }, where: { status: 'PAID', paidAt: { gte: m.start, lt: m.end }, ...scope } }),
+        this.prisma.paymentOrder.aggregate({ _sum: { amount: true }, where: { status: 'PAID', gateway: 'MANUAL', paidAt: { gte: m.start, lt: m.end }, ...scope } }),
       ]);
-      return { label: m.label, income: n(inc._sum.amount), expense: n(exp._sum.amount), revenue: n(rev._sum.amount) };
+      // revenue = TỔNG (giữ nguyên cho báo cáo PDF); revenueManual = phần Super Admin ghi nhận thủ công (⊂ revenue).
+      return { label: m.label, income: n(inc._sum.amount), expense: n(exp._sum.amount), revenue: n(rev._sum.amount), revenueManual: n(revManual._sum.amount) };
     }));
 
     // ── Khối 4: Hoạt động nghiệp vụ (trong kỳ) ──
@@ -295,6 +300,7 @@ export class CommandCenterService {
         revenue: {
           today: n(revToday._sum.amount), month: n(revMonth._sum.amount),
           quarter: n(revQuarter._sum.amount), year: n(revYear._sum.amount),
+          monthManual: n(revMonthManual._sum.amount), yearManual: n(revYearManual._sum.amount),
           mrr, arr: mrr * 12,
         },
         subscription: {

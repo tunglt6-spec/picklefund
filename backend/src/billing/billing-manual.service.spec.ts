@@ -64,3 +64,59 @@ describe('BillingManualService.record', () => {
     expect(Math.abs(r.expiresAt!.getTime() - addMonths(new Date(), 3).getTime())).toBeLessThan(5000);
   });
 });
+
+describe('BillingManualService — yêu cầu từ CLB Admin', () => {
+  const mk = (over: any = {}) => {
+    const tx = {
+      paymentOrder: { updateMany: jest.fn().mockResolvedValue({ count: 1 }) },
+      club: { update: jest.fn() }, subscription: { upsert: jest.fn() }, invoice: { create: jest.fn() },
+    };
+    const prisma: any = {
+      club: { findUnique: jest.fn().mockResolvedValue({ id: 'c1', name: 'A' }) },
+      paymentOrder: {
+        count: jest.fn().mockResolvedValue(0), findFirst: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockImplementation(async ({ data }) => ({ id: 'o1', ...data })),
+        findUnique: jest.fn().mockResolvedValue(null), updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+      },
+      user: { findMany: jest.fn().mockResolvedValue([{ id: 's1' }]) },
+      notification: { createMany: jest.fn() },
+      $transaction: jest.fn().mockImplementation(async (fn: any) => fn(tx)),
+      ...over,
+    };
+    return { svc: new BillingManualService(prisma, { log: jest.fn() } as any), prisma, tx };
+  };
+  const dto: any = { planTier: 'PRO', months: 1, amount: 99000, method: 'BANK_TRANSFER' };
+
+  it('gửi yêu cầu → PENDING (không đổi gói), báo Super Admin', async () => {
+    const { svc, prisma, tx } = mk();
+    const r = await svc.requestPayment('u', 'c1', dto);
+    expect(r.status).toBe('PENDING');
+    expect(prisma.paymentOrder.create.mock.calls[0][0].data).toMatchObject({ status: 'PENDING', gateway: 'MANUAL', clubId: 'c1' });
+    expect(tx.club.update).not.toHaveBeenCalled();
+    expect(prisma.notification.createMany).toHaveBeenCalled();
+  });
+
+  it('quá 5 yêu cầu chờ → 400', async () => {
+    const { svc } = mk({ paymentOrder: { count: jest.fn().mockResolvedValue(5), findFirst: jest.fn(), create: jest.fn() } });
+    await expect(svc.requestPayment('u', 'c1', dto)).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('xác nhận → PAID + kích hoạt gói; đã xử lý rồi → 400', async () => {
+    const order = { id: 'o1', clubId: 'c1', orderCode: 'MN1', gateway: 'MANUAL', status: 'PENDING', planTier: 'PRO', months: 1, billingCycle: 'MONTHLY', amount: 99000, club: { id: 'c1', name: 'A', plan: 'STARTER', planExpiresAt: null } };
+    const { svc, prisma, tx } = mk();
+    prisma.paymentOrder.findUnique.mockResolvedValue(order);
+    await svc.confirmRequest('s1', 'MN1');
+    expect(tx.club.update).toHaveBeenCalled();
+    expect(tx.invoice.create).toHaveBeenCalled();
+    prisma.paymentOrder.findUnique.mockResolvedValue({ ...order, status: 'PAID' });
+    await expect(svc.confirmRequest('s1', 'MN1')).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('từ chối → CANCELLED, không đụng gói', async () => {
+    const { svc, prisma, tx } = mk();
+    prisma.paymentOrder.findUnique.mockResolvedValue({ id: 'o1', clubId: 'c1', gateway: 'MANUAL', status: 'PENDING', amount: 1, note: null });
+    await svc.rejectRequest('s1', 'MN1', 'Chưa nhận được tiền');
+    expect(prisma.paymentOrder.updateMany.mock.calls[0][0].data.status).toBe('CANCELLED');
+    expect(tx.club.update).not.toHaveBeenCalled();
+  });
+});
