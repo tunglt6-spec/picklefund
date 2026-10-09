@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { QrCode, RefreshCw } from 'lucide-react'
 import api from '../../../lib/api'
+import { blobToDataUrl } from '../../../lib/blobUrl'
 
 interface Info { bank: { code: string; account: string; name: string }; contact: string; amount: number; memo: string; months: number; plan: string; planExpiresAt: string | null }
 
@@ -13,7 +14,6 @@ export function RenewalQrCard() {
 
   useEffect(() => {
     let alive = true
-    let url = ''
     setInfo(undefined)
     setQr('')
     api.get('/billing/renewal-info', { params: { months } }).then((r) => {
@@ -24,10 +24,10 @@ export function RenewalQrCard() {
       api.get('/billing/renewal-qr', { params: { months }, responseType: 'blob' }).then((q) => {
         if (!alive) return
         const b = q.data as Blob
-        if (/^image\//.test(b.type)) { url = URL.createObjectURL(b); setQr(url) }
+        if (/^image\//.test(b.type) && b.size > 500) blobToDataUrl(b).then((u) => { if (alive) setQr(u) }).catch(() => {})
       }).catch(() => {})
     }).catch(() => { if (alive) setInfo(null) })
-    return () => { alive = false; if (url) URL.revokeObjectURL(url) }
+    return () => { alive = false }
   }, [months, tick])
 
   if (info === null) return null
