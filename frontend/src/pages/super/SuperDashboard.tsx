@@ -38,6 +38,11 @@ type Alert = 'danger' | 'warning' | undefined
 const BRAND = 'var(--pf-primary)'
 const ALERT_COLOR: Record<'danger' | 'warning', string> = { danger: 'var(--pf-color-danger)', warning: 'var(--pf-color-warning)' }
 
+/** Chuẩn chữ DUY NHẤT cho thẻ KPI và ô nhỏ trong thẻ AIDO (inline → không bị CSS khác ghi đè, đảm bảo giống hệt nhau). */
+const T_LABEL: React.CSSProperties = { fontFamily: 'inherit', fontSize: 10, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', lineHeight: 1.2, color: 'var(--pf-color-muted)' }
+const T_VALUE: React.CSSProperties = { fontFamily: 'inherit', fontSize: '1.0625rem', fontWeight: 600, letterSpacing: 0, lineHeight: 1.25, color: 'color-mix(in srgb, var(--pf-text) 84%, var(--pf-surface))' }
+const T_SUB: React.CSSProperties = { fontFamily: 'inherit', fontSize: 11.5, fontWeight: 400, lineHeight: 1.3, color: 'var(--pf-color-muted)' }
+
 /** Thẻ KPI THỐNG NHẤT: nền tint thương hiệu nhẹ + shadow (độ sâu), đều chiều cao. Màu chỉ đổi khi alert. */
 function Kpi({ label, value, icon, sub, alert, onClick }: { label: string; value: React.ReactNode; icon?: React.ReactNode; sub?: string; alert?: Alert; onClick?: () => void }) {
   const accent = alert ? ALERT_COLOR[alert] : BRAND
@@ -52,13 +57,13 @@ function Kpi({ label, value, icon, sub, alert, onClick }: { label: string; value
       {...(alert ? { 'data-hi': '' } : {})}
     >
       <div className="mb-1.5 flex items-start justify-between gap-2">
-        <p className="text-[10.5px] font-bold uppercase tracking-wide [color:var(--pf-color-muted)]">{label}</p>
+        <p style={T_LABEL}>{label}</p>
         {icon && (
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl" style={{ background: `color-mix(in srgb, ${accent} 16%, var(--pf-surface))`, color: accent }}>{icon}</span>
         )}
       </div>
-      <p className="mt-auto text-xl font-extrabold leading-tight" style={{ color: alert ? accent : 'var(--pf-text)' }}>{value}</p>
-      {sub && <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">{sub}</p>}
+      <p className="mt-auto" style={{ ...T_VALUE, color: alert ? accent : T_VALUE.color }}>{value}</p>
+      {sub && <p className="mt-0.5" style={T_SUB}>{sub}</p>}
     </div>
   )
 }
@@ -625,13 +630,13 @@ function AgentCard({ name, role, icon, rows }: { name: string; role: string; ico
     >
       <div className="mb-2.5 flex items-center gap-2">
         <span className="flex h-9 w-9 items-center justify-center rounded-xl [color:var(--pf-primary-text)]" style={{ background: 'color-mix(in srgb, var(--pf-primary) 16%, var(--pf-surface))' }}>{icon}</span>
-        <div className="min-w-0"><p className="text-sm font-extrabold [color:var(--pf-text)]">{name}</p><p className="truncate text-xs [color:var(--pf-color-muted)]">{role}</p></div>
+        <div className="min-w-0"><p style={{ ...T_VALUE, fontSize: '0.9375rem' }}>{name}</p><p className="truncate" style={T_SUB}>{role}</p></div>
       </div>
       <div className="mt-auto grid grid-cols-2 gap-1.5">
         {rows.map(([lbl, val]) => (
           <div key={lbl} className="rounded-lg border px-2 py-1.5 [border-color:var(--pf-border)] [background:var(--pf-surface-muted)]">
-            <p className="text-xs [color:var(--pf-color-muted)]">{lbl}</p>
-            <p className="text-base font-extrabold [color:var(--pf-text)]">{typeof val === 'number' ? formatNumber(val) : val}</p>
+            <p style={T_LABEL}>{lbl}</p>
+            <p style={{ ...T_VALUE, marginTop: 3 }}>{typeof val === 'number' ? formatNumber(val) : val}</p>
           </div>
         ))}
       </div>
