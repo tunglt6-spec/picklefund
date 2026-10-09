@@ -601,7 +601,7 @@ export function Reports() {
                   />
                 </div>
               ) : (
-                <DataTable columns={billColumns} rows={memberBillRows} rowKey={(r, i) => `${r.memberName}-${i}`} />
+                <DataTable mobileCards columns={billColumns} rows={memberBillRows} rowKey={(r, i) => `${r.memberName}-${i}`} />
               )}
             </div>
           )}

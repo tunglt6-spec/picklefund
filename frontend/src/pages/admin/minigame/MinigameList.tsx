@@ -368,7 +368,7 @@ export function MinigameList() {
                 />
               </div>
             ) : (
-              <DataTable columns={columns} rows={rows} rowKey={(r) => r.mg.id} onRowClick={(r) => navigate(`/minigames/${r.mg.id}`)} />
+              <DataTable mobileCards columns={columns} rows={rows} rowKey={(r) => r.mg.id} onRowClick={(r) => navigate(`/minigames/${r.mg.id}`)} />
             )}
           </div>
 

@@ -225,7 +225,7 @@ export function ClubMemoryManager() {
             )}
           />
         ) : (
-          <DataTable columns={columns} rows={filtered} rowKey={m => m.memoryId} />
+          <DataTable mobileCards columns={columns} rows={filtered} rowKey={m => m.memoryId} />
         )}
       </div>
 

@@ -12,6 +12,7 @@ import {
   PageShell, PageHeader, StatusBadge, LoadingState, ErrorState, EmptyState, ExportActions,
   type StatusTone,
 } from '../../../components/shared'
+import { TableCardsWrap } from '../../../components/shared/TableCardsWrap'
 
 interface AuditLog {
   id: string
@@ -160,7 +161,7 @@ export function AuditLogViewer() {
         ) : (
           <div className="pf-glass-strong rounded-2xl shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="pf-rows w-full text-sm">
+              <TableCardsWrap><table className="pf-rows w-full text-sm">
                 <thead>
                   <tr className="border-b border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)] text-xs [color:var(--pf-color-muted)] uppercase">
                     <th scope="col" className="text-left px-4 py-3 font-semibold whitespace-nowrap">Thời gian</th>
@@ -181,7 +182,7 @@ export function AuditLogViewer() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></TableCardsWrap>
             </div>
             {/* Phân trang */}
             <div className="flex items-center justify-between border-t border-[color:var(--pf-border)] px-4 py-2.5">

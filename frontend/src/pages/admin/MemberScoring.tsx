@@ -332,7 +332,7 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
         ) : (
           <>
             <div className="hidden lg:block">
-              <DataTable columns={columns} rows={rows} rowKey={(r) => r.memberId} />
+              <DataTable mobileCards columns={columns} rows={rows} rowKey={(r) => r.memberId} />
             </div>
             <div className="lg:hidden">
               <MobileCardList

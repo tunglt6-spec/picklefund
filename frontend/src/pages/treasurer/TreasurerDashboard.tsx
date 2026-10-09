@@ -261,7 +261,7 @@ export function TreasurerDashboard() {
             ) : (
               <>
                 <div className="hidden lg:block">
-                  <DataTable columns={ledgerColumns} rows={recent} rowKey={(r) => r.id} />
+                  <DataTable mobileCards columns={ledgerColumns} rows={recent} rowKey={(r) => r.id} />
                 </div>
                 <div className="lg:hidden">
                   <MobileCardList

@@ -15,6 +15,7 @@ import type { FundContribution, FundSource, MiniIncomeType } from '../../types'
 import { MINI_INCOME_TYPE_LABELS } from '../../types'
 import { formatDate, formatVND, isChungPeriod } from '../../lib/utils'
 import toast from 'react-hot-toast'
+import { TableCardsWrap } from '../../components/shared/TableCardsWrap'
 
 const BLANK = {
   fundSource: 'COMMON' as FundSource,
@@ -542,7 +543,7 @@ export function TreasurerIncome() {
               </div>
             ) : (
               <div className="pf-glass-strong rounded-xl overflow-x-auto">
-                <table className="pf-rows w-full text-sm">
+                <TableCardsWrap><table className="pf-rows w-full text-sm">
                   <thead className="[background:var(--pf-surface-muted)]">
                     <tr>
                       <th scope="col" className="px-3 py-3 w-8">
@@ -629,7 +630,7 @@ export function TreasurerIncome() {
                       )
                     })}
                   </tbody>
-                </table>
+                </table></TableCardsWrap>
               </div>
             )}
           </>

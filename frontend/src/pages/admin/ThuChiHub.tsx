@@ -587,7 +587,7 @@ export function ThuChiHub() {
               />
             </div>
           ) : (
-            <DataTable columns={columns} rows={filteredTx} rowKey={(t) => t.id} onRowClick={(t) => setDetailId(t.id)} />
+            <DataTable mobileCards columns={columns} rows={filteredTx} rowKey={(t) => t.id} onRowClick={(t) => setDetailId(t.id)} />
           )}
         </div>
 

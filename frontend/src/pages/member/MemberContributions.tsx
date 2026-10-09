@@ -318,7 +318,7 @@ export function MemberContributions() {
 
       {/* Bảng đóng quỹ — DataTable, read-only */}
       <ChartCard title="Các khoản đóng quỹ" subtitle={`${filtered.length} khoản`}>
-        <DataTable columns={contribColumns} rows={filtered} rowKey={(c) => c.id} emptyText="Chưa có khoản đóng quỹ nào" />
+        <DataTable mobileCards columns={contribColumns} rows={filtered} rowKey={(c) => c.id} emptyText="Chưa có khoản đóng quỹ nào" />
       </ChartCard>
 
       {/* Sao kê kỳ đã chốt */}

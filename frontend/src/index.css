@@ -874,3 +874,29 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
 
 /* Danh sách thẻ trên mobile (DataTable mobileCards): nút thao tác đạt vùng bấm 44px */
 .pf-cardlist button { min-width: 44px; min-height: 44px; }
+
+/* Bảng thô → THẺ dưới 1024px (bọc bằng <TableCardsWrap>; td lấy nhãn từ data-label) */
+@media (max-width: 1023px) {
+  .pf-table-cards table, .pf-table-cards tbody { display: block; width: 100%; }
+  .pf-table-cards thead { display: none; }
+  .pf-table-cards tbody tr {
+    display: block; margin: 0 0 8px; padding: 10px 12px;
+    background-color: color-mix(in srgb, var(--pf-surface) 88%, transparent);
+    border: 1px solid color-mix(in srgb, var(--pf-primary) 24%, var(--pf-border));
+    border-radius: 14px;
+    box-shadow: 0 3px 8px color-mix(in srgb, var(--pf-primary) 12%, transparent);
+  }
+  .pf-table-cards tbody td {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    padding: 4px 0 !important; border: 0 !important; background: transparent !important;
+    text-align: right !important; min-width: 0; word-break: break-word;
+  }
+  .pf-table-cards tbody td::before {
+    content: attr(data-label); flex: 0 0 auto; max-width: 45%; text-align: left;
+    font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--pf-color-muted);
+  }
+  .pf-table-cards tbody td[data-label=""]::before, .pf-table-cards tbody td:not([data-label])::before { content: none; }
+  .pf-table-cards tbody td:first-child { font-weight: 600; }
+  .pf-table-cards button { min-height: 44px; min-width: 44px; }
+}

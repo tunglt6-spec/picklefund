@@ -12,6 +12,7 @@ import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
+import { TableCardsWrap } from '../../components/shared/TableCardsWrap'
 
 function isLocalToken(token?: string | null) {
   return !!token && (token.startsWith('local-token-') || token.startsWith('token-'))
@@ -333,7 +334,7 @@ export function TreasurerReminders() {
               <h3 className="text-sm font-semibold [color:var(--pf-text)]">Thành viên chưa đóng quỹ</h3>
               <Badge variant="red" className="ml-auto">{unpaidMembers.length}</Badge>
             </div>
-            <table className="table-base pf-rows">
+            <TableCardsWrap><table className="table-base pf-rows">
               <thead>
                 <tr>
                   <th scope="col">Thành viên</th>
@@ -373,7 +374,7 @@ export function TreasurerReminders() {
                   )
                 })}
               </tbody>
-            </table>
+            </table></TableCardsWrap>
           </div>
         )}
 
@@ -385,7 +386,7 @@ export function TreasurerReminders() {
               <h3 className="text-sm font-semibold [color:var(--pf-text)]">Chờ xác nhận thanh toán</h3>
               <Badge variant="yellow" className="ml-auto">{pendingMembers.length}</Badge>
             </div>
-            <table className="table-base pf-rows">
+            <TableCardsWrap><table className="table-base pf-rows">
               <thead>
                 <tr>
                   <th scope="col">Thành viên</th>
@@ -405,7 +406,7 @@ export function TreasurerReminders() {
                   )
                 })}
               </tbody>
-            </table>
+            </table></TableCardsWrap>
           </div>
         )}
 

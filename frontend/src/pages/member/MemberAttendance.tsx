@@ -262,7 +262,7 @@ export function MemberAttendance() {
                 className="input-base pl-9"
               />
             </div>
-            <DataTable columns={sessColumns} rows={filtered} rowKey={(s) => s.id} emptyText="Chưa có buổi tập nào" />
+            <DataTable mobileCards columns={sessColumns} rows={filtered} rowKey={(s) => s.id} emptyText="Chưa có buổi tập nào" />
           </ChartCard>
         </div>
 

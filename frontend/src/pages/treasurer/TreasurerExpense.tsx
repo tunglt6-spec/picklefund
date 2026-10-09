@@ -16,6 +16,7 @@ import { EXPENSE_STATUS_LABEL, isCommonFund, isEffectiveExpense } from '../../li
 import { useExportRunner } from '../../hooks/useExportRunner'
 import { mapExpense } from '../../hooks/useFinanceData'
 import toast from 'react-hot-toast'
+import { TableCardsWrap } from '../../components/shared/TableCardsWrap'
 
 const RULES: { value: AllocationRule; label: string; desc: string }[] = [
   { value: 'ATTENDANCE', label: 'Theo lượt tham gia', desc: 'Phân bổ theo số buổi tham gia thực tế' },
@@ -341,7 +342,7 @@ export function TreasurerExpense() {
               </div>
             ) : (
               <div className="pf-glass-strong rounded-xl overflow-x-auto">
-                <table className="pf-rows w-full text-sm">
+                <TableCardsWrap><table className="pf-rows w-full text-sm">
                   <thead className="[background:var(--pf-surface-muted)]">
                     <tr>
                       <th scope="col" className="text-left px-4 py-3 font-semibold [color:var(--pf-color-muted)]">Mô tả</th>
@@ -384,7 +385,7 @@ export function TreasurerExpense() {
                       )
                     })}
                   </tbody>
-                </table>
+                </table></TableCardsWrap>
               </div>
             )}
           </>
