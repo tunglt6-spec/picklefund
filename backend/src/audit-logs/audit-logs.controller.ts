@@ -15,12 +15,17 @@ export class AuditLogsController {
     @Query('action') action?: string,
     @Query('search') search?: string,
     @Query('limit') limit?: string,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
   ) {
+    const day = (v?: string) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined);
     return ok(
       await this.svc.findAll({
         clubId: clubId || undefined,
         action: action || undefined,
         search: search || undefined,
+        from: day(from),
+        to: day(to),
         limit: Math.min(500, Math.max(1, parseInt(limit ?? '', 10) || 100)),
       }),
     );

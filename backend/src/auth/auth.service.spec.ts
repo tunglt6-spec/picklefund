@@ -24,7 +24,7 @@ const mockPrisma = {
     findUnique: jest.fn(),
     update: jest.fn(),
   },
-  club: { create: jest.fn(), findFirst: jest.fn() },
+  club: { create: jest.fn(), findFirst: jest.fn(), findUnique: jest.fn().mockResolvedValue({ status: 'active' }) },
   member: { create: jest.fn() },
   $transaction: jest.fn(),
 };
@@ -102,6 +102,22 @@ describe('AuthService', () => {
       expect(result).toHaveProperty('refreshToken');
       expect(result.user.username).toBe('admin');
       expect(result.user.clubId).toBe('club-1');
+    });
+
+    it('CLB bị khóa/đã xóa → không cho đăng nhập (kể cả đúng mật khẩu)', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue(fakeUser);
+      mockArgon2.verify.mockResolvedValue(true);
+      mockPrisma.club.findUnique.mockResolvedValueOnce({ status: 'suspended' });
+      await expect(service.login('admin', 'password123')).rejects.toThrow(/tạm khóa/);
+      mockPrisma.club.findUnique.mockResolvedValueOnce({ status: 'deleted' });
+      await expect(service.login('admin', 'password123')).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('Super Admin (không thuộc CLB) không bị ảnh hưởng', async () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ ...fakeUser, role: 'SUPER_ADMIN', clubId: null });
+      mockArgon2.verify.mockResolvedValue(true);
+      mockPrisma.$transaction.mockResolvedValue([]);
+      await expect(service.login('admin', 'password123')).resolves.toHaveProperty('accessToken');
     });
 
     it('should throw UnauthorizedException when user not found', async () => {

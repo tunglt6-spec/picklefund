@@ -3,9 +3,13 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
+import { assertClubAccessible } from './club-access';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
+  // Cache ngắn (30s) trạng thái CLB theo clubId để không thêm 1 truy vấn cho MỖI request.
+  private readonly clubOk = new Map<string, number>();
+
   constructor(
     config: ConfigService,
     private prisma: PrismaService,
@@ -27,6 +31,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       where: { id: payload.sub },
     });
     if (!user || !user.isActive) throw new UnauthorizedException();
+    if (user.role !== 'SUPER_ADMIN' && user.clubId) {
+      const until = this.clubOk.get(user.clubId) ?? 0;
+      if (until < Date.now()) {
+        await assertClubAccessible(this.prisma, user);
+        this.clubOk.set(user.clubId, Date.now() + 30_000);
+      }
+    }
     return {
       userId: user.id,
       clubId: user.clubId,

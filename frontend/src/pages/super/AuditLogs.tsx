@@ -35,6 +35,8 @@ export function AuditLogs() {
   const { accessToken } = useAuthStore()
   const [search, setSearch] = useState('')
   const [action, setAction] = useState('Tất cả')
+  const [from, setFrom] = useState('')
+  const [to, setTo] = useState('')
   const [logs, setLogs] = useState<AuditLog[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
@@ -47,6 +49,8 @@ export function AuditLogs() {
     const params = new URLSearchParams()
     if (action !== 'Tất cả') params.set('action', action)
     if (search) params.set('search', search)
+    if (from) params.set('from', from)
+    if (to) params.set('to', to)
     params.set('limit', String(LOG_LIMIT))
     setLoading(true)
     setLoadError(false)
@@ -59,7 +63,7 @@ export function AuditLogs() {
         .finally(() => { if (alive) setLoading(false) })
     }, search ? 300 : 0)
     return () => { alive = false; clearTimeout(timer) }
-  }, [accessToken, action, search, isLocal, reloadKey])
+  }, [accessToken, action, search, from, to, isLocal, reloadKey])
 
   const rows = isLocal ? [] : logs
 
@@ -78,7 +82,7 @@ export function AuditLogs() {
 
   const { busy, run } = useExportRunner()
   // Export = ĐÚNG tập đang xem (lọc phía server theo hành động/tìm kiếm), tối đa LOG_LIMIT dòng gần nhất.
-  const scopeParts = [action !== 'Tất cả' ? `hành động ${action}` : '', search ? `tìm "${search}"` : ''].filter(Boolean)
+  const scopeParts = [action !== 'Tất cả' ? `hành động ${action}` : '', search ? `tìm "${search}"` : '', from || to ? `ngày ${from || '…'} → ${to || '…'}` : ''].filter(Boolean)
   const scopeText = scopeParts.length ? scopeParts.join(' · ') : 'tất cả hành động'
   const limitNote = `Giới hạn ${LOG_LIMIT} dòng gần nhất${rows.length >= LOG_LIMIT ? ' (đã chạm giới hạn — còn bản ghi cũ hơn chưa xuất)' : ''}`
   const doExportExcel = () => run(() => exportGenericExcel(
@@ -124,6 +128,7 @@ export function AuditLogs() {
 
       <div className="mb-4 flex flex-col gap-3">
         <FilterBar searchValue={search} onSearchChange={setSearch} searchPlaceholder="Tìm theo người dùng, mô tả, CLB…" />
+        <div className="flex flex-wrap items-center gap-2">
         <div className="flex gap-1 overflow-x-auto rounded-full border p-1 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
           {ACTION_OPTIONS.map((opt) => (
             <button
@@ -137,6 +142,14 @@ export function AuditLogs() {
               {opt}
             </button>
           ))}
+        </div>
+        <label className="flex items-center gap-1.5 text-xs [color:var(--pf-color-muted)]">Từ
+          <input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} aria-label="Từ ngày" className="input-base !w-40 py-1.5" />
+        </label>
+        <label className="flex items-center gap-1.5 text-xs [color:var(--pf-color-muted)]">Đến
+          <input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} aria-label="Đến ngày" className="input-base !w-40 py-1.5" />
+        </label>
+        {(from || to) && <button type="button" onClick={() => { setFrom(''); setTo('') }} className="text-xs font-semibold [color:var(--pf-primary-text)]">Xóa lọc ngày</button>}
         </div>
       </div>
 

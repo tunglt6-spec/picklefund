@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { assertClubAccessible } from './club-access';
 import * as argon2 from 'argon2';
 import { createHash } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -78,6 +79,7 @@ export class AuthService {
 
     const valid = await argon2.verify(user.passwordHash, password);
     if (!valid) throw new UnauthorizedException('Mật khẩu không đúng');
+    await assertClubAccessible(this.prisma, user);
 
     const accessToken = this.signAccess(
       user.id,
@@ -146,6 +148,7 @@ export class AuthService {
     });
     if (!user || !user.isActive)
       throw new UnauthorizedException('Tài khoản không hợp lệ');
+    await assertClubAccessible(this.prisma, user);
 
     // Rotate: revoke old, issue new
     await this.prisma.refreshToken.update({
