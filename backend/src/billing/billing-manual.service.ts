@@ -35,6 +35,18 @@ export class BillingManualService {
     return `MN${ts}${Math.floor(Math.random() * 90000 + 10000)}`;
   }
 
+  /** Chỉ mục duy nhất theo mã tham chiếu (thủ công) chặn 2 request song song cùng mã → báo lỗi dễ hiểu. */
+  private async guardDup<T>(fn: () => Promise<T>): Promise<T> {
+    try {
+      return await fn();
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        throw new BadRequestException('Mã tham chiếu đã được ghi nhận.');
+      }
+      throw e;
+    }
+  }
+
   private parsePaidAt(paidAt: string | undefined, now: Date): Date {
     if (!paidAt) return now;
     const d = new Date(paidAt);
@@ -44,8 +56,8 @@ export class BillingManualService {
   }
 
   /** Gia hạn: cùng gói còn hạn → cộng tiếp từ ngày hết hạn; hết hạn/khác gói → từ hôm nay; gói vô hạn do Admin cấp → giữ vô hạn. */
-  private expiryFor(club: { plan: string; planExpiresAt: Date | null }, planTier: string, months: number, now: Date): Date | null {
-    const unlimited = club.plan === planTier && club.planExpiresAt == null && planTier !== 'STARTER';
+  private expiryFor(club: { plan: string; planExpiresAt: Date | null }, planTier: string, months: number, now: Date, resetExpiry = false): Date | null {
+    const unlimited = !resetExpiry && club.plan === planTier && club.planExpiresAt == null && planTier !== 'STARTER';
     if (unlimited) return null;
     const sameActive = club.plan === planTier && club.planExpiresAt && club.planExpiresAt > now;
     return addMonths(sameActive ? club.planExpiresAt! : now, months);
@@ -87,11 +99,11 @@ export class BillingManualService {
     await this.assertUniqueReference(reference);
     const now = new Date();
     const paidAt = this.parsePaidAt(dto.paidAt, now);
-    const expiresAt = this.expiryFor(club, dto.planTier, dto.months, now);
+    const expiresAt = this.expiryFor(club, dto.planTier, dto.months, now, dto.resetExpiry === true);
     const billingCycle = dto.months >= 12 && dto.months % 12 === 0 ? 'YEARLY' : 'MONTHLY';
     const orderCode = this.genOrderCode();
 
-    const order = await this.prisma.$transaction(async (tx) => {
+    const order = await this.guardDup(() => this.prisma.$transaction(async (tx) => {
       const o = await tx.paymentOrder.create({
         data: {
           clubId: club.id, orderCode, planTier: dto.planTier, billingCycle, amount: new Prisma.Decimal(Math.round(dto.amount)),
@@ -101,7 +113,7 @@ export class BillingManualService {
       });
       await this.applyPaid(tx, o, expiresAt, now);
       return o;
-    });
+    }));
 
     void this.audit.log({
       userId: actorId, clubId: club.id, action: 'CREATE', resource: 'PaymentOrder', resourceId: orderCode,
@@ -122,13 +134,13 @@ export class BillingManualService {
     const now = new Date();
     const paidAt = this.parsePaidAt(dto.paidAt, now);
     const orderCode = this.genOrderCode();
-    const o = await this.prisma.paymentOrder.create({
+    const o = await this.guardDup(() => this.prisma.paymentOrder.create({
       data: {
         clubId, orderCode, planTier: dto.planTier, billingCycle: dto.months >= 12 && dto.months % 12 === 0 ? 'YEARLY' : 'MONTHLY',
         amount: new Prisma.Decimal(Math.round(dto.amount)), gateway: 'MANUAL', status: 'PENDING', paidAt, createdById: actorId,
         method: dto.method, months: dto.months, reference, note: dto.note?.trim() || null,
       },
-    });
+    }));
     void this.audit.log({
       userId: actorId, clubId, action: 'CREATE', resource: 'PaymentOrder', resourceId: orderCode,
       detail: `CLB gửi yêu cầu xác nhận thanh toán gói ${dto.planTier} ${dto.months} tháng — ${Math.round(dto.amount).toLocaleString('vi-VN')}đ (${METHOD_LABEL[dto.method]}${reference ? ` · ${reference}` : ''})`,

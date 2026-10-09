@@ -120,3 +120,18 @@ describe('BillingManualService — yêu cầu từ CLB Admin', () => {
     expect(tx.club.update).not.toHaveBeenCalled();
   });
 });
+
+describe('BillingManualService — gói vô hạn + resetExpiry', () => {
+  it('resetExpiry=true chuyển gói vô hạn sang có hạn từ hôm nay', async () => {
+    const tx = { paymentOrder: { create: jest.fn().mockImplementation(async ({ data }: any) => ({ id: 'o', ...data })) }, club: { update: jest.fn() }, subscription: { upsert: jest.fn() }, invoice: { create: jest.fn() } };
+    const prisma: any = {
+      club: { findUnique: jest.fn().mockResolvedValue({ id: 'c1', name: 'A', plan: 'PRO', planExpiresAt: null }) },
+      paymentOrder: { findFirst: jest.fn().mockResolvedValue(null) },
+      $transaction: jest.fn().mockImplementation(async (fn: any) => fn(tx)),
+    };
+    const svc = new BillingManualService(prisma, { log: jest.fn() } as any);
+    const r = await svc.record('u', { clubId: 'c1', planTier: 'PRO', months: 2, amount: 198000, method: 'CASH', resetExpiry: true } as any);
+    expect(r.expiresAt).not.toBeNull();
+    expect(Math.abs(r.expiresAt!.getTime() - addMonths(new Date(), 2).getTime())).toBeLessThan(5000);
+  });
+});

@@ -78,7 +78,7 @@ export function DesktopHeader() {
       <button
         onClick={openGuide}
         className="mr-1 flex h-9 [@media(pointer:coarse)]:h-11 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-white transition-transform active:scale-95"
-        style={{ background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)', boxShadow: '0 6px 16px -8px rgba(109,93,251,0.7)' }}
+        style={{ background: 'var(--pf-grad-brand)', boxShadow: '0 6px 16px -8px rgba(109,93,251,0.7)' }}
         title="Hướng dẫn sử dụng app" aria-label="Hướng dẫn sử dụng app"
       >
         <BookOpen size={15} /> <span className="hidden lg:inline">Hướng dẫn</span>
@@ -87,7 +87,7 @@ export function DesktopHeader() {
         <button
           onClick={() => navigate('/he-thong?tab=billing')}
           className="mr-1 flex h-9 [@media(pointer:coarse)]:h-11 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-white transition-transform active:scale-95"
-          style={{ background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)', boxShadow: '0 6px 16px -8px rgba(109,93,251,0.7)' }}
+          style={{ background: 'var(--pf-grad-brand)', boxShadow: '0 6px 16px -8px rgba(109,93,251,0.7)' }}
           title="Nâng cấp gói" aria-label="Nâng cấp gói"
         >
           <Zap size={15} /> <span className="hidden lg:inline">Nâng cấp gói</span>
@@ -117,7 +117,7 @@ export function DesktopHeader() {
         <button
           onClick={() => setOpen((v) => !v)}
           className="flex h-11 items-center gap-2.5 rounded-2xl py-1 pl-1.5 pr-2.5 text-white transition-transform active:scale-95"
-          style={{ background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)' }}
+          style={{ background: 'var(--pf-grad-brand)' }}
           title={user.username ?? 'Tài khoản'}
         >
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-black/25 text-sm font-extrabold">

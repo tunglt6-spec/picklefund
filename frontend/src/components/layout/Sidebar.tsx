@@ -196,7 +196,7 @@ export function Sidebar({ onClose }: SidebarProps) {
                 : 'hover:-translate-y-px hover:[background:var(--pf-surface)] hover:ring-1 hover:ring-[color:var(--pf-primary-soft)] hover:[box-shadow:0_10px_24px_-10px_rgba(109,93,251,0.4)]'
             )}
             style={({ isActive }) => isActive
-              ? { background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)', boxShadow: '0 10px 22px -10px rgba(109,93,251,0.7)' }
+              ? { background: 'var(--pf-grad-brand)', boxShadow: '0 10px 22px -10px rgba(109,93,251,0.7)' }
               : undefined}
           >
             {({ isActive }) => (
@@ -251,7 +251,7 @@ export function Sidebar({ onClose }: SidebarProps) {
               src="/lisa-avatar.jpg?v=2"
               alt="Lisa AI"
               className="h-12 w-12 shrink-0 rounded-full object-cover"
-              style={{ border: '2px solid #fff', boxShadow: '0 6px 16px -6px rgba(109,93,251,0.65)' }}
+              style={{ border: '2px solid var(--pf-surface)', boxShadow: '0 6px 16px -6px rgba(109,93,251,0.65)' }}
             />
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold leading-tight [color:var(--pf-primary-text)]">Lisa AI</p>

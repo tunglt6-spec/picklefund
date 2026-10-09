@@ -88,7 +88,7 @@ export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
                       ? 'border-transparent text-white [box-shadow:0_8px_18px_-8px_rgba(109,93,251,0.6)]'
                       : '[border-color:var(--pf-border)] [background:var(--pf-surface)] [color:var(--pf-color-muted)] hover:-translate-y-px hover:[color:var(--pf-primary-text)] hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)]',
                   )}
-                  style={isActive ? { background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)' } : undefined}
+                  style={isActive ? { background: 'var(--pf-grad-brand)' } : undefined}
                 >
                   <span className="inline-flex items-center gap-1.5">
                     {t.label}

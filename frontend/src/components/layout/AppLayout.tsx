@@ -108,7 +108,7 @@ export function AppLayout() {
               borderRadius: 28,
               overflow: 'hidden',
               padding: 0,
-              border: '2.5px solid #fff',
+              border: '2.5px solid var(--pf-surface)',
             }}
             aria-label="Hỏi Lisa AI"
           >

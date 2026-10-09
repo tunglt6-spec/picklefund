@@ -114,7 +114,7 @@ export function SuperPayments() {
     {
       key: 'act', header: '', align: 'center',
       render: (r) => r.gateway === 'MANUAL' ? (
-        <button onClick={() => setToVoid(r)} title="Hủy ghi nhận (nhập nhầm)" aria-label="Hủy ghi nhận" className="inline-flex h-7 w-7 items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-color-danger-soft)] hover:[color:var(--pf-color-danger)]"><Ban size={14} /></button>
+        <button onClick={() => setToVoid(r)} title="Hủy ghi nhận (nhập nhầm)" aria-label="Hủy ghi nhận thanh toán" className="inline-flex h-7 w-7 items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-color-danger-soft)] hover:[color:var(--pf-color-danger)]"><Ban size={14} /></button>
       ) : null,
     },
   ]
@@ -127,7 +127,7 @@ export function SuperPayments() {
         actions={<Button onClick={() => setOpen(true)}><Plus size={16} />Ghi nhận thanh toán</Button>}
       />
 
-      <div className="pf-kpi-row mb-4">
+      <div className="pf-kpi-row mb-4" data-sa-look="ledger">
         <MetricCard compact icon={<Wallet size={16} />} label="Tổng thu" value={formatVND(summary?.total ?? 0)} sub={`${summary?.count ?? 0} giao dịch`} />
         <MetricCard compact icon={<CalendarDays size={16} />} label="Tháng này" value={formatVND(summary?.thisMonthTotal ?? 0)} sub={`${summary?.thisMonthCount ?? 0} giao dịch`} />
         <MetricCard compact icon={<Landmark size={16} />} label="Ghi nhận thủ công" value={formatVND(manualTotal?.total ?? 0)} sub={`${manualTotal?.count ?? 0} giao dịch`} />

@@ -79,7 +79,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
           onClick={openGuide}
           aria-label="Hướng dẫn sử dụng"
           className="flex h-11 w-11 items-center justify-center rounded-xl text-white active:opacity-80"
-          style={{ background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)', boxShadow: '0 6px 16px -8px rgba(109,93,251,0.7)' }}
+          style={{ background: 'var(--pf-grad-brand)', boxShadow: '0 6px 16px -8px rgba(109,93,251,0.7)' }}
         >
           <BookOpen size={18} />
         </button>

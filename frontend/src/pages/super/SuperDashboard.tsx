@@ -504,7 +504,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
             <ul className="space-y-2">
               {todos.map((t) => (
                 <li key={t.key} className="sa-rank-row flex items-center gap-3 rounded-xl p-2.5">
-                  <span className="flex h-9 min-w-9 shrink-0 items-center justify-center rounded-xl px-2 text-sm font-bold text-white" style={{ background: 'linear-gradient(135deg,#6D5DFB,#5B4BE8)' }}>{t.count}</span>
+                  <span className="flex h-9 min-w-9 shrink-0 items-center justify-center rounded-xl px-2 text-sm font-bold text-white" style={{ background: 'var(--pf-grad-brand)' }}>{t.count}</span>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold [color:var(--pf-text)]">{t.title}</p>
                     {t.sub && <p className="text-xs [color:var(--pf-color-muted)]">{t.sub}</p>}
@@ -622,7 +622,7 @@ function SummaryBlock({ summary }: { summary: { status: string[]; risks: string[
 function AgentCard({ name, role, icon, rows }: { name: string; role: string; icon: React.ReactNode; rows: [string, React.ReactNode][] }) {
   return (
     <div
-      className="flex h-full flex-col rounded-2xl border p-4"
+      className="sa-agent-card flex h-full flex-col rounded-2xl border p-4"
       style={{
         borderColor: 'color-mix(in srgb, var(--pf-primary) 22%, var(--pf-border))',
         background: 'linear-gradient(180deg, color-mix(in srgb, var(--pf-primary) 6%, var(--pf-surface)), var(--pf-surface))',
@@ -633,7 +633,7 @@ function AgentCard({ name, role, icon, rows }: { name: string; role: string; ico
         <span className="flex h-9 w-9 items-center justify-center rounded-xl [color:var(--pf-primary-text)]" style={{ background: 'color-mix(in srgb, var(--pf-primary) 16%, var(--pf-surface))' }}>{icon}</span>
         <div className="min-w-0"><p style={{ ...T_VALUE, fontSize: '0.9375rem' }}>{name}</p><p className="truncate" style={T_SUB}>{role}</p></div>
       </div>
-      <div className="mt-auto grid grid-cols-2 gap-1.5">
+      <div className="sa-agent-grid mt-auto grid grid-cols-2 gap-1.5">
         {rows.map(([lbl, val]) => (
           <div key={lbl} className="rounded-lg border px-2 py-1.5 [border-color:var(--pf-border)] [background:var(--pf-surface-muted)]">
             <p style={T_LABEL}>{lbl}</p>
@@ -655,7 +655,7 @@ function RankList({ title, rows, fmt }: { title: string; rows: any[]; fmt: (v: n
         <ol className="space-y-1.5">
           {rows.map((r, i) => (
             <li key={r.clubId ?? i} className="sa-rank-row flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-sm">
-              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white" style={{ background: i === 0 ? 'linear-gradient(135deg,#6D5DFB,#5B4BE8)' : 'color-mix(in srgb, var(--pf-primary) 45%, var(--pf-surface))' }}>{i + 1}</span>
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white" style={{ background: i === 0 ? 'var(--pf-grad-brand)' : 'color-mix(in srgb, var(--pf-primary) 45%, var(--pf-surface))' }}>{i + 1}</span>
               <span className="min-w-0 flex-1 truncate font-medium [color:var(--pf-text)]">{r.name}</span>
               <span className="shrink-0 font-bold tabular-nums [color:var(--pf-primary-text)]">{fmt(r.value)}</span>
             </li>

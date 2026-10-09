@@ -36,12 +36,13 @@ export function RecordPlanPaymentModal({ open, onClose, clubs, clubId: presetClu
   const [reference, setReference] = useState('')
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
+  const [resetExpiry, setResetExpiry] = useState(false)
 
   useEffect(() => {
     if (!open) return
     api.get('/billing/plans').then((r) => setPlans(r.data?.data ?? [])).catch(() => setPlans([]))
     setClubId(presetClubId ?? '')
-    setPlanTier('PRO'); setMonths(1); setAmountTouched(false); setMethod('BANK_TRANSFER'); setPaidAt(today()); setReference(''); setNote('')
+    setPlanTier('PRO'); setMonths(1); setAmountTouched(false); setMethod('BANK_TRANSFER'); setPaidAt(today()); setReference(''); setNote(''); setResetExpiry(false)
   }, [open, presetClubId])
 
   const club = clubs.find((c) => c.id === clubId)
@@ -75,7 +76,7 @@ export function RecordPlanPaymentModal({ open, onClose, clubs, clubId: presetClu
         await api.post('/billing/manual-requests', body)
         toast.success('Đã gửi yêu cầu — chờ Super Admin xác nhận')
       } else {
-        await api.post('/billing/manual-payments', { clubId, ...body })
+        await api.post('/billing/manual-payments', { clubId, ...body, ...(unlimited && resetExpiry ? { resetExpiry: true } : {}) })
         toast.success('Đã ghi nhận thanh toán và gia hạn gói')
       }
       onDone()
@@ -148,8 +149,14 @@ export function RecordPlanPaymentModal({ open, onClose, clubs, clubId: presetClu
         {club && (
           <div className="rounded-xl border px-3 py-2.5 text-xs [border-color:var(--pf-border)] [background:var(--pf-surface-muted)] [color:var(--pf-text)]">
             Hạn gói hiện tại: <b>{club.planExpiresAt ? new Date(club.planExpiresAt).toLocaleDateString('vi-VN') : 'không giới hạn / chưa có'}</b>
-            {' → '}hạn mới: <b>{unlimited ? 'không giới hạn (giữ nguyên)' : newExpiry.toLocaleDateString('vi-VN')}</b>
+            {' → '}hạn mới: <b>{unlimited && !resetExpiry ? 'không giới hạn (giữ nguyên)' : newExpiry.toLocaleDateString('vi-VN')}</b>
           </div>
+        )}
+        {unlimited && mode === 'record' && (
+          <label className="flex items-start gap-2 text-xs [color:var(--pf-text)]">
+            <input type="checkbox" checked={resetExpiry} onChange={(e) => setResetExpiry(e.target.checked)} className="mt-0.5" />
+            <span>Gói đang <b>không giới hạn thời gian</b>. Tick để chuyển sang gói có hạn: hạn mới tính từ hôm nay + số tháng đã chọn.</span>
+          </label>
         )}
         <div className="flex justify-end gap-2 pt-1">
           <Button variant="outline" onClick={onClose}>Hủy</Button>

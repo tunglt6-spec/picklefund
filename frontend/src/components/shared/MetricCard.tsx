@@ -71,19 +71,19 @@ export function MetricCard({
       data-hi={tone === 'brand' ? '' : undefined}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-semibold uppercase tracking-wide leading-tight [color:var(--pf-color-muted)]">
+        <span className="pf-metric-label text-xs font-semibold uppercase tracking-wide leading-tight [color:var(--pf-color-muted)]">
           {label}
         </span>
         {icon && (
           <span
-            className={cn('hidden h-8 w-8 shrink-0 items-center justify-center rounded-xl @[10rem]:flex sm:h-9 sm:w-9', compact && 'max-sm:hidden')}
+            className={cn('pf-metric-icon hidden h-8 w-8 shrink-0 items-center justify-center rounded-xl @[10rem]:flex sm:h-9 sm:w-9', compact && 'max-sm:hidden')}
             style={t ? { background: t.border, color: t.fg } : { background: a.soft, color: a.color }}
           >
             {icon}
           </span>
         )}
       </div>
-      <div className="min-w-0">
+      <div className="pf-metric-body min-w-0">
         <p
           className="text-[clamp(0.9rem,9.5cqw,1.5rem)] font-bold tabular-nums leading-tight whitespace-nowrap"
           style={{

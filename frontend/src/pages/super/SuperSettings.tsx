@@ -224,7 +224,17 @@ export function SuperSettings() {
       .finally(() => setLoading(false))
   }, [])
 
+  const validate = (): string | null => {
+    for (const [k, v] of [['Số CLB tối đa', settings.maxClubs], ['Thành viên/CLB tối đa', settings.maxMembersPerClub], ['Thời gian hết phiên', settings.sessionTimeoutMinutes]] as const) {
+      if (!/^\d{1,6}$/.test(v) || Number(v) < 1) return `${k} phải là số nguyên dương`
+    }
+    if (settings.supportEmail && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(settings.supportEmail)) return 'Email hỗ trợ không hợp lệ'
+    return null
+  }
+
   const handleSave = async () => {
+    const err = validate()
+    if (err) { toast.error(err); return }
     setSaving(true)
     try {
       const res = await api.put('/system-settings', toApi(settings))

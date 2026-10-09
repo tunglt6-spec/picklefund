@@ -6,6 +6,7 @@ import { PageShell, PageHeader, StatusBadge, ExportActions, ErrorState, runExpor
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
+import { promptDialog } from '../../components/ui/ConfirmHost'
 import { RecordPlanPaymentModal } from '../../components/super/RecordPlanPaymentModal'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import type { Club, ServicePlan } from '../../types'
@@ -117,32 +118,40 @@ export function SuperClubs() {
     c.name.toLowerCase().includes(search.toLowerCase()) || c.code.toLowerCase().includes(search.toLowerCase())
   )
 
-  const toggleStatus = async (club: Club) => {
+  const toggleStatus = async (club: Club): Promise<boolean> => {
     const next = club.status === 'active' ? 'suspended' : 'active'
+    let reason: string | undefined
+    if (next === 'suspended') {
+      const r = await promptDialog('Lý do khóa CLB', 'Lý do (không bắt buộc, lưu vào nhật ký kiểm toán)', 'VD: Chưa thanh toán gói')
+      if (r === null || r === undefined) return false
+      reason = String(r).trim() || undefined
+    }
     try {
-      await api.patch(`/clubs/${club.id}/status`, { status: next })
+      await api.patch(`/clubs/${club.id}/status`, { status: next, ...(reason ? { reason } : {}) })
       setClubs(prev => prev.map(c => c.id === club.id ? { ...c, status: next } : c))
       toast.success(next === 'suspended' ? `Đã khóa ${club.name}` : `Đã mở khóa ${club.name}`)
-    } catch { toast.error('Thao tác thất bại') }
+      return true
+    } catch { toast.error('Thao tác thất bại'); return false }
   }
 
-  const changePlan = async (club: Club, plan: ServicePlan) => {
+  const changePlan = async (club: Club, plan: ServicePlan): Promise<boolean> => {
     try {
       await api.patch(`/clubs/${club.id}/plan`, { plan })
-      setClubs(prev => prev.map(c => c.id === club.id ? { ...c, plan } : c))
+      loadClubs() // hạn gói do máy chủ quyết định → nạp lại để hiển thị đúng
       toast.success(`Đã đổi gói ${club.name} → ${PLAN_LABEL[plan]}`)
-    } catch { toast.error('Đổi gói thất bại') }
+      return true
+    } catch { toast.error('Đổi gói thất bại'); return false }
   }
 
   const confirmPendingAction = async () => {
     if (!pendingAction) return
     setConfirmingAction(true)
+    let ok = false
     try {
-      if (pendingAction.kind === 'status') await toggleStatus(pendingAction.club)
-      else await changePlan(pendingAction.club, pendingAction.nextPlan)
+      ok = pendingAction.kind === 'status' ? await toggleStatus(pendingAction.club) : await changePlan(pendingAction.club, pendingAction.nextPlan)
     } finally {
       setConfirmingAction(false)
-      setPendingAction(null)
+      if (ok) setPendingAction(null) // thất bại → giữ hộp thoại để thử lại
     }
   }
 
@@ -315,7 +324,7 @@ export function SuperClubs() {
     <Modal open={!!deleteClub} onClose={() => setDeleteClub(null)} title="Xác nhận xóa CLB" size="sm">
       <div className="space-y-4">
         <p className="text-sm [color:var(--pf-color-muted)]">
-          Bạn có chắc muốn xóa CLB <span className="font-semibold [color:var(--pf-text)]">{deleteClub?.name}</span>? Hành động này không thể hoàn tác.
+          Bạn có chắc muốn xóa CLB <span className="font-semibold [color:var(--pf-text)]">{deleteClub?.name}</span>? CLB sẽ bị xóa khỏi danh sách quản lý (dữ liệu vẫn được lưu giữ trong hệ thống).
         </p>
         <div className="flex justify-end gap-2 pt-2">
           <Button variant="secondary" type="button" onClick={() => setDeleteClub(null)}>Hủy</Button>
@@ -379,7 +388,7 @@ export function SuperClubs() {
       <div className="space-y-3">
         {loadingUsers && <div className="text-center py-8 [color:var(--pf-color-muted)] text-sm">Đang tải...</div>}
         {!loadingUsers && usersError && (
-          <div className="text-center py-8 text-red-400 text-sm">Không tải được danh sách. Vui lòng thử lại.</div>
+          <div className="text-center py-8 text-sm [color:var(--pf-color-danger)]">Không tải được danh sách. Vui lòng thử lại.</div>
         )}
         {!loadingUsers && !usersError && clubUsers.length === 0 && (
           <div className="text-center py-8 [color:var(--pf-color-muted)] text-sm">Chưa có thành viên nào</div>
@@ -448,7 +457,7 @@ export function SuperClubs() {
     return t > Date.now() && t - Date.now() <= 30 * 86400000
   }).length
   const kpiRow = (
-    <div className="pf-kpi-row">
+    <div className="pf-kpi-row" data-sa-look="ledger">
       <MetricCard compact icon={<Building2 size={16} />} label="Tổng CLB" value={clubs.length.toLocaleString('vi-VN')} />
       <MetricCard compact icon={<Activity size={16} />} label="Đang hoạt động" value={kActive.toLocaleString('vi-VN')} sub={`${clubs.length ? Math.round((kActive / clubs.length) * 100) : 0}% tổng CLB`} />
       <MetricCard compact icon={<Lock size={16} />} label="Bị khóa" value={kSuspended.toLocaleString('vi-VN')} tone={kSuspended > 0 ? 'warning' : undefined} />

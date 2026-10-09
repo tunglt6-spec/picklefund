@@ -25,6 +25,17 @@ export class SystemSettingsController {
       if (typeof key !== 'string' || key.length > 100) throw new BadRequestException(`Key không hợp lệ: ${key}`);
       if (typeof value !== 'string' || value.length > 1000) throw new BadRequestException(`Giá trị quá dài cho key: ${key}`);
     }
+    if (!user.clubId) {
+      // Khóa cấu hình toàn cục (Super Admin): kiểm tra kiểu cho các khóa đã biết.
+      const intKeys = ['maxClubs', 'maxMembersPerClub', 'sessionTimeoutMinutes'];
+      const boolKeys = ['maintenanceMode', 'emailNotifications', 'autoBackup', 'registrationOpen', 'requireEmailVerification', 'renewal_reminder_enabled'];
+      for (const [key, value] of entries) {
+        if (intKeys.includes(key) && !(/^\d{1,6}$/.test(value) && Number(value) >= 1)) throw new BadRequestException(`"${key}" phải là số nguyên dương`);
+        if (boolKeys.includes(key) && value !== 'true' && value !== 'false') throw new BadRequestException(`"${key}" chỉ nhận true/false`);
+        if (key === 'supportEmail' && value && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value)) throw new BadRequestException('Email hỗ trợ không hợp lệ');
+        if (key === 'renewal_reminder_cadence' && !['MONTH', 'QUARTER', 'BOTH'].includes(value)) throw new BadRequestException('Mốc nhắc không hợp lệ');
+      }
+    }
     await this.svc.upsertMany(body, user.clubId ?? undefined);
     return ok(await this.svc.getAll(user.clubId ?? undefined));
   }

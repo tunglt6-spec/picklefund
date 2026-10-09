@@ -1,4 +1,4 @@
-import { IsEnum, IsIn, IsInt, IsNumber, IsObject, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import { IsBoolean, IsEnum, IsIn, IsInt, IsNumber, IsObject, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 import type { BillingCycle, ServicePlan } from '@prisma/client';
 
 export class CreateOrderDto {
@@ -43,6 +43,9 @@ export class RecordManualPaymentDto {
   @IsOptional() @IsString() @MaxLength(120) reference?: string;
 
   @IsOptional() @IsString() @MaxLength(500) note?: string;
+
+  /** Gói đang "vô thời hạn" (hạn rỗng) → true để chuyển sang có hạn, tính từ hôm nay. */
+  @IsOptional() @IsBoolean() resetExpiry?: boolean;
 }
 
 /** CLB Admin gửi yêu cầu xác nhận khoản đã chuyển khoản gia hạn gói (clubId lấy từ JWT, không nhận từ client). */
