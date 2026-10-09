@@ -364,7 +364,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
               <Kpi label="Hôm nay" value={vnd(biz.revenue.today)} /><Kpi label="Tháng" value={vnd(biz.revenue.month)} sub={biz.revenue.monthManual > 0 ? `gồm ${vnd(biz.revenue.monthManual)} ghi tay` : undefined} /><Kpi label="Quý" value={vnd(biz.revenue.quarter)} />
               <Kpi label="Năm" value={vnd(biz.revenue.year)} sub={biz.revenue.yearManual > 0 ? `gồm ${vnd(biz.revenue.yearManual)} ghi tay` : undefined} /><Kpi label="MRR" value={vnd(biz.revenue.mrr)} /><Kpi label="ARR" value={vnd(biz.revenue.arr)} />
             </div>
-            <p className="mb-1 flex flex-wrap gap-x-4 text-[11px] [color:var(--pf-color-muted)]"><span><i className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: 'var(--pf-primary)' }} />Doanh thu qua cổng</span><span><i className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: '#06B6D4' }} />Ghi nhận thủ công</span></p>
+            <p className="mb-1 flex flex-wrap gap-x-4 text-[11px] [color:var(--pf-color-muted)]"><span><i className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: 'var(--pf-primary)' }} />Doanh thu qua cổng</span><span><i className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: 'var(--pf-chart-manual)' }} />Ghi nhận thủ công</span></p>
             <ResponsiveContainer width="100%" height={190}>
               <AreaChart data={(fin.trend ?? []).map((t: any) => ({ ...t, revenueOnline: Math.max(0, (Number(t.revenue) || 0) - (Number(t.revenueManual) || 0)) }))} margin={{ left: -10, right: 8, top: 4 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--pf-border)" />
@@ -374,7 +374,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
                 <Area type="monotone" dataKey="income" stroke="var(--pf-primary)" fill="var(--pf-primary)" fillOpacity={0.16} />
                 <Area type="monotone" dataKey="expense" stroke="color-mix(in srgb, var(--pf-primary) 55%, var(--pf-color-muted))" fill="var(--pf-primary)" fillOpacity={0.05} />
                 <Area type="monotone" dataKey="revenueOnline" stackId="rev" stroke="var(--pf-primary)" strokeWidth={2} fill="var(--pf-primary)" fillOpacity={0.24} />
-                <Area type="monotone" dataKey="revenueManual" stackId="rev" stroke="#06B6D4" strokeWidth={2} fill="#06B6D4" fillOpacity={0.3} />
+                <Area type="monotone" dataKey="revenueManual" stackId="rev" stroke="var(--pf-chart-manual)" strokeWidth={2} fill="var(--pf-chart-manual)" fillOpacity={0.3} />
               </AreaChart>
             </ResponsiveContainer>
           </ChartCard>

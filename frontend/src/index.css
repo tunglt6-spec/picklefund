@@ -427,6 +427,8 @@ select:-webkit-autofill {
    3) Công tắc dừng khẩn cấp: <html data-glass="off"> (localStorage pf-glass=off hoặc ?glass=off).
    4) Trình duyệt không có backdrop-filter → nền đặc dự phòng (@supports not). */
 :root {
+  --pf-tone-success: #059669; --pf-tone-warning: #D97706; --pf-tone-danger: #EF4444; --pf-tone-info: #2563EB; --pf-tone-brand: #6D5DFB;
+  --pf-chart-manual: #06B6D4;
   --pf-grad-brand: linear-gradient(135deg, #6D5DFB, #5B4BE8);
   --pf-glass-bg:        rgb(255 255 255 / 0.50);
   --pf-glass-bg-strong: rgb(255 255 255 / 0.80);
@@ -545,7 +547,7 @@ select:-webkit-autofill {
     .pf-rows td button, .pf-rows td a, .table-base td button, .table-base td a { white-space: nowrap; }
     .pf-rows thead th, .table-base thead th { white-space: nowrap; }
   }
-  .pf-stat-card[data-hi], .pf-stat-cell[data-hi] {
+  .pf-stat-card[data-hi], .pf-stat-cell[data-hi], .pf-stat-card[data-brand] {
     background-color: color-mix(in srgb, var(--pf-primary) 13%, color-mix(in srgb, var(--pf-surface) 88%, transparent));
     border-color: color-mix(in srgb, var(--pf-primary) 45%, var(--pf-border));
   }

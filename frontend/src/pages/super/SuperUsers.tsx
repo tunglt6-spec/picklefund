@@ -43,19 +43,33 @@ export function SuperUsers() {
 
   const [loadError, setLoadError] = useState(false)
 
+  const [total, setTotal] = useState(0)
+  const [sum, setSum] = useState<{ total: number; active: number; inactive: number; byRole: Record<string, number>; clubs: number } | null>(null)
+
+  const loadSummary = () => {
+    api.get('/users/summary').then((r) => setSum(r.data?.data ?? null)).catch(() => setSum(null))
+  }
+
   const load = () => {
     setLoading(true)
     setLoadError(false)
-    api.get('/users').then((res) => {
-      const raw = res.data?.data ?? []
-      setUsers(raw.map((u: any) => ({
+    api.get('/users/paged', { params: { page, limit: PAGE_SIZE, search: search.trim() || undefined, role: roleFilter === 'all' ? undefined : roleFilter } }).then((res) => {
+      const d = res.data?.data
+      setTotal(d?.total ?? 0)
+      setUsers((d?.items ?? []).map((u: any) => ({
         id: u.id, username: u.username, email: u.email ?? '', role: u.role as Role,
         club: u.club?.name ?? null, fullName: u.member?.fullName ?? u.username, isActive: u.isActive ?? true,
       })))
     }).catch(() => setLoadError(true)).finally(() => setLoading(false))
   }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { load() }, [])
+  // Tìm kiếm chờ 300ms; đổi bộ lọc/trang → nạp lại từ máy chủ.
+  useEffect(() => {
+    const t = setTimeout(load, search ? 300 : 0)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, search, roleFilter])
+  useEffect(() => { loadSummary() }, [])
+  useEffect(() => { setPage(1) }, [search, roleFilter])
 
   const toggleActive = async (u: UserRow) => {
     const next = !u.isActive
@@ -64,6 +78,7 @@ export function SuperUsers() {
       await api.put(`/users/${u.id}`, { isActive: next })
       setUsers((prev) => prev.map((x) => (x.id === u.id ? { ...x, isActive: next } : x)))
       toast.success(`${next ? 'Mở khóa' : 'Khóa'} tài khoản ${u.username}`)
+      loadSummary()
     } catch {
       toast.error('Thao tác thất bại')
     } finally {
@@ -72,15 +87,6 @@ export function SuperUsers() {
     }
   }
 
-  const filtered = users.filter((u) => {
-    if (roleFilter !== 'all' && u.role !== roleFilter) return false
-    if (search) {
-      const q = search.toLowerCase()
-      return u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.fullName.toLowerCase().includes(q)
-    }
-    return true
-  })
-
   const roleOptions: { value: Role | 'all'; label: string }[] = [
     { value: 'all', label: 'Tất cả' },
     { value: 'SUPER_ADMIN', label: 'Super Admin' },
@@ -88,8 +94,8 @@ export function SuperUsers() {
     { value: 'CLUB_TREASURER', label: 'Thủ Quỹ' },
     { value: 'MEMBER_VIEW', label: 'Thành Viên' },
   ]
-  const countBy = (r: Role) => users.filter((u) => u.role === r).length
-  const activeCount = users.filter((u) => u.isActive).length
+  const by = (r: Role) => sum?.byRole?.[r] ?? 0
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   const columns: Column<UserRow>[] = [
     { key: 'username', header: 'Tài khoản', className: 'font-mono text-xs font-semibold', render: (u) => u.username },
@@ -118,15 +124,15 @@ export function SuperUsers() {
 
   return (
     <PageShell maxWidth={1760}>
-      <PageHeader title="Quản lý người dùng" subtitle={`${users.length} tài khoản toàn hệ thống`} />
+      <PageHeader title="Quản lý người dùng" subtitle={`${(sum?.total ?? total).toLocaleString('vi-VN')} tài khoản toàn hệ thống`} />
 
       <div className="pf-kpi-row mb-4" data-sa-look="ledger">
-        <MetricCard compact label="Tổng tài khoản" value={users.length.toLocaleString('vi-VN')} icon={<Users size={16} />} sub={`${new Set(users.map((u) => u.club).filter(Boolean)).size} CLB`} />
-        <MetricCard compact label="Đang hoạt động" value={activeCount.toLocaleString('vi-VN')} icon={<UserCheck size={16} />} sub={`${users.length ? Math.round((activeCount / users.length) * 100) : 0}% tổng tài khoản`} />
-        <MetricCard compact label="Bị khóa" value={(users.length - activeCount).toLocaleString('vi-VN')} icon={<UserX size={16} />} tone={users.length - activeCount > 0 ? 'warning' : undefined} />
-        <MetricCard compact label="Super Admin" value={countBy('SUPER_ADMIN')} icon={<Shield size={16} />} />
-        <MetricCard compact label="Quản trị CLB" value={(countBy('CLUB_ADMIN') + countBy('CLUB_TREASURER')).toLocaleString('vi-VN')} icon={<UserCheck size={16} />} sub={`${countBy('CLUB_ADMIN')} Admin · ${countBy('CLUB_TREASURER')} Thủ quỹ`} />
-        <MetricCard compact label="Thành viên" value={countBy('MEMBER_VIEW')} icon={<Users size={16} />} />
+        <MetricCard compact label="Tổng tài khoản" value={(sum?.total ?? 0).toLocaleString('vi-VN')} icon={<Users size={16} />} sub={`${sum?.clubs ?? 0} CLB`} />
+        <MetricCard compact label="Đang hoạt động" value={(sum?.active ?? 0).toLocaleString('vi-VN')} icon={<UserCheck size={16} />} sub={`${sum?.total ? Math.round((sum.active / sum.total) * 100) : 0}% tổng tài khoản`} />
+        <MetricCard compact label="Bị khóa" value={(sum?.inactive ?? 0).toLocaleString('vi-VN')} icon={<UserX size={16} />} tone={(sum?.inactive ?? 0) > 0 ? 'warning' : undefined} />
+        <MetricCard compact label="Super Admin" value={by('SUPER_ADMIN')} icon={<Shield size={16} />} />
+        <MetricCard compact label="Quản trị CLB" value={(by('CLUB_ADMIN') + by('CLUB_TREASURER')).toLocaleString('vi-VN')} icon={<UserCheck size={16} />} sub={`${by('CLUB_ADMIN')} Admin · ${by('CLUB_TREASURER')} Thủ quỹ`} />
+        <MetricCard compact label="Thành viên" value={by('MEMBER_VIEW')} icon={<Users size={16} />} />
       </div>
 
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
@@ -152,17 +158,17 @@ export function SuperUsers() {
           <LoadingState variant="table" rows={6} />
         ) : loadError ? (
           <ErrorState onRetry={load} />
-        ) : filtered.length === 0 ? (
-          <EmptyState icon={<Users size={24} />} title="Không có tài khoản" description={users.length === 0 ? 'Chưa tải được dữ liệu.' : 'Không tìm thấy tài khoản phù hợp.'} />
+        ) : users.length === 0 ? (
+          <EmptyState icon={<Users size={24} />} title="Không có tài khoản" description="Không tìm thấy tài khoản phù hợp bộ lọc." />
         ) : (
           <>
-            <DataTable className="pf-compact-table" columns={columns} rows={filtered.slice((Math.min(page, Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))) - 1) * PAGE_SIZE, Math.min(page, Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))) * PAGE_SIZE)} rowKey={(u) => u.id} />
-            {filtered.length > PAGE_SIZE && (
+            <DataTable className="pf-compact-table" columns={columns} rows={users} rowKey={(u) => u.id} />
+            {total > PAGE_SIZE && (
               <div className="flex items-center justify-between gap-3 px-3 py-2 text-xs [color:var(--pf-color-muted)]">
-                <span>{filtered.length} tài khoản · trang {Math.min(page, Math.ceil(filtered.length / PAGE_SIZE))}/{Math.ceil(filtered.length / PAGE_SIZE)}</span>
+                <span>{total.toLocaleString('vi-VN')} tài khoản · trang {page}/{totalPages}</span>
                 <div className="flex gap-2">
                   <button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))} className="rounded-lg border px-3 py-1.5 font-semibold disabled:opacity-40 [border-color:var(--pf-border)]">Trước</button>
-                  <button disabled={page >= Math.ceil(filtered.length / PAGE_SIZE)} onClick={() => setPage((p) => p + 1)} className="rounded-lg border px-3 py-1.5 font-semibold disabled:opacity-40 [border-color:var(--pf-border)]">Sau</button>
+                  <button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} className="rounded-lg border px-3 py-1.5 font-semibold disabled:opacity-40 [border-color:var(--pf-border)]">Sau</button>
                 </div>
               </div>
             )}

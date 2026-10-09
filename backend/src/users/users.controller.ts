@@ -48,6 +48,23 @@ export class UsersController {
     private audit: AuditLogsService,
   ) {}
 
+  @Get('paged')
+  @Roles('SUPER_ADMIN')
+  async findPaged(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('role') role?: string,
+  ) {
+    return ok(await this.service.findPaged({ page: Number(page), limit: Number(limit), search, role }));
+  }
+
+  @Get('summary')
+  @Roles('SUPER_ADMIN')
+  async summary() {
+    return ok(await this.service.summary());
+  }
+
   @Get()
   @Roles('SUPER_ADMIN', 'CLUB_ADMIN')
   async findAll(

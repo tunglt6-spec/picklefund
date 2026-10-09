@@ -21,11 +21,11 @@ const mkTone = (bar: string, fg?: string) => ({
   fg: fg ?? `color-mix(in srgb, ${bar} 65%, var(--pf-text))`,
 })
 const TONE_PALETTE: Record<MetricTone, { bg: string; border: string; bar: string; fg: string }> = {
-  success: mkTone('#059669'),
-  warning: mkTone('#D97706'),
-  danger: mkTone('#EF4444'),
-  info: mkTone('#2563EB'),
-  brand: mkTone('#6D5DFB'),
+  success: mkTone('var(--pf-tone-success)'),
+  warning: mkTone('var(--pf-tone-warning)'),
+  danger: mkTone('var(--pf-tone-danger)'),
+  info: mkTone('var(--pf-tone-info)'),
+  brand: mkTone('var(--pf-tone-brand)'),
   neutral: mkTone('var(--pf-color-muted)', 'var(--pf-color-muted)'),
 }
 
@@ -68,7 +68,7 @@ export function MetricCard({
         compact && 'max-sm:gap-1.5 max-sm:p-3',
         className,
       )}
-      data-hi={tone === 'brand' ? '' : undefined}
+      data-brand={tone === 'brand' ? '' : undefined}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="pf-metric-label text-xs font-semibold uppercase tracking-wide leading-tight [color:var(--pf-color-muted)]">
