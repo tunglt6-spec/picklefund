@@ -363,7 +363,7 @@ export function Billing() {
               <div className="space-y-1">
                 {orders.slice(0, 8).map(o => {
                   const paid = o.status === 'PAID'
-                  const stLabel = paid ? 'Đã thanh toán' : o.status === 'PENDING' ? (o.gateway === 'MANUAL' ? 'Chờ Super Admin xác nhận' : 'Chờ thanh toán') : o.status === 'FAILED' ? 'Thất bại' : o.status
+                  const stLabel = paid ? 'Đã thanh toán' : o.status === 'PENDING' ? (o.gateway === 'MANUAL' ? 'Chờ Super Admin xác nhận' : 'Chờ thanh toán') : o.status === 'FAILED' ? 'Thất bại' : o.status === 'CANCELLED' ? 'Đã hủy' : o.status === 'EXPIRED' ? 'Đã hết hạn' : o.status
                   return (
                     <div key={o.orderCode} className="flex items-center justify-between gap-3 py-2 border-b border-[color:var(--pf-border)] last:border-0">
                       <div className="min-w-0">
