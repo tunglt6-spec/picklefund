@@ -104,7 +104,7 @@ export function AuditLogs() {
   const columns: Column<AuditLog>[] = [
     { key: 'time', header: 'Thời gian', className: 'whitespace-nowrap text-xs [color:var(--pf-color-muted)]', render: (l) => formatTime(l.createdAt) },
     { key: 'user', header: 'Người dùng', className: 'font-mono text-xs', render: (l) => l.user?.username ?? '—' },
-    { key: 'action', header: 'Hành động', align: 'center', render: (l) => <StatusBadge tone={ACTION_TONE[l.action] ?? 'neutral'}>{l.action}</StatusBadge> },
+    { key: 'action', header: 'Hành động', align: 'center', mobileTitle: true, render: (l) => <StatusBadge tone={ACTION_TONE[l.action] ?? 'neutral'}>{l.action}</StatusBadge> },
     { key: 'detail', header: 'Chi tiết', className: 'text-xs [color:var(--pf-color-muted)]', render: (l) => l.detail ?? l.resource },
     { key: 'club', header: 'CLB', className: 'text-xs [color:var(--pf-color-muted)]', render: (l) => l.club?.name ?? 'System' },
   ]
@@ -161,7 +161,7 @@ export function AuditLogs() {
         ) : rows.length === 0 ? (
           <EmptyState icon={<ScrollText size={24} />} title="Chưa có nhật ký" description="Hoạt động quản trị sẽ xuất hiện tại đây." />
         ) : (
-          <DataTable className="pf-compact-table" columns={columns} rows={rows} rowKey={(l) => l.id} />
+          <DataTable mobileCards className="pf-compact-table" columns={columns} rows={rows} rowKey={(l) => l.id} />
         )}
       </ChartCard>
     </PageShell>

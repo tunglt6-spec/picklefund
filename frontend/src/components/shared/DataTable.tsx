@@ -13,6 +13,8 @@ export interface Column<T> {
   render?: (row: T, index: number) => ReactNode
   align?: 'left' | 'right' | 'center'
   className?: string
+  /** Dạng thẻ (mobile): dùng cột này làm tiêu đề thẻ (mặc định cột hiển thị đầu tiên). */
+  mobileTitle?: boolean
 }
 
 interface DataTableProps<T> {
@@ -24,6 +26,8 @@ interface DataTableProps<T> {
   emptyText?: string
   /** Class tuỳ biến cho <tr> theo row (vd highlight dòng đang chọn). */
   rowClassName?: (row: T, index: number) => string
+  /** Dưới 1024px hiển thị dạng THẺ (cột đầu = tiêu đề, cột có header rỗng = nút thao tác) thay vì bảng cuộn ngang. */
+  mobileCards?: boolean
 }
 
 export function DataTable<T>({
@@ -34,12 +38,57 @@ export function DataTable<T>({
   className,
   emptyText = 'Không có dữ liệu',
   rowClassName,
+  mobileCards = false,
 }: DataTableProps<T>) {
   const alignCls = (a?: Column<T>['align']) =>
     a === 'right' ? 'text-right' : a === 'center' ? 'text-center' : 'text-left'
 
+  const cell = (c: Column<T>, row: T, i: number) =>
+    c.render ? c.render(row, i) : ((row as Record<string, ReactNode>)[c.key])
+  const visible = columns.filter((c) => c.key !== 'sel' && !(typeof c.header === 'string' && c.header === ''))
+  const actionCols = columns.filter((c) => typeof c.header === 'string' && c.header === '' && c.key !== 'sel')
+  const titleCol = visible.find((c) => c.mobileTitle) ?? visible[0]
+  const restCols = visible.filter((c) => c !== titleCol)
+
+  const cards = mobileCards && (
+    <ul className="pf-cardlist flex flex-col gap-2 p-1 lg:hidden">
+      {rows.length === 0 ? (
+        <li className="py-8 text-center text-sm [color:var(--pf-color-muted)]">{emptyText}</li>
+      ) : (
+        rows.map((row, i) => (
+          <li
+            key={rowKey(row, i)}
+            onClick={onRowClick ? () => onRowClick(row) : undefined}
+            className={cn('pf-rowcard p-3', onRowClick && 'cursor-pointer', rowClassName?.(row, i))}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1 text-sm font-semibold [color:var(--pf-text)]">{titleCol ? cell(titleCol, row, i) : null}</div>
+              {actionCols.length > 0 && (
+                <div className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                  {actionCols.map((c) => <span key={c.key}>{cell(c, row, i)}</span>)}
+                </div>
+              )}
+            </div>
+            {restCols.length > 0 && (
+              <dl className="mt-2 divide-y [&>div]:py-1.5 text-[13px] [--tw-divide-opacity:1] divide-[color:var(--pf-border-soft)]">
+                {restCols.map((c) => (
+                  <div key={c.key} className="flex items-start justify-between gap-3">
+                    <dt className="shrink-0 pt-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] [color:var(--pf-color-muted)]">{c.header}</dt>
+                    <dd className="min-w-0 break-words text-right [color:var(--pf-text)]">{cell(c, row, i)}</dd>
+                  </div>
+                ))}
+              </dl>
+            )}
+          </li>
+        ))
+      )}
+    </ul>
+  )
+
   return (
-    <div className={cn('w-full overflow-x-auto', className)}>
+    <>
+    {cards}
+    <div className={cn('w-full overflow-x-auto', mobileCards && 'hidden lg:block', className)}>
       <table className="pf-rows w-full text-sm">
         <thead>
           <tr className="border-b border-[color:var(--pf-border)]">
@@ -98,5 +147,6 @@ export function DataTable<T>({
         </tbody>
       </table>
     </div>
+    </>
   )
 }

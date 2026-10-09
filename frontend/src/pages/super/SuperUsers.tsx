@@ -162,7 +162,7 @@ export function SuperUsers() {
           <EmptyState icon={<Users size={24} />} title="Không có tài khoản" description="Không tìm thấy tài khoản phù hợp bộ lọc." />
         ) : (
           <>
-            <DataTable className="pf-compact-table" columns={columns} rows={users} rowKey={(u) => u.id} />
+            <DataTable mobileCards className="pf-compact-table" columns={columns} rows={users} rowKey={(u) => u.id} />
             {total > PAGE_SIZE && (
               <div className="flex items-center justify-between gap-3 px-3 py-2 text-xs [color:var(--pf-color-muted)]">
                 <span>{total.toLocaleString('vi-VN')} tài khoản · trang {page}/{totalPages}</span>

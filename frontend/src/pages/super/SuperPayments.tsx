@@ -106,7 +106,7 @@ export function SuperPayments() {
 
   const columns: Column<Row>[] = [
     { key: 'paid', header: 'Ngày thu', className: 'whitespace-nowrap text-xs [color:var(--pf-color-muted)]', render: (r) => (r.paidAt ? new Date(r.paidAt).toLocaleDateString('vi-VN') : '—') },
-    { key: 'club', header: 'CLB', render: (r) => <div><p className="font-medium [color:var(--pf-text)]">{r.club.name}</p><p className="text-xs [color:var(--pf-color-muted)]">{r.club.code}</p></div> },
+    { key: 'club', header: 'CLB', mobileTitle: true, render: (r) => <div><p className="font-medium [color:var(--pf-text)]">{r.club.name}</p><p className="text-xs [color:var(--pf-color-muted)]">{r.club.code}</p></div> },
     { key: 'plan', header: 'Gói', align: 'center', render: (r) => <StatusBadge tone="ai">{PLAN[r.planTier] ?? r.planTier}{r.months ? ` · ${r.months} th` : r.billingCycle === 'YEARLY' ? ' · năm' : ' · tháng'}</StatusBadge> },
     { key: 'amount', header: 'Số tiền', align: 'right', className: 'font-semibold tabular-nums', render: (r) => formatVND(r.amount) },
     { key: 'ch', header: 'Kênh', className: 'text-xs [color:var(--pf-color-muted)]', render: channel },
@@ -187,7 +187,7 @@ export function SuperPayments() {
         {loading ? <LoadingState variant="table" rows={6} />
           : error ? <ErrorState onRetry={load} />
           : filtered.length === 0 ? <EmptyState icon={<Receipt size={24} />} title="Chưa có thanh toán" description="Bấm “Ghi nhận thanh toán” để ghi nhận khoản gia hạn gói của CLB." />
-          : <DataTable className="pf-compact-table" columns={columns} rows={filtered} rowKey={(r) => r.orderCode} />}
+          : <DataTable mobileCards className="pf-compact-table" columns={columns} rows={filtered} rowKey={(r) => r.orderCode} />}
       </div>
 
       <RecordPlanPaymentModal open={open} onClose={() => setOpen(false)} clubs={clubs} onDone={load} />
