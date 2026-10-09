@@ -133,6 +133,7 @@ export function SuperUsers() {
             <button
               key={opt.value}
               onClick={() => setRoleFilter(opt.value)}
+              aria-pressed={roleFilter === opt.value}
               className={`rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all ${
                 roleFilter === opt.value ? 'text-white shadow-sm [background:var(--pf-primary)]' : '[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'
               }`}

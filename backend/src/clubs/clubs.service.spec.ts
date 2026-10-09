@@ -16,6 +16,7 @@ const mockScoring = {
 };
 
 const mockPrisma = {
+  subscription: { upsert: jest.fn().mockResolvedValue({}) },
   club: {
     findMany: jest.fn(),
     findUnique: jest.fn(),
@@ -273,16 +274,19 @@ describe('ClubsService', () => {
       );
     });
 
-    it('không hạn → planExpiresAt null', async () => {
+    it('không truyền hạn → GIỮ nguyên hạn hiện có (không ghi planExpiresAt)', async () => {
       mockPrisma.club.findUnique.mockResolvedValue(baseClub);
-      mockPrisma.club.update.mockResolvedValue({
-        ...baseClub,
-        plan: 'CLUB_PLUS',
-      });
+      mockPrisma.club.update.mockResolvedValue({ ...baseClub, plan: 'CLUB_PLUS' });
       await service.setPlan('club-1', 'CLUB_PLUS');
-      const call = mockPrisma.club.update.mock.calls[0][0] as {
-        data: { planExpiresAt: Date | null };
-      };
+      const call = mockPrisma.club.update.mock.calls[0][0] as { data: Record<string, unknown> };
+      expect('planExpiresAt' in call.data).toBe(false);
+    });
+
+    it('về STARTER → hạn null', async () => {
+      mockPrisma.club.findUnique.mockResolvedValue(baseClub);
+      mockPrisma.club.update.mockResolvedValue({ ...baseClub, plan: 'STARTER', planExpiresAt: null });
+      await service.setPlan('club-1', 'STARTER');
+      const call = mockPrisma.club.update.mock.calls[0][0] as { data: { planExpiresAt: Date | null } };
       expect(call.data.planExpiresAt).toBeNull();
     });
   });

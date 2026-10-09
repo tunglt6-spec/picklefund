@@ -21,7 +21,7 @@ export class AuditLogsController {
         clubId: clubId || undefined,
         action: action || undefined,
         search: search || undefined,
-        limit: limit ? parseInt(limit, 10) : 100,
+        limit: Math.min(500, Math.max(1, parseInt(limit ?? '', 10) || 100)),
       }),
     );
   }

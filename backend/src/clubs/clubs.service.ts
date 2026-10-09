@@ -267,16 +267,23 @@ export class ClubsService {
     return this.prisma.club.update({ where: { id }, data: { status } });
   }
 
-  /** SUPER_ADMIN đổi gói dịch vụ + hạn sử dụng (V2.2). */
+  /**
+   * SUPER_ADMIN đổi gói dịch vụ (+ hạn sử dụng nếu được truyền). Không truyền `planExpiresAt` → GIỮ NGUYÊN hạn hiện có
+   * (trước đây ghi null = vô thời hạn khiến gói bị "đóng băng" và các lần gia hạn sau không cộng thêm hạn).
+   * Về STARTER (miễn phí) → hạn null. Đồng bộ bảng Subscription.
+   */
   async setPlan(id: string, plan: ServicePlan, planExpiresAt?: string | null) {
     await this.findOne(id);
-    return this.prisma.club.update({
-      where: { id },
-      data: {
-        plan,
-        planExpiresAt: planExpiresAt ? new Date(planExpiresAt) : null,
-      },
-    });
+    const data: { plan: ServicePlan; planExpiresAt?: Date | null } = { plan };
+    if (plan === 'STARTER') data.planExpiresAt = null;
+    else if (planExpiresAt !== undefined) data.planExpiresAt = planExpiresAt ? new Date(planExpiresAt) : null;
+    const club = await this.prisma.club.update({ where: { id }, data });
+    await this.prisma.subscription.upsert({
+      where: { clubId: id },
+      create: { clubId: id, planTier: plan, status: plan === 'STARTER' ? 'EXPIRED' : 'ACTIVE', billingCycle: 'MONTHLY', startedAt: new Date(), expiresAt: club.planExpiresAt },
+      update: { planTier: plan, status: plan === 'STARTER' ? 'EXPIRED' : 'ACTIVE', expiresAt: club.planExpiresAt, cancelledAt: null },
+    }).catch(() => undefined);
+    return club;
   }
 
   async delete(id: string) {

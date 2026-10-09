@@ -98,7 +98,7 @@ export function SuperClubs() {
   const [clubsError, setClubsError] = useState(false)
   const loadClubs = () => {
     setClubsError(false)
-    api.get('/clubs').then(res => {
+    api.get('/clubs', { params: { limit: 500 } }).then(res => {
       const raw = res.data?.data?.clubs ?? res.data?.data ?? []
       setClubs(raw.map((c: any) => ({
         id: c.id, name: c.name, code: c.code, address: c.address ?? '', logoUrl: undefined,
@@ -322,7 +322,7 @@ export function SuperClubs() {
           <button
             onClick={handleDelete}
             disabled={deleting}
-            className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-500 text-white text-sm font-medium disabled:opacity-60 transition-colors"
+            className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium disabled:opacity-60 transition-colors"
           >
             {deleting ? 'Đang xóa...' : 'Xóa CLB'}
           </button>
@@ -611,16 +611,16 @@ export function SuperClubs() {
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center justify-center gap-1">
-                      <button className="p-1.5 rounded [color:var(--pf-color-info)] hover:[background:var(--pf-color-info-soft)]" title="Xem chi tiết" onClick={() => navigate(`/super/clubs/${club.id}`)}>
+                      <button className="p-1.5 rounded [color:var(--pf-color-info)] hover:[background:var(--pf-color-info-soft)]" title="Xem chi tiết" aria-label="Xem chi tiết" onClick={() => navigate(`/super/clubs/${club.id}`)}>
                         <Eye size={15} />
                       </button>
                       <button className="[color:var(--pf-primary-text)] p-1.5 rounded hover:[background:var(--pf-primary-soft)]" title="Gia hạn / ghi nhận thanh toán gói" aria-label="Gia hạn gói" onClick={() => setPayClub(club)}>
                         <CreditCard size={15} />
                       </button>
-                      <button className="[color:var(--pf-primary-text)] hover:[color:var(--pf-primary-text)] p-1.5 rounded hover:[background:var(--pf-primary-soft)]" title="Sửa thông tin" onClick={() => openEdit(club)}>
+                      <button className="[color:var(--pf-primary-text)] hover:[color:var(--pf-primary-text)] p-1.5 rounded hover:[background:var(--pf-primary-soft)]" title="Sửa thông tin" aria-label="Sửa thông tin" onClick={() => openEdit(club)}>
                         <Pencil size={15} />
                       </button>
-                      <button className="[color:var(--pf-primary-text)] hover:[color:var(--pf-primary-text)] p-1.5 rounded hover:[background:var(--pf-primary-soft)]" title="Phân quyền thành viên" onClick={() => openRoles(club)}>
+                      <button className="[color:var(--pf-primary-text)] hover:[color:var(--pf-primary-text)] p-1.5 rounded hover:[background:var(--pf-primary-soft)]" title="Phân quyền thành viên" aria-label="Phân quyền thành viên" onClick={() => openRoles(club)}>
                         <ShieldCheck size={15} />
                       </button>
                       <button
@@ -631,7 +631,7 @@ export function SuperClubs() {
                       >
                         {club.status === 'active' ? <Lock size={15} /> : <Unlock size={15} />}
                       </button>
-                      <button className="p-1.5 rounded [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)]" title="Xóa CLB" onClick={() => setDeleteClub(club)}>
+                      <button className="p-1.5 rounded [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)]" title="Xóa CLB" aria-label="Xóa CLB" onClick={() => setDeleteClub(club)}>
                         <Trash2 size={15} />
                       </button>
                     </div>

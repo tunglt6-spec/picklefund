@@ -108,8 +108,10 @@ export class ClubsController {
   @Get()
   @Roles('SUPER_ADMIN')
   async findAll(@Query('page') page = 1, @Query('limit') limit = 20) {
-    const { clubs, total } = await this.clubs.findAll(+page, +limit);
-    return paginated(clubs, total, +page, +limit);
+    const p = Math.max(1, Math.floor(Number(page)) || 1);
+    const l = Math.min(500, Math.max(1, Math.floor(Number(limit)) || 20));
+    const { clubs, total } = await this.clubs.findAll(p, l);
+    return paginated(clubs, total, p, l);
   }
 
   @Get('stats')

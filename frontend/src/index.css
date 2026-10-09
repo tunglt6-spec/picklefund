@@ -679,12 +679,6 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
    Quy tắc dịu mắt: 1 kiểu thẻ duy nhất; màu chỉ ở 2 chỗ — chip icon + đường sáng mảnh cạnh trên, theo NHÓM
    (mỗi khu 1 màu nhạt, đồng nhất trong khu); cảnh báo chỉ đổi màu số + đường sáng cam. Không quầng tím, không thẻ nền tím đặc. */
 [data-sa-look] { --sa-accent: #6D5DFB; }
-[data-sa-look] section:nth-of-type(1) { --sa-accent: #10B981; }
-[data-sa-look] section:nth-of-type(2) { --sa-accent: #6D5DFB; }
-[data-sa-look] section:nth-of-type(3) { --sa-accent: #06B6D4; }
-[data-sa-look] section:nth-of-type(4) { --sa-accent: #64748B; }
-[data-sa-look] section:nth-of-type(5) { --sa-accent: #F59E0B; }
-[data-sa-look] section:nth-of-type(n+6) { --sa-accent: #6D5DFB; }
 
 [data-sa-look] .pf-stat-card, [data-sa-look] div[style*='linear-gradient(180deg'] {
   background-color: color-mix(in srgb, var(--pf-surface) 58%, transparent) !important;
@@ -787,9 +781,9 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
 [data-sa-look] .sa-log-row > span:last-child, [data-sa-look] .sa-log-row > span:nth-last-child(2) { font-variant-numeric: tabular-nums; font-size: 12.5px; }
 
 /* Giảm độ đậm chữ toàn bộ Trung tâm điều hành (Super Admin) */
-[data-sa-look] .font-extrabold, [data-sa-look] .font-bold { font-weight: 600; }
-[data-sa-look] .font-semibold { font-weight: 500; }
-[data-sa-look] .font-medium { font-weight: 400; }
+[data-sa-look] .pf-stat-card .font-extrabold, [data-sa-look] .pf-stat-card .font-bold, [data-sa-look] .sa-rank-row .font-bold, [data-sa-look] .sa-log-row .font-bold { font-weight: 600; }
+[data-sa-look] .sa-rank-row .font-semibold, [data-sa-look] .sa-log-row .font-semibold { font-weight: 500; }
+[data-sa-look] .sa-rank-row .font-medium, [data-sa-look] .sa-log-row .font-medium { font-weight: 400; }
 [data-sa-look] section.pf-glass > header h3 { font-weight: 600; }
 [data-sa-look] section h2 { font-weight: 600; }
 [data-sa-look] .sa-rank-row .truncate, [data-sa-look] .sa-log-row .truncate { color: color-mix(in srgb, var(--pf-text) 80%, var(--pf-surface)); }

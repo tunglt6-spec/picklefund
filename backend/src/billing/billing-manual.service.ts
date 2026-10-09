@@ -230,7 +230,7 @@ export class BillingManualService {
       }),
       this.prisma.paymentOrder.aggregate({ where, _sum: { amount: true }, _count: true }),
       this.prisma.paymentOrder.groupBy({ by: ['gateway'], where, _sum: { amount: true }, _count: true }),
-      this.prisma.paymentOrder.aggregate({ where: { ...where, paidAt: { gte: monthStart } }, _sum: { amount: true }, _count: true }),
+      this.prisma.paymentOrder.aggregate({ where: { ...where, paidAt: { ...(range.lt ? { lt: range.lt } : {}), gte: range.gte && range.gte > monthStart ? range.gte : monthStart } }, _sum: { amount: true }, _count: true }),
     ]);
     return {
       items: items.map((o) => ({

@@ -13,7 +13,10 @@ const METHODS = [
   { v: 'EWALLET', l: 'Ví điện tử' }, { v: 'OTHER', l: 'Khác' },
 ]
 const MONTH_PRESETS = [1, 3, 6, 12, 24]
-const today = () => new Date().toISOString().slice(0, 10)
+const today = () => {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 const fmt = (n: number) => n.toLocaleString('vi-VN')
 
 /** Super Admin ghi nhận thanh toán / gia hạn gói cho 1 CLB (thu ngoài cổng thanh toán). */
@@ -64,6 +67,7 @@ export function RecordPlanPaymentModal({ open, onClose, clubs, clubId: presetClu
 
   const submit = async () => {
     if (!clubId) { toast.error('Chọn CLB'); return }
+    if (!(amount > 0)) { toast.error('Nhập số tiền thực thu lớn hơn 0'); return }
     setBusy(true)
     try {
       const body = { planTier, months, amount, method, paidAt, reference: reference.trim() || undefined, note: note.trim() || undefined }
@@ -149,7 +153,7 @@ export function RecordPlanPaymentModal({ open, onClose, clubs, clubId: presetClu
         )}
         <div className="flex justify-end gap-2 pt-1">
           <Button variant="outline" onClick={onClose}>Hủy</Button>
-          <Button onClick={submit} disabled={busy || !clubId || (mode === 'request' && amount <= 0)}>{busy ? 'Đang gửi…' : mode === 'request' ? 'Gửi yêu cầu xác nhận' : 'Ghi nhận thanh toán'}</Button>
+          <Button onClick={submit} disabled={busy || !clubId || amount <= 0}>{busy ? 'Đang gửi…' : mode === 'request' ? 'Gửi yêu cầu xác nhận' : 'Ghi nhận thanh toán'}</Button>
         </div>
       </div>
     </Modal>

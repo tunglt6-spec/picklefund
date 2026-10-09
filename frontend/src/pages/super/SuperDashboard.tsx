@@ -129,6 +129,7 @@ export function SuperDashboard() {
       if (ov.status === 'fulfilled') setData(ov.value.data?.data ?? null)
       else throw new Error('overview failed')
       if (al.status === 'fulfilled') setAudit(al.value.data?.data ?? [])
+      else { setAudit([]); toast.error('Không tải được nhật ký hệ thống') }
       setRefreshedAt(new Date())
     } catch { setError(true) } finally { setLoading(false) }
   }, [range, clubId, from, to])

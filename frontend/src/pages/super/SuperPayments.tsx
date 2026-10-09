@@ -9,6 +9,7 @@ import api from '../../lib/api'
 import { PageShell, PageHeader, FilterBar, DataTable, StatusBadge, MetricCard, LoadingState, EmptyState, ErrorState, type Column } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
+import { confirmDialog, promptDialog } from '../../components/ui/ConfirmHost'
 import { RecordPlanPaymentModal, type ClubOption } from '../../components/super/RecordPlanPaymentModal'
 import { formatVND } from '../../lib/utils'
 
@@ -35,6 +36,7 @@ export function SuperPayments() {
   const [toVoid, setToVoid] = useState<Row | null>(null)
   const [voiding, setVoiding] = useState(false)
   const [pending, setPending] = useState<Pending[]>([])
+  const [pendingError, setPendingError] = useState(false)
   const [busyCode, setBusyCode] = useState<string | null>(null)
   const [amounts, setAmounts] = useState<Record<string, number>>({})
 
@@ -47,25 +49,42 @@ export function SuperPayments() {
       .finally(() => setLoading(false))
   }, [clubId])
   const loadPending = useCallback(() => {
-    api.get('/billing/manual-payments/pending').then((r) => setPending(r.data?.data ?? [])).catch(() => setPending([]))
+    setPendingError(false)
+    api.get('/billing/manual-payments/pending').then((r) => setPending(r.data?.data ?? [])).catch(() => { setPending([]); setPendingError(true) })
   }, [])
   useEffect(() => { load(); loadPending() }, [load, loadPending])
   const act = async (code: string, kind: 'confirm' | 'reject') => {
+    const row = pending.find((x) => x.orderCode === code)
+    const claimed = row?.amount
+    const real = amounts[code] ?? claimed ?? 0
+    let reason: string | undefined
+    if (kind === 'confirm') {
+      if (!(real > 0)) { toast.error('Số tiền thực nhận phải lớn hơn 0'); return }
+      const ok = await confirmDialog({
+        title: 'Xác nhận đã nhận tiền?',
+        message: `Xác nhận ${formatVND(real)} từ "${row?.club.name ?? ''}" và gia hạn gói ${PLAN[row?.planTier ?? ''] ?? ''} ${row?.months ?? ''} tháng. Gói của CLB sẽ có hiệu lực ngay.`,
+        confirmLabel: 'Xác nhận',
+      })
+      if (!ok) return
+    } else {
+      const r = await promptDialog('Từ chối yêu cầu', 'Lý do từ chối (không bắt buộc)', 'VD: Chưa nhận được tiền')
+      if (r === null || r === undefined) return
+      reason = String(r).trim() || undefined
+    }
     setBusyCode(code)
     try {
-      const claimed = pending.find((x) => x.orderCode === code)?.amount
-      const real = amounts[code]
-      await api.post(`/billing/manual-payments/${code}/${kind}`, kind === 'confirm' && real != null && real !== claimed ? { amount: real } : {})
+      await api.post(`/billing/manual-payments/${code}/${kind}`, kind === 'confirm' ? (real !== claimed ? { amount: real } : {}) : { reason })
       toast.success(kind === 'confirm' ? 'Đã xác nhận — gói của CLB đã được gia hạn' : 'Đã từ chối yêu cầu')
       load(); loadPending()
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'Xử lý thất bại')
     } finally { setBusyCode(null) }
   }
+
   useEffect(() => {
-    api.get('/clubs', { params: { limit: 200 } })
-      .then((r) => setClubs((r.data?.data ?? []).map((c: any) => ({ id: c.id, name: c.name, plan: c.plan, planExpiresAt: c.planExpiresAt }))))
-      .catch(() => setClubs([]))
+    api.get('/clubs', { params: { limit: 500 } })
+      .then((r) => setClubs((r.data?.data?.clubs ?? r.data?.data ?? []).map((c: any) => ({ id: c.id, name: c.name, plan: c.plan, planExpiresAt: c.planExpiresAt }))))
+      .catch(() => { setClubs([]); toast.error('Không tải được danh sách CLB cho bộ lọc') })
   }, [open])
 
   const q = search.trim().toLowerCase()
@@ -95,7 +114,7 @@ export function SuperPayments() {
     {
       key: 'act', header: '', align: 'center',
       render: (r) => r.gateway === 'MANUAL' ? (
-        <button onClick={() => setToVoid(r)} title="Hủy ghi nhận (nhập nhầm)" aria-label="Hủy ghi nhận" className="inline-flex h-7 w-7 items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:bg-red-50 hover:text-red-500"><Ban size={14} /></button>
+        <button onClick={() => setToVoid(r)} title="Hủy ghi nhận (nhập nhầm)" aria-label="Hủy ghi nhận" className="inline-flex h-7 w-7 items-center justify-center rounded-md [color:var(--pf-color-muted)] hover:[background:var(--pf-color-danger-soft)] hover:[color:var(--pf-color-danger)]"><Ban size={14} /></button>
       ) : null,
     },
   ]
@@ -115,6 +134,12 @@ export function SuperPayments() {
         <MetricCard compact icon={<Receipt size={16} />} label="TB / giao dịch" value={formatVND(summary && summary.count ? Math.round(summary.total / summary.count) : 0)} />
       </div>
 
+      {pendingError && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm [border-color:var(--pf-color-warning)] [background:var(--pf-color-warning-soft)] [color:var(--pf-text)]">
+          <span>Không tải được danh sách yêu cầu chờ xác nhận — có thể đang thiếu khoản cần duyệt.</span>
+          <button onClick={loadPending} className="shrink-0 font-semibold [color:var(--pf-primary-text)]">Thử lại</button>
+        </div>
+      )}
       {pending.length > 0 && (
         <div className="pf-glass mb-4 rounded-[16px] p-4">
           <p className="mb-3 flex items-center gap-2 text-sm font-semibold [color:var(--pf-text)]"><Clock size={16} className="[color:var(--pf-color-warning)]" />Chờ xác nhận ({pending.length}) — CLB báo đã chuyển khoản</p>

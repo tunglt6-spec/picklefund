@@ -46,13 +46,13 @@ const ROLE_LABEL: Record<string, string> = {
 const TIER_BADGE: Record<ServicePlan, string> = {
   STARTER: '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]',
   PRO: '[background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]',
-  CLUB_PLUS: 'bg-amber-100 text-amber-700',
+  CLUB_PLUS: '[background:var(--pf-color-warning-soft)] [color:var(--pf-color-warning)]',
 }
 
 const TIER_BORDER: Record<ServicePlan, string> = {
   STARTER: 'border-[color:var(--pf-border)]',
   PRO: '[border-color:var(--pf-primary-soft)]',
-  CLUB_PLUS: 'border-amber-200',
+  CLUB_PLUS: '[border-color:var(--pf-color-warning)]',
 }
 
 function fmtPlanPrice(price: number | null) {
@@ -130,7 +130,10 @@ export function SuperClubDetail() {
       // Dùng chung PATCH /clubs/:id/plan (nguồn duy nhất Club.plan — cùng endpoint
       // SuperClubs.tsx đã dùng), thay vì POST /billing/upgrade (hệ SystemSetting
       // song song cũ, không liên quan Club.plan thật).
-      const expiry = new Date()
+      // Cùng gói còn hạn → cộng tiếp từ ngày hết hạn (không rút ngắn thời gian CLB đang có); khác gói/đã hết hạn → từ hôm nay.
+      const cur = sub?.expiresAt ? new Date(sub.expiresAt) : null
+      const base = sub?.tier === upgradeTier && cur && cur > new Date() ? cur : new Date()
+      const expiry = new Date(base)
       expiry.setMonth(expiry.getMonth() + upgradeMonths)
       await api.patch(`/clubs/${id}/plan`, { plan: upgradeTier, planExpiresAt: expiry.toISOString() })
       toast.success(`Đã đổi gói CLB thành ${upgradeTier} (${upgradeMonths} tháng)`)

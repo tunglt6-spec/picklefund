@@ -50,10 +50,15 @@ export function AuditLogs() {
     params.set('limit', String(LOG_LIMIT))
     setLoading(true)
     setLoadError(false)
-    api.get(`/audit-logs?${params.toString()}`)
-      .then((res) => setLogs(res.data?.data ?? []))
-      .catch(() => setLoadError(true))
-      .finally(() => setLoading(false))
+    // Debounce 300ms khi gõ tìm kiếm + bỏ kết quả request cũ về muộn (tránh ghi đè kết quả mới).
+    let alive = true
+    const timer = setTimeout(() => {
+      api.get(`/audit-logs?${params.toString()}`)
+        .then((res) => { if (alive) setLogs(res.data?.data ?? []) })
+        .catch(() => { if (alive) setLoadError(true) })
+        .finally(() => { if (alive) setLoading(false) })
+    }, search ? 300 : 0)
+    return () => { alive = false; clearTimeout(timer) }
   }, [accessToken, action, search, isLocal, reloadKey])
 
   const rows = isLocal ? [] : logs
@@ -124,6 +129,7 @@ export function AuditLogs() {
             <button
               key={opt}
               onClick={() => setAction(opt)}
+              aria-pressed={action === opt}
               className={`rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all ${
                 action === opt ? 'text-white shadow-sm [background:var(--pf-primary)]' : '[color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'
               }`}

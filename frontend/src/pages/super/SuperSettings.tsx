@@ -136,6 +136,7 @@ export function SuperSettings() {
 
   /** Lưu cấu hình rồi chạy nhắc gia hạn ngay cho mọi CLB đến mốc (chống nhắc trùng theo mốc). */
   const runRenewalNow = async () => {
+    if (!(await confirmDialog({ title: 'Gửi nhắc gia hạn thật?', message: 'Thao tác sẽ LƯU cài đặt đang sửa và gửi thông báo THẬT (chuông, email, Telegram) tới Admin các CLB đến mốc nhắc. Mỗi mốc chỉ gửi 1 lần.', confirmLabel: 'Lưu và gửi' }))) return
     setRenewBusy(true)
     const t = toast.loading('Đang quét và gửi nhắc gia hạn…')
     try {
@@ -294,7 +295,7 @@ export function SuperSettings() {
                   {tgBusy ? 'Đang gửi…' : 'Gửi thử Telegram'}
                 </button>
                 <button type="button" onClick={detachSharedChat}
-                  className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold text-amber-700 border-amber-200 hover:bg-amber-50">
+                  className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold [color:var(--pf-color-warning)] [border-color:var(--pf-color-warning)] hover:[background:var(--pf-color-warning-soft)]">
                   Tách chat dùng chung khỏi CLB
                 </button>
               </div>
