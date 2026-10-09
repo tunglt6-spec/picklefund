@@ -59,7 +59,7 @@ function Kpi({ label, value, icon, sub, alert, onClick }: { label: string; value
       <div className="mb-1.5 flex items-start justify-between gap-2">
         <p style={T_LABEL}>{label}</p>
         {icon && (
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl" style={{ background: `color-mix(in srgb, ${accent} 16%, var(--pf-surface))`, color: accent }}>{icon}</span>
+          <span className="pf-metric-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-xl" style={{ '--chip-bg': `color-mix(in srgb, ${accent} 16%, var(--pf-surface))`, '--chip-fg': accent } as React.CSSProperties}>{icon}</span>
         )}
       </div>
       <p className="mt-auto" style={{ ...T_VALUE, color: alert ? accent : T_VALUE.color }}>{value}</p>
@@ -623,11 +623,6 @@ function AgentCard({ name, role, icon, rows }: { name: string; role: string; ico
   return (
     <div
       className="sa-agent-card flex h-full flex-col rounded-2xl border p-4"
-      style={{
-        borderColor: 'color-mix(in srgb, var(--pf-primary) 22%, var(--pf-border))',
-        background: 'linear-gradient(180deg, color-mix(in srgb, var(--pf-primary) 6%, var(--pf-surface)), var(--pf-surface))',
-        boxShadow: 'var(--pf-shadow)',
-      }}
     >
       <div className="mb-2.5 flex items-center gap-2">
         <span className="flex h-9 w-9 items-center justify-center rounded-xl [color:var(--pf-primary-text)]" style={{ background: 'color-mix(in srgb, var(--pf-primary) 16%, var(--pf-surface))' }}>{icon}</span>

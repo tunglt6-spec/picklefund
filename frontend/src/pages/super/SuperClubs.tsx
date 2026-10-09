@@ -403,7 +403,7 @@ export function SuperClubs() {
               value={u.role}
               disabled={savingRole === u.id}
               onChange={e => handleRoleChange(u.id, e.target.value)}
-              className="rounded-lg border border-[color:var(--pf-border)] px-3 py-1.5 text-sm [background:var(--pf-surface)] focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] disabled:opacity-60"
+              className="input-base w-auto py-1.5"
             >
               {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
               {!ROLES.find(r => r.value === u.role) && (
@@ -495,7 +495,7 @@ export function SuperClubs() {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Tìm tên hoặc mã CLB..."
-              className="w-full pl-9 pr-4 py-2 rounded-xl border border-[color:var(--pf-border)] text-sm [background:var(--pf-surface)] focus:outline-none focus:[border-color:var(--pf-primary)]"
+              className="input-base pl-9"
             />
           </div>
         </div>
@@ -582,7 +582,7 @@ export function SuperClubs() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Tìm kiếm CLB theo tên hoặc mã..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-[color:var(--pf-border)] text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]"
+            className="input-base pl-10"
           />
         </div>
 

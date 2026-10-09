@@ -77,7 +77,7 @@ export function MetricCard({
         {icon && (
           <span
             className={cn('pf-metric-icon hidden h-8 w-8 shrink-0 items-center justify-center rounded-xl @[10rem]:flex sm:h-9 sm:w-9', compact && 'max-sm:hidden')}
-            style={t ? { background: t.border, color: t.fg } : { background: a.soft, color: a.color }}
+            style={(t ? { '--chip-bg': t.border, '--chip-fg': t.fg } : { '--chip-bg': a.soft, '--chip-fg': a.color }) as React.CSSProperties}
           >
             {icon}
           </span>
