@@ -1,0 +1,27 @@
+# Kiểm tra tạo QR chuyển khoản TRÊN máy chủ (chỉ đọc, không đổi dữ liệu). Chạy tay.
+name: Ops QR test
+on:
+  workflow_dispatch:
+
+jobs:
+  qr:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          command_timeout: 3m
+          script: |
+            docker exec picklefund-api node -e "
+            const q=require('/app/dist/billing/platform-qr');
+            (async()=>{
+              const bank={code:'TPB',account:'00584047001',name:'LE THANH TUNG'};
+              try{const r=await fetch('https://img.vietqr.io/image/TPB-00584047001-compact2.png?amount=99000&addInfo=TEST',{signal:AbortSignal.timeout(8000)});console.log('vietqr status',r.status,r.headers.get('content-type'));const b=Buffer.from(await r.arrayBuffer());console.log('vietqr bytes',b.length,b.subarray(0,8).toString('hex'));}catch(e){console.log('vietqr fetch lỗi',String(e));}
+              const buf=await q.renderTransferQr(bank,99000,'GIA HAN TEST');
+              console.log('renderTransferQr',buf?buf.length:null,buf?buf.subarray(0,8).toString('hex'):'');
+              const p=q.buildVietQrPayload(bank,99000,'GIA HAN TEST');console.log('payload',p&&p.length);
+            })().catch(e=>console.log('lỗi',e));
+            "
