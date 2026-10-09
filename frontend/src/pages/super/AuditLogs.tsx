@@ -140,7 +140,7 @@ export function AuditLogs() {
         </div>
       </div>
 
-      <ChartCard title="Timeline" subtitle={`${rows.length} sự kiện`} bodyClassName="!p-0">
+      <ChartCard title="Timeline" subtitle={`${rows.length} sự kiện`} className="pf-compact-card" bodyClassName="!p-0">
         {loading ? (
           <LoadingState variant="table" rows={8} />
         ) : loadError ? (
