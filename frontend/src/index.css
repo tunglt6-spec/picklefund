@@ -906,3 +906,12 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   .pf-table-cards tbody { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .pf-table-cards tbody tr { margin: 0; }
 }
+
+/* Thẻ KPI: bỏ ô con (nền/viền/bóng) — nhãn + số hiển thị thẳng trên thẻ, áp dụng toàn app */
+:root .pf-stat-card .pf-stat-cell,
+:root[data-glass="off"] .pf-stat-card .pf-stat-cell,
+:root .pf-stat-card .pf-stat-cell[data-hi] {
+  background: transparent; background-color: transparent; background-image: none;
+  border: 0; box-shadow: none; padding-left: 0; padding-right: 0;
+}
+@media print { .pf-stat-card .pf-stat-cell { background: transparent; box-shadow: none; } }
