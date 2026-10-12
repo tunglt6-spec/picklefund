@@ -907,11 +907,12 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   .pf-table-cards tbody tr { margin: 0; }
 }
 
-/* Thẻ KPI: bỏ ô con (nền/viền/bóng) — nhãn + số hiển thị thẳng trên thẻ, áp dụng toàn app */
+/* Thẻ KPI: bỏ ô con (nền/viền/bóng) — nhãn + số hiển thị thẳng trên thẻ, áp dụng CHỈ điện thoại/Fold (<1024px); desktop giữ nguyên */
+@media (max-width: 1023px) {
 :root .pf-stat-card .pf-stat-cell:not([data-keep]),
 :root[data-glass="off"] .pf-stat-card .pf-stat-cell:not([data-keep]),
 :root .pf-stat-card .pf-stat-cell[data-hi]:not([data-keep]) {
   background: transparent; background-color: transparent; background-image: none;
   border: 0; box-shadow: none; padding-left: 0; padding-right: 0;
 }
-@media print { .pf-stat-card .pf-stat-cell:not([data-keep]) { background: transparent; box-shadow: none; } }
+}

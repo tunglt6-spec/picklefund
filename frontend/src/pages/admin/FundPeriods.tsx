@@ -2027,10 +2027,10 @@ function FundOverviewCompact({ items, contributions, isMember, className }: {
               {!isMember && <button type="button" aria-label={p ? 'Sửa quỹ' : 'Tạo kỳ quỹ'} onClick={it.onEdit} className={iconBtn}>{p ? <Pencil size={16} /> : <Plus size={16} />}</button>}
             </div>
 
-            <div className="mt-3 grid grid-cols-2 gap-2.5 text-center sm:grid-cols-4">
+            <div className="mt-3 grid grid-cols-2 gap-2.5 text-center sm:grid-cols-4 lg:mt-4 lg:gap-3">
               {cells.map(([k, v, hi]) => (
-                <div key={k} data-keep="" className="pf-stat-cell rounded-2xl px-2 py-2.5 shadow-[0_10px_20px_-10px_rgba(109,93,251,0.55),0_2px_4px_rgba(15,23,42,0.08)]" data-hi={hi ? '' : undefined}>
-                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">{k}</p>
+                <div key={k} data-keep="" className="pf-stat-cell rounded-2xl px-2 py-2.5 lg:py-3.5 shadow-[0_10px_20px_-10px_rgba(109,93,251,0.55),0_2px_4px_rgba(15,23,42,0.08)]" data-hi={hi ? '' : undefined}>
+                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide lg:mb-1.5 [color:var(--pf-color-muted)]">{k}</p>
                   <p className={`text-lg font-extrabold ${hi ? '[color:var(--pf-primary-text)]' : '[color:var(--pf-text)]'}`}>{v}</p>
                 </div>
               ))}
