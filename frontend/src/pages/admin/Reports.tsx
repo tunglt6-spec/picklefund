@@ -591,7 +591,7 @@ export function Reports() {
                           <p className="truncate font-semibold [color:var(--pf-text)]">{r.memberName}</p>
                           <span className="font-semibold tabular-nums" style={{ color: r.balance >= 0 ? 'var(--pf-green)' : 'var(--pf-color-danger)' }}>{r.balance >= 0 ? '+' : ''}{formatVND(r.balance)}</span>
                         </div>
-                        <div className="mt-1 flex items-center gap-3 text-xs [color:var(--pf-color-muted)]">
+                        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs [color:var(--pf-color-muted)]">
                           <StatusBadge tone={r.contributionPaid ? 'success' : 'warning'}>{r.contributionPaid ? 'Đã đóng' : 'Chưa đóng'}</StatusBadge>
                           <span>{r.attendedSessions}{r.totalSessions ? `/${r.totalSessions}` : ''} buổi</span>
                           <span>Chi phí {formatVND(r.totalCost)}</span>
