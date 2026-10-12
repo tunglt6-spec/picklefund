@@ -435,13 +435,13 @@ export function Contributions() {
         {/* Summary row */}
         <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-3">
           <div className="pf-stat-card rounded-xl p-4">
-            <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
+            <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
               <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Quỹ Chính</p>
               <p className="text-base font-bold tabular-nums [color:var(--pf-primary-text)]">{formatVND(commonTotal)}</p>
             </div>
           </div>
           <div className="pf-stat-card rounded-xl p-4">
-            <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
+            <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
               <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Quỹ Phụ</p>
               <p className="text-base font-bold tabular-nums [color:var(--pf-color-info)]">{formatVND(miniTotal)}</p>
             </div>
@@ -729,15 +729,15 @@ export function Contributions() {
               <p className="text-xs font-semibold [color:var(--pf-primary-text)] uppercase tracking-wide">Quỹ Chính</p>
             </div>
             <div className="grid grid-cols-3 gap-2">
-              <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
+              <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
                 <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Tổng</p>
                 <p className="text-base font-bold tabular-nums [color:var(--pf-text)]">{formatVND(commonTotal)}</p>
               </div>
-              <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+              <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Xác nhận ({confirmed.length})</p>
                 <p className="text-base font-bold tabular-nums [color:var(--pf-color-success)]">{formatVND(confirmed.reduce((s, c) => s + c.amount, 0))}</p>
               </div>
-              <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+              <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Chờ ({unconfirmed.length})</p>
                 <p className="text-base font-bold tabular-nums [color:var(--pf-color-warning)]">{formatVND(unconfirmed.reduce((s, c) => s + c.amount, 0))}</p>
               </div>
@@ -752,15 +752,15 @@ export function Contributions() {
               <p className="text-xs font-semibold [color:var(--pf-primary-text)] uppercase tracking-wide">Quỹ Phụ</p>
             </div>
             <div className="grid grid-cols-3 gap-2">
-              <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
+              <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
                 <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Tổng</p>
                 <p className="text-base font-bold tabular-nums [color:var(--pf-text)]">{formatVND(miniTotal)}</p>
               </div>
-              <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+              <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Xác nhận ({miniContribs.filter(c => c.isConfirmed).length})</p>
                 <p className="text-base font-bold tabular-nums [color:var(--pf-color-success)]">{formatVND(miniTotal)}</p>
               </div>
-              <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+              <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Chờ ({miniContribs.filter(c => !c.isConfirmed).length})</p>
                 <p className="text-base font-bold tabular-nums [color:var(--pf-color-warning)]">{formatVND(miniContribs.filter(c => !c.isConfirmed).reduce((s, c) => s + c.amount, 0))}</p>
               </div>
