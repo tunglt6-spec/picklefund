@@ -512,13 +512,13 @@ export function MemberAccounts() {
             { label: 'Chưa kích hoạt', value: accounts.filter(a => ['pending', 'must_change'].includes(getStatus(a))).length, color: 'text-amber-600', bg: 'bg-amber-50' },
             { label: 'Bị khóa', value: accounts.filter(a => getStatus(a) === 'locked').length, color: 'text-red-600', bg: 'bg-red-50' },
           ].map(s => (
-            <div key={s.label} className="pf-stat-card rounded-xl p-4">
-              <div className={`inline-flex p-2 rounded-lg ${s.bg} mb-2`}>
+            <div key={s.label} className="pf-stat-card flex items-center gap-3 rounded-xl p-3 lg:block lg:p-4">
+              <div className={`inline-flex shrink-0 p-2 rounded-lg ${s.bg} lg:mb-2`}>
                 <Users size={16} className={s.color} />
               </div>
-              <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
-                <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{s.label}</p>
-                <p className="text-lg font-bold text-[var(--pf-text)]">{s.value}</p>
+              <div className="pf-stat-cell min-w-0 flex-1 rounded-lg px-2 py-2.5 text-left lg:text-center">
+                <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-0.5 lg:mb-1">{s.label}</p>
+                <p className="text-xl font-bold leading-tight text-[var(--pf-text)] lg:text-lg">{s.value}</p>
               </div>
             </div>
           ))}
