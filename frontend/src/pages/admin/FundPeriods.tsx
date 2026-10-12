@@ -1186,11 +1186,11 @@ export function FundPeriods() {
                         <Badge variant={statusVariant[p.status]} dot>{statusLabel[p.status]}</Badge>
                       </div>
                       <div className="mt-3 grid grid-cols-2 gap-2">
-                        <div className="pf-stat-cell rounded-lg px-2 py-2 text-center">
+                        <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2 text-center">
                           <p className="text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Mức đóng/người</p>
                           <p className="mt-0.5 text-base font-bold [color:var(--pf-text)]">{formatVND(p.contributionAmount)}</p>
                         </div>
-                        <div className="pf-stat-cell rounded-lg px-2 py-2 text-center">
+                        <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2 text-center">
                           <p className="text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Đã thu</p>
                           <p className="mt-0.5 text-base font-bold text-green-600">{formatVND(periodCollected(p))}</p>
                         </div>
@@ -2027,10 +2027,10 @@ function FundOverviewCompact({ items, contributions, isMember, className }: {
               {!isMember && <button type="button" aria-label={p ? 'Sửa quỹ' : 'Tạo kỳ quỹ'} onClick={it.onEdit} className={iconBtn}>{p ? <Pencil size={16} /> : <Plus size={16} />}</button>}
             </div>
 
-            <div className="mt-4 grid grid-cols-2 gap-3 text-center sm:grid-cols-4">
+            <div className="mt-3 grid grid-cols-2 gap-2.5 text-center sm:grid-cols-4">
               {cells.map(([k, v, hi]) => (
-                <div key={k} className="pf-stat-cell rounded-2xl px-2 py-3.5 shadow-[0_10px_20px_-10px_rgba(109,93,251,0.55),0_2px_4px_rgba(15,23,42,0.08)]" data-hi={hi ? '' : undefined}>
-                  <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">{k}</p>
+                <div key={k} data-keep="" className="pf-stat-cell rounded-2xl px-2 py-2.5 shadow-[0_10px_20px_-10px_rgba(109,93,251,0.55),0_2px_4px_rgba(15,23,42,0.08)]" data-hi={hi ? '' : undefined}>
+                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">{k}</p>
                   <p className={`text-lg font-extrabold ${hi ? '[color:var(--pf-primary-text)]' : '[color:var(--pf-text)]'}`}>{v}</p>
                 </div>
               ))}
@@ -2058,18 +2058,18 @@ function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, footerLabel, 
         <span className="text-xs font-bold [color:var(--pf-color-muted)] uppercase tracking-wide">{title}</span>
       </div>
       <div className="grid grid-cols-3 gap-2 text-center lg:gap-3">
-        <div className="pf-stat-cell rounded-lg px-2 py-2.5 lg:py-3" data-hi="">
+        <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 lg:py-3" data-hi="">
           <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold tracking-wide mb-1">Số dư</p>
           <p className={`text-lg font-bold ${accentColor}`}>{formatVND(stats.balance)}</p>
           {stats.prevCarryover != null && stats.prevCarryover > 0 && (
             <p className="text-xs text-emerald-600 mt-0.5">↩ Kết dư +{formatVND(stats.prevCarryover)}</p>
           )}
         </div>
-        <div className="pf-stat-cell rounded-lg px-2 py-2.5 lg:py-3">
+        <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 lg:py-3">
           <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold tracking-wide mb-1">Chờ xác nhận</p>
           <p className={`text-lg font-bold ${stats.totalPending > 0 ? 'text-amber-500' : '[color:var(--pf-color-muted)]'}`}>{formatVND(stats.totalPending)}</p>
         </div>
-        <div className="pf-stat-cell rounded-lg px-2 py-2.5 lg:py-3">
+        <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 lg:py-3">
           <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold tracking-wide mb-1">Giao dịch</p>
           <p className="text-lg font-bold [color:var(--pf-text)]">{stats.txCount}</p>
         </div>
@@ -2115,11 +2115,11 @@ function FundDetailCard({ title, icon, period, color, contributions, onEdit, onV
             </div>
           )}
           <div className="mt-2 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
-            <div className="pf-stat-cell rounded-lg px-2 py-2" data-hi="">
+            <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2" data-hi="">
               <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Đã thu</p>
               <p className="text-base font-bold [color:var(--pf-text)]">{formatVND(collected)}</p>
             </div>
-            <div className="pf-stat-cell rounded-lg px-2 py-2">
+            <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2">
               <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Giao dịch</p>
               <p className="text-base font-bold [color:var(--pf-text)]">{miniMode
                 ? contributions.filter(c => c.fundSource === 'MINI').length
