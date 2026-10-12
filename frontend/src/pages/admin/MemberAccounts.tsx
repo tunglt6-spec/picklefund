@@ -551,8 +551,8 @@ export function MemberAccounts() {
             <ul className="grid grid-cols-1 min-[600px]:grid-cols-2 gap-3 p-3 lg:hidden">
               {filtered.map(acc => (
                 <li key={acc.id} className="pf-rowcard p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
+                  <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">
+                    <div className="min-w-0 flex-1 basis-40">
                       <p className="truncate font-semibold [color:var(--pf-text)]">{acc.member?.fullName ?? '—'}</p>
                       <p className="truncate text-xs [color:var(--pf-color-muted)]">{acc.member?.phone ?? acc.email}</p>
                     </div>
