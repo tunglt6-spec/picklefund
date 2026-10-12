@@ -464,10 +464,10 @@ export function Contributions() {
           </button>
         </div>
 
-        <div className="px-4 pt-3 pb-24 space-y-2">
+        <div className="px-4 pt-3 pb-24 grid grid-cols-1 min-[600px]:grid-cols-2 gap-2 items-start">
           {mobileTab === 'COMMON' ? (
             sortedCommon.length === 0 ? (
-              <div className="text-center py-14 [color:var(--pf-color-muted)] text-sm">
+              <div className="col-span-full text-center py-14 [color:var(--pf-color-muted)] text-sm">
                 <DollarSign size={36} className="mx-auto [color:var(--pf-color-muted)] opacity-40 mb-3" />
                 Chưa có khoản thu nào
               </div>
@@ -496,7 +496,7 @@ export function Contributions() {
             })
           ) : (
             sortedMini.length === 0 ? (
-              <div className="text-center py-14 [color:var(--pf-color-muted)] text-sm">
+              <div className="col-span-full text-center py-14 [color:var(--pf-color-muted)] text-sm">
                 <DollarSign size={36} className="mx-auto [color:var(--pf-color-muted)] opacity-40 mb-3" />
                 Chưa có khoản thu Quỹ Phụ nào
               </div>

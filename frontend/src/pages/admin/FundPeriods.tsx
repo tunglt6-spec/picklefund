@@ -1168,7 +1168,7 @@ export function FundPeriods() {
                 </div>
               ) : (
                 <>
-                <ul className="flex flex-col gap-3 p-3 lg:hidden">
+                <ul className="grid grid-cols-1 min-[600px]:grid-cols-2 gap-3 p-3 lg:hidden">
                   {paginated.map(p => (
                     <li key={p.id} className="pf-rowcard p-4">
                       <div className="flex items-start justify-between gap-3">

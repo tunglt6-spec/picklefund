@@ -900,3 +900,9 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   .pf-table-cards tbody td:first-child { font-weight: 600; }
   .pf-table-cards button { min-height: 44px; min-width: 44px; }
 }
+
+/* Fold mở / tablet nhỏ: thẻ bảng thô xếp 2 cột */
+@media (min-width: 600px) and (max-width: 1023px) {
+  .pf-table-cards tbody { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pf-table-cards tbody tr { margin: 0; }
+}

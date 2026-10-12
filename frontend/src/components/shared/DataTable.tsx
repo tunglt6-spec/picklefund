@@ -51,9 +51,9 @@ export function DataTable<T>({
   const restCols = visible.filter((c) => c !== titleCol)
 
   const cards = mobileCards && (
-    <ul className="pf-cardlist flex flex-col gap-2 p-1 lg:hidden">
+    <ul className="pf-cardlist grid grid-cols-1 min-[600px]:grid-cols-2 gap-2 p-1 lg:hidden">
       {rows.length === 0 ? (
-        <li className="py-8 text-center text-sm [color:var(--pf-color-muted)]">{emptyText}</li>
+        <li className="col-span-full py-8 text-center text-sm [color:var(--pf-color-muted)]">{emptyText}</li>
       ) : (
         rows.map((row, i) => (
           <li

@@ -74,7 +74,7 @@ export function RolesPermissions() {
     <PageShell>
       <PageHeader title="Vai trò & phân quyền" subtitle={`${users.length} tài khoản trong CLB · gán vai trò, khóa/mở đăng nhập`} />
 
-      <ul className="flex flex-col gap-3 lg:hidden">
+      <ul className="grid grid-cols-1 min-[600px]:grid-cols-2 gap-3 lg:hidden">
         {users.map((u) => {
           const isMe = me?.username === u.username
           const locked = u.role === 'SUPER_ADMIN' || isMe
