@@ -182,7 +182,7 @@ export function TreasurerReminders() {
               { label: 'Chờ xác nhận', value: `${pendingMembers.length}`, color: 'text-amber-600', Icon: Clock },
               { label: 'Hoàn thành', value: `${doneCnt}`, color: 'text-emerald-600', Icon: CheckCircle },
             ].map(k => (
-              <div key={k.label} className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+              <div key={k.label} data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1 leading-tight">{k.label}</div>
                 <div className={`text-base font-bold ${k.color}`}>{k.value}</div>
               </div>

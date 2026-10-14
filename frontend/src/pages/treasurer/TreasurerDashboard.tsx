@@ -197,9 +197,9 @@ export function TreasurerDashboard() {
                 <p className="text-xs font-bold uppercase tracking-wide [color:var(--pf-primary-text)]">{f.label}</p>
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
-                <div className="pf-stat-cell rounded-lg px-2 py-2.5"><p className="mb-1 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Thu</p><p className="text-base font-bold text-emerald-600">{formatVND(f.income)}</p></div>
-                <div className="pf-stat-cell rounded-lg px-2 py-2.5"><p className="mb-1 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Chi</p><p className="text-base font-bold text-orange-500">{formatVND(f.expense)}</p></div>
-                <div data-hi="" className="pf-stat-cell rounded-lg px-2 py-2.5"><p className="mb-1 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Số dư</p><p className={`text-base font-bold ${f.bal >= 0 ? '[color:var(--pf-primary-text)]' : 'text-red-500'}`}>{formatVND(f.bal)}</p></div>
+                <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5"><p className="mb-1 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Thu</p><p className="text-base font-bold text-emerald-600">{formatVND(f.income)}</p></div>
+                <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5"><p className="mb-1 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Chi</p><p className="text-base font-bold text-orange-500">{formatVND(f.expense)}</p></div>
+                <div data-hi="" data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5"><p className="mb-1 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Số dư</p><p className={`text-base font-bold ${f.bal >= 0 ? '[color:var(--pf-primary-text)]' : 'text-red-500'}`}>{formatVND(f.bal)}</p></div>
               </div>
             </div>
           ))}

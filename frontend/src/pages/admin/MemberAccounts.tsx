@@ -409,7 +409,7 @@ export function MemberAccounts() {
               { label: 'Chờ', value: accounts.filter(a => ['pending','must_change'].includes(getStatus(a))).length, color: 'text-amber-600' },
               { label: 'Khóa', value: accounts.filter(a => getStatus(a) === 'locked').length, color: 'text-red-600' },
             ].map(s => (
-              <div key={s.label} className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+              <div key={s.label} data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{s.label}</div>
                 <div className={`text-base font-bold ${s.color}`}>{s.value}</div>
               </div>

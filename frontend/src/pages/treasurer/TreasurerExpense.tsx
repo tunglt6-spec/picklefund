@@ -185,11 +185,11 @@ export function TreasurerExpense() {
           ) : (
             <>
               <div className="grid grid-cols-2 gap-2">
-                <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+                <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                   <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Tổng đã chi · {expenses.length} khoản</div>
                   <div className="text-base font-bold text-red-600">{formatVND(totalExpenses)}</div>
                 </div>
-                <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+                <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                   <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Thiếu hóa đơn</div>
                   <div className="text-base font-bold text-amber-500">{expenses.filter(e => !e.receiptUrl).length}</div>
                 </div>

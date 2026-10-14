@@ -144,7 +144,7 @@ export function MemberDashboard() {
               { label: 'Chi phí TT', value: formatVND(myCost), color: '[color:var(--pf-color-danger)]' },
               { label: 'Tỷ lệ TG', value: `${attendanceRate}%`, color: attendanceRate >= 60 ? '[color:var(--pf-green)]' : '[color:var(--pf-color-warning)]' },
             ].map(k => (
-              <div key={k.label} className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+              <div key={k.label} data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{k.label}</p>
                 <p className={`text-base font-bold ${k.color} tabular-nums`}>{k.value}</p>
               </div>

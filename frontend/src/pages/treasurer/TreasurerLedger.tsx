@@ -102,7 +102,7 @@ export function TreasurerLedger() {
               { label: 'Tổng chi', value: formatVND(totalExpense), color: 'text-red-500' },
               { label: 'Số dư', value: fmtBal(currentBalance), color: currentBalance >= 0 ? '[color:var(--pf-primary-text)]' : 'text-red-500' },
             ].map(k => (
-              <div key={k.label} className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+              <div key={k.label} data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{k.label}</div>
                 <div className={`text-base font-bold ${k.color} truncate`}>{k.value}</div>
               </div>

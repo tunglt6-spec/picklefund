@@ -884,7 +884,7 @@ export function Expenses() {
             { label: 'Chờ duyệt', val: pendingAmt, color: 'text-amber-600' },
           ].map(k => (
             <div key={k.label} className="pf-stat-card rounded-xl p-3">
-              <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+              <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1 truncate">{k.label}</p>
                 <p className={`text-base font-bold tabular-nums ${k.color}`}>{formatVND(k.val)}</p>
               </div>

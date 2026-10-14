@@ -646,7 +646,7 @@ function DistRow({ label, value, color }: { label: string; value: number; color:
 }
 function Stat({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+    <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
       <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{label}</p>
       <p className="text-lg font-bold tabular-nums [color:var(--pf-text)]">{value}</p>
     </div>

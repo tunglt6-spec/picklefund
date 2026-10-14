@@ -487,7 +487,7 @@ function QuickStatsCard({ totalFor, totalAgainst, completedMatches }: {
       </div>
       <div className="grid grid-cols-2 gap-2">
         {stats.map((s, i) => (
-          <div key={i} className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
+          <div key={i} data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
             <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{s.label}</p>
             <p className="text-lg font-bold" style={{ color: s.color }}>{s.value}</p>
           </div>
