@@ -1184,7 +1184,7 @@ export function FundPeriods() {
 
         {/* Bottom row */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-4">
+          <div className="contents">
             {/* Donut chart */}
             <div className="pf-glass rounded-xl p-5">
               <h3 className="font-bold [color:var(--pf-text)] text-sm mb-3">Biểu đồ thu theo loại quỹ</h3>
