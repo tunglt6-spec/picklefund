@@ -143,7 +143,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
           </button>
           <div className="flex-1 min-w-0">
             <p className="text-base font-bold [color:var(--pf-text)] truncate">Lịch Thi Đấu</p>
-            <p className="text-xs [color:var(--pf-color-muted)] truncate">{minigameName} · {myMatches.length} trận · {myRounds.length} vòng</p>
+            <p className="text-xs [color:var(--pf-color-muted)] line-clamp-2 break-words">{minigameName} · {myMatches.length} trận · {myRounds.length} vòng</p>
           </div>
           {myRounds.length > 0 && (
             <ScheduleExportButtons onPng={doExportPng} onPdf={doExportPdf} ariaScope="lịch thi đấu" size="sm" />
@@ -561,7 +561,7 @@ export function MatchSchedule() {
           </button>
           <div className="flex-1 min-w-0">
             <p className="text-base font-bold [color:var(--pf-text)] truncate">Lịch Thi Đấu</p>
-            <p className="text-xs [color:var(--pf-color-muted)] truncate">{mg.name} · {myMatches.length} trận</p>
+            <p className="text-xs [color:var(--pf-color-muted)] line-clamp-2 break-words">{mg.name} · {myMatches.length} trận</p>
           </div>
           {myMatches.length > 0 && (
             <ScheduleExportButtons onPng={doExportPng} onPdf={doExportPdf} ariaScope="lịch thi đấu" size="sm" />

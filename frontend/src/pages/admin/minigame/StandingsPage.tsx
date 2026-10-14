@@ -140,7 +140,7 @@ export function StandingsPage() {
           </button>
           <div className="flex-1 min-w-0">
             <p className="text-base font-bold [color:var(--pf-text)] truncate">Bảng Xếp Hạng</p>
-            <p className="text-xs [color:var(--pf-color-muted)] truncate">{mg.name} · {standings.length} thành viên</p>
+            <p className="text-xs [color:var(--pf-color-muted)] line-clamp-2 break-words">{mg.name} · {standings.length} thành viên</p>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             <button onClick={doExportPng} aria-label="Xuất ảnh" className="inline-flex h-9 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] active:opacity-70">
