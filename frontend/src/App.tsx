@@ -97,7 +97,6 @@ const FundPeriods = lz(() => import('./pages/admin/FundPeriods'), 'FundPeriods')
 const Contributions = lz(() => import('./pages/admin/Contributions'), 'Contributions')
 const Expenses = lz(() => import('./pages/admin/Expenses'), 'Expenses')
 const Debts = lz(() => import('./pages/admin/Debts'), 'Debts')
-const ThuChiHub = lz(() => import('./pages/admin/ThuChiHub'), 'ThuChiHub')
 const Attendance = lz(() => import('./pages/admin/Attendance'), 'Attendance')
 const WeeklyActivity = lz(() => import('./pages/admin/WeeklyActivity'), 'WeeklyActivity')
 const SessionRegistration = lz(() => import('./pages/admin/SessionRegistration'), 'SessionRegistration')
@@ -273,7 +272,7 @@ export default function App() {
             {/* Club Admin */}
             <Route path="/dashboard" element={<ClubDashboard />} />
             <Route path="/members" element={<Members />} />
-            <Route path="/thu-chi" element={<ThuChiHub />} />
+            <Route path="/thu-chi" element={<Navigate to="/tai-chinh?tab=income" replace />} />
             <Route path="/attendance" element={<Attendance />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/lisa" element={<LisaChat />} />

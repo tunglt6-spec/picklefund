@@ -4,19 +4,18 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import api from '../../lib/api'
 import {
   Plus, Building2, Wallet, Search, Eye, Pencil, Trash2,
-  ChevronLeft, ChevronRight, Download, Lock, LockOpen, Play, TrendingUp,
+  ChevronLeft, ChevronRight, Download, Lock, LockOpen, Play,
   FolderOpen, ChevronDown, QrCode, FileText,
-  Trophy, Star, Filter, Upload, AlertCircle, CheckCircle2, FileSpreadsheet, Copy, Check, Maximize2
+  Trophy, Upload, AlertCircle, CheckCircle2, FileSpreadsheet, Copy, Check, Maximize2
 } from 'lucide-react'
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { PageShell, PageHeader, DataTable, ExportActions, type Column } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
-import type { FundPeriod, FundPeriodStatus, FundPeriodType, FundContribution, Member } from '../../types'
-import { MINI_INCOME_TYPE_LABELS } from '../../types'
+import type { FundPeriod, FundPeriodStatus, FundPeriodType } from '../../types'
 import { useClubContributions } from '../../hooks/useFinanceData'
 import { formatDate, formatVND } from '../../lib/utils'
 import { exportGenericExcel, exportGenericTablePDF, exportTemplateExcel } from '../../lib/export'
@@ -64,7 +63,6 @@ interface PreviousPeriodInfo {
   memberCount: number
 }
 
-type Tab = 'list' | 'history' | 'highlights'
 
 /** Ô ngày từ Excel (cellDates -> Date, hoặc chuỗi) -> YYYY-MM-DD theo giờ địa phương, không lệch múi giờ. */
 function toIsoDate(v: unknown): string {
@@ -90,7 +88,6 @@ export function FundPeriods() {
   const setPeriods = (fn: (prev: FundPeriod[]) => FundPeriod[]) =>
     savePeriods(clubId, fn(getClubData(clubId).fundPeriods))
 
-  const [tab, setTab] = useState<Tab>('list')
   const [showCreateChung, setShowCreateChung] = useState(false)
   const [showCreateGame, setShowCreateGame] = useState(false)
   const [formChung, setFormChung] = useState({ ...emptyForm })
@@ -408,13 +405,6 @@ export function FundPeriods() {
 
   // Nếu xóa làm trang hiện tại vượt quá số trang → lùi về trang cuối hợp lệ.
   useEffect(() => { if (page > totalPages) setPage(totalPages) }, [page, totalPages])
-
-  // Recent transactions
-  const recentTx = useMemo(() => {
-    return [...contributions]
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 5)
-  }, [contributions])
 
   const donutData = [
     { name: 'Quỹ Chính', value: stats.chung.balance },
@@ -1024,13 +1014,13 @@ export function FundPeriods() {
 
         {/* KPI cards */}
         <FundOverviewCompact
-          className="lg:hidden"
+          className="2xl:grid 2xl:grid-cols-2 2xl:items-stretch"
           isMember={isMember}
           contributions={contributions}
           items={[
             {
               title: 'Quỹ Chính', tone: 'main', icon: <Building2 size={18} />, stats: stats.chung,
-              period: activePeriods.chung, unpaid: stats.chung.unpaidCount,
+              period: activePeriods.chung, unpaid: stats.chung.unpaidCount, carryover: prevChungBalance,
               onView: () => activePeriods.chung && setViewPeriod(activePeriods.chung),
               onEdit: () => activePeriods.chung ? openEdit(activePeriods.chung) : (setEditingChung(null), setFormChung({ ...emptyForm }), setShowCreateChung(true)),
             },
@@ -1043,63 +1033,13 @@ export function FundPeriods() {
           ]}
         />
 
-        <div className="hidden gap-4 lg:grid lg:grid-cols-2">
-          <KpiSummaryCard
-            title="TỔNG QUỸ CHÍNH"
-            icon={<Building2 size={16} className="[color:var(--pf-primary-text)]" />}
-            iconBg="[background:var(--pf-primary-soft)]"
-            accentColor="[color:var(--pf-primary-text)]"
-            stats={stats.chung}
-            footerLabel="Chưa đóng"
-            footerValue={stats.chung.unpaidCount}
-          />
-          <KpiSummaryCard
-            title="TỔNG QUỸ PHỤ"
-            icon={<Wallet size={16} className="[color:var(--pf-primary-text)]" />}
-            iconBg="[background:var(--pf-primary-soft)]"
-            accentColor="[color:var(--pf-primary-text)]"
-            stats={stats.game}
-          />
-        </div>
-
-        {/* Fund detail cards */}
-        <div className="hidden gap-4 lg:grid lg:grid-cols-2">
-          <FundDetailCard
-            title="Quỹ Chính CLB"
-            icon={<Building2 size={16} className="[color:var(--pf-primary-text)]" />}
-            period={activePeriods.chung}
-            color="indigo"
-            contributions={contributions}
-            prevBalance={prevChungBalance}
-            isMember={isMember}
-            onEdit={() => activePeriods.chung ? openEdit(activePeriods.chung) : (setEditingChung(null), setFormChung({ ...emptyForm }), setShowCreateChung(true))}
-            onView={() => activePeriods.chung && setViewPeriod(activePeriods.chung)}
-          />
-          <FundDetailCard
-            title="Quỹ Phụ"
-            icon={<Wallet size={16} className="[color:var(--pf-primary-text)]" />}
-            period={activePeriods.game ?? latestGamePeriod}
-            color="violet"
-            contributions={contributions}
-            miniMode
-            isMember={isMember}
-            onEdit={() => (activePeriods.game ?? latestGamePeriod) ? openEdit((activePeriods.game ?? latestGamePeriod)!) : (setEditingGame(null), setFormGame({ ...emptyForm }), setShowCreateGame(true))}
-            onView={() => { const p = activePeriods.game ?? latestGamePeriod; if (p) setViewPeriod(p) }}
-          />
-        </div>
-
         {/* Tabs */}
         <div className="pf-glass-strong rounded-xl overflow-hidden">
-          <div className="flex border-b border-[color:var(--pf-border)] px-2 pt-1">
-            {([['list', 'Danh sách kỳ quỹ'], ['history', 'Lịch sử giao dịch'], ['highlights', 'Giao dịch nổi bật']] as [Tab, string][]).map(([key, label]) => (
-              <button key={key} onClick={() => setTab(key)}
-                className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${tab === key ? '[border-color:var(--pf-primary)] [color:var(--pf-primary-text)]' : 'border-transparent [color:var(--pf-color-muted)] hover:[color:var(--pf-text)]'}`}>
-                {label}
-              </button>
-            ))}
+          <div className="border-b border-[color:var(--pf-border)] px-5 py-3">
+            <h2 className="text-sm font-semibold [color:var(--pf-text)]">Danh sách kỳ quỹ</h2>
           </div>
 
-          {tab === 'list' && (
+          {(
             <>
               {/* Filters */}
               <div className="flex flex-wrap items-center gap-3 px-5 py-4 border-b border-[color:var(--pf-border)]">
@@ -1236,60 +1176,10 @@ export function FundPeriods() {
             </>
           )}
 
-          {tab === 'history' && (
-            <HistoryTab contributions={contributions} periods={periods} members={members} />
-          )}
-
-          {tab === 'highlights' && (
-            <HighlightsTab contributions={contributions} periods={periods} members={members} />
-          )}
         </div>
 
         {/* Bottom row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Recent transactions */}
-          <div className="pf-glass md:col-span-2 rounded-xl p-5">
-            <h3 className="font-bold [color:var(--pf-text)] text-sm mb-4">Lịch sử giao dịch gần đây</h3>
-            {recentTx.length === 0 ? (
-              <p className="text-xs [color:var(--pf-color-muted)] text-center py-6">Chưa có giao dịch nào</p>
-            ) : (
-              <div className="space-y-2">
-                {recentTx.map(tx => {
-                  // Giao dịch có 2 loại: COMMON (Quỹ Chính, gắn thành viên + kỳ) và MINI (Quỹ Phụ,
-                  // gắn người nộp payerName + loại thu, KHÔNG có memberId/fundPeriodId) → phải xử
-                  // lý cả hai, nếu không dòng MINI hiện trống/"—" (thiếu thông tin).
-                  const isMini = tx.fundSource === 'MINI'
-                  const period = periods.find(p => p.id === tx.fundPeriodId)
-                  const member = tx.member ?? members.find(m => m.id === tx.memberId)
-                  const incomeTypeLabel = tx.miniIncomeType ? MINI_INCOME_TYPE_LABELS[tx.miniIncomeType] : undefined
-                  const title = isMini
-                    ? (tx.payerName?.trim() || incomeTypeLabel || 'Thu Quỹ Phụ')
-                    : (member?.fullName?.trim() || 'Thành viên')
-                  const subLeft = isMini
-                    ? (incomeTypeLabel || 'Quỹ Phụ')
-                    : (period?.name || 'Quỹ Chính')
-                  return (
-                    <div key={tx.id} className="flex items-center justify-between gap-3 py-2 border-b border-[color:var(--pf-border)] last:border-0">
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium [color:var(--pf-text)] truncate">{title}</p>
-                        <p className="text-xs [color:var(--pf-color-muted)] truncate">
-                          <span className={`mr-1.5 inline-block h-1.5 w-1.5 rounded-full align-middle ${isMini ? 'bg-violet-500' : 'bg-emerald-500'}`} />
-                          {subLeft} · {formatDate(tx.paymentDate)}
-                        </p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-bold text-green-600">+{formatVND(tx.amount)}</p>
-                        {tx.isConfirmed
-                          ? <span className="text-xs text-green-500">Đã xác nhận</span>
-                          : <span className="text-xs text-amber-500">Chờ xác nhận</span>}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-4">
             {/* Donut chart */}
             <div className="pf-glass rounded-xl p-5">
@@ -1706,282 +1596,6 @@ export function FundPeriods() {
 
 // ─── HistoryTab ────────────────────────────────────────────────────────────────
 
-function HistoryTab({ contributions, periods, members }: {
-  contributions: FundContribution[]
-  periods: FundPeriod[]
-  members: Member[]
-}) {
-  const [filterPeriod, setFilterPeriod] = useState('')
-  const [filterStatus, setFilterStatus] = useState<'' | 'confirmed' | 'pending'>('')
-  const [histPage, setHistPage] = useState(1)
-  const PAGE = 12
-
-  const sorted = useMemo(() => {
-    return [...contributions]
-      .filter(c => {
-        if (filterPeriod && c.fundPeriodId !== filterPeriod) return false
-        if (filterStatus === 'confirmed' && !c.isConfirmed) return false
-        if (filterStatus === 'pending' && c.isConfirmed) return false
-        return true
-      })
-      .sort((a, b) => new Date(b.paymentDate || b.createdAt).getTime() - new Date(a.paymentDate || a.createdAt).getTime())
-  }, [contributions, filterPeriod, filterStatus])
-
-  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE))
-  const paged = sorted.slice((histPage - 1) * PAGE, histPage * PAGE)
-
-  const totalIncome = sorted.filter(c => c.isConfirmed).reduce((s, c) => s + c.amount, 0)
-  const totalPending = sorted.filter(c => !c.isConfirmed).reduce((s, c) => s + c.amount, 0)
-
-  return (
-    <div className="p-5 space-y-4">
-      {/* Summary strip */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="rounded-xl bg-emerald-50 border border-emerald-100 px-4 py-3">
-          <p className="text-xs text-emerald-600 font-medium">Tổng đã xác nhận</p>
-          <p className="text-base font-bold text-emerald-700 mt-0.5">{formatVND(totalIncome)}</p>
-        </div>
-        <div className="rounded-xl bg-amber-50 border border-amber-100 px-4 py-3">
-          <p className="text-xs text-amber-600 font-medium">Chờ xác nhận</p>
-          <p className="text-base font-bold text-amber-700 mt-0.5">{formatVND(totalPending)}</p>
-        </div>
-        <div className="rounded-xl [background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)] px-4 py-3">
-          <p className="text-xs [color:var(--pf-primary-text)] font-medium">Số giao dịch</p>
-          <p className="text-base font-bold [color:var(--pf-primary-text)] mt-0.5">{sorted.length}</p>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2 items-center">
-        <Filter size={14} className="[color:var(--pf-color-muted)] shrink-0" />
-        <select
-          value={filterPeriod}
-          onChange={e => { setFilterPeriod(e.target.value); setHistPage(1) }}
-          className="rounded-lg border border-[color:var(--pf-border)] [background:var(--pf-surface)] px-2.5 py-1.5 text-xs [color:var(--pf-text)] focus:outline-none focus:[border-color:var(--pf-primary)]"
-        >
-          <option value="">Tất cả kỳ quỹ</option>
-          {periods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
-        <select
-          value={filterStatus}
-          onChange={e => { setFilterStatus(e.target.value as any); setHistPage(1) }}
-          className="rounded-lg border border-[color:var(--pf-border)] [background:var(--pf-surface)] px-2.5 py-1.5 text-xs [color:var(--pf-text)] focus:outline-none focus:[border-color:var(--pf-primary)]"
-        >
-          <option value="">Tất cả trạng thái</option>
-          <option value="confirmed">Đã xác nhận</option>
-          <option value="pending">Chờ xác nhận</option>
-        </select>
-      </div>
-
-      {/* Table */}
-      {paged.length === 0 ? (
-        <div className="py-10 text-center [color:var(--pf-color-muted)] text-sm">
-          <TrendingUp size={28} className="mx-auto mb-2 text-slate-200" />Chưa có giao dịch nào
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border border-[color:var(--pf-border)]">
-          <table className="pf-rows w-full text-sm">
-            <thead>
-              <tr className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
-                <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold [color:var(--pf-color-muted)]">Ngày</th>
-                <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold [color:var(--pf-color-muted)]">Thành viên</th>
-                <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold [color:var(--pf-color-muted)]">Kỳ quỹ</th>
-                <th scope="col" className="px-4 py-2.5 text-left text-xs font-semibold [color:var(--pf-color-muted)]">Loại quỹ</th>
-                <th scope="col" className="px-4 py-2.5 text-right text-xs font-semibold [color:var(--pf-color-muted)]">Số tiền</th>
-                <th scope="col" className="px-4 py-2.5 text-center text-xs font-semibold [color:var(--pf-color-muted)]">Trạng thái</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[color:var(--pf-border-soft)]">
-              {paged.map(c => {
-                const member = members.find(m => m.id === c.memberId)
-                const period = periods.find(p => p.id === c.fundPeriodId)
-                return (
-                  <tr key={c.id} className="hover:[background:var(--pf-color-muted-soft)] transition-colors">
-                    <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)] whitespace-nowrap">{formatDate(c.paymentDate || c.createdAt)}</td>
-                    <td className="px-4 py-2.5">
-                      <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full [background:var(--pf-primary-soft)] flex items-center justify-center text-xs font-bold [color:var(--pf-primary-text)] shrink-0">
-                          {(member?.fullName ?? c.payerName ?? '?').charAt(0).toUpperCase()}
-                        </div>
-                        <span className="text-xs font-medium [color:var(--pf-text)]">{member?.fullName ?? c.payerName ?? '—'}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-2.5 text-xs [color:var(--pf-color-muted)]">{period?.name ?? '—'}</td>
-                    <td className="px-4 py-2.5">
-                      <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full ${c.fundSource === 'MINI' ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]' : '[background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]'}`}>
-                        {c.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2.5 text-right">
-                      <span className="text-xs font-bold text-emerald-600">+{formatVND(c.amount)}</span>
-                    </td>
-                    <td className="px-4 py-2.5 text-center">
-                      {c.isConfirmed
-                        ? <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Đã xác nhận</span>
-                        : <span className="inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">Chờ xác nhận</span>
-                      }
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-1">
-          <span className="text-xs [color:var(--pf-color-muted)]">{sorted.length} giao dịch</span>
-          <div className="flex items-center gap-1">
-            <button onClick={() => setHistPage(p => Math.max(1, p - 1))} disabled={histPage === 1}
-              className="p-1.5 rounded-lg hover:[background:var(--pf-color-muted-soft)] disabled:opacity-30 transition-colors">
-              <ChevronLeft size={14} />
-            </button>
-            <span className="text-xs [color:var(--pf-color-muted)] px-2">{histPage}/{totalPages}</span>
-            <button onClick={() => setHistPage(p => Math.min(totalPages, p + 1))} disabled={histPage === totalPages}
-              className="p-1.5 rounded-lg hover:[background:var(--pf-color-muted-soft)] disabled:opacity-30 transition-colors">
-              <ChevronRight size={14} />
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── HighlightsTab ──────────────────────────────────────────────────────────────
-
-function HighlightsTab({ contributions, periods, members }: {
-  contributions: FundContribution[]
-  periods: FundPeriod[]
-  members: Member[]
-}) {
-  // Top 5 contributors by total confirmed amount
-  const topContributors = useMemo(() => {
-    const map = new Map<string, { name: string; total: number; count: number }>()
-    for (const c of contributions) {
-      if (!c.isConfirmed || !c.memberId) continue
-      const member = members.find(m => m.id === c.memberId)
-      const name = member?.fullName ?? c.payerName ?? c.memberId
-      const prev = map.get(c.memberId) ?? { name, total: 0, count: 0 }
-      map.set(c.memberId, { name, total: prev.total + c.amount, count: prev.count + 1 })
-    }
-    return [...map.values()].sort((a, b) => b.total - a.total).slice(0, 5)
-  }, [contributions, members])
-
-  // Per-period collection stats for bar chart
-  const periodStats = useMemo(() => {
-    return periods
-      .filter(p => contributions.some(c => c.fundPeriodId === p.id))
-      .map(p => {
-        const confirmed = contributions.filter(c => c.fundPeriodId === p.id && c.isConfirmed).reduce((s, c) => s + c.amount, 0)
-        const pending = contributions.filter(c => c.fundPeriodId === p.id && !c.isConfirmed).reduce((s, c) => s + c.amount, 0)
-        return { name: p.name.length > 12 ? p.name.slice(0, 12) + '…' : p.name, confirmed, pending }
-      })
-      .slice(-6)
-  }, [contributions, periods])
-
-  // Largest single transactions
-  const topTx = useMemo(() => {
-    return [...contributions]
-      .filter(c => c.isConfirmed)
-      .sort((a, b) => b.amount - a.amount)
-      .slice(0, 5)
-  }, [contributions])
-
-  const medals = ['🥇', '🥈', '🥉', '4.', '5.']
-
-  return (
-    <div className="p-5 space-y-5">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Top contributors */}
-        <div>
-          <h3 className="text-sm font-bold [color:var(--pf-text)] mb-3 flex items-center gap-2">
-            <Trophy size={15} className="text-amber-500" />Top đóng quỹ
-          </h3>
-          {topContributors.length === 0 ? (
-            <p className="text-xs [color:var(--pf-color-muted)] py-4 text-center">Chưa có dữ liệu</p>
-          ) : (
-            <div className="space-y-2.5">
-              {topContributors.map((c, i) => (
-                <div key={c.name} className="flex items-center gap-3">
-                  <span className="text-sm w-6 text-center shrink-0">{medals[i]}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-semibold [color:var(--pf-text)] truncate">{c.name}</span>
-                      <span className="text-xs font-bold text-emerald-600 shrink-0 ml-2">{formatVND(c.total)}</span>
-                    </div>
-                    <div className="h-1.5 [background:var(--pf-color-muted-soft)] rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-gradient-to-r from-[var(--pf-primary)] to-emerald-400"
-                        style={{ width: `${Math.round((c.total / (topContributors[0]?.total || 1)) * 100)}%` }} />
-                    </div>
-                  </div>
-                  <span className="text-xs [color:var(--pf-color-muted)] shrink-0">{c.count} lần</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Largest single transactions */}
-        <div>
-          <h3 className="text-sm font-bold [color:var(--pf-text)] mb-3 flex items-center gap-2">
-            <Star size={15} className="[color:var(--pf-primary-text)]" />Giao dịch lớn nhất
-          </h3>
-          {topTx.length === 0 ? (
-            <p className="text-xs [color:var(--pf-color-muted)] py-4 text-center">Chưa có dữ liệu</p>
-          ) : (
-            <div className="space-y-2">
-              {topTx.map((c, i) => {
-                const member = members.find(m => m.id === c.memberId)
-                const period = periods.find(p => p.id === c.fundPeriodId)
-                return (
-                  <div key={c.id} className="flex items-center gap-3 p-2.5 rounded-xl [background:var(--pf-surface-muted)] hover:[background:var(--pf-color-muted-soft)] transition-colors">
-                    <span className="text-sm w-5 text-center shrink-0 font-bold [color:var(--pf-color-muted)]">{i + 1}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold [color:var(--pf-text)] truncate">{member?.fullName ?? c.payerName ?? '—'}</p>
-                      <p className="text-xs [color:var(--pf-color-muted)]">{period?.name ?? '—'} · {formatDate(c.paymentDate)}</p>
-                    </div>
-                    <span className="text-xs font-bold text-emerald-600 shrink-0">{formatVND(c.amount)}</span>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Per-period bar chart */}
-      {periodStats.length > 0 && (
-        <div>
-          <h3 className="text-sm font-bold [color:var(--pf-text)] mb-3 flex items-center gap-2">
-            <TrendingUp size={15} className="[color:var(--pf-primary-text)]" />Thu quỹ theo kỳ
-          </h3>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={periodStats} margin={{ top: 4, right: 4, left: 0, bottom: 4 }} barSize={18}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--pf-border)" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: 'var(--pf-color-muted)' }} axisLine={false} tickLine={false} />
-                <YAxis tickFormatter={v => `${Math.round(v / 1000)}k`} tick={{ fontSize: 10, fill: 'var(--pf-color-muted)' }} axisLine={false} tickLine={false} />
-                <Tooltip formatter={(v) => formatVND(Number(v))} labelStyle={{ fontSize: 11 }} contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--pf-border)' }} />
-                <Bar dataKey="confirmed" name="Đã xác nhận" fill="var(--pf-primary)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="pending" name="Chờ xác nhận" fill="#fbbf24" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="flex gap-4 justify-center mt-1">
-            <div className="flex items-center gap-1.5 text-xs [color:var(--pf-color-muted)]"><span className="w-3 h-3 rounded-sm [background:var(--pf-primary)] inline-block" />Đã xác nhận</div>
-            <div className="flex items-center gap-1.5 text-xs [color:var(--pf-color-muted)]"><span className="w-3 h-3 rounded-sm bg-amber-400 inline-block" />Chờ xác nhận</div>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── Sub-components ────────────────────────────────────────────────────────────
-
 interface KpiStats {
   balance: number
   unpaidCount: number; txCount: number; totalPending: number
@@ -1990,7 +1604,7 @@ interface KpiStats {
 
 interface FundOverviewItem {
   title: string; tone: 'main' | 'mini'; icon: React.ReactNode; stats: KpiStats
-  period: FundPeriod | undefined; unpaid?: number; mini?: boolean
+  period: FundPeriod | undefined; unpaid?: number; carryover?: number; mini?: boolean
   onView: () => void; onEdit: () => void
 }
 
@@ -2035,120 +1649,15 @@ function FundOverviewCompact({ items, contributions, isMember, className }: {
                 </div>
               ))}
             </div>
-            {(it.unpaid ?? 0) > 0 && (
-              <p className="mt-3 text-xs [color:var(--pf-color-muted)]">Chưa đóng: <strong className="[color:var(--pf-text)]">{it.unpaid}</strong></p>
+            {((it.unpaid ?? 0) > 0 || (it.carryover ?? 0) !== 0) && (
+              <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs [color:var(--pf-color-muted)]">
+                {(it.unpaid ?? 0) > 0 && <span>Chưa đóng: <strong className="[color:var(--pf-text)]">{it.unpaid}</strong></span>}
+                {(it.carryover ?? 0) !== 0 && <span>↩ Kết dư kỳ trước: <strong className="[color:var(--pf-text)]">{(it.carryover ?? 0) > 0 ? '+' : ''}{formatVND(it.carryover ?? 0)}</strong></span>}
+              </div>
             )}
           </section>
         )
       })}
-    </div>
-  )
-}
-
-function KpiSummaryCard({ title, icon, iconBg, accentColor, stats, footerLabel, footerValue }: {
-  title: string; icon: React.ReactNode; iconBg: string; accentColor: string
-  stats: KpiStats; footerLabel?: string; footerValue?: number
-}) {
-  // Khoản thu mở: KHÔNG hiển thị Mục tiêu / Còn thiếu / Tiến độ (mức đóng thực tế mỗi
-  // CLB khác nhau nên % theo mức cấu hình gây hiểu nhầm). Chỉ hiện SỐ TIỀN THẬT.
-  return (
-    <div className="pf-stat-card rounded-xl p-4 lg:p-5">
-      <div className="flex items-center gap-2 mb-3 lg:mb-4">
-        <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${iconBg}`}>{icon}</div>
-        <span className="text-xs font-bold [color:var(--pf-color-muted)] uppercase tracking-wide">{title}</span>
-      </div>
-      <div className="grid grid-cols-3 gap-2 text-center lg:gap-3">
-        <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 lg:py-3" data-hi="">
-          <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold tracking-wide mb-1">Số dư</p>
-          <p className={`text-lg font-bold ${accentColor}`}>{formatVND(stats.balance)}</p>
-          {stats.prevCarryover != null && stats.prevCarryover > 0 && (
-            <p className="text-xs text-emerald-600 mt-0.5">↩ Kết dư +{formatVND(stats.prevCarryover)}</p>
-          )}
-        </div>
-        <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 lg:py-3">
-          <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold tracking-wide mb-1">Chờ xác nhận</p>
-          <p className={`text-lg font-bold ${stats.totalPending > 0 ? 'text-amber-500' : '[color:var(--pf-color-muted)]'}`}>{formatVND(stats.totalPending)}</p>
-        </div>
-        <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 lg:py-3">
-          <p className="text-[10px] [color:var(--pf-color-muted)] uppercase font-semibold tracking-wide mb-1">Giao dịch</p>
-          <p className="text-lg font-bold [color:var(--pf-text)]">{stats.txCount}</p>
-        </div>
-      </div>
-      {footerLabel && (
-        <div className="mt-3 flex items-center justify-between text-xs [color:var(--pf-color-muted)]">
-          <span>{footerLabel}: <strong className="[color:var(--pf-text)]">{footerValue ?? 0}</strong></span>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function FundDetailCard({ title, icon, period, color, contributions, onEdit, onView, miniMode, prevBalance = 0, isMember = false }: {
-  title: string; icon: React.ReactNode; period: FundPeriod | undefined
-  color: 'indigo' | 'violet'
-  contributions: import('../../types').FundContribution[]; onEdit: () => void; onView?: () => void
-  miniMode?: boolean; prevBalance?: number; isMember?: boolean
-}) {
-  // Khoản thu mở: chỉ hiển thị "Đã thu" (số tiền thật). KHÔNG tính Mục tiêu / Tiến độ %.
-  const collected = miniMode
-    ? contributions.filter(c => c.fundSource === 'MINI' && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
-    : period
-      ? contributions.filter(c => c.fundPeriodId === period.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
-      : 0
-
-  return (
-    <div className="pf-stat-card rounded-xl p-4 lg:p-5">
-      <div className="flex items-center justify-between mb-2 lg:mb-3">
-        <div className="flex items-center gap-2">
-          {icon}
-          <span className="font-bold [color:var(--pf-text)] text-sm">{title}</span>
-        </div>
-        {period && <Badge variant={color === 'indigo' ? 'indigo' : 'purple'} dot>{statusLabel[period.status]}</Badge>}
-      </div>
-      {period ? (
-        <>
-          <p className="mb-2 text-xs [color:var(--pf-color-muted)] lg:mb-3"><span className="font-medium [color:var(--pf-text)]">{period.name}</span> · {formatDate(period.startDate)} – {formatDate(period.endDate)}</p>
-          {!miniMode && prevBalance > 0 && (
-            <div className="flex items-center justify-between text-xs mt-1 mb-1 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-100">
-              <span className="text-emerald-700">↩ Kết dư kỳ trước</span>
-              <span className="font-semibold text-emerald-700">+{formatVND(prevBalance)}</span>
-            </div>
-          )}
-          <div className="mt-2 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
-            <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2" data-hi="">
-              <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Đã thu</p>
-              <p className="text-base font-bold [color:var(--pf-text)]">{formatVND(collected)}</p>
-            </div>
-            <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2">
-              <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Giao dịch</p>
-              <p className="text-base font-bold [color:var(--pf-text)]">{miniMode
-                ? contributions.filter(c => c.fundSource === 'MINI').length
-                : contributions.filter(c => c.fundPeriodId === period.id && c.isConfirmed).length}</p>
-            </div>
-            <Button variant="outline" size="sm" className="h-full min-h-11" onClick={onView}>
-              <Eye size={13} />Chi tiết
-            </Button>
-            {!isMember && (
-              <Button variant="outline" size="sm" className="h-full min-h-11" onClick={onEdit}>
-                <Pencil size={13} />Sửa quỹ
-              </Button>
-            )}
-          </div>
-        </>
-      ) : miniMode && collected > 0 ? (
-        <>
-          <p className="text-xs [color:var(--pf-color-muted)] mb-3">Chưa có kỳ quỹ đang mở</p>
-          <div className="flex justify-between text-xs [color:var(--pf-color-muted)] mt-2 mb-4">
-            <span>Đã thu: <strong className="[color:var(--pf-text)]">{formatVND(collected)}</strong></span>
-          </div>
-          {!isMember && <Button size="sm" onClick={onEdit}><Plus size={13} />Tạo kỳ quỹ</Button>}
-        </>
-      ) : (
-        <div className="py-4 text-center">
-          <p className="text-xs [color:var(--pf-color-muted)] mb-3">Chưa có kỳ quỹ đang mở</p>
-          {!isMember && <Button size="sm" onClick={onEdit}><Plus size={13} />Tạo kỳ quỹ</Button>}
-        </div>
-      )}
     </div>
   )
 }

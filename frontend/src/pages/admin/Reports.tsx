@@ -20,7 +20,7 @@ import {
 } from 'recharts'
 import {
   TrendingUp, TrendingDown, Wallet, Gamepad2, ArrowLeftRight, Users, Calendar,
-  Activity, AlertCircle, RefreshCw, FileSpreadsheet, FileText, Sparkles,
+  Activity, AlertCircle, RefreshCw, FileText, Sparkles,
 } from 'lucide-react'
 import { formatVND, getActiveChungPeriod } from '../../lib/utils'
 import { exportReportsPDF, exportReportsExcel, type ReportExpenseRow } from '../../lib/export'
@@ -573,35 +573,19 @@ export function Reports() {
             </div>
           )}
 
-          {/* ── Export panel ── */}
-          {canExport && (<div className="pf-glass mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[16px] p-5">
-            <div className="min-w-0">
-              <h3 className="text-sm font-semibold [color:var(--pf-text)]">Xuất báo cáo</h3>
-              <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">
-                {officialReady ? 'Chọn loại báo cáo rồi xuất PDF · Excel · Infographic.' : `${EXPORT_HINT} (Chưa có đủ dữ liệu backend summary)`}
-              </p>
-              {/* Chọn loại báo cáo */}
-              <div className="mt-2.5 flex items-center gap-1 rounded-full border p-1 [background:var(--pf-surface)] border-[color:var(--pf-border)]" role="radiogroup" aria-label="Loại báo cáo">
+          {/* ── Loại báo cáo khi xuất (nút Xuất Excel/PDF/Infographic nằm ở hàng tiêu đề) ── */}
+          {canExport && (
+            <div className="pf-glass mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[16px] px-5 py-4">
+              <p className="text-sm font-semibold [color:var(--pf-text)]">Loại báo cáo khi xuất</p>
+              <div className="flex items-center gap-1 rounded-full border p-1 [background:var(--pf-surface)] border-[color:var(--pf-border)]" role="radiogroup" aria-label="Loại báo cáo">
                 {([['full', 'Đầy đủ (kèm bảng kê)'], ['financial', 'Tổng quan tài chính']] as ['full' | 'financial', string][]).map(([v, l]) => (
                   <button key={v} type="button" role="radio" aria-checked={reportType === v} onClick={() => setReportType(v)}
-                    className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
+                    className="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors"
                     style={reportType === v ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' } : { color: 'var(--pf-color-muted)' }}>
                     {l}
                   </button>
                 ))}
               </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <ActionButton variant="secondary" icon={<FileText size={15} />} onClick={doExportPDF} disabled={!officialReady || exporting} title={officialReady ? 'Xuất PDF' : EXPORT_HINT}>PDF</ActionButton>
-              <ActionButton variant="secondary" icon={<FileSpreadsheet size={15} />} onClick={doExportExcel} disabled={!officialReady || exporting} title={officialReady ? 'Xuất Excel' : EXPORT_HINT}>Excel</ActionButton>
-              <ActionButton icon={<Sparkles size={15} />} onClick={openInfographic} disabled={!infographicReady} title={infographicReady ? 'Tạo Infographic' : EXPORT_HINT}>Infographic</ActionButton>
-            </div>
-          </div>)}
-
-          {/* ── Mobile sticky quick action: Infographic ── */}
-          {isMobile && canExport && (
-            <div className="pointer-events-none fixed right-4 z-30" style={{ bottom: 'calc(132px + env(safe-area-inset-bottom))' }}>
-              <ActionButton className="pointer-events-auto h-12 w-12 shadow-lg" iconOnly ariaLabel="Tạo Infographic" icon={<Sparkles size={20} />} onClick={openInfographic} disabled={!infographicReady} title={infographicReady ? 'Tạo Infographic' : EXPORT_HINT} />
             </div>
           )}
         </>
