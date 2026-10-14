@@ -233,23 +233,12 @@ export function Attendance() {
     <PageShell>
       <PageHeader
         title="Điểm Danh"
-        subtitle={activePeriod ? activePeriod.name : 'Quản lý điểm danh từng buổi chơi'}
         actions={
           <>
-            {exportSessions.length > 0 && <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} />}
-            <ActionButton icon={<Plus size={16} />} onClick={() => setShowCreate(true)}>Tạo buổi chơi</ActionButton>
-          </>
-        }
-      />
-
-      <div className="flex flex-col gap-5">
-        {/* Bộ lọc kỳ + chuyển kỳ */}
-        {allPeriods.length > 1 && (
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="min-w-0 flex-1 basis-full sm:basis-auto">
-              <PeriodSelector periods={allPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} label="Lọc theo kỳ" />
-            </div>
-            {sessions.length > 0 && (
+            {allPeriods.length > 1 && (
+              <PeriodSelector periods={allPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} label="Kỳ quỹ" />
+            )}
+            {allPeriods.length > 1 && sessions.length > 0 && (
               <button
                 onClick={() => setShowMovePeriod(true)}
                 className="min-h-11 rounded-lg border px-3 text-sm font-semibold [color:var(--pf-primary-text)] [border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)] transition-colors"
@@ -257,9 +246,13 @@ export function Attendance() {
                 Chuyển kỳ ({sessions.length} buổi)
               </button>
             )}
-          </div>
-        )}
+            {exportSessions.length > 0 && <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} />}
+            <ActionButton icon={<Plus size={16} />} onClick={() => setShowCreate(true)}>Tạo buổi chơi</ActionButton>
+          </>
+        }
+      />
 
+      <div className="flex flex-col gap-5">
         {/* KPI */}
         {sessions.length > 0 && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">

@@ -695,9 +695,11 @@ export function Contributions() {
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader variant="bar"
         title="Thu Quỹ"
-        subtitle={selectedPeriod ? `${selectedPeriod.name} — Quỹ Chính: ${formatVND(commonTotal)} | Quỹ Phụ: ${formatVND(miniTotal)}` : 'Chưa có kỳ quỹ nào'}
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            {chungPeriods.length > 1 && (
+              <PeriodSelector periods={chungPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} label="Kỳ quỹ" />
+            )}
             {canExportOrgWideData(user?.role) && (<>
               <Button variant="outline" onClick={exportContribXlsx} disabled={exporting}><FileSpreadsheet size={14} />Xuất Excel</Button>
               <Button variant="outline" onClick={exportContribPdf} disabled={exporting}><FileText size={14} />Xuất PDF</Button>
@@ -710,12 +712,6 @@ export function Contributions() {
           </div>
         }
       />
-
-      {chungPeriods.length > 1 && (
-        <div className="px-6 pt-4 pb-0">
-          <PeriodSelector periods={chungPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} label="Lọc theo kỳ" />
-        </div>
-      )}
 
       <div className="p-6 space-y-5">
         {/* Summary cards — split by fund source */}

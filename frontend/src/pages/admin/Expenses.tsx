@@ -5,7 +5,7 @@ import { getBrandClubName } from '../../store/brandingStore'
 import {
   Plus, Search, Filter, Eye, Trash2, Receipt,
   CheckCircle, Clock, Pencil,
-  FileText, X, ArrowLeft, Calendar, Users, Wallet, DollarSign, Download, Tag, Paperclip,
+  FileText, X, ArrowLeft, Users, Wallet, DollarSign, Download, Tag, Paperclip,
   Landmark, Coffee, Check, FileDown,
 } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
@@ -1057,11 +1057,8 @@ export function Expenses() {
         <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
             {!embedded && <h1 className="text-base font-bold [color:var(--pf-text)]">Chi Phí</h1>}
-            <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">
-              {allPeriods.find(p => p.id === selectedPeriodId)?.name ?? 'Quản lý và theo dõi các khoản chi của CLB'}
-            </p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
             {allPeriods.length > 1 && (
               <PeriodSelector
                 periods={allPeriods}
@@ -1069,14 +1066,6 @@ export function Expenses() {
                 onChange={id => setSelectedPeriodId(id)}
               />
             )}
-            <div className="flex items-center gap-2 rounded-lg border border-[color:var(--pf-border)] [background:var(--pf-surface)] px-3 py-2 text-xs [color:var(--pf-color-muted)]">
-              <Calendar size={13} className="[color:var(--pf-color-muted)]" />
-              <span>
-                {activePeriod
-                  ? `${formatDate(activePeriod.startDate)} – ${formatDate(activePeriod.endDate)}`
-                  : 'Chưa có kỳ quỹ'}
-              </span>
-            </div>
             {!isMember && <Button variant="outline" size="sm" onClick={() => setShowCatMgr(true)}><Tag size={13} />Danh mục</Button>}
             <Button variant="outline" size="sm" onClick={() => setShowFilter(true)}><Filter size={13} />Bộ lọc</Button>
             <Button variant="outline" size="sm" onClick={exportExcel} disabled={exporting}><Download size={13} />Xuất Excel</Button>
