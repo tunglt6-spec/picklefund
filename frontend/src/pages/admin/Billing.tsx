@@ -233,7 +233,6 @@ export function Billing() {
           <div className="pf-glass-strong rounded-xl overflow-hidden">
             <div className="px-5 py-4 border-b border-[color:var(--pf-border)]">
               <h3 className="font-semibold [color:var(--pf-text)]">Bảng so sánh gói dịch vụ</h3>
-              <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">Chọn gói và tự nâng cấp — kích hoạt ngay sau khi thanh toán</p>
             </div>
             <div className="overflow-x-auto">
               <table className="pf-rows w-full text-sm">

@@ -16,7 +16,7 @@ const BANNER_CARD: { key: string; x: number; y: number; w: number; h: number; dx
   { key: 'NOTIFICATION', x: 1498, y: 80, w: 237, h: 227, dx: 1528, dy: 181, color: '#C026D3', dur: '6.8s', delay: '.8s' },
 ]
 
-export function OfficeBanner({ badge, caption }: { badge?: ReactNode; caption?: ReactNode }) {
+export function OfficeBanner({ badge }: { badge?: ReactNode }) {
   return (
     <div>
       <style>{`
@@ -58,9 +58,6 @@ export function OfficeBanner({ badge, caption }: { badge?: ReactNode; caption?: 
         </svg>
         {badge}
       </div>
-      <p className="mt-1.5 text-center text-xs [color:var(--pf-color-muted)]">
-        {caption ?? 'Văn phòng AI · viền chạy quanh thẻ = agent đang làm việc'}
-      </p>
     </div>
   )
 }

@@ -138,11 +138,6 @@ export function DataMonitorPage() {
               ))}
             </div>
           </section>
-
-          <p className="text-xs [color:var(--pf-color-muted)] px-1">
-            Toàn vẹn tham chiếu (khóa ngoại) được cơ sở dữ liệu đảm bảo. Các kiểm tra ở đây là read-only,
-            không thay đổi dữ liệu — hãy sửa trực tiếp ở màn Thành viên / Kỳ Quỹ khi cần.
-          </p>
         </div>
       )}
     </PageShell>

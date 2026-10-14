@@ -121,7 +121,6 @@ export function AiApprovalInbox() {
             </span>
             <div>
               <h1 className="text-xl font-bold [color:var(--pf-text)]">Hộp Duyệt AI</h1>
-              <p className="text-sm [color:var(--pf-color-muted)]">Hàng đợi phê duyệt hành động AI · Đánh giá điều kiện duyệt</p>
             </div>
           </div>
           <button

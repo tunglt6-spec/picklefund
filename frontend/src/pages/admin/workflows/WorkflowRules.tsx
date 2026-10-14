@@ -154,7 +154,6 @@ export function WorkflowRules() {
             </span>
             <div>
               <h1 className="text-xl font-bold [color:var(--pf-text)]">Hermes Workflows</h1>
-              <p className="text-sm [color:var(--pf-color-muted)]">Workflow rule + lịch sử chạy · hành động đi qua AI Action Center</p>
             </div>
           </div>
           <button

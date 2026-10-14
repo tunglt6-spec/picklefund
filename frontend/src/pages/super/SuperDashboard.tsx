@@ -468,7 +468,6 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
           <Kpi label="Lỗi (5xx)" value={infra.errorRate != null ? `${infra.errorRate}%` : <NoData hint="Chưa có request trong 5 phút gần đây" />} icon={<AlertTriangle size={16} />} alert={infra.errorRate >= 5 ? 'danger' : infra.errorRate > 0 ? 'warning' : undefined} />
         </div>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-          <p className="text-xs [color:var(--pf-color-muted)]">Số liệu thật từ máy chủ (Node os/statfs, process, ping DB, pg_stat_activity, uploads, hàng đợi DB, telemetry request cửa sổ 5').</p>
           <button onClick={onRunBackup} className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)]"><ShieldCheck size={13} /> Chạy sao lưu ngay</button>
         </div>
         <MaikaNote review={review} k="infra" />
@@ -498,7 +497,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
           <MaikaNote review={review} k="alerts" />
         </ChartCard>
 
-        <ChartCard title="Việc cần xử lý" subtitle="Tổng hợp từ dữ liệu hệ thống · ưu tiên trên xuống">
+        <ChartCard title="Việc cần xử lý">
           {todos.length ? (
             <ul className="space-y-2">
               {todos.map((t) => (

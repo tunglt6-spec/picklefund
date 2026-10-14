@@ -128,7 +128,6 @@ export function MemberOffice() {
 
       <div className="space-y-5">
         <OfficeBanner
-          caption="Văn phòng AI · viền chạy quanh thẻ = agent đang làm việc · kết quả THẬT ở bảng dưới"
           badge={
             <div
               className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-white"

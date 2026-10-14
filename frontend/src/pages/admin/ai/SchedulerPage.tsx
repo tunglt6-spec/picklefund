@@ -289,7 +289,6 @@ export function SchedulerPage() {
             <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-1 flex items-center gap-2">
               <Clock size={16} className="[color:var(--pf-color-muted)]" /> Cron Hệ Thống (cố định)
             </h3>
-            <p className="text-xs [color:var(--pf-color-muted)] mb-4">Lịch tự động của Maika/Lisa — cố định theo hệ thống, không cấu hình tại đây.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {SYSTEM_CRONS.map((c, i) => (
                 <div key={i} className="flex items-center gap-3 rounded-xl border border-[color:var(--pf-border)] p-3">

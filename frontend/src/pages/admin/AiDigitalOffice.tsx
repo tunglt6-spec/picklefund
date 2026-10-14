@@ -375,7 +375,7 @@ export function AiDigitalOffice() {
     <PageShell>
       <PageHeader title="AIDO — AI Digital Office" />
       <div className="space-y-4">
-        <OfficeBanner caption="Viền chạy quanh thẻ = agent đang làm việc" />
+        <OfficeBanner />
         <div
           className="mx-auto flex w-full max-w-2xl flex-col items-center gap-2 rounded-2xl border p-5 text-center [border-color:var(--pf-border)]"
           style={{ background: 'var(--pf-surface)' }}
@@ -437,7 +437,6 @@ export function AiDigitalOffice() {
               đồng bộ hoàn toàn desktop/tablet/mobile, KHÔNG phủ thẻ DOM (hết đè/cắt/lệch).
               Trạng thái THẬT hiển thị ở KPI + 3 panel + Đội ngũ AI bên dưới. */}
           <OfficeBanner
-            caption="Văn phòng AI · viền chạy quanh thẻ = agent đang làm việc · trạng thái THẬT ở bảng dưới"
             badge={
               <div
                 className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-white"

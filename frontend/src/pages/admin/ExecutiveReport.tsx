@@ -403,7 +403,7 @@ export function ExecutiveReport() {
         <div>
           <SectionTitle icon={<Wallet size={15} />} title="Tài chính" note="Số liệu chuẩn theo kỳ quỹ (carry-forward)" />
           <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-            <ChartCard title="Thu / Chi theo kỳ" subtitle="6 kỳ gần nhất — dữ liệu tổ chức theo kỳ quỹ (không phải theo tuần)">
+            <ChartCard title="Thu / Chi theo kỳ" subtitle="6 kỳ gần nhất">
               <div style={{ height: 240 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={(f.trends || []).map((t: any) => ({ name: t.name, Thu: t.thu, Chi: t.chi }))} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
