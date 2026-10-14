@@ -903,6 +903,8 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   .pf-table-cards tbody td:first-child { display: block; text-align: left !important; font-weight: 600; padding-bottom: 6px !important; }
   .pf-table-cards tbody td:first-child::before { content: none; }
   .pf-table-cards table { min-width: 0 !important; }
+  .pf-table-cards tbody td, .pf-table-cards tbody tr { height: auto !important; min-height: 0 !important; }
+  .pf-table-cards tbody tr { overflow: hidden; }
   .pf-table-cards tbody td { flex-wrap: wrap; }
   .pf-table-cards tbody td > .flex { flex-wrap: wrap; justify-content: flex-end; margin-left: auto; }
   .pf-table-cards tbody td:first-child:has(> input[type=checkbox]:only-child), .pf-table-cards tbody td:first-child:empty { display: none; }
