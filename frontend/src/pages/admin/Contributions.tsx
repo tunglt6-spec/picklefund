@@ -464,7 +464,7 @@ export function Contributions() {
           </button>
         </div>
 
-        <div className="pf-cardlist px-4 pt-3 pb-24 grid grid-cols-1 min-[600px]:grid-cols-2 gap-2 items-start">
+        <div className="pf-cardlist px-4 pt-3 pb-24 grid grid-cols-1 min-[600px]:grid-cols-2 gap-2">
           {mobileTab === 'COMMON' ? (
             sortedCommon.length === 0 ? (
               <div className="col-span-full text-center py-14 [color:var(--pf-color-muted)] text-sm">
