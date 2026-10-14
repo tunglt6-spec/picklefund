@@ -13,7 +13,6 @@
  *  - Reports/PDF/Excel/Infographic dùng hàm/API export hiện có (không đổi contract).
  */
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
-import { useDialogA11y } from '../../hooks/useDialogA11y'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend,
@@ -36,10 +35,9 @@ import toast from 'react-hot-toast'
 import { InfographicPreviewModal } from '../../components/reports/infographic/InfographicPreviewModal'
 import { mapToInfographicData } from '../../components/reports/infographic/infographic.utils'
 import {
-  PageShell, PageHeader, MetricCard, ChartCard, FilterBar, DataTable, type Column,
-  StatusBadge, ActionButton, ExportActions, EmptyState, LoadingState, MobileCardList, ResponsiveTabs,
+  PageShell, PageHeader, MetricCard, ChartCard, DataTable, type Column,
+  StatusBadge, ActionButton, ExportActions, EmptyState, LoadingState, MobileCardList,
 } from '../../components/shared'
-import { Portal } from '../../components/ui/Portal'
 
 /* Màu chart mirror token --pf-* (recharts cần string — data-viz). */
 const CHART_INCOME = '#059669'
@@ -54,13 +52,6 @@ function num(v: unknown): number | undefined {
   return v == null ? undefined : Number(v)
 }
 
-type ReportTab = 'overview' | 'finance' | 'member' | 'attendance'
-const REPORT_TABS = [
-  { key: 'overview', label: 'Tổng hợp' },
-  { key: 'finance', label: 'Tài chính' },
-  { key: 'member', label: 'Thành viên' },
-  { key: 'attendance', label: 'Điểm danh' },
-]
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function VNDTooltip({ active, payload, label }: any) {
@@ -110,16 +101,13 @@ export function Reports() {
     ?? clubData.fundPeriods[0]
 
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>('')
-  const [fundFilter, setFundFilter] = useState<'ALL' | FundSource>('ALL')
-  const [reportTab, setReportTab] = useState<ReportTab>('overview')
+  // Báo cáo luôn tổng hợp cả hai quỹ (lọc Quỹ Chính/Quỹ Phụ có sẵn ở các màn Kỳ quỹ/Thu/Chi) — không còn bộ lọc nguồn quỹ ở đây.
+  const fundFilter: 'ALL' | FundSource = 'ALL'
   const [showInfographic, setShowInfographic] = useState(false)
   const [reportType, setReportType] = useState<'full' | 'financial'>('full')
   // fundSummary = backend Source of Truth (raw response.data.data)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [fundSummary, setFundSummary] = useState<any>(null)
-  const [showFilterSheet, setShowFilterSheet] = useState(false)
-  const filterSheetRef = useRef<HTMLDivElement>(null)
-  useDialogA11y(showFilterSheet, filterSheetRef, () => setShowFilterSheet(false))
   const [loadState, setLoadState] = useState<'idle' | 'loading' | 'error'>('idle')
   const [exporting, setExporting] = useState(false) // chống bấm đúp Excel/PDF (cả 2 cụm nút)
   const brandDisplayName = useBrandingStore((s) => s.branding.displayName)
@@ -377,25 +365,11 @@ export function Reports() {
     setShowInfographic(true)
   }
 
-  const resetFilters = () => { setFundFilter('ALL'); if (defaultPeriod?.id) setSelectedPeriodId(defaultPeriod.id) }
-
   /* ── KPI card helper (official) ── */
   const kpi = (label: string, value: number | undefined, sub: string, accent: 'green' | 'rose' | 'violet' | 'amber' | 'blue' | 'teal', icon: React.ReactNode, fmt: (v: number) => string = formatVND) => (
     <MetricCard label={label} value={value === undefined ? 'Chưa có' : fmt(value)}
       sub={value === undefined ? 'Chưa có dữ liệu (backend summary)' : sub}
       accent={accent} icon={icon} negative={value !== undefined && value < 0} />
-  )
-
-  const fundChips = (
-    <div className="flex items-center gap-1 rounded-full border p-1 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
-      {([['ALL', 'Tất cả'], ['COMMON', 'Quỹ Chính'], ['MINI', 'Quỹ Phụ']] as ['ALL' | FundSource, string][]).map(([v, l]) => (
-        <button key={v} onClick={() => setFundFilter(v)} aria-pressed={fundFilter === v}
-          className="rounded-full px-3 py-1 text-xs font-semibold transition-colors"
-          style={fundFilter === v ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' } : { color: 'var(--pf-color-muted)' }}>
-          {l}
-        </button>
-      ))}
-    </div>
   )
 
   const periodSelect = (
@@ -413,10 +387,15 @@ export function Reports() {
 
   // MEMBER_VIEW chỉ XEM: không xuất bảng kê/infographic chứa tiền từng thành viên khác.
   const canExport = canExportOrgWideData(user?.role)
-  const headerActions = !canExport ? undefined : (
+  const headerActions = (
     <>
-      <ExportActions onExcel={doExportExcel} onPdf={doExportPDF} disabled={!officialReady || exporting} />
-      <ActionButton icon={<Sparkles size={15} />} onClick={openInfographic} disabled={!infographicReady} title={infographicReady ? 'Tạo Infographic' : EXPORT_HINT}>Infographic</ActionButton>
+      {periodSelect}
+      {canExport && (
+        <>
+          <ExportActions onExcel={doExportExcel} onPdf={doExportPDF} disabled={!officialReady || exporting} />
+          <ActionButton icon={<Sparkles size={15} />} onClick={openInfographic} disabled={!infographicReady} title={infographicReady ? 'Tạo Infographic' : EXPORT_HINT}>Infographic</ActionButton>
+        </>
+      )}
     </>
   )
 
@@ -433,9 +412,9 @@ export function Reports() {
     },
   ]
 
-  const showFinance = reportTab === 'overview' || reportTab === 'finance'
-  const showMember = reportTab === 'overview' || reportTab === 'member'
-  const showAttendance = reportTab === 'overview' || reportTab === 'attendance'
+  const showFinance = true
+  const showMember = true
+  const showAttendance = true
 
   return (
     <PageShell>
@@ -462,20 +441,8 @@ export function Reports() {
         </div>
       ) : (
         <>
-          {/* ── Report Type Tabs ── */}
-          <ResponsiveTabs tabs={REPORT_TABS} active={reportTab} onChange={(k) => setReportTab(k as ReportTab)} />
-
-          {/* ── Filter / Search ── */}
-          <div className="mt-3">
-            <FilterBar
-              searchPlaceholder="Báo cáo kỳ quỹ…"
-              filters={<>{fundChips}{periodSelect}</>}
-              onOpenFilters={() => setShowFilterSheet(true)}
-            />
-          </div>
-
           {/* ── Official KPI Summary (backend fundSummary = Source of Truth) ── */}
-          <p className="mb-2 mt-4 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Tổng hợp chính thức · nguồn: backend summary</p>
+          <p className="mb-2 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Tổng hợp chính thức · nguồn: backend summary</p>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 xl:grid-cols-4">
             {kpi('Tổng thu kỳ', kIncome, 'Quỹ Chính (backend)', 'green', <TrendingUp size={18} />)}
             {kpi('Tổng chi kỳ', kExpense, 'Quỹ Chính (backend)', 'amber', <TrendingDown size={18} />)}
@@ -638,45 +605,6 @@ export function Reports() {
             </div>
           )}
         </>
-      )}
-
-      {/* ── Mobile filter bottom sheet ── */}
-      {showFilterSheet && (
-        <Portal>
-        <div className="fixed inset-0 z-50 flex items-end">
-          <div className="absolute inset-0" style={{ background: 'rgb(15 23 42 / 0.30)' }} onClick={() => setShowFilterSheet(false)} />
-          <div ref={filterSheetRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Bộ lọc báo cáo" className="outline-none relative flex max-h-[88vh] w-full flex-col rounded-t-[24px] [background:var(--pf-surface)]">
-            <div className="flex items-center justify-between border-b px-5 py-4 border-[color:var(--pf-border)]">
-              <h2 className="text-base font-semibold [color:var(--pf-text)]">Bộ lọc báo cáo</h2>
-              <button onClick={() => setShowFilterSheet(false)} aria-label="Đóng" className="flex h-9 w-9 items-center justify-center rounded-xl text-lg [color:var(--pf-color-muted)]"><span aria-hidden>✕</span></button>
-            </div>
-            <div className="space-y-5 overflow-y-auto px-5 py-5">
-              <div>
-                <p className="mb-2 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Nguồn quỹ</p>
-                <div className="flex flex-wrap gap-2">
-                  {([['ALL', 'Tất cả'], ['COMMON', 'Quỹ Chính'], ['MINI', 'Quỹ Phụ']] as ['ALL' | FundSource, string][]).map(([v, l]) => (
-                    <button key={v} onClick={() => setFundFilter(v)} aria-pressed={fundFilter === v}
-                      className="rounded-full border px-3 py-1.5 text-xs font-semibold"
-                      style={fundFilter === v ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)', borderColor: 'var(--pf-primary)' } : { color: 'var(--pf-color-muted)', borderColor: 'var(--pf-border)' }}>{l}</button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label htmlFor="rp-period-m" className="mb-2 block text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Kỳ quỹ</label>
-                <select id="rp-period-m" value={selectedPeriodId} onChange={e => setSelectedPeriodId(e.target.value)} className="input-base">
-                  {[...clubData.fundPeriods].sort((a, b) => (b.startDate ?? '').localeCompare(a.startDate ?? '')).map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 border-t px-5 py-4 border-[color:var(--pf-border)]">
-              <ActionButton variant="secondary" fullWidth onClick={() => { resetFilters(); setShowFilterSheet(false) }}>Xóa lọc</ActionButton>
-              <ActionButton fullWidth onClick={() => setShowFilterSheet(false)}>Áp dụng</ActionButton>
-            </div>
-          </div>
-        </div>
-        </Portal>
       )}
 
       {/* ── Infographic modal — chỉ mở khi đủ official field (không fallback 0/fake) ── */}

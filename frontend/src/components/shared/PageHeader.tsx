@@ -73,17 +73,17 @@ export function PageHeader({
     return (
       <header
         className={cn(
-          'mb-4 flex flex-col gap-2 min-[600px]:flex-row min-[600px]:items-center min-[600px]:justify-between lg:gap-2',
+          'mb-4 flex flex-col gap-2 min-[600px]:flex-row min-[600px]:flex-wrap min-[600px]:items-center min-[600px]:justify-between lg:gap-2',
           actions ? 'pf-toolbar' : '',
           className,
         )}
       >
         {subtitle ? (
-          <p className="min-w-0 flex-1 text-sm [color:var(--pf-color-muted)]">{subtitle}</p>
+          <p className="min-w-0 flex-1 basis-56 text-sm [color:var(--pf-color-muted)]">{subtitle}</p>
         ) : (
           <span />
         )}
-        <div className="flex items-center gap-2 flex-wrap min-[600px]:shrink-0 min-[600px]:flex-nowrap min-[600px]:justify-end">
+        <div className="flex items-center gap-2 flex-wrap min-[600px]:ml-auto min-[600px]:shrink-0 min-[600px]:flex-nowrap min-[600px]:justify-end">
           {aside && <div className="hidden sm:flex items-center gap-2">{aside}</div>}
           {actions}
         </div>
