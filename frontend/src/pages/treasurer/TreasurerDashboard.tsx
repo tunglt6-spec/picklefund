@@ -201,16 +201,23 @@ export function TreasurerDashboard() {
                 <div className="flex h-7 w-7 items-center justify-center rounded-lg [background:var(--pf-primary-soft)]"><f.Icon size={14} className="[color:var(--pf-primary-text)]" /></div>
                 <p className="text-xs font-bold uppercase tracking-wide [color:var(--pf-primary-text)]">{f.label}</p>
               </div>
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5"><p className="mb-1 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Thu</p><p className="text-base font-bold" style={{ color: moneyColor(f.income, 'income') }}>{formatVND(f.income)}</p></div>
-                <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5"><p className="mb-1 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Chi</p><p className="text-base font-bold" style={{ color: moneyColor(f.expense, 'expense') }}>{formatVND(f.expense)}</p></div>
-                <div data-hi="" data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5"><p className="mb-1 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Số dư</p><p className="text-base font-bold" style={{ color: moneyColor(f.bal, 'balance') }}>{formatVND(f.bal)}</p></div>
+              <div className="flex flex-col gap-2">
+                {([
+                  ['Thu', f.income, 'income', false],
+                  ['Chi', f.expense, 'expense', false],
+                  ['Số dư', f.bal, 'balance', true],
+                ] as const).map(([lab, val, kind, hi]) => (
+                  <div key={lab} data-keep="" data-hi={hi ? '' : undefined} className="pf-stat-cell flex items-center justify-between gap-3 rounded-lg px-3 py-2.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">{lab}</p>
+                    <div className="whitespace-nowrap text-base font-bold tabular-nums" style={{ color: moneyColor(val, kind) }}>{formatVND(val)}</div>
+                  </div>
+                ))}
               </div>
             </div>
           ))}
-          <div data-hi="" className="pf-stat-card rounded-xl p-4">
+          <div data-hi="" className="pf-stat-card rounded-xl p-4 min-[600px]:max-[1023px]:col-span-2">
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Tổng Tài Sản CLB</p>
-            <p className="text-xl font-bold [color:var(--pf-primary-text)]">{formatVND(clubAssetsBalance)}</p>
+            <p className="text-xl font-bold" style={{ color: moneyColor(clubAssetsBalance, 'balance') ?? 'var(--pf-primary-text)' }}>{formatVND(clubAssetsBalance)}</p>
             <p className="mt-1 text-xs [color:var(--pf-color-muted)]">Quỹ Chính + Số dư chuyển kỳ</p>
           </div>
         </div>

@@ -293,7 +293,7 @@ export function TreasurerIncome() {
         </div>
         <div className="px-4 pt-4 pb-24 space-y-4">
           {/* KPIs */}
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2 [&>:last-child]:col-span-2">
             {[
               { label: 'Đã xác nhận', value: formatVND(totalConfirmed), color: '', mc: moneyColor(totalConfirmed, 'income') },
               { label: 'Chờ xác nhận', value: `${unconfirmedCount}`, color: 'text-amber-600', mc: undefined as string | undefined },
@@ -301,7 +301,7 @@ export function TreasurerIncome() {
             ].map(k => (
               <div key={k.label} data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1 leading-tight">{k.label}</div>
-                <div className={`text-base font-bold ${k.color} whitespace-nowrap text-[clamp(0.8rem,4.2vw,1rem)]`} style={k.mc ? { color: k.mc } : undefined}>{k.value}</div>
+                <div className={`text-base font-bold ${k.color} whitespace-nowrap text-[min(1rem,11.5cqw)]`} style={k.mc ? { color: k.mc } : undefined}>{k.value}</div>
               </div>
             ))}
           </div>

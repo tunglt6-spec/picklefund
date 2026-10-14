@@ -157,7 +157,7 @@ function SectionCard({
       onClick={() => clickable && onGo(s.to!)}
       style={cardStyle}
       data-hi={s.status === 'here' ? '' : undefined}
-      className={`pf-stat-card group relative flex flex-col gap-2 rounded-xl p-3 text-left transition-all ${
+      className={`pf-stat-card @container group relative flex flex-col gap-2 rounded-xl p-3 text-left transition-all ${
         clickable ? 'hover:shadow-sm cursor-pointer' : 'cursor-default'
       } ${s.status === 'here' ? 'ring-1 ring-inset' : ''}`}
     >
@@ -181,21 +181,50 @@ function SectionCard({
         </div>
       </div>
       <div className="min-w-0">
-        <p className={`text-sm font-semibold truncate ${soon ? '[color:var(--pf-color-muted)]' : '[color:var(--pf-text)]'}`}>{s.label}</p>
-        <p className="text-xs [color:var(--pf-color-muted)] leading-snug line-clamp-2">{s.desc}</p>
+        <p className={`text-sm font-semibold leading-tight ${soon ? '[color:var(--pf-color-muted)]' : '[color:var(--pf-text)]'}`}>{s.label}</p>
+        <p className="mt-0.5 text-xs [color:var(--pf-color-muted)] leading-snug line-clamp-2">{s.desc}</p>
       </div>
       {metrics && metrics.length > 0 && (
-        <div className="mt-auto grid grid-cols-3 gap-1">
-          {metrics.map((m) => (
-            <div key={m.label} data-keep="" className="pf-stat-cell rounded-lg px-1 py-1.5 text-center">
-              <p className="text-[10px] font-semibold uppercase tracking-wide leading-tight [color:var(--pf-color-muted)] break-words">{m.label}</p>
-              <p className="mt-1 text-base font-bold leading-none [color:var(--pf-text)] tabular-nums truncate">{m.value}</p>
-            </div>
+        <div className="grid flex-1 grid-cols-6 auto-rows-fr content-start gap-1.5">
+          {metrics.map((m, i) => (
+            <MiniStat key={m.label} label={m.label} value={m.value} className={miniSpan(i, metrics.length)} />
           ))}
         </div>
       )}
     </button>
   )
+}
+
+/** Ô số liệu nhỏ THỐNG NHẤT (hub + đội ngũ AI): cùng chiều cao, cỡ chữ cố định (không co theo container), nhãn tối đa 2 dòng. */
+/** Lưới 6 cột: hẹp = 2 ô/hàng, rộng (container ≥15rem) = 3 ô/hàng; ô lẻ cuối hàng tự giãn để KHÔNG chừa lỗ trống. */
+function miniSpan(i: number, n: number): string {
+  const narrow = n % 2 === 1 && i === n - 1 ? 'col-span-6' : 'col-span-3'
+  const r = n % 3
+  let wide = '@[15rem]:col-span-2'
+  if (r === 1 && i === n - 1) wide = '@[15rem]:col-span-6'
+  else if (r === 2 && i >= n - 2) wide = '@[15rem]:col-span-3'
+  return `${narrow} ${wide}`
+}
+
+function MiniStat({ label, value, className = '' }: { label: string; value: React.ReactNode; className?: string }) {
+  const long = typeof value === 'string' && value.length > 7
+  return (
+    <div data-keep="" title={label} className={`pf-stat-cell flex min-h-[58px] max-h-[92px] min-w-0 flex-col items-center justify-center rounded-lg px-1.5 py-2 text-center ${className}`}>
+      <div className="line-clamp-2 w-full text-[10px] font-semibold uppercase leading-tight tracking-wide [color:var(--pf-color-muted)]">{label}</div>
+      <div className={`mt-1 w-full whitespace-nowrap font-bold leading-tight tabular-nums [color:var(--pf-text)] ${long ? 'text-xs' : 'text-base'}`}>{value}</div>
+    </div>
+  )
+}
+
+/** Mã hành động kiểm toán → nhãn ngắn dễ đọc (AI_ACTION_APPROVE → "AI duyệt"). */
+function actionLabel(name: string): string {
+  const MAP: Record<string, string> = {
+    AI_ACTION_APPROVE: 'AI duyệt', AI_ACTION_REJECT: 'AI từ chối', AI_ACTION_CREATE: 'AI tạo', AI_ACTION_CREATED: 'AI tạo',
+    AI_ACTION_EXECUTE: 'AI thực thi', AI_ACTION_EXECUTED: 'AI thực thi', AI_ACTION_EXPIRE: 'AI hết hạn',
+  }
+  if (MAP[name]) return MAP[name]
+  const t = name.replace(/^AI_ACTION_/, 'AI ').replace(/_/g, ' ').toLowerCase()
+  return t.charAt(0).toUpperCase() + t.slice(1)
 }
 
 function Card({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -378,7 +407,7 @@ export function AiManagerDashboard() {
         return {
           metrics: [
             { label: 'Health Score', value: `${rt.kpi.score}/100` },
-            { label: rt.kpi.interpretation ?? 'Sức khỏe CLB', value: rt.kpi.score >= 70 ? 'Ổn định' : rt.kpi.score >= 50 ? 'Theo dõi' : 'Cần cải thiện' },
+            { label: 'Đánh giá', value: rt.kpi.score >= 70 ? 'Ổn định' : rt.kpi.score >= 50 ? 'Theo dõi' : 'Cần cải thiện' },
           ],
         }
       }
@@ -398,7 +427,7 @@ export function AiManagerDashboard() {
         return {
           metrics: [
             { label: 'Tổng (hôm nay)', value: a.total },
-            ...top.map((t) => ({ label: t.name, value: t.count })),
+            ...top.map((t) => ({ label: actionLabel(t.name), value: t.count })),
           ],
         }
       }
@@ -594,7 +623,7 @@ export function AiManagerDashboard() {
                 return (
                 <div
                   key={t.key}
-                  className="pf-stat-card rounded-xl p-4 flex flex-col gap-2.5"
+                  className="pf-stat-card @container rounded-xl p-4 flex flex-col gap-2.5"
                   style={{ '--accent': color } as React.CSSProperties}
                 >
                   <div className="flex items-center justify-between">
@@ -611,12 +640,9 @@ export function AiManagerDashboard() {
                     <p className="text-xs [color:var(--pf-color-muted)] leading-snug line-clamp-2">{t.role}</p>
                   </div>
                   {t.stats ? (
-                    <div className={`grid gap-1 text-center ${t.stats.length >= 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
-                      {t.stats.map(s => (
-                        <div key={s.l} data-keep="" className="pf-stat-cell rounded-lg py-1.5">
-                          <p className="text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)] leading-tight">{s.l}</p>
-                          <p className="mt-1 text-base font-bold [color:var(--pf-text)] tabular-nums">{s.v}</p>
-                        </div>
+                    <div className="grid grid-cols-6 auto-rows-fr gap-1.5">
+                      {t.stats.map((s, i) => (
+                        <MiniStat key={s.l} label={s.l} value={s.v} className={miniSpan(i, t.stats!.length)} />
                       ))}
                     </div>
                   ) : (
