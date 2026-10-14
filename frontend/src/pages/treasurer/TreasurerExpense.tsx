@@ -205,7 +205,7 @@ export function TreasurerExpense() {
                       <div key={e.id} className="pf-rowcard p-4">
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-[700] [color:var(--pf-text)] truncate">{e.description}</div>
+                            <div className="text-sm font-[700] [color:var(--pf-text)] break-words">{e.description}</div>
                             <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{period?.name ?? '—'} · {formatDate(e.expenseDate)}</div>
                           </div>
                           <div className="text-base font-[800] text-red-600 shrink-0">{formatVND(e.amount)}</div>

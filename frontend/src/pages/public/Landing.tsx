@@ -264,7 +264,7 @@ export function Landing() {
   }, [])
 
   return (
-    <div className="pf-landing-root min-h-screen [background:var(--pf-bg)] [color:var(--pf-text)]">
+    <div className="pf-landing-root min-h-dvh [background:var(--pf-bg)] [color:var(--pf-text)]">
       <style>{`
 .pf-landing-root :where(a,button):focus-visible{outline:2px solid var(--pf-primary);outline-offset:2px}
 .pf-elev{box-shadow:var(--pf-shadow);transition:box-shadow .25s ease,transform .25s ease,border-color .25s ease}

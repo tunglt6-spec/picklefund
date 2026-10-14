@@ -151,7 +151,7 @@ export function SuperClubDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen [background:var(--pf-surface-muted)] flex items-center justify-center">
+      <div className="min-h-dvh [background:var(--pf-surface-muted)] flex items-center justify-center">
         <div className="[color:var(--pf-color-muted)] text-sm">Đang tải...</div>
       </div>
     )
@@ -159,7 +159,7 @@ export function SuperClubDetail() {
 
   if (!club) {
     return (
-      <div className="min-h-screen [background:var(--pf-surface-muted)] flex flex-col items-center justify-center gap-4">
+      <div className="min-h-dvh [background:var(--pf-surface-muted)] flex flex-col items-center justify-center gap-4">
         <div className="[color:var(--pf-color-muted)] text-sm">Không tìm thấy CLB</div>
         <Button variant="secondary" onClick={() => navigate('/super/clubs')}><ArrowLeft size={16} /> Quay lại</Button>
       </div>
@@ -362,7 +362,7 @@ export function SuperClubDetail() {
 
   if (isMobile) {
     return (
-      <div className="min-h-screen [background:var(--pf-bg)]">
+      <div className="min-h-dvh [background:var(--pf-bg)]">
         <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center gap-3">
           <button onClick={() => navigate('/super/clubs')} className="p-1.5 rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]">
             <ArrowLeft size={18} />

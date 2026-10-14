@@ -790,11 +790,11 @@ export function Members() {
               itemKey={(r) => r.member.id}
               onItemClick={(r) => setDetailId(r.member.id)}
               renderCard={(r) => (
-                <div className="flex items-center gap-3 min-[600px]:flex-wrap">
+                <div className="flex flex-wrap items-center gap-3">
                   <MemberAvatar name={r.member.fullName} id={r.member.id} size={42} />
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 basis-32">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="truncate font-semibold [color:var(--pf-text)] min-[600px]:whitespace-normal">{r.member.fullName}</p>
+                      <p className="break-words font-semibold [color:var(--pf-text)]">{r.member.fullName}</p>
                       <StatusBadge tone={STATUS_TONE[r.member.status] ?? 'neutral'} dot>{STATUS_LABEL[r.member.status] ?? r.member.status}</StatusBadge>
                     </div>
                     <div className="mt-1 flex items-center gap-3 text-xs [color:var(--pf-color-muted)]">
@@ -802,7 +802,7 @@ export function Members() {
                       <span className="flex items-center gap-1"><Wallet size={12} />{r.periodName ? (r.paid ? 'Đã đóng' : 'Chưa đóng') : '—'}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 min-[600px]:w-full min-[600px]:justify-end min-[600px]:border-t min-[600px]:pt-1 min-[600px]:[border-color:var(--pf-border-soft)]" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex w-full items-center justify-end gap-1 border-t pt-1 [border-color:var(--pf-border-soft)]" onClick={(e) => e.stopPropagation()}>
                     <IconBtn label="Chỉnh sửa" onClick={() => openEdit(r.member)}><Edit2 size={15} /></IconBtn>
                     {r.member.status !== 'left' && (
                       <IconBtn label={r.member.status === 'active' ? 'Tạm ngưng' : 'Kích hoạt'} onClick={() => handleToggleStatus(r.member)}><Power size={15} /></IconBtn>

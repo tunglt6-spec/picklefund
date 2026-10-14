@@ -186,7 +186,7 @@ export function MemberReceipt() {
   }
 
   if (isMobile && loading) return (
-    <div className="flex-1 flex items-center justify-center min-h-screen [background:var(--pf-bg)]">
+    <div className="flex-1 flex items-center justify-center min-h-dvh [background:var(--pf-bg)]">
       <div className="h-8 w-8 rounded-full border-2 [border-color:var(--pf-primary)] border-t-transparent animate-spin" />
     </div>
   )

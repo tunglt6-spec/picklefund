@@ -273,7 +273,7 @@ export function TreasurerDashboard() {
                           {row.type === 'income' ? <TrendingUp size={13} className="text-emerald-600" /> : <TrendingDown size={13} className="text-red-500" />}
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="truncate text-sm font-semibold [color:var(--pf-text)] min-[600px]:whitespace-normal min-[600px]:break-words">{row.description}</div>
+                          <div className="text-sm font-semibold [color:var(--pf-text)] break-words">{row.description}</div>
                           <div className="text-xs [color:var(--pf-color-muted)]">{formatDate(row.date)}</div>
                         </div>
                         <div className="shrink-0 text-right">

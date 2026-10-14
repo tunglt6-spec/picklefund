@@ -651,7 +651,7 @@ function RankList({ title, rows, fmt }: { title: string; rows: any[]; fmt: (v: n
           {rows.map((r, i) => (
             <li key={r.clubId ?? i} className="sa-rank-row flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-sm">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white" style={{ background: i === 0 ? 'var(--pf-grad-brand)' : 'color-mix(in srgb, var(--pf-primary) 45%, var(--pf-surface))' }}>{i + 1}</span>
-              <span className="min-w-0 flex-1 truncate font-medium [color:var(--pf-text)] min-[600px]:whitespace-normal min-[600px]:break-words">{r.name}</span>
+              <span className="min-w-0 flex-1 font-medium [color:var(--pf-text)] break-words">{r.name}</span>
               <span className="shrink-0 font-bold tabular-nums [color:var(--pf-primary-text)]">{fmt(r.value)}</span>
             </li>
           ))}

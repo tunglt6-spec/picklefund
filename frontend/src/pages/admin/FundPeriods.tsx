@@ -1119,7 +1119,7 @@ export function FundPeriods() {
                               checked={selectedIds.has(p.id)} onChange={() => toggleOne(p.id)} />
                           )}
                           <div className="min-w-0">
-                            <p className="truncate font-semibold [color:var(--pf-text)] min-[600px]:whitespace-normal min-[600px]:break-words">{p.name}</p>
+                            <p className="font-semibold [color:var(--pf-text)] break-words">{p.name}</p>
                             <p className="text-xs [color:var(--pf-color-muted)]">{(p.type ?? 'chung') === 'game' ? 'Quỹ Phụ' : 'Quỹ Chính'} · {periodDays(p)} ngày</p>
                           </div>
                         </div>

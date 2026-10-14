@@ -23,7 +23,7 @@ export function PublicPage({
   }, [title])
 
   return (
-    <div className="min-h-screen [background:var(--pf-bg)] [color:var(--pf-text)]">
+    <div className="min-h-dvh [background:var(--pf-bg)] [color:var(--pf-text)]">
       <LandingHeader />
       <main>{children}</main>
       <LandingFooter />

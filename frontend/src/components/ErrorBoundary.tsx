@@ -118,7 +118,7 @@ function ManHinhLoi({
   }, [hienNut])
   return (
     <div
-      className="flex min-h-screen flex-col items-center justify-center gap-4 px-6 text-center"
+      className="flex min-h-dvh flex-col items-center justify-center gap-4 px-6 text-center"
       style={{ background: 'var(--pf-bg, var(--pf-surface-muted))', color: 'var(--pf-text, #1e293b)' }}
     >
       <div

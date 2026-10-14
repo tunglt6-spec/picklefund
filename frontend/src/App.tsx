@@ -224,7 +224,7 @@ export default function App() {
             cả app; lỗi tải chunk sau deploy → tự tải lại lấy bản mới. */}
         <ErrorBoundary>
         <Suspense fallback={
-          <div className="flex min-h-screen items-center justify-center [background:var(--pf-bg)]">
+          <div className="flex min-h-dvh items-center justify-center [background:var(--pf-bg)]">
             <div
               className="h-8 w-8 animate-spin rounded-full border-2 border-[color:var(--pf-border)] border-t-[color:var(--pf-primary-text)]"
               role="status"

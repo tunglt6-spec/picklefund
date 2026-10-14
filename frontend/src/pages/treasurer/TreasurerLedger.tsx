@@ -104,7 +104,7 @@ export function TreasurerLedger() {
             ].map(k => (
               <div key={k.label} data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{k.label}</div>
-                <div className={`text-base font-bold ${k.color} truncate`}>{k.value}</div>
+                <div className={`text-base font-bold ${k.color} whitespace-nowrap text-[clamp(0.8rem,4.2vw,1rem)]`}>{k.value}</div>
               </div>
             ))}
           </div>

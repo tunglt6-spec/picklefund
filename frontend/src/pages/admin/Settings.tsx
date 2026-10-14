@@ -1147,11 +1147,11 @@ export function Settings() {
         </div>
 
         {/* Tab bar */}
-        <div className="flex gap-1 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-3 py-2">
+        <div className="flex gap-1 overflow-x-auto no-scrollbar [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-3 py-2">
           {tabs.map(tab => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
               className={cn(
-                'flex flex-1 items-center justify-center gap-1.5 rounded-[10px] px-2 py-2 text-xs font-medium transition-colors',
+                'flex shrink-0 flex-1 items-center whitespace-nowrap justify-center gap-1.5 rounded-[10px] px-2 py-2 text-xs font-medium transition-colors',
                 activeTab === tab.id
                   ? 'text-white shadow-sm'
                   : '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]'
@@ -1177,7 +1177,7 @@ export function Settings() {
   }
 
   return (
-    <div className="min-h-screen [background:var(--pf-surface-muted)]">
+    <div className="min-h-dvh [background:var(--pf-surface-muted)]">
       <PageHeader variant="bar" title="Cài đặt" subtitle="Quản lý thông tin CLB và tài khoản" />
 
       <div className="p-4 md:p-6 space-y-4 md:space-y-6">

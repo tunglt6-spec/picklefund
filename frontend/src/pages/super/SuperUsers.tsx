@@ -137,7 +137,7 @@ export function SuperUsers() {
 
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
         <FilterBar className="flex-1" searchValue={search} onSearchChange={setSearch} searchPlaceholder="Tìm theo tên, email, tài khoản…" />
-        <div className="flex gap-1 self-start overflow-x-auto rounded-full border p-1 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
+        <div className="flex max-w-full gap-1 self-start overflow-x-auto rounded-full border p-1 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
           {roleOptions.map((opt) => (
             <button
               key={opt.value}

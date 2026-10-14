@@ -300,7 +300,7 @@ export function TreasurerIncome() {
             ].map(k => (
               <div key={k.label} data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1 leading-tight">{k.label}</div>
-                <div className={`text-base font-bold ${k.color} truncate`}>{k.value}</div>
+                <div className={`text-base font-bold ${k.color} whitespace-nowrap text-[clamp(0.8rem,4.2vw,1rem)]`}>{k.value}</div>
               </div>
             ))}
           </div>
@@ -319,7 +319,7 @@ export function TreasurerIncome() {
                   <div key={c.id} className="pf-rowcard p-4">
                     <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-[700] [color:var(--pf-text)] truncate">
+                        <div className="text-sm font-[700] [color:var(--pf-text)] break-words">
                           {isMiniRow ? (c.payerName || 'Quỹ Phụ') : (c.member?.fullName ?? c.memberId)}
                         </div>
                         <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">
