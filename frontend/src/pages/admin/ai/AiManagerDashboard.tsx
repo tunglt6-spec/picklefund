@@ -187,7 +187,7 @@ function SectionCard({
       {metrics && metrics.length > 0 && (
         <div className="mt-auto grid grid-cols-3 gap-1">
           {metrics.map((m) => (
-            <div key={m.label} className="pf-stat-cell rounded-lg px-1 py-1.5 text-center">
+            <div key={m.label} data-keep="" className="pf-stat-cell rounded-lg px-1 py-1.5 text-center">
               <p className="text-[10px] font-semibold uppercase tracking-wide leading-tight [color:var(--pf-color-muted)] break-words">{m.label}</p>
               <p className="mt-1 text-base font-bold leading-none [color:var(--pf-text)] tabular-nums truncate">{m.value}</p>
             </div>
@@ -614,7 +614,7 @@ export function AiManagerDashboard() {
                   {t.stats ? (
                     <div className={`grid gap-1 text-center ${t.stats.length >= 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                       {t.stats.map(s => (
-                        <div key={s.l} className="pf-stat-cell rounded-lg py-1.5">
+                        <div key={s.l} data-keep="" className="pf-stat-cell rounded-lg py-1.5">
                           <p className="text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)] leading-tight">{s.l}</p>
                           <p className="mt-1 text-base font-bold [color:var(--pf-text)] tabular-nums">{s.v}</p>
                         </div>
