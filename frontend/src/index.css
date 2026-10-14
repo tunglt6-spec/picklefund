@@ -897,7 +897,9 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
     color: var(--pf-color-muted);
   }
   .pf-table-cards tbody td[data-label=""]::before, .pf-table-cards tbody td:not([data-label])::before { content: none; }
-  .pf-table-cards tbody td:first-child { font-weight: 600; }
+  .pf-table-cards tbody td:first-child { display: block; text-align: left !important; font-weight: 600; padding-bottom: 6px !important; }
+  .pf-table-cards tbody td:first-child::before { content: none; }
+  .pf-table-cards table { min-width: 0 !important; }
   .pf-table-cards button { min-height: 44px; min-width: 44px; }
 }
 

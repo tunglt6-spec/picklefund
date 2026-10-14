@@ -11,6 +11,7 @@ import { RecordPlanPaymentModal } from '../../components/super/RecordPlanPayment
 import { useIsMobile } from '../../hooks/useIsMobile'
 import type { Club, ServicePlan } from '../../types'
 import toast from 'react-hot-toast'
+import { TableCardsWrap } from '../../components/shared/TableCardsWrap'
 
 const PLAN_LABEL: Record<ServicePlan, string> = {
   STARTER: 'Starter',
@@ -588,7 +589,7 @@ export function SuperClubs() {
 
         {clubsError && clubs.length === 0 && <ErrorState onRetry={loadClubs} />}
         <div className="pf-glass-strong pf-compact-table rounded-2xl overflow-x-auto" style={{ boxShadow: 'var(--pf-shadow)' }}>
-          <table className="pf-rows w-full min-w-[720px] text-sm [border-spacing:0_6px]">
+          <TableCardsWrap><table className="pf-rows w-full min-w-[720px] text-sm [border-spacing:0_6px]">
             <thead className="[background:var(--pf-surface-muted)] border-b border-[color:var(--pf-border)]">
               <tr>
                 <th scope="col" className="text-left px-3 py-2 font-semibold [color:var(--pf-text)]">Tên CLB</th>
@@ -648,7 +649,7 @@ export function SuperClubs() {
                 </tr>
               ))}
             </tbody>
-          </table>
+          </table></TableCardsWrap>
         </div>
       </div>
 
