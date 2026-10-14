@@ -350,7 +350,7 @@ export function MinigameList() {
                     <div>
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
-                          <p className="truncate font-semibold [color:var(--pf-text)]">{sportEmoji(r.mg.sport) && `${sportEmoji(r.mg.sport)} `}{r.mg.name}</p>
+                          <p className="truncate font-semibold [color:var(--pf-text)] min-[600px]:whitespace-normal min-[600px]:break-words">{sportEmoji(r.mg.sport) && `${sportEmoji(r.mg.sport)} `}{r.mg.name}</p>
                           <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">{r.mg.startDate || '—'}{r.mg.endDate ? ` → ${r.mg.endDate}` : ''}</p>
                         </div>
                         <StatusBadge tone={STATUS_TONE[r.mg.status] ?? 'neutral'} dot>{STATUS_LABEL[r.mg.status] ?? r.mg.status}</StatusBadge>

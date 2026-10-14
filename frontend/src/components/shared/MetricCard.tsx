@@ -64,7 +64,7 @@ export function MetricCard({
     <div
       className={cn(
         'pf-stat-card @container',
-        'flex flex-col gap-2 rounded-[20px] p-4 sm:gap-3 sm:p-5 pf-hover-lift',
+        'flex flex-col gap-2 rounded-[20px] p-4 lg:gap-3 lg:p-5 pf-hover-lift',
         compact && 'max-sm:gap-1.5 max-sm:p-3',
         className,
       )}
@@ -76,7 +76,7 @@ export function MetricCard({
         </span>
         {icon && (
           <span
-            className={cn('pf-metric-icon hidden h-8 w-8 shrink-0 items-center justify-center rounded-xl @[10rem]:flex sm:h-9 sm:w-9', compact && 'max-sm:hidden')}
+            className={cn('pf-metric-icon hidden h-8 w-8 shrink-0 items-center justify-center rounded-xl @[10rem]:flex lg:h-9 lg:w-9', compact && 'max-sm:hidden')}
             style={(t ? { '--chip-bg': t.border, '--chip-fg': t.fg } : { '--chip-bg': a.soft, '--chip-fg': a.color }) as React.CSSProperties}
           >
             {icon}

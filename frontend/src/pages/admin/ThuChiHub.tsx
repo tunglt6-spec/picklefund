@@ -574,7 +574,7 @@ export function ThuChiHub() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="truncate font-semibold [color:var(--pf-text)]">{t.party}</p>
+                        <p className="truncate font-semibold [color:var(--pf-text)] min-[600px]:whitespace-normal min-[600px]:break-words">{t.party}</p>
                         <Amount t={t} />
                       </div>
                       <div className="mt-1 flex items-center gap-2 text-xs [color:var(--pf-color-muted)]">

@@ -548,7 +548,7 @@ export function MemberAccounts() {
             </div>
           ) : (
             <>
-            <ul className="grid grid-cols-1 min-[600px]:grid-cols-2 gap-3 p-3 lg:hidden">
+            <ul className="pf-cardlist grid grid-cols-1 min-[600px]:grid-cols-2 gap-3 p-3 lg:hidden">
               {filtered.map(acc => (
                 <li key={acc.id} className="pf-rowcard p-4">
                   <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1.5">

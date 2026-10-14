@@ -191,9 +191,9 @@ export function Debts() {
                     items={filtered}
                     itemKey={(r) => r.id}
                     renderCard={(r) => (
-                      <div className="flex items-center justify-between gap-3 rounded-[16px] border p-4 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
+                      <div className="flex items-center justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="font-semibold [color:var(--pf-text)] truncate">{r.name}</p>
+                          <p className="font-semibold [color:var(--pf-text)] truncate min-[600px]:whitespace-normal min-[600px]:break-words">{r.name}</p>
                           <p className="text-xs [color:var(--pf-color-muted)]">{r.phone || '—'}</p>
                         </div>
                         <div className="flex flex-col items-end gap-1 shrink-0">

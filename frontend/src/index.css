@@ -875,6 +875,7 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
 
 /* Danh sách thẻ trên mobile (DataTable mobileCards): nút thao tác đạt vùng bấm 44px */
 .pf-cardlist button { min-width: 44px; min-height: 44px; }
+.pf-cardlist input[type=checkbox] { width: 22px; height: 22px; }
 
 /* Bảng thô → THẺ dưới 1024px (bọc bằng <TableCardsWrap>; td lấy nhãn từ data-label) */
 @media (max-width: 1023px) {
@@ -888,7 +889,7 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
     box-shadow: 0 3px 8px color-mix(in srgb, var(--pf-primary) 12%, transparent);
   }
   .pf-table-cards tbody td {
-    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
     padding: 4px 0 !important; border: 0 !important; background: transparent !important;
     text-align: right !important; min-width: 0; word-break: break-word;
   }

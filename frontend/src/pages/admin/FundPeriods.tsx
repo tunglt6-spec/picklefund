@@ -1168,7 +1168,7 @@ export function FundPeriods() {
                 </div>
               ) : (
                 <>
-                <ul className="grid grid-cols-1 min-[600px]:grid-cols-2 gap-3 p-3 lg:hidden">
+                <ul className="pf-cardlist grid grid-cols-1 min-[600px]:grid-cols-2 gap-3 p-3 lg:hidden">
                   {paginated.map(p => (
                     <li key={p.id} className="pf-rowcard p-4">
                       <div className="flex items-start justify-between gap-3">
@@ -1179,7 +1179,7 @@ export function FundPeriods() {
                               checked={selectedIds.has(p.id)} onChange={() => toggleOne(p.id)} />
                           )}
                           <div className="min-w-0">
-                            <p className="truncate font-semibold [color:var(--pf-text)]">{p.name}</p>
+                            <p className="truncate font-semibold [color:var(--pf-text)] min-[600px]:whitespace-normal min-[600px]:break-words">{p.name}</p>
                             <p className="text-xs [color:var(--pf-color-muted)]">{(p.type ?? 'chung') === 'game' ? 'Quỹ Phụ' : 'Quỹ Chính'} · {periodDays(p)} ngày</p>
                           </div>
                         </div>
