@@ -2,7 +2,7 @@
  * ClubDashboard (06) — Dashboard Tổng quan CLB (VẬN HÀNH) theo UI Spec V2.2 đã duyệt.
  * 4 KPI vận hành (Thành viên · Check-in · Vắng mặt · Tỷ lệ chuyên cần) + "Lịch hôm nay"
  * + "Hoạt động gần đây". Read-only từ clubDataStore (KHÔNG gọi finance — tài chính ở màn 07
- * /finance-dashboard). V2.2 Clean Modern SaaS, mobile-first.
+ * /tai-chinh?tab=reports). V2.2 Clean Modern SaaS, mobile-first.
  */
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'

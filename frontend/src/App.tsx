@@ -102,7 +102,6 @@ const WeeklyActivity = lz(() => import('./pages/admin/WeeklyActivity'), 'WeeklyA
 const SessionRegistration = lz(() => import('./pages/admin/SessionRegistration'), 'SessionRegistration')
 const CheckIn = lz(() => import('./pages/admin/CheckIn'), 'CheckIn')
 const ScheduleCalendar = lz(() => import('./pages/admin/ScheduleCalendar'), 'ScheduleCalendar')
-const FinanceDashboard = lz(() => import('./pages/admin/FinanceDashboard'), 'FinanceDashboard')
 const Reports = lz(() => import('./pages/admin/Reports'), 'Reports')
 const MemberScoring = lz(() => import('./pages/admin/MemberScoring'), 'MemberScoring')
 const Settings = lz(() => import('./pages/admin/Settings'), 'Settings')
@@ -197,6 +196,12 @@ function RoleRoute({ allow }: { allow: string[] }) {
   if (!user) return <Navigate to="/login" replace />
   if (!allow.includes(user.role)) return <Navigate to="/" replace />
   return <Outlet />
+}
+
+// Dashboard tài chính đã gộp vào Báo cáo (trùng KPI/biểu đồ) — route cũ chuyển sang tab Báo cáo theo vai.
+function FinanceDashboardRedirect() {
+  const role = useAuthStore((s) => s.user?.role)
+  return <Navigate to={role === 'MEMBER_VIEW' ? '/member/tai-chinh?tab=reports' : '/tai-chinh?tab=reports'} replace />
 }
 
 function RootRedirect() {
@@ -316,7 +321,7 @@ export default function App() {
             <Route path="/minigames/:id/groups" element={<GroupAssignment />} />
             <Route path="/minigames/:id/schedule" element={<MatchSchedule />} />
             <Route path="/minigames/:id/standings" element={<StandingsPage />} />
-            <Route path="/finance-dashboard" element={<FinanceDashboard />} />
+            <Route path="/finance-dashboard" element={<FinanceDashboardRedirect />} />
             </Route>
             {/* Cộng đồng CLB (Member Experience v1) — mọi vai trong CLB đều vào được. */}
             <Route element={<RoleRoute allow={['SUPER_ADMIN', 'CLUB_ADMIN', 'CLUB_TREASURER', 'MEMBER_VIEW']} />}>
