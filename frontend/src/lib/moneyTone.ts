@@ -36,14 +36,14 @@ export function moneyTone(value: number | null | undefined, kind: MoneyKind = 'b
 }
 
 const VAR: Record<Exclude<MoneyTone, 'neutral'>, string> = {
-  success: 'var(--pf-tone-success)',
-  warning: 'var(--pf-tone-warning)',
-  danger: 'var(--pf-tone-danger)',
+  success: 'var(--pf-money-pos)',
+  warning: 'var(--pf-money-warn)',
+  danger: 'var(--pf-money-neg)',
 }
 
-/** Màu chữ (đủ tương phản trên nền sáng/tối): pha màu tông với --pf-text. */
+/** Màu chữ số tiền: dùng ĐÚNG màu Xanh/Đỏ của bảng & biểu đồ (token --pf-money-*), tự đổi sáng/tối. */
 export function moneyColor(value: number | null | undefined, kind: MoneyKind = 'balance'): string | undefined {
   const t = moneyTone(value, kind)
   if (t === 'neutral') return undefined
-  return `color-mix(in srgb, ${VAR[t]} 72%, var(--pf-text))`
+  return VAR[t]
 }

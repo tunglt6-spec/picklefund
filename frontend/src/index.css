@@ -286,6 +286,7 @@ select:-webkit-autofill {
   --pf-color-info-soft:    #0E2233;
   --pf-color-ai-soft:      #241E52;
   --pf-green-soft:         #10261B;
+  --pf-money-pos: #4ADE80; --pf-money-neg: #FB7185; --pf-money-warn: #FBBF24;
   --pf-secondary-soft:     #10261B;
   --pf-accent-blue-soft:   #0E2233;
   --pf-accent-violet-soft: #241E52;
@@ -429,6 +430,8 @@ select:-webkit-autofill {
    4) Trình duyệt không có backdrop-filter → nền đặc dự phòng (@supports not). */
 :root {
   --pf-tone-success: #059669; --pf-tone-warning: #D97706; --pf-tone-danger: #EF4444; --pf-tone-info: #2563EB; --pf-tone-brand: #6D5DFB;
+  /* Màu SỐ TIỀN KPI (lib/moneyTone): Xanh = màu số tiền thu ở bảng (green-600) · Đỏ = màu cột Chi ở biểu đồ · Vàng = báo động */
+  --pf-money-pos: #16A34A; --pf-money-neg: #E11D48; --pf-money-warn: #D97706;
   --pf-chart-manual: #06B6D4;
   --pf-grad-brand: linear-gradient(135deg, #6D5DFB, #5B4BE8);
   --pf-glass-bg:        rgb(255 255 255 / 0.50);

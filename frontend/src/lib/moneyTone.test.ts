@@ -24,6 +24,6 @@ test('giá trị không hợp lệ → trung tính, không có màu', () => {
   assert.equal(moneyTone(undefined, 'balance'), 'neutral')
   assert.equal(moneyTone(NaN, 'income'), 'neutral')
   assert.equal(moneyColor(null, 'balance'), undefined)
-  assert.match(moneyColor(1_000_000, 'balance') ?? '', /pf-tone-success/)
-  assert.match(moneyColor(-1, 'balance') ?? '', /pf-tone-danger/)
+  assert.match(moneyColor(1_000_000, 'balance') ?? '', /pf-money-pos/)
+  assert.match(moneyColor(-1, 'balance') ?? '', /pf-money-neg/)
 })

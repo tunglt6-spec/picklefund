@@ -1640,7 +1640,7 @@ function FundOverviewCompact({ items, contributions, isMember, className }: {
                   {p ? `${p.name} · ${formatDate(p.startDate)} – ${formatDate(p.endDate)}` : 'Chưa có kỳ quỹ đang mở'}
                 </p>
               </div>
-              {p && <Badge variant={it.tone === 'main' ? 'indigo' : 'purple'} dot>{statusLabel[p.status]}</Badge>}
+              {p && <Badge variant={statusVariant[p.status]} dot>{statusLabel[p.status]}</Badge>}
               {p && <button type="button" aria-label="Chi tiết" onClick={it.onView} className={iconBtn}><Eye size={16} /></button>}
               {!isMember && <button type="button" aria-label={p ? 'Sửa quỹ' : 'Tạo kỳ quỹ'} onClick={it.onEdit} className={iconBtn}>{p ? <Pencil size={16} /> : <Plus size={16} />}</button>}
             </div>
