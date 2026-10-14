@@ -30,6 +30,8 @@ import { canExportOrgWideData } from '../../lib/exportAccess'
 import { useBrandingStore, getBrandClubName } from '../../store/brandingStore'
 import { useClubDataStore } from '../../store/clubDataStore'
 import type { FundSource } from '../../types'
+import type { MoneyKind } from '../../lib/moneyTone'
+import { useLiveRefresh } from '../../hooks/useLiveRefresh'
 import { MINI_EXPENSE_TYPE_LABELS } from '../../types'
 import toast from 'react-hot-toast'
 import { InfographicPreviewModal } from '../../components/reports/infographic/InfographicPreviewModal'
@@ -145,6 +147,16 @@ export function Reports() {
       setLoadState('error')
     }
   }, [activePeriod?.id, accessToken])
+
+  // Làm mới âm thầm (không bật skeleton) để KPI + màu số tiền cập nhật gần thời gian thực.
+  const refreshSummarySilently = useCallback(async () => {
+    if (!activePeriod?.id || isLocalToken(accessToken)) return
+    try {
+      const res = await api.get(`/fund-periods/${activePeriod.id}/summary`)
+      setFundSummary(res.data?.data ?? null)
+    } catch { /* giữ số liệu cũ */ }
+  }, [activePeriod?.id, accessToken])
+  useLiveRefresh(refreshSummarySilently, !!activePeriod?.id)
 
   const summaryPeriodRef = useRef<string | null>(null)
   useEffect(() => {
@@ -366,8 +378,8 @@ export function Reports() {
   }
 
   /* ── KPI card helper (official) ── */
-  const kpi = (label: string, value: number | undefined, sub: string, accent: 'green' | 'rose' | 'violet' | 'amber' | 'blue' | 'teal', icon: React.ReactNode, fmt: (v: number) => string = formatVND) => (
-    <MetricCard label={label} value={value === undefined ? 'Chưa có' : fmt(value)}
+  const kpi = (label: string, value: number | undefined, sub: string, accent: 'green' | 'rose' | 'violet' | 'amber' | 'blue' | 'teal', icon: React.ReactNode, fmt: (v: number) => string = formatVND, kind?: MoneyKind) => (
+    <MetricCard label={label} value={value === undefined ? 'Chưa có' : fmt(value)} money={kind ? { value, kind } : undefined}
       sub={value === undefined ? 'Chưa có dữ liệu (backend summary)' : sub}
       accent={accent} icon={icon} negative={value !== undefined && value < 0} />
   )
@@ -442,11 +454,11 @@ export function Reports() {
         <>
           {/* ── Official KPI Summary (backend fundSummary = Source of Truth) ── */}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 xl:grid-cols-4">
-            {kpi('Tổng thu kỳ', kIncome, 'Quỹ Chính (backend)', 'green', <TrendingUp size={18} />)}
-            {kpi('Tổng chi kỳ', kExpense, 'Quỹ Chính (backend)', 'amber', <TrendingDown size={18} />)}
-            {kpi('Số dư Quỹ Chính', kMainFund, '= Thu − Chi + chuyển kỳ', 'green', <Wallet size={18} />)}
-            {kpi('Quỹ Phụ', kMiniBalance, 'Độc lập Quỹ Chính', 'violet', <Gamepad2 size={18} />)}
-            {kpi('Số dư chuyển kỳ', kCarry, 'Từ kỳ trước', 'blue', <ArrowLeftRight size={18} />)}
+            {kpi('Tổng thu kỳ', kIncome, 'Quỹ Chính (backend)', 'green', <TrendingUp size={18} />, formatVND, 'income')}
+            {kpi('Tổng chi kỳ', kExpense, 'Quỹ Chính (backend)', 'amber', <TrendingDown size={18} />, formatVND, 'expense')}
+            {kpi('Số dư Quỹ Chính', kMainFund, '= Thu − Chi + chuyển kỳ', 'green', <Wallet size={18} />, formatVND, 'balance')}
+            {kpi('Quỹ Phụ', kMiniBalance, 'Độc lập Quỹ Chính', 'violet', <Gamepad2 size={18} />, formatVND, 'balance')}
+            {kpi('Số dư chuyển kỳ', kCarry, 'Từ kỳ trước', 'blue', <ArrowLeftRight size={18} />, formatVND, 'signed')}
             {kpi('Tổng lượt điểm danh', kAttendance, 'Backend summary', 'teal', <Activity size={18} />, (v) => v.toLocaleString('vi-VN'))}
             {kpi('Chưa đóng quỹ', kUnpaid, periodName || 'Kỳ hiện tại', 'rose', <AlertCircle size={18} />, (v) => v.toLocaleString('vi-VN'))}
             <MetricCard label="Thành viên hoạt động" value={activeMemberCount.toLocaleString('vi-VN')} sub="Đang sinh hoạt" accent="blue" icon={<Users size={18} />} />

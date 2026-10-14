@@ -1,3 +1,4 @@
+import { moneyColor } from '../../lib/moneyTone'
 import { useMemo, useCallback, useState, useEffect } from 'react'
 import { DollarSign, CreditCard, Building2, FileText, AlertTriangle, Clock, TrendingUp, TrendingDown, Wallet } from 'lucide-react'
 import { Button } from '../../components/ui/Button'
@@ -12,6 +13,7 @@ import { exportGenericExcel } from '../../lib/export'
 import { buildLedgerRows, isEffectiveExpense } from '../../lib/finance-ledger'
 import { useExportRunner } from '../../hooks/useExportRunner'
 import toast from 'react-hot-toast'
+import { useLiveRefresh } from '../../hooks/useLiveRefresh'
 
 type LedgerRow = {
   id: string
@@ -63,6 +65,9 @@ export function TreasurerDashboard() {
     totalExpense: number
   } | null>(null)
 
+  // Làm mới âm thầm 30s: tăng liveTick → effect nạp lại summary (không xóa số cũ) để KPI + màu cập nhật gần thời gian thực.
+  const [liveTick, setLiveTick] = useState(0)
+  useLiveRefresh(() => setLiveTick(t => t + 1), !!activePeriod?.id)
   useEffect(() => {
     if (!activePeriod?.id) { setFinanceSummary(null); return }
     let cancelled = false
@@ -84,9 +89,9 @@ export function TreasurerDashboard() {
           totalExpense: Number(fund?.totalExpenses ?? 0),
         })
       })
-      .catch(() => { if (!cancelled) setFinanceSummary(null) })
+      .catch(() => { if (!cancelled && liveTick === 0) setFinanceSummary(null) })
     return () => { cancelled = true }
-  }, [activePeriod?.id])
+  }, [activePeriod?.id, liveTick])
 
   // Tổng tài sản CLB từ backend; fallback: Quỹ Chính + Số dư chuyển kỳ (không cộng Quỹ Phụ)
   const clubAssetsBalance = financeSummary?.clubAssetsBalance ?? (balance + (financeSummary?.carryForwardBalance ?? 0))
@@ -197,9 +202,9 @@ export function TreasurerDashboard() {
                 <p className="text-xs font-bold uppercase tracking-wide [color:var(--pf-primary-text)]">{f.label}</p>
               </div>
               <div className="grid grid-cols-3 gap-2 text-center">
-                <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5"><p className="mb-1 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Thu</p><p className="text-base font-bold text-emerald-600">{formatVND(f.income)}</p></div>
-                <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5"><p className="mb-1 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Chi</p><p className="text-base font-bold text-orange-500">{formatVND(f.expense)}</p></div>
-                <div data-hi="" data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5"><p className="mb-1 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Số dư</p><p className={`text-base font-bold ${f.bal >= 0 ? '[color:var(--pf-primary-text)]' : 'text-red-500'}`}>{formatVND(f.bal)}</p></div>
+                <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5"><p className="mb-1 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Thu</p><p className="text-base font-bold" style={{ color: moneyColor(f.income, 'income') }}>{formatVND(f.income)}</p></div>
+                <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5"><p className="mb-1 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Chi</p><p className="text-base font-bold" style={{ color: moneyColor(f.expense, 'expense') }}>{formatVND(f.expense)}</p></div>
+                <div data-hi="" data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5"><p className="mb-1 text-[10px] font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Số dư</p><p className="text-base font-bold" style={{ color: moneyColor(f.bal, 'balance') }}>{formatVND(f.bal)}</p></div>
               </div>
             </div>
           ))}
@@ -212,9 +217,9 @@ export function TreasurerDashboard() {
 
         {/* KPI grid */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          <MetricCard label="Thu Quỹ Chính" value={formatVND(canonIncome)} icon={<DollarSign size={18} />} accent="green" />
-          <MetricCard label="Chi Quỹ Chính" value={formatVND(canonExpense)} icon={<CreditCard size={18} />} accent="amber" />
-          <MetricCard label="Số Dư Q.Chính" value={formatVND(canonBalance)} icon={<Building2 size={18} />} accent="blue" negative={canonBalance < 0} />
+          <MetricCard label="Thu Quỹ Chính" value={formatVND(canonIncome)} money={{ value: canonIncome, kind: 'income' }} icon={<DollarSign size={18} />} accent="green" />
+          <MetricCard label="Chi Quỹ Chính" value={formatVND(canonExpense)} money={{ value: canonExpense, kind: 'expense' }} icon={<CreditCard size={18} />} accent="amber" />
+          <MetricCard label="Số Dư Q.Chính" value={formatVND(canonBalance)} money={{ value: canonBalance, kind: 'balance' }} icon={<Building2 size={18} />} accent="blue" negative={canonBalance < 0} />
           <MetricCard label="Khoản Chi" value={`${expenses.length} khoản`} icon={<FileText size={18} />} accent="violet" />
         </div>
 

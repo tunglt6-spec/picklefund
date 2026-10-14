@@ -123,7 +123,7 @@ export function MemberActivity() {
               <div className="mt-3 grid grid-cols-2 gap-3 max-sm:[&>:last-child:nth-child(odd)]:col-span-2 sm:grid-cols-3">
                 <MetricCard icon={<CalendarCheck size={18} />} accent="blue" label="Buổi tham gia" value={sel.att ? `${sel.att.attendedSessions}/${sel.att.totalSessions}` : '—'} />
                 <MetricCard icon={<TrendingUp size={18} />} accent="teal" label="Chuyên cần" value={sel.rate != null ? `${sel.rate}%` : '—'} />
-                <MetricCard icon={<DollarSign size={18} />} accent="violet" label="Tổng đóng quỹ" sub={periodTag.replace(/^\s*\(|\)\s*$/g, '') || undefined} value={formatVND(sel.totalPaid)} />
+                <MetricCard icon={<DollarSign size={18} />} accent="violet" label="Tổng đóng quỹ" sub={periodTag.replace(/^\s*\(|\)\s*$/g, '') || undefined} value={formatVND(sel.totalPaid)} money={{ value: sel.totalPaid, kind: 'income' }} />
               </div>
             </div>
 

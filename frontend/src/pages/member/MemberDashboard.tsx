@@ -298,10 +298,10 @@ export function MemberDashboard() {
           {/* CỘT TRÁI (2/3): KPI + tiến độ trực quan */}
           <div className="space-y-4 lg:col-span-2">
             <div className="grid grid-cols-2 gap-4">
-              <MetricCard label="Đã Đóng Quỹ" value={formatVND(amountPaid)} sub="Kỳ hiện tại" accent="green" icon={<DollarSign size={18} />} />
+              <MetricCard label="Đã Đóng Quỹ" value={formatVND(amountPaid)} money={{ value: amountPaid, kind: 'income' }} sub="Kỳ hiện tại" accent="green" icon={<DollarSign size={18} />} />
               <MetricCard label="Buổi Tham Gia" value={`${myAttendance}/${totalSessions}`} sub="Số buổi có mặt" accent="blue" icon={<Calendar size={18} />} />
               <MetricCard label="Tỷ Lệ Tham Gia" value={`${attendanceRate}%`} sub="So với toàn kỳ" accent={attendanceRate >= 50 ? 'green' : 'amber'} icon={<TrendingUp size={18} />} />
-              <MetricCard label="Số Dư" value={formatVND(balance)} sub="Số dư còn lại" accent="blue" negative={balance < 0} icon={<AlertCircle size={18} />} />
+              <MetricCard label="Số Dư" value={formatVND(balance)} money={{ value: balance, kind: 'signed' }} sub="Số dư còn lại" accent="blue" negative={balance < 0} icon={<AlertCircle size={18} />} />
             </div>
 
             {/* Tiến độ trực quan: vòng % tham gia + thanh tiến độ đóng quỹ */}

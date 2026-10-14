@@ -1,4 +1,5 @@
-﻿import { useState, useEffect } from 'react'
+﻿import { moneyColor } from '../../lib/moneyTone'
+import { useState, useEffect } from 'react'
 import { Plus, CheckCircle, XCircle, Edit2, Trash2, DollarSign, Wallet, Download, FileText } from 'lucide-react'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 import { useExportRunner } from '../../hooks/useExportRunner'
@@ -294,13 +295,13 @@ export function TreasurerIncome() {
           {/* KPIs */}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: 'Đã xác nhận', value: formatVND(totalConfirmed), color: 'text-emerald-600' },
-              { label: 'Chờ xác nhận', value: `${unconfirmedCount}`, color: 'text-amber-600' },
-              { label: 'Quỹ Phụ', value: formatVND(miniTotal), color: '[color:var(--pf-primary-text)]' },
+              { label: 'Đã xác nhận', value: formatVND(totalConfirmed), color: '', mc: moneyColor(totalConfirmed, 'income') },
+              { label: 'Chờ xác nhận', value: `${unconfirmedCount}`, color: 'text-amber-600', mc: undefined as string | undefined },
+              { label: 'Quỹ Phụ', value: formatVND(miniTotal), color: '', mc: moneyColor(miniTotal, 'income') },
             ].map(k => (
               <div key={k.label} data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1 leading-tight">{k.label}</div>
-                <div className={`text-base font-bold ${k.color} whitespace-nowrap text-[clamp(0.8rem,4.2vw,1rem)]`}>{k.value}</div>
+                <div className={`text-base font-bold ${k.color} whitespace-nowrap text-[clamp(0.8rem,4.2vw,1rem)]`} style={k.mc ? { color: k.mc } : undefined}>{k.value}</div>
               </div>
             ))}
           </div>

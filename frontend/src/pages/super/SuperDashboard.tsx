@@ -19,6 +19,7 @@ import { exportFileName } from '../../lib/export'
 import { formatVND, formatNumber } from '../../lib/utils'
 import { PageShell, ChartCard, EmptyState, ErrorState, StatusBadge } from '../../components/shared'
 import { Modal } from '../../components/ui/Modal'
+import { moneyColor, type MoneyKind } from '../../lib/moneyTone'
 
 const RANGES = [
   { key: 'today', label: 'Hôm nay' }, { key: '7d', label: '7 ngày' }, { key: '30d', label: '30 ngày' },
@@ -44,7 +45,7 @@ const T_VALUE: React.CSSProperties = { fontFamily: 'inherit', fontSize: '1.0625r
 const T_SUB: React.CSSProperties = { fontFamily: 'inherit', fontSize: 12, fontWeight: 400, lineHeight: 1.3, color: 'color-mix(in srgb, var(--pf-color-muted) 80%, var(--pf-text))' }
 
 /** Thẻ KPI THỐNG NHẤT: nền tint thương hiệu nhẹ + shadow (độ sâu), đều chiều cao. Màu chỉ đổi khi alert. */
-function Kpi({ label, value, icon, sub, alert, onClick }: { label: string; value: React.ReactNode; icon?: React.ReactNode; sub?: string; alert?: Alert; onClick?: () => void }) {
+function Kpi({ label, value, icon, sub, alert, onClick, money }: { label: string; value: React.ReactNode; icon?: React.ReactNode; sub?: string; alert?: Alert; onClick?: () => void; money?: { value: number | null | undefined; kind: MoneyKind } }) {
   const accent = alert ? ALERT_COLOR[alert] : BRAND
   const clickable = !!onClick
   return (
@@ -62,7 +63,7 @@ function Kpi({ label, value, icon, sub, alert, onClick }: { label: string; value
           <span className="pf-metric-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-xl" style={{ '--chip-bg': `color-mix(in srgb, ${accent} 16%, var(--pf-surface))`, '--chip-fg': accent } as React.CSSProperties}>{icon}</span>
         )}
       </div>
-      <p className="mt-auto" style={{ ...T_VALUE, color: alert ? accent : T_VALUE.color }}>{value}</p>
+      <p className="mt-auto" style={{ ...T_VALUE, color: alert ? accent : (money ? moneyColor(money.value, money.kind) : undefined) ?? T_VALUE.color }}>{value}</p>
       <p className="mt-0.5" style={sub ? T_SUB : { ...T_SUB, visibility: 'hidden' }} aria-hidden={sub ? undefined : true}>{sub ?? ' '}</p>
     </div>
   )
@@ -331,8 +332,8 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
         <Kpi label="Tổng thành viên" value={num(k.totalMembers)} icon={<Users size={16} />} />
         <Kpi label="Người dùng hoạt động" value={num(k.activeUsers)} icon={<UserCheck size={16} />} />
         <Kpi label="Đăng nhập 24h" value={num(k.logins24h)} icon={<LogIn size={16} />} />
-        <Kpi label="MRR" value={vnd(k.mrr)} icon={<TrendingUp size={16} />} />
-        <Kpi label={`Doanh thu (${rangeLabel})`} value={vnd(k.revenueInRange)} icon={<Wallet size={16} />} />
+        <Kpi label="MRR" value={vnd(k.mrr)} money={{ value: k.mrr, kind: 'income' }} icon={<TrendingUp size={16} />} />
+        <Kpi label={`Doanh thu (${rangeLabel})`} value={vnd(k.revenueInRange)} money={{ value: k.revenueInRange, kind: 'income' }} icon={<Wallet size={16} />} />
         <Kpi label="Thuê bao trả phí" value={num(k.paidSubscribers)} icon={<CreditCard size={16} />} />
         <Kpi label="AI Request" value={num(k.aiRequests)} icon={<Bot size={16} />} />
         <Kpi label="Chi phí AI (ước tính)" value={k.aiCost != null ? `$${Number(k.aiCost).toFixed(4)}` : <NoData hint="Chưa có lượt gọi AI trong kỳ" />} icon={<Cpu size={16} />} />
@@ -360,8 +361,8 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
         <div className="grid gap-4 lg:grid-cols-2">
           <ChartCard title="Doanh thu & tăng trưởng" subtitle="Doanh thu thật + thu/chi ghi nhận">
             <div className={`${GRID} mb-3 grid-cols-2 sm:grid-cols-3`}>
-              <Kpi label="Hôm nay" value={vnd(biz.revenue.today)} /><Kpi label="Tháng" value={vnd(biz.revenue.month)} sub={biz.revenue.monthManual > 0 ? `gồm ${vnd(biz.revenue.monthManual)} ghi tay` : undefined} /><Kpi label="Quý" value={vnd(biz.revenue.quarter)} />
-              <Kpi label="Năm" value={vnd(biz.revenue.year)} sub={biz.revenue.yearManual > 0 ? `gồm ${vnd(biz.revenue.yearManual)} ghi tay` : undefined} /><Kpi label="MRR" value={vnd(biz.revenue.mrr)} /><Kpi label="ARR" value={vnd(biz.revenue.arr)} />
+              <Kpi label="Hôm nay" value={vnd(biz.revenue.today)} money={{ value: biz.revenue.today, kind: 'income' }} /><Kpi label="Tháng" value={vnd(biz.revenue.month)} money={{ value: biz.revenue.month, kind: 'income' }} sub={biz.revenue.monthManual > 0 ? `gồm ${vnd(biz.revenue.monthManual)} ghi tay` : undefined} /><Kpi label="Quý" value={vnd(biz.revenue.quarter)} />
+              <Kpi label="Năm" value={vnd(biz.revenue.year)} money={{ value: biz.revenue.year, kind: 'income' }} sub={biz.revenue.yearManual > 0 ? `gồm ${vnd(biz.revenue.yearManual)} ghi tay` : undefined} /><Kpi label="MRR" value={vnd(biz.revenue.mrr)} /><Kpi label="ARR" value={vnd(biz.revenue.arr)} />
             </div>
             <p className="mb-1 flex flex-wrap gap-x-4 text-[11px] [color:var(--pf-color-muted)]"><span><i className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: 'var(--pf-primary)' }} />Doanh thu qua cổng</span><span><i className="mr-1 inline-block h-2 w-2 rounded-full" style={{ background: 'var(--pf-chart-manual)' }} />Ghi nhận thủ công</span></p>
             <ResponsiveContainer width="100%" height={190}>
@@ -421,11 +422,11 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
       {/* Tài chính */}
       <Section title="Tổng hợp tài chính toàn nền tảng" desc="chỉ Super Admin · đã ghi audit" icon={<Wallet size={16} />}>
         <div className={`${GRID} grid-cols-2 sm:grid-cols-3 lg:grid-cols-6`}>
-          <Kpi label="Tổng thu ghi nhận" value={vnd(fin.totalIncome)} icon={<TrendingUp size={16} />} />
-          <Kpi label="Tổng chi ghi nhận" value={vnd(fin.totalExpense)} icon={<Wallet size={16} />} />
-          <Kpi label="Tổng số dư quỹ" value={vnd(fin.totalBalance)} icon={<Wallet size={16} />} alert={fin.totalBalance < 0 ? 'danger' : undefined} />
+          <Kpi label="Tổng thu ghi nhận" value={vnd(fin.totalIncome)} money={{ value: fin.totalIncome, kind: 'income' }} icon={<TrendingUp size={16} />} />
+          <Kpi label="Tổng chi ghi nhận" value={vnd(fin.totalExpense)} money={{ value: fin.totalExpense, kind: 'expense' }} icon={<Wallet size={16} />} />
+          <Kpi label="Tổng số dư quỹ" value={vnd(fin.totalBalance)} money={{ value: fin.totalBalance, kind: 'balance' }} icon={<Wallet size={16} />} alert={fin.totalBalance < 0 ? 'danger' : undefined} />
           <Kpi label="Chi chờ duyệt" value={num(fin.pendingExpenses)} icon={<ClipboardList size={16} />} alert={fin.pendingExpenses > 0 ? 'warning' : undefined} sub={fin.pendingExpenses > 0 ? 'Bấm để xem chi tiết' : 'Không có khoản chờ'} onClick={fin.pendingExpenses > 0 ? openPending : undefined} />
-          <Kpi label="Tổng công nợ" value={vnd(fin.debt)} sub={fin.overdueCount > 0 ? `${num(fin.overdueCount)} quá hạn · ${vnd(fin.overdueAmount)}` : 'Không có quá hạn'} icon={<CircleAlert size={16} />} alert={fin.debt > 0 ? 'warning' : undefined} />
+          <Kpi label="Tổng công nợ" value={vnd(fin.debt)} money={{ value: fin.debt, kind: 'debt' }} sub={fin.overdueCount > 0 ? `${num(fin.overdueCount)} quá hạn · ${vnd(fin.overdueAmount)}` : 'Không có quá hạn'} icon={<CircleAlert size={16} />} alert={fin.debt > 0 ? 'warning' : undefined} />
           <Kpi label="Thu đúng hạn" value={fin.onTimeRatio != null ? `${fin.onTimeRatio}%` : <NoData hint="Chưa kỳ nào đặt hạn đóng" />} icon={<Gauge size={16} />} />
         </div>
         <MaikaNote review={review} k="finance" />

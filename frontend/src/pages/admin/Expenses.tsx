@@ -26,6 +26,8 @@ import { useExportRunner } from '../../hooks/useExportRunner'
 import api from '../../lib/api'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import toast from 'react-hot-toast'
+import { useLiveRefresh } from '../../hooks/useLiveRefresh'
+import { moneyColor } from '../../lib/moneyTone'
 import { Portal } from '../../components/ui/Portal'
 
 /* ── Constants ── */
@@ -527,7 +529,9 @@ export function Expenses() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activePeriod?.id])
 
-  // Refresh expenses on mount
+  // Refresh expenses on mount + làm mới âm thầm mỗi 30s (liveTick) để KPI/màu số tiền cập nhật gần thời gian thực
+  const [liveTick, setLiveTick] = useState(0)
+  useLiveRefresh(() => setLiveTick(t => t + 1), !!clubId)
   useEffect(() => {
     if (!clubId) return
     api.get(`/expenses?clubId=${clubId}`).then(res => {
@@ -541,9 +545,9 @@ export function Expenses() {
         status: e.status ?? 'pending',
         createdAt: e.createdAt ?? '', createdBy: e.createdById ?? '',
       })))
-    }).catch(() => toast.error('Không tải được danh sách chi phí. Vui lòng tải lại trang.'))
+    }).catch(() => { if (liveTick === 0) toast.error('Không tải được danh sách chi phí. Vui lòng tải lại trang.') })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clubId])
+  }, [clubId, liveTick])
 
   // Derive display view from store — no local copy
   const richExpenses = useMemo<RichExpense[]>(
@@ -878,15 +882,15 @@ export function Expenses() {
         {/* KPI strip */}
         <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-2">
           {[
-            { label: 'Quỹ Chính', val: commonAmt, color: '[color:var(--pf-primary-text)]' },
-            { label: 'Quỹ Phụ', val: miniAmt, color: '[color:var(--pf-color-info)]' },
-            { label: 'Đã duyệt', val: approvedAmt, color: 'text-emerald-600' },
-            { label: 'Chờ duyệt', val: pendingAmt, color: 'text-amber-600' },
+            { label: 'Quỹ Chính', val: commonAmt, kind: 'expense' as const },
+            { label: 'Quỹ Phụ', val: miniAmt, kind: 'expense' as const },
+            { label: 'Đã duyệt', val: approvedAmt, kind: 'expense' as const },
+            { label: 'Chờ duyệt', val: pendingAmt, kind: 'pending' as const },
           ].map(k => (
             <div key={k.label} className="pf-stat-card rounded-xl p-3">
               <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1 truncate">{k.label}</p>
-                <p className={`text-base font-bold tabular-nums ${k.color}`}>{formatVND(k.val)}</p>
+                <p className="text-base font-bold tabular-nums" style={{ color: moneyColor(k.val, k.kind) }}>{formatVND(k.val)}</p>
               </div>
             </div>
           ))}
@@ -1078,10 +1082,10 @@ export function Expenses() {
       <div className="p-6 space-y-5">
         {/* KPI cards */}
         <div className="grid grid-cols-2 gap-3 max-[599px]:[&>:last-child:nth-child(odd)]:col-span-2 lg:grid-cols-5">
-          <MetricCard accent="violet" icon={<DollarSign size={18} />}  label="Chi Quỹ Chính" value={formatVND(commonAmt)} />
-          <MetricCard accent="violet" icon={<Wallet size={18} />}      label="Chi Quỹ Phụ"   value={formatVND(miniAmt)} />
-          <MetricCard accent="green"  icon={<CheckCircle size={18} />} label="Chi đã duyệt"   value={formatVND(approvedAmt)} />
-          <MetricCard accent="amber"  icon={<Clock size={18} />}       label="Chờ duyệt"      value={formatVND(pendingAmt)} />
+          <MetricCard accent="violet" icon={<DollarSign size={18} />}  label="Chi Quỹ Chính" value={formatVND(commonAmt)} money={{ value: commonAmt, kind: 'expense' }} />
+          <MetricCard accent="violet" icon={<Wallet size={18} />}      label="Chi Quỹ Phụ"   value={formatVND(miniAmt)} money={{ value: miniAmt, kind: 'expense' }} />
+          <MetricCard accent="green"  icon={<CheckCircle size={18} />} label="Chi đã duyệt"   value={formatVND(approvedAmt)} money={{ value: approvedAmt, kind: 'expense' }} />
+          <MetricCard accent="amber"  icon={<Clock size={18} />}       label="Chờ duyệt"      value={formatVND(pendingAmt)} money={{ value: pendingAmt, kind: 'pending' }} />
           <MetricCard accent="blue"   icon={<FileText size={18} />}    label="Số khoản chi"   value={`${periodFiltered.length.toLocaleString('vi-VN')} khoản`} />
         </div>
 

@@ -1,3 +1,4 @@
+import { moneyColor } from '../../lib/moneyTone'
 import { useState, useMemo, useEffect } from 'react'
 import { ArrowUpCircle, ArrowDownCircle, Wallet, Search, FileText, FileSpreadsheet } from 'lucide-react'
 import { PageShell, PageHeader } from '../../components/shared'
@@ -98,13 +99,13 @@ export function TreasurerLedger() {
           {/* KPIs */}
           <div className="grid grid-cols-3 gap-2">
             {[
-              { label: 'Tổng thu', value: formatVND(totalIncome), color: 'text-emerald-600' },
-              { label: 'Tổng chi', value: formatVND(totalExpense), color: 'text-red-500' },
-              { label: 'Số dư', value: fmtBal(currentBalance), color: currentBalance >= 0 ? '[color:var(--pf-primary-text)]' : 'text-red-500' },
+              { label: 'Tổng thu', value: formatVND(totalIncome), color: '', mc: moneyColor(totalIncome, 'income') },
+              { label: 'Tổng chi', value: formatVND(totalExpense), color: '', mc: moneyColor(totalExpense, 'expense') },
+              { label: 'Số dư', value: fmtBal(currentBalance), color: '', mc: moneyColor(currentBalance, 'balance') },
             ].map(k => (
               <div key={k.label} data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{k.label}</div>
-                <div className={`text-base font-bold ${k.color} whitespace-nowrap text-[clamp(0.8rem,4.2vw,1rem)]`}>{k.value}</div>
+                <div className={`text-base font-bold ${k.color} whitespace-nowrap text-[clamp(0.8rem,4.2vw,1rem)]`} style={k.mc ? { color: k.mc } : undefined}>{k.value}</div>
               </div>
             ))}
           </div>

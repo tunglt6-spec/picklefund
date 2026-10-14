@@ -17,6 +17,7 @@ import { exportContribExcel, exportContribPDF, exportMiniIncomeReceiptPDF } from
 import { useExportRunner } from '../../hooks/useExportRunner'
 import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { moneyColor } from '../../lib/moneyTone'
 import { MobileTransactionCard } from '../../components/mobile/MobileTransactionCard'
 import { PeriodSelector } from '../../components/ui/PeriodSelector'
 import { BulkActionBar, RowCheckbox, DataTable, type Column } from '../../components/shared'
@@ -437,13 +438,13 @@ export function Contributions() {
           <div className="pf-stat-card rounded-xl p-4">
             <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
               <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Quỹ Chính</p>
-              <p className="text-base font-bold tabular-nums [color:var(--pf-primary-text)]">{formatVND(commonTotal)}</p>
+              <p className="text-base font-bold tabular-nums" style={{ color: moneyColor(commonTotal, 'income') }}>{formatVND(commonTotal)}</p>
             </div>
           </div>
           <div className="pf-stat-card rounded-xl p-4">
             <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
               <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Quỹ Phụ</p>
-              <p className="text-base font-bold tabular-nums [color:var(--pf-color-info)]">{formatVND(miniTotal)}</p>
+              <p className="text-base font-bold tabular-nums" style={{ color: moneyColor(miniTotal, 'income') }}>{formatVND(miniTotal)}</p>
             </div>
           </div>
         </div>
@@ -727,15 +728,15 @@ export function Contributions() {
             <div className="grid grid-cols-3 gap-2">
               <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
                 <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Tổng</p>
-                <p className="text-base font-bold tabular-nums [color:var(--pf-text)]">{formatVND(commonTotal)}</p>
+                <p className="text-base font-bold tabular-nums" style={{ color: moneyColor(commonTotal, 'income') }}>{formatVND(commonTotal)}</p>
               </div>
               <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Xác nhận ({confirmed.length})</p>
-                <p className="text-base font-bold tabular-nums [color:var(--pf-color-success)]">{formatVND(confirmed.reduce((s, c) => s + c.amount, 0))}</p>
+                <p className="text-base font-bold tabular-nums" style={{ color: moneyColor(confirmed.reduce((s, c) => s + c.amount, 0), 'income') }}>{formatVND(confirmed.reduce((s, c) => s + c.amount, 0))}</p>
               </div>
               <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Chờ ({unconfirmed.length})</p>
-                <p className="text-base font-bold tabular-nums [color:var(--pf-color-warning)]">{formatVND(unconfirmed.reduce((s, c) => s + c.amount, 0))}</p>
+                <p className="text-base font-bold tabular-nums" style={{ color: moneyColor(unconfirmed.reduce((s, c) => s + c.amount, 0), 'pending') }}>{formatVND(unconfirmed.reduce((s, c) => s + c.amount, 0))}</p>
               </div>
             </div>
           </div>
@@ -750,15 +751,15 @@ export function Contributions() {
             <div className="grid grid-cols-3 gap-2">
               <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
                 <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Tổng</p>
-                <p className="text-base font-bold tabular-nums [color:var(--pf-text)]">{formatVND(miniTotal)}</p>
+                <p className="text-base font-bold tabular-nums" style={{ color: moneyColor(miniTotal, 'income') }}>{formatVND(miniTotal)}</p>
               </div>
               <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Xác nhận ({miniContribs.filter(c => c.isConfirmed).length})</p>
-                <p className="text-base font-bold tabular-nums [color:var(--pf-color-success)]">{formatVND(miniTotal)}</p>
+                <p className="text-base font-bold tabular-nums" style={{ color: moneyColor(miniTotal, 'income') }}>{formatVND(miniTotal)}</p>
               </div>
               <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                 <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Chờ ({miniContribs.filter(c => !c.isConfirmed).length})</p>
-                <p className="text-base font-bold tabular-nums [color:var(--pf-color-warning)]">{formatVND(miniContribs.filter(c => !c.isConfirmed).reduce((s, c) => s + c.amount, 0))}</p>
+                <p className="text-base font-bold tabular-nums" style={{ color: moneyColor(miniContribs.filter(c => !c.isConfirmed).reduce((s, c) => s + c.amount, 0), 'pending') }}>{formatVND(miniContribs.filter(c => !c.isConfirmed).reduce((s, c) => s + c.amount, 0))}</p>
               </div>
             </div>
             <div className="flex gap-3 mt-2 flex-wrap">

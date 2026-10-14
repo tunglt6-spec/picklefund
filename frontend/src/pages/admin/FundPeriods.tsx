@@ -17,6 +17,8 @@ import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import type { FundPeriod, FundPeriodStatus, FundPeriodType } from '../../types'
 import { useClubContributions } from '../../hooks/useFinanceData'
+import { moneyColor } from '../../lib/moneyTone'
+import { useLiveRefresh } from '../../hooks/useLiveRefresh'
 import { formatDate, formatVND } from '../../lib/utils'
 import { exportGenericExcel, exportGenericTablePDF, exportTemplateExcel } from '../../lib/export'
 import { parseMoney } from '../../lib/finance-ledger'
@@ -317,12 +319,10 @@ export function FundPeriods() {
     [periods]
   )
 
-  useEffect(() => {
-    if (!activeChungId) { setPeriodsFinanceSummary(null); return }
-    let cancelled = false
-    api.get(`/fund-periods/${activeChungId}/summary`)
+  const loadPeriodsSummary = useCallback(() => {
+    if (!activeChungId) return Promise.resolve()
+    return api.get(`/fund-periods/${activeChungId}/summary`)
       .then(res => {
-        if (cancelled) return
         const fund = res.data?.data
         const carryForwardBalance = Number(fund?.carryForward?.balance ?? 0)
         const commonBalance = Number(fund?.balance ?? 0)
@@ -333,9 +333,14 @@ export function FundPeriods() {
           unpaidCount: Number(fund?.unpaidCount ?? 0),
         })
       })
-      .catch(() => { if (!cancelled) setPeriodsFinanceSummary(null) })
-    return () => { cancelled = true }
+      .catch(() => { /* giữ số liệu cũ khi làm mới âm thầm lỗi */ })
   }, [activeChungId])
+
+  useEffect(() => {
+    if (!activeChungId) { setPeriodsFinanceSummary(null); return }
+    void loadPeriodsSummary()
+  }, [activeChungId, loadPeriodsSummary])
+  useLiveRefresh(loadPeriodsSummary, !!activeChungId)
 
   // KPI computations
   const stats = useMemo(() => {
@@ -1619,11 +1624,11 @@ function FundOverviewCompact({ items, contributions, isMember, className }: {
           ? contributions.filter(c => c.fundSource === 'MINI' && c.isConfirmed).reduce((a, c) => a + c.amount, 0)
           : p ? contributions.filter(c => c.fundPeriodId === p.id && c.isConfirmed).reduce((a, c) => a + c.amount, 0) : 0
         const iconBtn = 'inline-flex h-10 w-10 items-center justify-center rounded-xl border [border-color:var(--pf-border)] [color:var(--pf-color-muted)] [background:var(--pf-surface)] active:scale-95'
-        const cells: [string, string, boolean][] = [
-          ['Số dư', formatVND(it.stats.balance), true],
-          ['Đã thu', formatVND(collected), false],
-          ['Chờ xác nhận', formatVND(it.stats.totalPending), false],
-          ['Giao dịch', String(it.stats.txCount), false],
+        const cells: [string, string, boolean, string | undefined][] = [
+          ['Số dư', formatVND(it.stats.balance), true, moneyColor(it.stats.balance, 'balance')],
+          ['Đã thu', formatVND(collected), false, moneyColor(collected, 'income')],
+          ['Chờ xác nhận', formatVND(it.stats.totalPending), false, moneyColor(it.stats.totalPending, 'pending')],
+          ['Giao dịch', String(it.stats.txCount), false, undefined],
         ]
         return (
           <section key={it.title} className="pf-stat-card rounded-[20px] p-4 sm:p-5">
@@ -1641,10 +1646,10 @@ function FundOverviewCompact({ items, contributions, isMember, className }: {
             </div>
 
             <div className="mt-3 grid grid-cols-2 gap-2.5 text-center sm:grid-cols-4 lg:mt-4 lg:gap-3">
-              {cells.map(([k, v, hi]) => (
+              {cells.map(([k, v, hi, col]) => (
                 <div key={k} data-keep="" className="pf-stat-cell rounded-2xl px-2 py-2.5 lg:py-3.5 shadow-[0_10px_20px_-10px_rgba(109,93,251,0.55),0_2px_4px_rgba(15,23,42,0.08)]" data-hi={hi ? '' : undefined}>
                   <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide lg:mb-1.5 [color:var(--pf-color-muted)]">{k}</p>
-                  <p className={`text-lg font-extrabold ${hi ? '[color:var(--pf-primary-text)]' : '[color:var(--pf-text)]'}`}>{v}</p>
+                  <p className={`text-lg font-extrabold ${col ? '' : hi ? '[color:var(--pf-primary-text)]' : '[color:var(--pf-text)]'}`} style={col ? { color: col } : undefined}>{v}</p>
                 </div>
               ))}
             </div>

@@ -14,6 +14,7 @@ import { useExportRunner } from '../../hooks/useExportRunner'
 import api from '../../lib/api'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useClubContributions } from '../../hooks/useFinanceData'
+import { useLiveRefresh } from '../../hooks/useLiveRefresh'
 import { useAuthStore } from '../../store/authStore'
 import { canExportOrgWideData } from '../../lib/exportAccess'
 import { formatVND, getActiveChungPeriod } from '../../lib/utils'
@@ -60,6 +61,8 @@ export function Debts() {
 
   // Canonical/thành viên từ fund-periods summary (financial-calculator): số dư + đã-đóng-đủ.
   const [memberInfo, setMemberInfo] = useState<Record<string, { balance: number; paid: boolean }>>({})
+  const [liveTick, setLiveTick] = useState(0)
+  useLiveRefresh(() => setLiveTick(t => t + 1), !!activePeriod?.id && !isLocalToken(accessToken))
   useEffect(() => {
     if (!activePeriod?.id || isLocalToken(accessToken)) { setMemberInfo({}); return }
     let cancelled = false
@@ -67,9 +70,9 @@ export function Debts() {
       if (cancelled) return
       const list = (res.data?.data?.members ?? []) as { memberId: string; balance: number; contributionPaid?: boolean }[]
       setMemberInfo(Object.fromEntries(list.map((m) => [m.memberId, { balance: m.balance, paid: !!m.contributionPaid }])))
-    }).catch(() => { if (!cancelled) setMemberInfo({}) })
+    }).catch(() => { if (!cancelled && liveTick === 0) setMemberInfo({}) })
     return () => { cancelled = true }
-  }, [activePeriod?.id, accessToken])
+  }, [activePeriod?.id, accessToken, liveTick])
 
   const rows = useMemo<DebtRow[]>(() => {
     const commonContribs = contributions.filter((c) => (c.fundSource ?? 'COMMON') === 'COMMON')
@@ -170,7 +173,7 @@ export function Debts() {
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             <MetricCard accent="rose" icon={<AlertCircle size={18} />} label="Còn nợ" value={stats.unpaid} sub="thành viên chưa đóng" />
             <MetricCard accent="teal" icon={<Users size={18} />} label="Đã đóng" value={stats.paid} sub="thành viên đã đóng đủ" />
-            <MetricCard accent="violet" icon={<Wallet size={18} />} label="Tổng công nợ" value={formatVND(stats.totalDebt)} />
+            <MetricCard accent="violet" icon={<Wallet size={18} />} label="Tổng công nợ" value={formatVND(stats.totalDebt)} money={{ value: stats.totalDebt, kind: 'debt' }} />
             <MetricCard accent="teal" icon={<Users size={18} />} label="Tỷ lệ đã thu" value={`${stats.collectRate}%`} sub={`${stats.paid}/${rows.length} đã đóng`} />
           </div>
 

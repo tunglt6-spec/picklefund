@@ -398,10 +398,10 @@ export function MemberReceipt() {
           {/* CỘT TRÁI (2/3) — KPI 2×2 + phiếu thu chính thức */}
           <div className="space-y-4 lg:col-span-2">
             <div className="grid grid-cols-2 gap-4">
-              <MetricCard label="Tổng đã đóng" value={formatVND(totalPaid)} sub={activePeriod ? `Kỳ ${activePeriod.name}` : undefined} accent="green" icon={<DollarSign size={18} />} />
+              <MetricCard label="Tổng đã đóng" value={formatVND(totalPaid)} money={{ value: totalPaid, kind: 'income' }} sub={activePeriod ? `Kỳ ${activePeriod.name}` : undefined} accent="green" icon={<DollarSign size={18} />} />
               <MetricCard label="Buổi tham gia" value={`${n(live?.attendedSessions)}/${n(live?.totalSessions)}`} sub="Số buổi có mặt" accent="blue" icon={<Calendar size={18} />} />
-              <MetricCard label="Chi phí phân bổ" value={formatVND(totalCost)} sub="Tiền sân + sinh hoạt" accent="amber" icon={<TrendingUp size={18} />} />
-              <MetricCard label="Số dư" value={`${netBalance >= 0 ? '+' : ''}${formatVND(netBalance)}`} sub={netBalance >= 0 ? 'Dư quỹ' : 'Còn thiếu'} accent="blue" negative={netBalance < 0} icon={<AlertCircle size={18} />} />
+              <MetricCard label="Chi phí phân bổ" value={formatVND(totalCost)} money={{ value: totalCost, kind: 'expense' }} sub="Tiền sân + sinh hoạt" accent="amber" icon={<TrendingUp size={18} />} />
+              <MetricCard label="Số dư" value={`${netBalance >= 0 ? '+' : ''}${formatVND(netBalance)}`} money={{ value: netBalance, kind: 'signed' }} sub={netBalance >= 0 ? 'Dư quỹ' : 'Còn thiếu'} accent="blue" negative={netBalance < 0} icon={<AlertCircle size={18} />} />
             </div>
 
             <ChartCard title="Phiếu thu chính thức" subtitle={hasReceipts ? `${displayReceipts.length} kỳ đã chốt` : 'Tạo sau khi kỳ quỹ kết thúc'}>

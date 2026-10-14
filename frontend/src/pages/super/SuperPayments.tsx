@@ -127,9 +127,9 @@ export function SuperPayments() {
       />
 
       <div className="pf-kpi-row mb-4" data-sa-look="ledger">
-        <MetricCard compact icon={<Wallet size={16} />} label="Tổng thu" value={formatVND(summary?.total ?? 0)} sub={`${summary?.count ?? 0} giao dịch`} />
-        <MetricCard compact icon={<CalendarDays size={16} />} label="Tháng này" value={formatVND(summary?.thisMonthTotal ?? 0)} sub={`${summary?.thisMonthCount ?? 0} giao dịch`} />
-        <MetricCard compact icon={<Landmark size={16} />} label="Ghi nhận thủ công" value={formatVND(manualTotal?.total ?? 0)} sub={`${manualTotal?.count ?? 0} giao dịch`} />
+        <MetricCard compact icon={<Wallet size={16} />} label="Tổng thu" value={formatVND(summary?.total ?? 0)} money={{ value: summary?.total ?? 0, kind: 'income' }} sub={`${summary?.count ?? 0} giao dịch`} />
+        <MetricCard compact icon={<CalendarDays size={16} />} label="Tháng này" value={formatVND(summary?.thisMonthTotal ?? 0)} money={{ value: summary?.thisMonthTotal ?? 0, kind: 'income' }} sub={`${summary?.thisMonthCount ?? 0} giao dịch`} />
+        <MetricCard compact icon={<Landmark size={16} />} label="Ghi nhận thủ công" value={formatVND(manualTotal?.total ?? 0)} money={{ value: manualTotal?.total ?? 0, kind: 'income' }} sub={`${manualTotal?.count ?? 0} giao dịch`} />
         <MetricCard compact icon={<Receipt size={16} />} label="TB / giao dịch" value={formatVND(summary && summary.count ? Math.round(summary.total / summary.count) : 0)} />
       </div>
 

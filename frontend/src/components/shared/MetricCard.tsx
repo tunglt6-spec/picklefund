@@ -5,6 +5,7 @@
 import type { ReactNode } from 'react'
 import { cn } from '../../lib/utils'
 import { accentVars, type ModuleAccent } from './tokens'
+import { moneyColor, type MoneyKind } from '../../lib/moneyTone'
 
 /**
  * Tông màu KPI theo NGUYÊN TẮC dùng chung (SaaS): nền tint nhạt + viền trên 3px + số/icon
@@ -41,6 +42,8 @@ interface MetricCardProps {
   negative?: boolean
   /** Tông màu value-based (opt-in): nền tint + viền trên + số/icon theo màu. */
   tone?: MetricTone
+  /** Tô màu SỐ TIỀN theo giá trị (Xanh dương/tốt · Đỏ âm/chi/nợ · Vàng báo động) — xem lib/moneyTone. Cập nhật tức thì khi value đổi. */
+  money?: { value: number | null | undefined; kind?: MoneyKind }
   className?: string
   /** Thu gọn (mobile 3 cột): ẩn icon, padding nhỏ, số vừa. */
   compact?: boolean
@@ -55,6 +58,7 @@ export function MetricCard({
   trend,
   negative,
   tone,
+  money,
   className,
   compact,
 }: MetricCardProps) {
@@ -88,7 +92,7 @@ export function MetricCard({
           className="text-[clamp(0.9rem,9.5cqw,1.5rem)] font-bold tabular-nums leading-tight whitespace-nowrap"
           style={{
             letterSpacing: '-0.02em',
-            color: t ? t.fg : negative ? 'var(--pf-accent-rose)' : 'var(--pf-text)',
+            color: money ? (moneyColor(money.value, money.kind) ?? 'var(--pf-text)') : t ? t.fg : negative ? 'var(--pf-accent-rose)' : 'var(--pf-text)',
           }}
         >
           {value}

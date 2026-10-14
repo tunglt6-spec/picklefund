@@ -123,7 +123,7 @@ export function PaymentApprovals() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <MetricCard label="Chờ xác nhận" value={`${stats?.pendingCount ?? 0}`} accent="amber" icon={<Clock size={18} />} />
         <MetricCard label="Đã xác nhận" value={`${stats?.confirmedCount ?? 0}`} accent="green" icon={<CheckCircle2 size={18} />} />
-        <MetricCard label="Tổng đã thu (xác nhận)" value={formatVND(Number(stats?.confirmedAmount ?? 0))} accent="blue" icon={<Wallet size={18} />} />
+        <MetricCard label="Tổng đã thu (xác nhận)" value={formatVND(Number(stats?.confirmedAmount ?? 0))} money={{ value: Number(stats?.confirmedAmount ?? 0), kind: 'income' }} accent="blue" icon={<Wallet size={18} />} />
       </div>
 
       {loading ? (

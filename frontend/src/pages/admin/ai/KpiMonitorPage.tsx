@@ -165,9 +165,9 @@ export function KpiMonitorPage() {
           <section>
             <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-2 flex items-center gap-1.5"><Wallet size={13} /> Tài chính</p>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-              <MetricCard label="Tổng tài sản" value={vnd(snap?.totalAssets)} icon={<Wallet size={16} />} tone={(snap?.totalAssets ?? 0) < 0 ? 'danger' : 'success'} />
-              <MetricCard label="Thu (Quỹ Chính)" value={vnd(snap?.commonIncome)} icon={<TrendingUp size={16} />} tone="success" />
-              <MetricCard label="Chi (Quỹ Chính)" value={vnd(snap?.commonExpense)} icon={<Wallet size={16} />} tone="info" />
+              <MetricCard label="Tổng tài sản" value={vnd(snap?.totalAssets)} money={{ value: snap?.totalAssets, kind: 'balance' }} icon={<Wallet size={16} />} tone={(snap?.totalAssets ?? 0) < 0 ? 'danger' : 'success'} />
+              <MetricCard label="Thu (Quỹ Chính)" value={vnd(snap?.commonIncome)} money={{ value: snap?.commonIncome, kind: 'income' }} icon={<TrendingUp size={16} />} tone="success" />
+              <MetricCard label="Chi (Quỹ Chính)" value={vnd(snap?.commonExpense)} money={{ value: snap?.commonExpense, kind: 'expense' }} icon={<Wallet size={16} />} tone="info" />
             </div>
           </section>
 

@@ -392,9 +392,9 @@ export function ExecutiveReport() {
             <MetricCard accent="teal" icon={<UserCheck size={18} />} label="Tỷ lệ tham gia" value={`${s.participationRate}%`} sub="điểm danh / sĩ số" />
             <MetricCard accent="violet" icon={<CalendarDays size={18} />} label="Buổi chơi" value={s.totalSessions} sub={`${s.completedSessions} xong · ${s.cancelledSessions} hủy`} />
             <MetricCard accent="amber" icon={<Trophy size={18} />} label="Giải / Minigame" value={s.tournamentsCount} sub="trong kỳ" />
-            <MetricCard accent="green" icon={<ArrowUpRight size={18} />} label="Tổng thu" value={formatVND(s.totalIncome)} />
-            <MetricCard accent="rose" icon={<ArrowDownLeft size={18} />} label="Tổng chi" value={formatVND(s.totalExpense)} />
-            <MetricCard accent="blue" icon={<Wallet size={18} />} label="Tổng tài sản" value={formatVND(s.clubAssets)} sub="quỹ cuối kỳ" negative={s.clubAssets < 0} />
+            <MetricCard accent="green" icon={<ArrowUpRight size={18} />} label="Tổng thu" value={formatVND(s.totalIncome)} money={{ value: s.totalIncome, kind: 'income' }} />
+            <MetricCard accent="rose" icon={<ArrowDownLeft size={18} />} label="Tổng chi" value={formatVND(s.totalExpense)} money={{ value: s.totalExpense, kind: 'expense' }} />
+            <MetricCard accent="blue" icon={<Wallet size={18} />} label="Tổng tài sản" value={formatVND(s.clubAssets)} money={{ value: s.clubAssets, kind: 'balance' }} sub="quỹ cuối kỳ" negative={s.clubAssets < 0} />
             <MetricCard accent="rose" icon={<AlertTriangle size={18} />} label="Công nợ" value={`${s.outstandingCount} TV`} sub="chưa/không đủ đóng" negative={s.outstandingCount > 0} />
           </div>
         </div>

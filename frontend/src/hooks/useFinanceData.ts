@@ -3,6 +3,7 @@
  * mỗi lần vào app). Mỗi màn tài chính nạp dữ liệu KHI MỞ màn → sau khi Phase D cắt full-load trong
  * useApiSync, các màn này vẫn đúng số vì tái dùng NGUYÊN VẸN phép tính client (mapping giống useApiSync).
  */
+import { useLiveRefresh } from './useLiveRefresh'
 import { useState, useCallback, useEffect } from 'react'
 import api from '../lib/api'
 import type { FundContribution, LivingExpense, Member, ExpenseStatus } from '../types'
@@ -62,6 +63,7 @@ export function useClubContributions(clubId: string) {
   useEffect(() => {
     reload()
   }, [reload])
+  useLiveRefresh(reload, !!clubId)
   return { data, reload, setData }
 }
 
@@ -80,5 +82,6 @@ export function useClubExpenses(clubId: string) {
   useEffect(() => {
     reload()
   }, [reload])
+  useLiveRefresh(reload, !!clubId)
   return { data, reload, setData }
 }

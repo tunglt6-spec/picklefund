@@ -1,3 +1,4 @@
+import { moneyColor } from '../../lib/moneyTone'
 import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, Receipt, FileSpreadsheet, FileText } from 'lucide-react'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -187,7 +188,7 @@ export function TreasurerExpense() {
               <div className="grid grid-cols-2 gap-2">
                 <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                   <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Tổng đã chi · {expenses.length} khoản</div>
-                  <div className="text-base font-bold text-red-600">{formatVND(totalExpenses)}</div>
+                  <div className="text-base font-bold" style={{ color: moneyColor(totalExpenses, 'expense') }}>{formatVND(totalExpenses)}</div>
                 </div>
                 <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
                   <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Thiếu hóa đơn</div>

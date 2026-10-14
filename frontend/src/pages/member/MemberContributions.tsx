@@ -299,7 +299,7 @@ export function MemberContributions() {
         {/* CỘT TRÁI (2/3) — KPI 2×2 + tìm kiếm + bảng đóng quỹ */}
         <div className="space-y-4 lg:col-span-2">
           <div className="grid grid-cols-2 gap-4">
-            <MetricCard label="Tổng đã đóng" value={formatVND(totalPaid)} sub={`${contributions.length} khoản`} accent="green" icon={<DollarSign size={18} />} />
+            <MetricCard label="Tổng đã đóng" value={formatVND(totalPaid)} money={{ value: totalPaid, kind: 'income' }} sub={`${contributions.length} khoản`} accent="green" icon={<DollarSign size={18} />} />
             <MetricCard label="Đã xác nhận" value={`${confirmedCount} khoản`} sub={formatVND(contributions.filter(c => c.isConfirmed).reduce((s, c) => s + c.amount, 0))} accent="green" icon={<CheckCircle size={18} />} />
             <MetricCard label="Chờ xác nhận" value={`${pendingCount} khoản`} sub={activePeriod ? `Kỳ ${activePeriod.name}` : 'Không có kỳ mở'} accent="amber" icon={<Clock size={18} />} />
             <MetricCard label="Đã báo nộp" value={`${myPayments.length} khoản`} sub="Chờ/đã duyệt" accent="blue" icon={<Send size={18} />} />
