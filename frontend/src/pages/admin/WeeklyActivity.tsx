@@ -101,7 +101,7 @@ export function WeeklyActivity() {
 
   return (
     <PageShell>
-      <PageHeader title="Hoạt động tuần" subtitle="Buổi chơi, đăng ký, check-in và chuyên cần theo tuần" />
+      <PageHeader title="Hoạt động tuần" />
 
       {!hasData ? (
         <EmptyState icon={<CalendarRange size={24} />} title="Chưa có dữ liệu hoạt động" description="Tạo buổi chơi và điểm danh để xem thống kê hoạt động theo tuần." />

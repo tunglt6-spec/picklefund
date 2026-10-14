@@ -121,7 +121,6 @@ export function SessionRegistration() {
     <PageShell>
       <PageHeader
         title="Đăng ký buổi chơi"
-        subtitle="Chọn buổi sắp tới và đánh dấu thành viên tham gia"
         actions={
           !isMember && sessionId && rows.length > 0 ? (
             <ActionButton icon={<Save size={16} />} onClick={save} disabled={saving}>

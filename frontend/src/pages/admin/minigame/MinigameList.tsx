@@ -284,7 +284,6 @@ export function MinigameList() {
     <PageShell>
       <PageHeader
         title="Giải đấu"
-        subtitle="Quản lý minigame, bốc cặp, lịch đấu, kết quả và bảng xếp hạng của CLB."
         actions={headerActions}
       />
 

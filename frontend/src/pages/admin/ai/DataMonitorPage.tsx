@@ -69,7 +69,6 @@ export function DataMonitorPage() {
     <PageShell>
       <PageHeader
         title="Data Monitor"
-        subtitle="Giám sát chất lượng & toàn vẹn dữ liệu CLB"
       />
 
       {loading ? (

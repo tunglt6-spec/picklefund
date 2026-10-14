@@ -485,9 +485,6 @@ export function MemberAccounts() {
         <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
             {!embedded && <h1 className="text-base font-bold text-[var(--pf-text)]">Tài khoản thành viên</h1>}
-            <p className="text-xs text-[var(--pf-color-muted)] mt-0.5">
-              Cấp quyền đăng nhập view-only cho thành viên CLB
-            </p>
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setShowBulk(true)} disabled={noAccountMembers.length === 0}>

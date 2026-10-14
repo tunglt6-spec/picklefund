@@ -60,7 +60,6 @@ export function MitDacExecutionLog() {
     <PageShell>
       <PageHeader
         title="Mít Đặc — Nhật ký thực thi"
-        subtitle="Lịch sử các hành động AI đã được duyệt và thực thi"
       />
 
       {loading ? (

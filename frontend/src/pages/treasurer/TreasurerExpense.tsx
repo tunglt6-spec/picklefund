@@ -299,7 +299,6 @@ export function TreasurerExpense() {
     <PageShell maxWidth={1760}>
       <PageHeader
         title="Nhập Khoản Chi"
-        subtitle="Ghi nhận chi phí của CLB"
         actions={
           <div className="flex items-center gap-2">
             {expenses.length > 0 && (

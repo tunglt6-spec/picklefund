@@ -104,7 +104,6 @@ export function MemberOffice() {
     <PageShell maxWidth={1760}>
       <PageHeader
         title="Văn phòng AI"
-        subtitle="Đội ngũ AI đang làm việc phục vụ CLB của bạn"
         actions={
           <div className="flex items-center gap-2">
             {updatedAt && (

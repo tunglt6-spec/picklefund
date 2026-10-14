@@ -120,8 +120,7 @@ export function RunningDashboardPage() {
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
-      <PageHeader variant="bar" title={`🏃 Chạy bộ – ${mg.name}`} subtitle="Xếp hạng theo thời gian · tổng thời gian nhỏ nhất đứng đầu"
-        actions={leaderboard.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined} />
+      <PageHeader variant="bar" title={`🏃 Chạy bộ – ${mg.name}`}        actions={leaderboard.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined} />
       <div className="p-4 sm:p-6 space-y-5">
         <button onClick={() => navigate('/minigames')} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors"><ArrowLeft size={14} /> Danh Sách Giải Đấu</button>
 

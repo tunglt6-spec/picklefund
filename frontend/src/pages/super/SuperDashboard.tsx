@@ -205,7 +205,6 @@ export function SuperDashboard() {
       <header className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <h1 className="text-xl font-bold tracking-tight [color:var(--pf-text)] sm:text-2xl">Trung tâm điều hành PickleFund</h1>
-          <p className="mt-0.5 text-sm [color:var(--pf-color-muted)]">Tổng quan kinh doanh, vận hành, AI và sức khỏe hệ thống</p>
           {refreshedAt && <p className="mt-1 inline-flex items-center gap-1 text-xs [color:var(--pf-color-muted)]"><Clock size={11} /> Cập nhật: {refreshedAt.toLocaleString('vi-VN')}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-2">

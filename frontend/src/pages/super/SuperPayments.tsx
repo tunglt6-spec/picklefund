@@ -123,7 +123,6 @@ export function SuperPayments() {
     <PageShell maxWidth={1760}>
       <PageHeader
         title="Thanh toán gói dịch vụ"
-        subtitle="Ghi nhận & theo dõi chi phí sử dụng nền tảng của các CLB"
         actions={<Button onClick={() => setOpen(true)}><Plus size={16} />Ghi nhận thanh toán</Button>}
       />
 

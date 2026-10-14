@@ -108,7 +108,6 @@ export function AuditLogViewer() {
     <PageShell>
       <PageHeader
         title="Audit Logs"
-        subtitle="Nhật ký kiểm toán — các thao tác trong CLB của bạn"
         actions={logs.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} /> : undefined}
       />
 

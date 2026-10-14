@@ -121,7 +121,7 @@ export function CommunityModeration({ embedded }: { embedded?: boolean } = {}) {
   const body = (
     <>
       {!embedded && (
-        <PageHeader title="Kiểm Duyệt Nội Dung" subtitle="Duyệt các báo cáo nội dung cộng đồng" />
+        <PageHeader title="Kiểm Duyệt Nội Dung" />
       )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

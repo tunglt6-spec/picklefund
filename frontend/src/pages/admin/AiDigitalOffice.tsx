@@ -373,7 +373,7 @@ export function AiDigitalOffice() {
   // lại, thay vì xóa trắng cả màn (tránh cảm giác "chập chờn" khi refresh gặp blip mạng).
   if (error) return (
     <PageShell>
-      <PageHeader title="AIDO — AI Digital Office" subtitle="Văn phòng AI của câu lạc bộ" />
+      <PageHeader title="AIDO — AI Digital Office" />
       <div className="space-y-4">
         <OfficeBanner caption="Viền chạy quanh thẻ = agent đang làm việc" />
         <div
@@ -392,7 +392,6 @@ export function AiDigitalOffice() {
     <PageShell>
       <PageHeader
         title="AIDO — AI Digital Office"
-        subtitle="Văn phòng AI · Thấy trạng thái thật · Làm việc thật · Kết quả thật"
         actions={
           <div className="flex items-center gap-2">
             <span

@@ -462,7 +462,6 @@ export function TreasurerIncome() {
     <PageShell maxWidth={1760}>
       <PageHeader
         title="Nhập Khoản Thu"
-        subtitle="Ghi nhận thu quỹ cho Quỹ Chính và Quỹ Phụ"
         actions={
           <div className="flex items-center gap-2">
             {contributions.length > 0 && (

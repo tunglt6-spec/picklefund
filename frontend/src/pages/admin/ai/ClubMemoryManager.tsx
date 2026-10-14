@@ -168,7 +168,6 @@ export function ClubMemoryManager() {
     <PageShell maxWidth={1200}>
       <PageHeader
         title="Club Memory"
-        subtitle="Tri thức nền của CLB — nguồn tham chiếu chung cho AI (Maika)"
         actions={
           <Button onClick={openCreate}><Plus size={14} />Thêm tri thức</Button>
         }

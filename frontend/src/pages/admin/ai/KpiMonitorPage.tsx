@@ -108,7 +108,6 @@ export function KpiMonitorPage() {
     <PageShell>
       <PageHeader
         title="KPI Monitor"
-        subtitle="Chỉ số vận hành & sức khỏe CLB"
       />
 
       {loading ? (

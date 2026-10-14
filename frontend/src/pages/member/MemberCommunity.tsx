@@ -1787,7 +1787,6 @@ export default function MemberCommunity() {
     <PageShell maxWidth={1760}>
       <PageHeader
         title="Cộng đồng CLB"
-        subtitle="Kết nối, chia sẻ và tìm bạn chơi cùng"
         actions={
           tab === 'matchmaking' ? (
             <ActionButton

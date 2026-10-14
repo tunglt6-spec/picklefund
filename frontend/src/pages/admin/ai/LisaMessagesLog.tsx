@@ -47,7 +47,6 @@ export function LisaMessagesLog() {
     <PageShell>
       <PageHeader
         title="Lisa — Lịch sử hỏi–đáp"
-        subtitle="Toàn văn câu hỏi của thành viên và câu trả lời của Lisa"
       />
 
       {loading ? (

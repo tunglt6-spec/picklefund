@@ -1178,7 +1178,7 @@ export function Settings() {
 
   return (
     <div className="min-h-dvh [background:var(--pf-surface-muted)]">
-      <PageHeader variant="bar" title="Cài đặt" subtitle="Quản lý thông tin CLB và tài khoản" />
+      <PageHeader variant="bar" title="Cài đặt" />
 
       <div className="p-4 md:p-6 space-y-4 md:space-y-6">
         {/* Tab bar */}

@@ -151,7 +151,6 @@ export function CheckIn() {
     <PageShell>
       <PageHeader
         title="Check-in nhanh"
-        subtitle="Chọn buổi chơi và điểm danh một chạm"
         actions={
           !isMember && sessionId && rows.length > 0 ? (
             <ActionButton icon={<Save size={16} />} onClick={save} disabled={saving}>

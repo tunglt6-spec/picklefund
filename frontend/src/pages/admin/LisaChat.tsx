@@ -270,7 +270,6 @@ export function LisaChat() {
     <div className="pf-fill flex flex-col h-full [background:var(--pf-surface-muted)]">
       <PageHeader variant="bar"
         title="Lisa AI"
-        subtitle="Trợ lý cá nhân thông minh"
         actions={
           <div className="flex items-center gap-3">
             <button onClick={() => navigate('/aido')} className="flex items-center gap-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)]">

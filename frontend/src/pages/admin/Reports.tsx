@@ -420,7 +420,6 @@ export function Reports() {
     <PageShell>
       <PageHeader
         title="Báo cáo"
-        subtitle="Tổng hợp tài chính, thành viên, điểm danh và hiệu quả hoạt động của CLB."
         actions={headerActions}
       />
 
@@ -442,7 +441,6 @@ export function Reports() {
       ) : (
         <>
           {/* ── Official KPI Summary (backend fundSummary = Source of Truth) ── */}
-          <p className="mb-2 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Tổng hợp chính thức · nguồn: backend summary</p>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 xl:grid-cols-4">
             {kpi('Tổng thu kỳ', kIncome, 'Quỹ Chính (backend)', 'green', <TrendingUp size={18} />)}
             {kpi('Tổng chi kỳ', kExpense, 'Quỹ Chính (backend)', 'amber', <TrendingDown size={18} />)}

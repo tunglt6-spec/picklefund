@@ -77,7 +77,7 @@ export function Onboarding() {
 
   return (
     <PageShell maxWidth={960}>
-      <PageHeader title="Tạo CLB mới" subtitle="Thiết lập câu lạc bộ và tài khoản quản trị trong vài bước." />
+      <PageHeader title="Tạo CLB mới" />
 
       {/* Stepper */}
       <div className="mb-6 flex items-center">

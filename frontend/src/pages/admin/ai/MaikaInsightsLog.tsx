@@ -59,7 +59,6 @@ export function MaikaInsightsLog() {
     <PageShell>
       <PageHeader
         title="Maika — Nhật ký phân tích"
-        subtitle="Toàn văn báo cáo, phân tích và cảnh báo bất thường Maika đã tạo"
       />
 
       {loading ? (

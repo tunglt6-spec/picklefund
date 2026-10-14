@@ -133,7 +133,6 @@ export function MemberScoring() {
     <PageShell>
       <PageHeader
         title="Chấm điểm thành viên"
-        subtitle="Theo dõi điểm & xếp loại thành viên theo tháng"
       />
       <div className="mb-4">
         <ResponsiveTabs
@@ -311,11 +310,6 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
         <MetricCard accent="blue" icon={<Award size={18} />} label="Tốt" value={stats.good} />
         <MetricCard accent="amber" icon={<TrendingDown size={18} />} label="Cần lưu ý" value={stats.review} sub="cần cải thiện / xem xét" />
       </div>
-
-      <p className="text-xs [color:var(--pf-color-muted)]">
-        Điểm cập nhật tự động theo điểm danh &amp; đóng quỹ. Mỗi thành viên bắt đầu ở 100 điểm,
-        bị trừ khi vắng/nợ quỹ/vi phạm; có thể cộng/trừ thêm bằng điều chỉnh thủ công.
-      </p>
 
       {/* Bảng điểm */}
       <div className="pf-glass pf-unwrap rounded-[16px] p-4 sm:p-5">

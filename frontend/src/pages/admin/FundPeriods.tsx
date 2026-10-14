@@ -987,7 +987,6 @@ export function FundPeriods() {
     <PageShell>
       <PageHeader
         title="Kỳ Quỹ"
-        subtitle="Quản lý Quỹ Chính và Quỹ Phụ CLB"
         actions={
           <div className="flex flex-wrap gap-2">
             {filtered.length > 0 && (

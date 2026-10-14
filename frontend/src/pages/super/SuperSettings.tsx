@@ -259,7 +259,6 @@ export function SuperSettings() {
     <PageShell maxWidth={1280}>
       <PageHeader
         title="Cài đặt hệ thống"
-        subtitle="Cấu hình toàn bộ nền tảng PickleFund"
         actions={
           <Button onClick={handleSave} disabled={saving}>
             <Save size={14} />{saving ? 'Đang lưu...' : 'Lưu cài đặt'}

@@ -484,7 +484,6 @@ export function AiManagerDashboard() {
                   Hermes · AI COO
                 </span>
               </div>
-              <p className="text-sm [color:var(--pf-color-muted)]">Điều phối · Duyệt · Thông báo · Lịch · Cảnh báo · Giám sát (read-only)</p>
             </div>
           </div>
         </div>

@@ -69,7 +69,6 @@ export function ClubDashboard() {
     <PageShell>
       <PageHeader
         title="Tổng quan CLB"
-        subtitle="Tình hình vận hành câu lạc bộ"
         actions={
           <div className="flex items-center gap-2">
             <ActionButton variant="secondary" icon={<UserCheck size={16} />} onClick={() => navigate('/check-in')}>

@@ -721,7 +721,6 @@ export function Members() {
     <PageShell>
       <PageHeader
         title="Thành viên"
-        subtitle="Quản lý hồ sơ, trạng thái, tài khoản và hoạt động thành viên trong CLB."
         actions={headerActions}
       />
 

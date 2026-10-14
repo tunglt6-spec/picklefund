@@ -73,7 +73,7 @@ export function MemberActivity() {
   if (members.length === 0) {
     return (
       <PageShell>
-        <PageHeader title="Lịch sử hoạt động" subtitle="Hồ sơ hoạt động thành viên" />
+        <PageHeader title="Lịch sử hoạt động" />
         <EmptyState icon={<Activity size={24} />} title="Chưa có dữ liệu"
           description="Thêm thành viên và ghi nhận điểm danh/đóng quỹ để xem hồ sơ hoạt động." />
       </PageShell>
@@ -82,8 +82,7 @@ export function MemberActivity() {
 
   return (
     <PageShell>
-      <PageHeader title="Lịch sử hoạt động" subtitle="Hồ sơ từng thành viên · điểm danh · đóng quỹ · chuyên cần"
-        actions={<ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} />}
+      <PageHeader title="Lịch sử hoạt động"        actions={<ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} />}
       />
 
       <div className="grid gap-5 lg:grid-cols-[320px_1fr]">

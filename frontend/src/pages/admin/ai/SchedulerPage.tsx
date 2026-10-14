@@ -168,7 +168,6 @@ export function SchedulerPage() {
     <PageShell>
       <PageHeader
         title="Scheduler"
-        subtitle="Lịch cron & tác vụ định kỳ của Hermes AI COO"
         actions={
           <div className="flex items-center gap-2">
             {/* Công tắc hệ thống (ảnh hưởng MỌI CLB) — mở cho CLUB_ADMIN theo yêu cầu. */}

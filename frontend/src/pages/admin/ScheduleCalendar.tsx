@@ -223,7 +223,6 @@ export function ScheduleCalendar() {
     <PageShell>
       <PageHeader
         title="Lịch sinh hoạt"
-        subtitle="Quản lý lịch chơi và đăng ký của CLB"
         actions={isMember ? undefined : <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/attendance')}>Tạo buổi chơi</ActionButton>}
       />
 

@@ -72,7 +72,7 @@ export function RolesPermissions() {
 
   return (
     <PageShell>
-      <PageHeader title="Vai trò & phân quyền" subtitle={`${users.length} tài khoản trong CLB · gán vai trò, khóa/mở đăng nhập`} />
+      <PageHeader title="Vai trò & phân quyền" />
 
       <ul className="pf-cardlist grid grid-cols-1 min-[600px]:grid-cols-2 gap-3 lg:hidden">
         {users.map((u) => {

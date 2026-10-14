@@ -120,7 +120,6 @@ export function AlertCenterPage() {
     <PageShell>
       <PageHeader
         title="Alert Center"
-        subtitle="Cảnh báo vận hành, chất lượng dữ liệu & lỗi hệ thống"
       />
 
       {loading ? (

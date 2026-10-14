@@ -113,7 +113,7 @@ export function AuditLogs() {
     <PageShell maxWidth={1760}>
       <PageHeader
         title="Nhật ký kiểm toán"
-        subtitle={`${rows.length} thao tác · lịch sử hoạt động toàn hệ thống`}
+        subtitle={`${rows.length} thao tác`}
         actions={rows.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} /> : undefined}
       />
 

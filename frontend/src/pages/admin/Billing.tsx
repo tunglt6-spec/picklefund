@@ -417,7 +417,7 @@ export function Billing() {
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
-      <PageHeader variant="bar" title="Gói dịch vụ" subtitle="Quản lý subscription và theo dõi chi phí AI" />
+      <PageHeader variant="bar" title="Gói dịch vụ" />
       <div className="p-6 mx-auto">{content}</div>
     </div>
   )
