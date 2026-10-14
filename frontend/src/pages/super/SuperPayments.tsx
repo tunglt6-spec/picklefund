@@ -89,7 +89,7 @@ export function SuperPayments() {
 
   const q = search.trim().toLowerCase()
   const filtered = q ? rows.filter((r) => `${r.club.name} ${r.club.code} ${r.orderCode} ${r.reference ?? ''} ${r.note ?? ''}`.toLowerCase().includes(q)) : rows
-  const manualTotal = summary?.byGateway.find((g) => g.gateway === 'MANUAL')
+  const manualTotal = summary?.byGateway?.find((g) => g.gateway === 'MANUAL')
 
   const doVoid = async () => {
     if (!toVoid) return
@@ -147,8 +147,8 @@ export function SuperPayments() {
             {pending.map((r) => (
               <li key={r.orderCode} className="grid grid-cols-1 items-center gap-3 rounded-xl border px-4 py-3 [border-color:var(--pf-border)] [background:var(--pf-surface)] md:grid-cols-[minmax(0,1fr)_210px_220px]">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold [color:var(--pf-text)]">{r.club.name} · {PLAN[r.planTier] ?? r.planTier} {r.months ? `${r.months} tháng` : ''}</p>
-                  <p className="mt-0.5 truncate text-xs [color:var(--pf-color-muted)]">{METHOD[r.method ?? ''] ?? '—'}{r.reference ? ` · ${r.reference}` : ''}{r.note ? ` · ${r.note}` : ''} · ngày chuyển {r.paidAt ? new Date(r.paidAt).toLocaleDateString('vi-VN') : '—'}</p>
+                  <p className="truncate text-sm font-semibold [color:var(--pf-text)] min-[600px]:whitespace-normal min-[600px]:break-words">{r.club.name} · {PLAN[r.planTier] ?? r.planTier} {r.months ? `${r.months} tháng` : ''}</p>
+                  <p className="mt-0.5 truncate text-xs [color:var(--pf-color-muted)] min-[600px]:whitespace-normal min-[600px]:break-words">{METHOD[r.method ?? ''] ?? '—'}{r.reference ? ` · ${r.reference}` : ''}{r.note ? ` · ${r.note}` : ''} · ngày chuyển {r.paidAt ? new Date(r.paidAt).toLocaleDateString('vi-VN') : '—'}</p>
                   {amounts[r.orderCode] != null && amounts[r.orderCode] !== r.amount && (
                     <p className="mt-0.5 text-[11px] [color:var(--pf-color-warning)]">CLB khai {formatVND(r.amount)}</p>
                   )}

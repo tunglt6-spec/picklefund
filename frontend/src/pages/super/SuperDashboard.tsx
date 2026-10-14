@@ -344,8 +344,8 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
       <div className="mt-4">
         <ChartCard title="AIDO Executive Summary" subtitle={review?.byAi ? 'Maika tổng hợp (AI)' : 'Tổng hợp từ dữ liệu thật'}
           actions={<div className="flex items-center gap-1.5">
-            <button onClick={onRunReview} disabled={reviewLoading} className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold [color:var(--pf-primary-text)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60"><Sparkles size={12} className={reviewLoading ? 'animate-pulse' : ''} /> {reviewLoading ? 'Đang viết…' : 'Maika đánh giá'}</button>
-            <button onClick={onSelfTest} className="inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-semibold [color:var(--pf-color-muted)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)]" title="Kiểm tra đường AI của Maika">Kiểm tra AI</button>
+            <button onClick={onRunReview} disabled={reviewLoading} className="pf-touch inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-semibold [color:var(--pf-primary-text)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60"><Sparkles size={12} className={reviewLoading ? 'animate-pulse' : ''} /> {reviewLoading ? 'Đang viết…' : 'Maika đánh giá'}</button>
+            <button onClick={onSelfTest} className="pf-touch inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-semibold [color:var(--pf-color-muted)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)]" title="Kiểm tra đường AI của Maika">Kiểm tra AI</button>
           </div>}>
           <SummaryBlock summary={data.summary} />
           <div className="mt-4 border-t pt-4 [border-color:var(--pf-border)]">
@@ -510,9 +510,9 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
                     {t.sub && <p className="text-xs [color:var(--pf-color-muted)]">{t.sub}</p>}
                   </div>
                   {t.onClick ? (
-                    <button type="button" onClick={t.onClick} className="shrink-0 text-xs font-semibold [color:var(--pf-primary-text)]">{t.cta} →</button>
+                    <button type="button" onClick={t.onClick} className="shrink-0 py-3 text-xs font-semibold [color:var(--pf-primary-text)] -my-3">{t.cta} →</button>
                   ) : t.to ? (
-                    <Link to={t.to} className="shrink-0 text-xs font-semibold [color:var(--pf-primary-text)]">{t.cta} →</Link>
+                    <Link to={t.to} className="shrink-0 py-3 text-xs font-semibold [color:var(--pf-primary-text)] -my-3">{t.cta} →</Link>
                   ) : null}
                 </li>
               ))}
@@ -556,7 +556,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
             </ul>
           ) : <EmptyState icon={<ClipboardList size={22} />} title="Chưa có nhật ký" />}
           <MaikaNote review={review} k="syslog" />
-          <div className="mt-3"><Link to="/super/audit-logs" className="text-xs font-semibold [color:var(--pf-primary-text)]">Xem toàn bộ nhật ký →</Link></div>
+          <div className="mt-3"><Link to="/super/audit-logs" className="pf-touch inline-flex items-center text-xs font-semibold [color:var(--pf-primary-text)]">Xem toàn bộ nhật ký →</Link></div>
         </ChartCard>
       </Section>
 
@@ -651,7 +651,7 @@ function RankList({ title, rows, fmt }: { title: string; rows: any[]; fmt: (v: n
           {rows.map((r, i) => (
             <li key={r.clubId ?? i} className="sa-rank-row flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-sm">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white" style={{ background: i === 0 ? 'var(--pf-grad-brand)' : 'color-mix(in srgb, var(--pf-primary) 45%, var(--pf-surface))' }}>{i + 1}</span>
-              <span className="min-w-0 flex-1 truncate font-medium [color:var(--pf-text)]">{r.name}</span>
+              <span className="min-w-0 flex-1 truncate font-medium [color:var(--pf-text)] min-[600px]:whitespace-normal min-[600px]:break-words">{r.name}</span>
               <span className="shrink-0 font-bold tabular-nums [color:var(--pf-primary-text)]">{fmt(r.value)}</span>
             </li>
           ))}

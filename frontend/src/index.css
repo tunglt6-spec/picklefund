@@ -923,3 +923,6 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   border: 0; box-shadow: none; padding-left: 0; padding-right: 0;
 }
 }
+
+/* Điều khiển nhỏ tự viết (không dùng <Button>): vùng bấm 44px trên thiết bị cảm ứng */
+@media (pointer: coarse) { .pf-touch { min-height: 44px; min-width: 44px; } }

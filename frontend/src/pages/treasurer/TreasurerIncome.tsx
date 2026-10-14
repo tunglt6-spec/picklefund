@@ -311,7 +311,7 @@ export function TreasurerIncome() {
               <p className="text-sm [color:var(--pf-color-muted)]">Chưa có khoản thu nào</p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="pf-cardlist grid grid-cols-1 gap-2 min-[600px]:grid-cols-2">
               {contributions.map(c => {
                 const period = data.fundPeriods.find(p => p.id === c.fundPeriodId)
                 const isMiniRow = (c.fundSource ?? 'COMMON') === 'MINI'

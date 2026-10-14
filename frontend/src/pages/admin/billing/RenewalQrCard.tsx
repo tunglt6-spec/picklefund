@@ -51,7 +51,7 @@ export function RenewalQrCard() {
         <div className="flex flex-col gap-4 sm:flex-row">
           <div className="flex h-44 w-44 shrink-0 items-center justify-center rounded-xl border bg-white [border-color:var(--pf-border)]">
             {qr ? <img src={qr} alt="QR chuyển khoản gia hạn" className="h-full w-full rounded-xl object-contain" />
-              : <button type="button" onClick={() => setTick((t) => t + 1)} className="inline-flex items-center gap-1 text-xs font-semibold [color:var(--pf-primary-text)]"><RefreshCw size={12} />Tải lại QR</button>}
+              : <button type="button" onClick={() => setTick((t) => t + 1)} className="pf-touch inline-flex items-center gap-1 text-xs font-semibold [color:var(--pf-primary-text)]"><RefreshCw size={12} />Tải lại QR</button>}
           </div>
           <dl className="grid flex-1 grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
             <dt className="[color:var(--pf-color-muted)]">Ngân hàng</dt><dd className="font-semibold [color:var(--pf-text)]">{info.bank.code}</dd>

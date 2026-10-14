@@ -315,46 +315,46 @@ export function AiDigitalOffice() {
         unit: health?.score != null ? '/100' : '',
         headline: 'Sức khỏe CLB',
         details: [
-          `${opsSignals.length} cảnh báo · ${r?.maika.insightsToday ?? 0} phân tích hôm nay`,
-          r?.maika.recentInsights?.[0]
+          `${opsSignals.length} cảnh báo · ${r?.maika?.insightsToday ?? 0} phân tích hôm nay`,
+          r?.maika?.recentInsights?.[0]
             ? `Gần nhất: ${r.maika.recentInsights[0].title}`
-            : `${r?.maika.briefsToday ?? 0} báo cáo · ${r?.maika.actionsToday ?? 0} đề xuất`,
+            : `${r?.maika?.briefsToday ?? 0} báo cáo · ${r?.maika?.actionsToday ?? 0} đề xuất`,
         ],
       },
       {
         key: 'LISA', name: 'Lisa', color: '#2563EB',
-        value: String(r?.lisa.answeredToday ?? 0), unit: 'lượt',
+        value: String(r?.lisa?.answeredToday ?? 0), unit: 'lượt',
         headline: 'Lisa trả lời hôm nay',
         details: [
-          `${r?.lisa.remindersToday ?? 0} nhắc nhở đã gửi`,
+          `${r?.lisa?.remindersToday ?? 0} nhắc nhở đã gửi`,
           'Hỗ trợ thành viên & giải đáp',
         ],
       },
       {
         key: 'HERMES', name: 'Hermes', color: '#059669',
-        value: String(r?.hermes.runsToday ?? 0), unit: 'workflow',
+        value: String(r?.hermes?.runsToday ?? 0), unit: 'workflow',
         headline: 'Điều phối hôm nay',
         details: [
-          `${r?.hermes.waitingApproval ?? 0} chờ duyệt · ${r?.hermes.completedToday ?? 0} hoàn tất`,
-          `${r?.hermes.failedToday ?? 0} lỗi`,
+          `${r?.hermes?.waitingApproval ?? 0} chờ duyệt · ${r?.hermes?.completedToday ?? 0} hoàn tất`,
+          `${r?.hermes?.failedToday ?? 0} lỗi`,
         ],
       },
       {
         key: 'MIT_DAT', name: 'Mít Đặc', color: '#EA580C',
-        value: String(r?.mitDac.executedToday ?? executedToday), unit: 'tác vụ',
+        value: String(r?.mitDac?.executedToday ?? executedToday), unit: 'tác vụ',
         headline: 'Đã thực thi hôm nay',
         details: [
-          `${r?.mitDac.running ?? running} đang chạy · ${r?.mitDac.failedToday ?? 0} lỗi`,
-          `Thời gian TB ${fmtLatency(r?.mitDac.averageExecutionMs)}`,
+          `${r?.mitDac?.running ?? running} đang chạy · ${r?.mitDac?.failedToday ?? 0} lỗi`,
+          `Thời gian TB ${fmtLatency(r?.mitDac?.averageExecutionMs)}`,
         ],
       },
       {
         key: 'NOTIFICATION', name: 'Notification', color: '#C026D3',
-        value: String(r?.notification.sentToday ?? 0), unit: 'đã gửi',
+        value: String(r?.notification?.sentToday ?? 0), unit: 'đã gửi',
         headline: 'Thông báo gửi hôm nay',
         details: [
-          `In-app ${r?.notification.byChannel.IN_APP ?? 0} · Email ${r?.notification.byChannel.EMAIL ?? 0}`,
-          `Telegram ${r?.notification.byChannel.TELEGRAM ?? 0} (thử) · ${r?.notification.failedToday ?? 0} lỗi`,
+          `In-app ${r?.notification?.byChannel?.IN_APP ?? 0} · Email ${r?.notification?.byChannel?.EMAIL ?? 0}`,
+          `Telegram ${r?.notification?.byChannel?.TELEGRAM ?? 0} (thử) · ${r?.notification?.failedToday ?? 0} lỗi`,
         ],
       },
     ]

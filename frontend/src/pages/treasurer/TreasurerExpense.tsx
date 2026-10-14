@@ -198,7 +198,7 @@ export function TreasurerExpense() {
               {expenses.length === 0 ? (
                 <div className="text-center py-12 text-sm [color:var(--pf-color-muted)]">Chưa có khoản chi nào</div>
               ) : (
-                <div className="space-y-2">
+                <div className="pf-cardlist grid grid-cols-1 gap-2 min-[600px]:grid-cols-2">
                   {expenses.map(e => {
                     const period = data.fundPeriods.find(p => p.id === e.fundPeriodId)
                     return (

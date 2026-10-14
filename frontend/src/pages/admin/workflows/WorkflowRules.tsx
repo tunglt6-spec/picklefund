@@ -418,7 +418,7 @@ export function WorkflowRules() {
           </div>
 
           {/* Quan sát AI (30 ngày) — cùng style KPI của trang (WF_KPI_TONE, value-based). */}
-          {obs && (
+          {obs?.runs && (
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {([
                 { label: 'Tỷ lệ thành công', value: `${obs.runs.successRate}%`, sub: `${obs.runs.total} lần chạy`, tone: obs.runs.successRate >= 90 ? 'success' : obs.runs.successRate >= 60 ? 'warning' : 'danger' },

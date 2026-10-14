@@ -301,11 +301,11 @@ export function SuperSettings() {
               <p className="text-xs [color:var(--pf-color-muted)] mt-1">Nhận thông báo biến động hệ thống qua Telegram. Để trống = tắt kênh này. Bạn phải <b>/start</b> bot trước để bot được phép nhắn.</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <button type="button" onClick={testTelegram} disabled={tgBusy || !settings.superTelegramChatId}
-                  className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold [color:var(--pf-primary-text)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60">
+                  className="pf-touch inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold [color:var(--pf-primary-text)] border-[color:var(--pf-border)] hover:[background:var(--pf-surface-muted)] disabled:opacity-60">
                   {tgBusy ? 'Đang gửi…' : 'Gửi thử Telegram'}
                 </button>
                 <button type="button" onClick={detachSharedChat}
-                  className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold [color:var(--pf-color-warning)] [border-color:var(--pf-color-warning)] hover:[background:var(--pf-color-warning-soft)]">
+                  className="pf-touch inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold [color:var(--pf-color-warning)] [border-color:var(--pf-color-warning)] hover:[background:var(--pf-color-warning-soft)]">
                   Tách chat dùng chung khỏi CLB
                 </button>
               </div>
@@ -333,7 +333,7 @@ export function SuperSettings() {
             <S id="contact" label="Liên hệ hỗ trợ (hiện trong thông báo)" value={settings.contact} onChange={v => setSettings(p => ({ ...p, contact: v }))} placeholder="VD: Zalo/SĐT/email của Super Admin" />
             <div className="flex flex-wrap items-center gap-3">
               <button type="button" onClick={runRenewalNow} disabled={renewBusy || !settings.bankCode || !settings.bankAccount || !settings.bankName}
-                className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold [color:var(--pf-primary-text)] border-[color:var(--pf-border)] disabled:opacity-50">
+                className="pf-touch inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold [color:var(--pf-primary-text)] border-[color:var(--pf-border)] disabled:opacity-50">
                 {renewBusy ? 'Đang gửi…' : 'Lưu và chạy nhắc ngay'}
               </button>
               <p className="text-xs [color:var(--pf-color-muted)]">Thông báo gửi tới Admin của từng CLB; mỗi mốc chỉ nhắc 1 lần. Cần điền đủ tài khoản nhận mới gửi được.</p>
@@ -381,7 +381,7 @@ export function SuperSettings() {
                     placeholder="••••••••"
                   />
                   <button type="button" onClick={() => setShowPw(s => ({ ...s, [f.key]: !s[f.key] }))}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] hover:[color:var(--pf-color-muted)]">
+                    className="pf-touch absolute right-1 top-1/2 inline-flex -translate-y-1/2 items-center justify-center [color:var(--pf-color-muted)] hover:[color:var(--pf-color-muted)]">
                     {showPw[f.key] ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>

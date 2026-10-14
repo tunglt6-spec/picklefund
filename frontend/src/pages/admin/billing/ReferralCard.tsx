@@ -71,7 +71,7 @@ export function ReferralCard() {
       <div className="flex items-center gap-2">
         <div className="flex-1 flex items-center justify-between rounded-xl border border-dashed px-4 py-3 [border-color:var(--pf-primary)] [background:var(--pf-primary-soft)]">
           <span className="text-lg font-extrabold tracking-widest [color:var(--pf-primary-text)]">{info.code}</span>
-          <button onClick={copy} className="inline-flex items-center gap-1 text-xs font-semibold [color:var(--pf-primary-text)]">
+          <button onClick={copy} className="pf-touch inline-flex items-center gap-1 text-xs font-semibold [color:var(--pf-primary-text)]">
             {copied ? <><Check size={14} /> Đã copy</> : <><Copy size={14} /> Copy</>}
           </button>
         </div>

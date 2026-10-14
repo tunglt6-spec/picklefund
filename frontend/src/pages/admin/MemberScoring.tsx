@@ -75,8 +75,8 @@ const CATEGORY_ORDER: Category[] = [
 ]
 
 /** Xếp loại → tone StatusBadge. */
-function classificationTone(c: string): StatusTone {
-  const v = c.toLowerCase()
+function classificationTone(c?: string | null): StatusTone {
+  const v = (c ?? '').toLowerCase()
   if (v.includes('xuất sắc')) return 'success'
   if (v.includes('tốt')) return 'info'
   if (v.includes('cần cải thiện')) return 'warning'

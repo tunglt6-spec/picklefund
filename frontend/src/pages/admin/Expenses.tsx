@@ -893,9 +893,9 @@ export function Expenses() {
         </div>
 
         {/* Expense list */}
-        <div className="px-4 pt-3 pb-24 space-y-2">
+        <div className="pf-cardlist px-4 pt-3 pb-24 grid grid-cols-1 gap-2 min-[600px]:grid-cols-2">
           {mobileFiltered.length === 0 ? (
-            <div className="text-center py-14 [color:var(--pf-color-muted)] text-sm">
+            <div className="col-span-full text-center py-14 [color:var(--pf-color-muted)] text-sm">
               <Receipt size={36} className="mx-auto [color:var(--pf-color-muted)] opacity-40 mb-3" />
               {search ? `Không tìm thấy "${search}"` : 'Không có khoản chi nào'}
             </div>
