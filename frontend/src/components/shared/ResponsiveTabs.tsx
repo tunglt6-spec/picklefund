@@ -27,7 +27,7 @@ export function ResponsiveTabs({
       role="tablist"
       className={cn(
         // Chuẩn v2.1 — tab NÚT TO; 1 hàng cuộn ngang (mobile vuốt, không xuống dòng).
-        'flex gap-2 overflow-x-auto no-scrollbar',
+        'pf-seg flex gap-2 overflow-x-auto no-scrollbar',
         className,
       )}
     >

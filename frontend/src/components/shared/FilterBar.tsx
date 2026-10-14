@@ -29,7 +29,7 @@ export function FilterBar({
   className,
 }: FilterBarProps) {
   return (
-    <div className={cn('flex items-center gap-2', className)}>
+    <div className={cn('pf-toolbar flex items-center gap-2', className)}>
       <div className="relative flex-1 min-w-0">
         <Search
           size={16}

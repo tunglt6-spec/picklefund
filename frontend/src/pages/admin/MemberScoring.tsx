@@ -275,7 +275,7 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
   return (
     <div className="flex flex-col gap-5">
       {/* Bộ chọn tháng + actions */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="pf-toolbar flex flex-col gap-3 min-[600px]:flex-row min-[600px]:items-center min-[600px]:justify-between">
         <label className="flex items-center gap-2 text-sm font-medium [color:var(--pf-text)]">
           <span className="[color:var(--pf-color-muted)]">Tháng</span>
           <select
@@ -318,7 +318,7 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
       </p>
 
       {/* Bảng điểm */}
-      <div className="pf-glass rounded-[16px] p-4 sm:p-5">
+      <div className="pf-glass pf-unwrap rounded-[16px] p-4 sm:p-5">
         {loading ? (
           <LoadingState rows={4} />
         ) : error ? (
@@ -342,7 +342,7 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
                   <button
                     type="button"
                     onClick={() => setDetailMemberId(r.memberId)}
-                    className="flex w-full items-center justify-between gap-3 rounded-[16px] border p-4 text-left [background:var(--pf-surface)] border-[color:var(--pf-border)]"
+                    className="flex w-full items-center justify-between gap-3 text-left"
                   >
                     <div className="min-w-0">
                       <p className="font-semibold [color:var(--pf-text)] truncate">{r.memberName}</p>

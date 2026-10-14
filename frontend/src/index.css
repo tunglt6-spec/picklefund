@@ -926,3 +926,30 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
 
 /* Điều khiển nhỏ tự viết (không dùng <Button>): vùng bấm 44px trên thiết bị cảm ứng */
 @media (pointer: coarse) { .pf-touch { min-height: 44px; min-width: 44px; } }
+
+/* ══ Thanh công cụ gọn (Luxury SaaS) — CHỈ <1024px: phụ đề + hành động / bộ lọc nằm trong 1 thanh kính; tab con dạng segmented ══ */
+@media (max-width: 1023px) {
+  .pf-toolbar {
+    padding: 8px 10px;
+    border-radius: 18px;
+    border: 1px solid color-mix(in srgb, var(--pf-primary) 14%, var(--pf-border));
+    background-color: color-mix(in srgb, var(--pf-surface) 86%, transparent);
+    background-image: var(--pf-sheen);
+    box-shadow: 0 2px 10px color-mix(in srgb, var(--pf-primary) 8%, transparent);
+  }
+  .pf-toolbar > p { padding-left: 4px; }
+  .pf-seg {
+    padding: 4px; gap: 4px;
+    border-radius: 18px;
+    border: 1px solid color-mix(in srgb, var(--pf-primary) 14%, var(--pf-border));
+    background-color: color-mix(in srgb, var(--pf-surface) 86%, transparent);
+    box-shadow: 0 2px 10px color-mix(in srgb, var(--pf-primary) 8%, transparent);
+  }
+  .pf-seg > button { flex: 1 1 auto; border-color: transparent; background: transparent; border-radius: 14px; min-height: 44px; }
+  .pf-seg > button[aria-selected="true"] { background: var(--pf-grad-brand); }
+}
+@media (max-width: 1023px) {
+  /* Khung kính bọc danh sách thẻ → bỏ (tránh thẻ lồng thẻ) */
+  .pf-unwrap { background: none !important; border: 0 !important; box-shadow: none !important; padding: 0 !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media print { .pf-toolbar, .pf-seg { box-shadow: none; } }
