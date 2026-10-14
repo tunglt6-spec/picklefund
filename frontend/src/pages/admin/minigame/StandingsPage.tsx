@@ -49,7 +49,7 @@ export function StandingsPage() {
   const myGroups = groups.filter(g => g.minigameId === id).sort((a, b) => a.groupOrder - b.groupOrder)
 
   const [activeTab, setActiveTab] = useState<'all' | string>('all')
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile(1024)
 
   // Trang BXH generic chỉ phục vụ RANDOM_DOUBLES + GROUP_STAGE. Format đội (đôi cố định/bóng đá/
   // bóng rổ) & golf có BXH RIÊNG trong dashboard của chúng → điều hướng về dashboard (tránh trang

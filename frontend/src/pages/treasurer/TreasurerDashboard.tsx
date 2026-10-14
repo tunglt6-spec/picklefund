@@ -189,7 +189,7 @@ export function TreasurerDashboard() {
 
       <div className="flex flex-col gap-5">
         {/* Fund split summary */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 min-[600px]:max-[1023px]:grid-cols-2 lg:grid-cols-3">
           {fundCards.map(f => (
             <div key={f.label} className="pf-stat-card rounded-xl p-4">
               <div className="mb-3 flex items-center gap-2">

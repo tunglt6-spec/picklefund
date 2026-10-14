@@ -112,7 +112,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
   const [deleteTarget, setDeleteTarget] = useState<MiniGameDoublesMatch | null>(null)
   const delMobileRef = useRef<HTMLDivElement>(null)
   const delDesktopRef = useRef<HTMLDivElement>(null)
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile(1024)
   useDialogA11y(!!deleteTarget && isMobile, delMobileRef, () => setDeleteTarget(null))
   useDialogA11y(!!deleteTarget && !isMobile, delDesktopRef, () => setDeleteTarget(null))
 
@@ -505,7 +505,7 @@ export function MatchSchedule() {
 
   const [filter, setFilter] = useState<Filter>('all')
   const [scoreMatch, setScoreMatch] = useState<MiniGameMatch | null>(null)
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile(1024)
 
   // Trang Lịch generic chỉ phục vụ RANDOM_DOUBLES (nhánh dưới) + GROUP_STAGE (bảng matches).
   // Format đội (đôi cố định/bóng đá/bóng rổ) & golf có lịch RIÊNG trong dashboard → điều hướng về

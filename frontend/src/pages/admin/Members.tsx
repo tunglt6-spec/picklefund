@@ -96,7 +96,7 @@ function DrawerShell({
         aria-label={title}
         className={`relative flex flex-col [background:var(--pf-surface)] ${
           isMobile
-            ? 'w-full max-h-[88dvh] rounded-t-[24px] animate-fadeIn'
+            ? 'w-full max-h-[88dvh] rounded-t-[24px] animate-fadeIn min-[600px]:mx-auto min-[600px]:max-w-lg'
             : 'h-full w-full max-w-md shadow-2xl animate-fadeIn'
         }`}
       >
