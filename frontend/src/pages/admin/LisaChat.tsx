@@ -70,8 +70,7 @@ export function LisaChat() {
     }
   }, [user])
 
-  // Mở màn: tải tóm tắt + LỊCH SỬ hội thoại (server). Có lịch sử → dựng lại dòng chat;
-  // chưa có → hiện lời chào.
+  // Mở màn: tải tóm tắt và LUÔN bắt đầu bằng lời chào (không dựng lại lịch sử chat).
   const initChat = useCallback(async () => {
     if (!user) return
     setBriefLoading(true)
@@ -81,16 +80,6 @@ export function LisaChat() {
       if (b) { setBrief(b); if (b.greeting) greeting = b.greeting }
     } catch { toast.error('Không tải được tóm tắt từ Lisa.') }
     finally { setBriefLoading(false) }
-    try {
-      const hist = (await api.get('/lisa/history?limit=40')).data?.data ?? []
-      if (Array.isArray(hist) && hist.length) {
-        setMessages(hist.flatMap((h: any, i: number) => [
-          { id: `h-u-${i}`, role: 'user' as const, text: h.question, time: hhmm(h.createdAt) },
-          { id: `h-l-${i}`, role: 'lisa' as const, text: h.answer, time: hhmm(h.createdAt) },
-        ]))
-        return
-      }
-    } catch { /* lỗi lịch sử → hiện lời chào */ }
     setMessages([{ id: 'welcome', role: 'lisa', text: greeting, time: hhmm() }])
   }, [user])
 
