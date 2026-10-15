@@ -104,7 +104,13 @@ export function MemberLisaChat() {
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = prev }
   }, [isMobile])
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
+  // Vào màn: nhảy thẳng xuống tin cuối (không chạy hiệu ứng cuộn từ trên xuống); chỉ cuộn mượt khi có tin MỚI.
+  const prevCountRef = useRef(0)
+  useEffect(() => {
+    const first = prevCountRef.current === 0
+    prevCountRef.current = messages.length
+    bottomRef.current?.scrollIntoView({ behavior: first ? 'instant' : 'smooth' })
+  }, [messages])
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || loading) return
