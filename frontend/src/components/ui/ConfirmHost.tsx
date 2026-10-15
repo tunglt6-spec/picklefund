@@ -51,7 +51,7 @@ export function ConfirmHost() {
   const done = () => { req.resolve(); close() }
   return (
     <Modal open onClose={done} title={req.title} size="sm" footer={<ActionButton variant="primary" className="min-h-11" onClick={done}>Đóng</ActionButton>}>
-      <p className="whitespace-pre-line text-sm [color:var(--pf-text)]">{req.message}</p>
+      <p className="max-h-[60vh] overflow-y-auto whitespace-pre-line break-words text-sm [overflow-wrap:anywhere] [color:var(--pf-text)]">{req.message}</p>
     </Modal>
   )
 }

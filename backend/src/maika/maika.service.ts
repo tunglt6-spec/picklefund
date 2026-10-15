@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { HermesService } from '../hermes/hermes.service';
 import { FundPeriodsService } from '../fund-periods/fund-periods.service';
 import { AiUsageService } from '../ai-usage/ai-usage.service';
+import { GeminiBreaker, GEMINI_KIND_HINT, type GeminiErrorKind } from '../ai-usage/gemini-health';
 import type {
   ClubSnapshot,
   DailyBrief,
@@ -171,21 +172,39 @@ export class MaikaService {
     return { text, byAi: !!this.genAI && text.trim() !== fallback.trim() };
   }
 
-  /** Chẩn đoán đường Gemini: thử lần lượt các model, trả về model nào chạy + lỗi từng model. */
-  async selfTest(): Promise<{ configured: boolean; okModel: string | null; preview: string; attempts: { model: string; ok: boolean; error?: string }[] }> {
-    if (!this.genAI) return { configured: false, okModel: null, preview: '', attempts: [] };
-    const candidates = [this.geminiModel, 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'].filter((m, i, a) => !!m && a.indexOf(m) === i);
-    const attempts: { model: string; ok: boolean; error?: string }[] = [];
+  /** Chẩn đoán đường Gemini: thử TỪNG model (bỏ qua cầu dao), trả model chạy được + loại lỗi + gợi ý khắc phục. */
+  async selfTest(): Promise<{
+    configured: boolean; okModel: string | null; preview: string;
+    attempts: { model: string; ok: boolean; kind?: GeminiErrorKind; error?: string }[];
+    diagnosis: string[];
+  }> {
+    if (!this.genAI) {
+      return { configured: false, okModel: null, preview: '', attempts: [], diagnosis: ['Chưa cấu hình GOOGLE_API_KEY — Maika/Lisa đang chạy bản rule-based (không dùng AI).'] };
+    }
+    const candidates = GeminiBreaker.candidates(this.geminiModel, this.config.get<string>('GEMINI_FALLBACK_MODELS'));
+    const attempts: { model: string; ok: boolean; kind?: GeminiErrorKind; error?: string }[] = [];
     for (const m of candidates) {
       try {
         const model = this.genAI.getGenerativeModel({ model: m });
         const result = await model.generateContent('Trả lời đúng một câu tiếng Việt: "Xin chào từ Maika".');
         const text = result.response.text().trim();
-        if (text) { attempts.push({ model: m, ok: true }); return { configured: true, okModel: m, preview: text.slice(0, 160), attempts }; }
-        attempts.push({ model: m, ok: false, error: 'empty response' });
-      } catch (e: any) { attempts.push({ model: m, ok: false, error: String(e?.message ?? e).slice(0, 180) }); }
+        if (text) {
+          GeminiBreaker.reset(m);
+          attempts.push({ model: m, ok: true });
+          return { configured: true, okModel: m, preview: text.slice(0, 160), attempts, diagnosis: [] };
+        }
+        attempts.push({ model: m, ok: false, kind: 'OTHER', error: 'Phản hồi rỗng (bị lọc an toàn?)' });
+      } catch (e: any) {
+        const msg = String(e?.message ?? e);
+        const kind = GeminiBreaker.trip(m, msg);
+        // Rút gọn thông điệp thô của SDK (URL dài) — giữ mã lỗi + phần mô tả đầu.
+        const short = msg.replace(/https?:\/\/\S+/g, '[url]').replace(/\s+/g, ' ').slice(0, 220);
+        attempts.push({ model: m, ok: false, kind, error: short });
+      }
     }
-    return { configured: true, okModel: null, preview: '', attempts };
+    const kinds = Array.from(new Set(attempts.filter((a) => !a.ok).map((a) => a.kind as GeminiErrorKind)));
+    const diagnosis = kinds.map((k) => `${GEMINI_KIND_HINT[k]} (${attempts.filter((a) => a.kind === k).map((a) => a.model).join(', ')})`);
+    return { configured: true, okModel: null, preview: '', attempts, diagnosis };
   }
 
   /** Như composeText nhưng cho phép ĐẦU RA DÀI (nâng maxOutputTokens) — báo cáo điều hành nhiều mục. */
@@ -201,11 +220,12 @@ export class MaikaService {
 
   private async askAI(prompt: string, fallback: string, clubId?: string, maxTokens?: number): Promise<string> {
     // 1) Gemini — thử lần lượt danh sách model (tự chữa khi model cấu hình sai/không tồn tại):
-    //    model cấu hình → gemini-2.5-flash → gemini-2.0-flash → gemini-1.5-flash.
+    //    model cấu hình → GEMINI_FALLBACK_MODELS (mặc định gemini-2.5-flash). 2.0/1.5 đã bị Google gỡ (404) nên không còn trong chuỗi.
     if (this.genAI) {
-      const candidates = [this.geminiModel, 'gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
-        .filter((m, i, a) => !!m && a.indexOf(m) === i);
+      const candidates = GeminiBreaker.candidates(this.geminiModel, this.config.get<string>('GEMINI_FALLBACK_MODELS'));
       for (const modelName of candidates) {
+        // Cầu dao: model đang bị khoá (hết hạn mức/đã bị gỡ) → bỏ qua ngay, không chờ lại.
+        if (GeminiBreaker.isBlocked(modelName)) continue;
         const t0 = Date.now();
         try {
           const model = this.genAI.getGenerativeModel({
@@ -220,7 +240,8 @@ export class MaikaService {
             return text;
           }
         } catch (err: any) {
-          this.logger.warn(`[Maika] Gemini model ${modelName} lỗi: ${err.message}`);
+          const kind = GeminiBreaker.trip(modelName, err?.message);
+          this.logger.warn(`[Maika] Gemini model ${modelName} lỗi (${kind}): ${String(err?.message ?? '').slice(0, 160)}`);
         }
       }
       this.logger.warn('[Maika] Mọi model Gemini đều lỗi — trying OpenRouter/fallback');

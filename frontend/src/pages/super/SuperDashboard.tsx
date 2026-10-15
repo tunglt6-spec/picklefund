@@ -193,9 +193,11 @@ export function SuperDashboard() {
       const res = await api.get('/command-center/ai-selftest', { timeout: 30000 })
       const d = res.data?.data
       toast.dismiss(t)
+      const KIND: Record<string, string> = { QUOTA: 'hết hạn mức (429)', MODEL_GONE: 'model đã bị gỡ (404)', AUTH: 'key bị từ chối', TIMEOUT: 'quá thời gian chờ', OTHER: 'lỗi khác' }
+      const lines = (d?.attempts ?? []).map((a: any) => `• ${a.model}: ${a.ok ? 'chạy được ✓' : (KIND[a.kind] ?? 'lỗi') + (a.error ? ` — ${a.error}` : '')}`)
       await noticeDialog('Kết quả kiểm tra AI', d?.okModel
         ? `AI OK ✓\nModel dùng được: ${d.okModel}\nVí dụ: ${d.preview}`
-        : `AI KHÔNG chạy ✗ (configured=${d?.configured})\n` + (d?.attempts ?? []).map((a: any) => `• ${a.model}: ${a.ok ? 'OK' : 'lỗi — ' + a.error}`).join('\n'))
+        : `AI KHÔNG chạy ✗${d?.configured === false ? ' (chưa cấu hình GOOGLE_API_KEY)' : ''}\n\n${[...(d?.diagnosis ?? []).map((x: string) => `⚠ ${x}`), '', ...lines].join('\n')}`)
     } catch { toast.error('Không gọi được self-test', { id: t }) }
   }
 
