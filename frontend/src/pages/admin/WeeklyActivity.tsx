@@ -83,13 +83,12 @@ export function WeeklyActivity() {
   // Lượt đăng ký tuần này — tổng registrations của các buổi trong tuần (endpoint có sẵn).
   const loadRegs = useCallback(async (ids: string[]) => {
     if (ids.length === 0) { setWeekRegs(0); return }
-    const res = await Promise.allSettled(ids.map((id) => api.get(`/attendance/${id}/registrations`)))
     let total = 0
-    for (const r of res) {
-      if (r.status === 'fulfilled') {
-        total += ((r.value.data?.data ?? []) as { registered: boolean }[]).filter((x) => x.registered).length
-      }
-    }
+    try {
+      const res = await api.get('/attendance/registrations/bulk', { params: { sessionIds: ids.join(',') } })
+      const data = (res.data?.data ?? {}) as Record<string, { registered: boolean }[]>
+      for (const rows of Object.values(data)) total += rows.filter((x) => x.registered).length
+    } catch { /* im lặng: giữ 0 */ }
     setWeekRegs(total)
   }, [])
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import api from '../lib/api'
+import { visibleInterval } from '../lib/visibleInterval'
 
 /**
  * useOperationsRuntime — dữ liệu RUNTIME THẬT cho AI Operations Center (tab trong AIDO).
@@ -145,8 +146,7 @@ export function useOperationsRuntime(pollMs = 60_000): OperationsRuntime {
   useEffect(() => {
     void load()
     if (pollMs <= 0) return
-    const id = setInterval(() => void load(true), pollMs)
-    return () => clearInterval(id)
+    return visibleInterval(() => void load(true), pollMs)
   }, [load, pollMs])
 
   return { summary, alerts, dataMonitor, kpi, loading, error, stale, generatedAt, refresh: () => void load(), }

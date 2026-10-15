@@ -10,6 +10,7 @@ import { RefreshCw } from 'lucide-react'
 import api from '../../lib/api'
 import { PageShell, PageHeader, ActionButton } from '../../components/shared'
 import { OfficeBanner } from '../../components/aido/OfficeBanner'
+import { visibleInterval } from '../../lib/visibleInterval'
 
 /** Kết quả công việc trong ngày của từng agent — cùng shape với admin AIDO. */
 interface AgentResults {
@@ -49,10 +50,10 @@ export function MemberOffice() {
   // Nạp lần đầu + poll 60s + refresh khi quay lại tab (member không dùng socket quản trị).
   useEffect(() => {
     void load()
-    const t = setInterval(() => void load(), 60_000)
+    const stop = visibleInterval(() => void load(), 60_000)
     const onVisible = () => { if (document.visibilityState === 'visible') void load() }
     document.addEventListener('visibilitychange', onVisible)
-    return () => { clearInterval(t); document.removeEventListener('visibilitychange', onVisible) }
+    return () => { stop(); document.removeEventListener('visibilitychange', onVisible) }
   }, [load])
 
   const r = results

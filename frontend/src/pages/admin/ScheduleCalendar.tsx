@@ -121,15 +121,16 @@ export function ScheduleCalendar() {
     if (ids.length === 0 || isLocalToken(accessToken)) { setRegMap({}); return }
     setRegLoading(true)
     try {
-      const res = await Promise.allSettled(ids.map((id) => api.get(`/attendance/${id}/registrations`)))
+      const res = await api.get('/attendance/registrations/bulk', { params: { sessionIds: ids.join(',') } })
+      const data = (res.data?.data ?? {}) as Record<string, RegRow[]>
       const map: Record<string, RegInfo> = {}
-      res.forEach((r, i) => {
-        if (r.status === 'fulfilled') {
-          const rows = (r.value.data?.data ?? []) as RegRow[]
-          map[ids[i]] = { registered: rows.filter((x) => x.registered).length, pool: rows.length, members: rows }
-        }
-      })
+      for (const id of ids) {
+        const rows = data[id]
+        if (rows) map[id] = { registered: rows.filter((x) => x.registered).length, pool: rows.length, members: rows }
+      }
       setRegMap(map)
+    } catch {
+      setRegMap({})
     } finally {
       setRegLoading(false)
     }

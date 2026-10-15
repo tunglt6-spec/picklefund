@@ -14,6 +14,7 @@ import type { Role } from '../../types'
 import { PickleFundLogoMark } from '../ui/PickleFundLogoMark'
 import api from '../../lib/api'
 import { useNotifStore } from '../../store/notifStore'
+import { visibleInterval } from '../../lib/visibleInterval'
 
 interface NavItem {
   label: string
@@ -97,8 +98,7 @@ function useHermesUnreadCount(user: any) {
   }, [user, setUnreadCount])
   useEffect(() => {
     sync()
-    const id = setInterval(sync, 30000)
-    return () => clearInterval(id)
+    return visibleInterval(sync, 30000)
   }, [sync])
   return unreadCount
 }

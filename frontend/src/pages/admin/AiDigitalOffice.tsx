@@ -32,6 +32,7 @@ import { useAuthStore } from '../../store/authStore'
 // Gộp vào AIDO làm tab (tái dùng nguyên màn đã có — không đổi nghiệp vụ).
 import { AiManagerDashboard } from './ai/AiManagerDashboard'
 import { ExecutiveReport } from './ExecutiveReport'
+import { visibleInterval } from '../../lib/visibleInterval'
 
 // ── Kiểu dữ liệu nguồn ────────────────────────────────────────────────────────
 interface HealthScore { score?: number; interpretation?: string }
@@ -174,8 +175,7 @@ export function AiDigitalOffice() {
 
   useEffect(() => {
     void load()
-    const id = setInterval(() => void load(true), 30_000) // fallback polling (WebSocket là kênh chính)
-    return () => clearInterval(id)
+    return visibleInterval(() => void load(true), 30_000) // fallback polling (WebSocket là kênh chính)
   }, [load])
 
   // Đang lỗi → tự thử lại nhanh (6s) để tự lành sau blip, không bắt user bấm "Thử lại".

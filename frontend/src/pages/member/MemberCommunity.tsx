@@ -41,6 +41,7 @@ import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import { CommunityModeration } from '../admin/CommunityModeration'
+import { visibleInterval } from '../../lib/visibleInterval'
 
 /* ────────────────────────────── Types ────────────────────────────── */
 
@@ -1705,12 +1706,12 @@ export default function MemberCommunity() {
   // Poll 30s khi đang ở tab Bảng tin + làm mới khi quay lại app (focus/hiển thị lại).
   useEffect(() => {
     if (tab !== 'feed') return
-    const iv = setInterval(() => void refreshFeedTop(), 30_000)
+    const iv = visibleInterval(() => void refreshFeedTop(), 30_000)
     const onFocus = () => { if (document.visibilityState === 'visible') void refreshFeedTop() }
     window.addEventListener('focus', onFocus)
     document.addEventListener('visibilitychange', onFocus)
     return () => {
-      clearInterval(iv)
+      iv()
       window.removeEventListener('focus', onFocus)
       document.removeEventListener('visibilitychange', onFocus)
     }

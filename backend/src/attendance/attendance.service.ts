@@ -304,6 +304,46 @@ export class AttendanceService {
   }
 
   /**
+   * Gộp registrations của NHIỀU buổi trong 1 request (thay vì N lần GET :id/registrations).
+   * Chỉ nhận buổi thuộc CLB; tối đa 100 buổi; trả { [sessionId]: rows[] }.
+   */
+  async getRegistrationsBulk(sessionIds: string[], clubId: string) {
+    const ids = Array.from(new Set(sessionIds.filter(Boolean))).slice(0, 100);
+    if (ids.length === 0) return {};
+    const [sessions, members, regs] = await Promise.all([
+      this.prisma.attendanceSession.findMany({
+        where: { id: { in: ids }, clubId },
+        select: { id: true },
+      }),
+      this.prisma.member.findMany({
+        where: { clubId, status: 'active', isDeleted: false },
+        orderBy: { fullName: 'asc' },
+        select: { id: true, fullName: true },
+      }),
+      this.prisma.sessionRegistration.findMany({
+        where: { clubId, attendanceSessionId: { in: ids } },
+        select: { attendanceSessionId: true, memberId: true },
+      }),
+    ]);
+    const bySession = new Map<string, Set<string>>();
+    for (const r of regs) {
+      const set = bySession.get(r.attendanceSessionId) ?? new Set<string>();
+      set.add(r.memberId);
+      bySession.set(r.attendanceSessionId, set);
+    }
+    const out: Record<string, { memberId: string; memberName: string; registered: boolean }[]> = {};
+    for (const s of sessions) {
+      const set = bySession.get(s.id);
+      out[s.id] = members.map((m) => ({
+        memberId: m.id,
+        memberName: m.fullName,
+        registered: !!set?.has(m.id),
+      }));
+    }
+    return out;
+  }
+
+  /**
    * RSVP — set toàn bộ danh sách đăng ký của 1 buổi (bulk, idempotent):
    * thêm member mới đăng ký, gỡ member không còn trong danh sách. Scope theo clubId.
    */

@@ -121,6 +121,19 @@ export class AttendanceController {
     );
   }
 
+  @Get('registrations/bulk')
+  async getRegistrationsBulk(
+    @CurrentUser() user: JwtUser,
+    @Query('sessionIds') sessionIds?: string,
+  ) {
+    return ok(
+      await this.service.getRegistrationsBulk(
+        (sessionIds ?? '').split(','),
+        user.clubId ?? '',
+      ),
+    );
+  }
+
   @Get(':id/registrations')
   async getRegistrations(
     @Param('id') id: string,
