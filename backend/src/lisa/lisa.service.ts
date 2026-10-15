@@ -4,7 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { PrismaService } from '../prisma/prisma.service';
 import { HermesService } from '../hermes/hermes.service';
 import { AiUsageService } from '../ai-usage/ai-usage.service';
-import { GeminiBreaker } from '../ai-usage/gemini-health';
+import { GeminiBreaker, GeminiBudget } from '../ai-usage/gemini-health';
 import { APP_GUIDE } from '../common/app-guide';
 import type {
   MemberContext,
@@ -48,6 +48,7 @@ export class LisaService {
     private hermes: HermesService,
     private aiUsage: AiUsageService,
   ) {
+    GeminiBudget.configure({ tier: this.config.get<string>('GEMINI_TIER'), limits: this.config.get<string>('GEMINI_LIMITS') });
     this.geminiModel =
       this.config.get<string>('GEMINI_MODEL_LITE') ?? 'gemini-3.1-flash-lite';
     const apiKey = this.config.get<string>('GOOGLE_API_KEY');
@@ -89,8 +90,11 @@ export class LisaService {
     // 1) Gemini — thử lần lượt model cấu hình → GEMINI_FALLBACK_MODELS; cầu dao bỏ qua model vừa hết hạn mức (429)/bị gỡ (404)
     //    ngay (khỏi chờ timeout 15s). Mỗi model có hạn mức riêng nên model dự phòng có thể còn chạy được.
     if (this.genAI) {
-      for (const modelName of GeminiBreaker.candidates(this.geminiModel, this.config.get<string>('GEMINI_FALLBACK_MODELS'))) {
-        if (GeminiBreaker.isBlocked(modelName)) continue;
+      // Chat ngắn → Flash-Lite trước (hạn mức free 500 RPD), dự phòng Flash-Lite 2.5 / Flash; bỏ qua model đang khoá hoặc hết ngân sách cục bộ.
+      const chain = GeminiBreaker.tiered('short', { main: this.geminiModel, lite: this.geminiModel, fallbacks: this.config.get<string>('GEMINI_FALLBACK_MODELS') });
+      for (const modelName of chain) {
+        if (GeminiBreaker.isBlocked(modelName) || !GeminiBudget.canUse(modelName).ok) continue;
+        GeminiBudget.note(modelName);
         const t0 = Date.now();
         try {
           const model = this.genAI.getGenerativeModel({

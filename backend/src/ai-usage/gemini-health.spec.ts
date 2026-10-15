@@ -29,3 +29,53 @@ describe('gemini-health', () => {
     expect(GeminiBreaker.candidates('a', 'b, c ,a')).toEqual(['a', 'b', 'c']);
   });
 });
+
+import { GeminiBudget } from './gemini-health';
+
+describe('GeminiBreaker.tiered', () => {
+  it('short: Flash-Lite trước; long: Flash chính trước, Lite làm dự phòng', () => {
+    const cfg = { main: 'gemini-3.5-flash', lite: 'gemini-3.1-flash-lite' };
+    expect(GeminiBreaker.tiered('short', cfg)).toEqual(['gemini-3.1-flash-lite', 'gemini-2.5-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash']);
+    expect(GeminiBreaker.tiered('long', cfg)).toEqual(['gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-3.1-flash-lite', 'gemini-2.5-flash-lite']);
+  });
+});
+
+describe('GeminiBudget (free tier từ bảng Rate limit thật)', () => {
+  afterEach(() => { GeminiBudget.reset(); GeminiBudget.configure({}); GeminiBudget.now = () => Date.now(); });
+
+  it('Flash: 5 RPM / 20 RPD; Flash-Lite 3.1: 15 RPM / 500 RPD', () => {
+    expect(GeminiBudget.limitFor('gemini-2.5-flash')).toEqual({ rpm: 5, rpd: 20 });
+    expect(GeminiBudget.limitFor('gemini-3.5-flash')).toEqual({ rpm: 5, rpd: 20 });
+    expect(GeminiBudget.limitFor('gemini-3.1-flash-lite')).toEqual({ rpm: 15, rpd: 500 });
+    expect(GeminiBudget.limitFor('gemini-2.5-flash-lite')).toEqual({ rpm: 10, rpd: 20 });
+  });
+
+  it('chặn khi hết RPM rồi mở lại sau 60s', () => {
+    let t = Date.UTC(2026, 9, 15, 18, 0, 0);
+    GeminiBudget.now = () => t;
+    for (let i = 0; i < 5; i++) { expect(GeminiBudget.canUse('gemini-2.5-flash').ok).toBe(true); GeminiBudget.note('gemini-2.5-flash'); }
+    const r = GeminiBudget.canUse('gemini-2.5-flash');
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe('RPM');
+    t += 61_000;
+    expect(GeminiBudget.canUse('gemini-2.5-flash').ok).toBe(true);
+  });
+
+  it('chặn khi hết RPD (20) và reset sang ngày mới (giờ Thái Bình Dương)', () => {
+    let t = Date.UTC(2026, 9, 15, 18, 0, 0);
+    GeminiBudget.now = () => t;
+    for (let i = 0; i < 20; i++) { t += 61_000; GeminiBudget.note('gemini-2.5-flash'); }
+    const r = GeminiBudget.canUse('gemini-2.5-flash');
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe('RPD');
+    t += 24 * 3_600_000;
+    expect(GeminiBudget.canUse('gemini-2.5-flash').ok).toBe(true);
+  });
+
+  it('GEMINI_TIER=paid tắt giới hạn cục bộ; GEMINI_LIMITS ghi đè', () => {
+    GeminiBudget.configure({ tier: 'paid' });
+    expect(GeminiBudget.limitFor('gemini-2.5-flash')).toBeNull();
+    GeminiBudget.configure({ limits: '{"gemini-2.5-flash":{"rpm":60,"rpd":1000}}' });
+    expect(GeminiBudget.limitFor('gemini-2.5-flash')).toEqual({ rpm: 60, rpd: 1000 });
+  });
+});

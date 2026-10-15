@@ -195,9 +195,11 @@ export function SuperDashboard() {
       toast.dismiss(t)
       const KIND: Record<string, string> = { QUOTA: 'hết hạn mức (429)', MODEL_GONE: 'model đã bị gỡ (404)', AUTH: 'key bị từ chối', TIMEOUT: 'quá thời gian chờ', OTHER: 'lỗi khác' }
       const lines = (d?.attempts ?? []).map((a: any) => `• ${a.model}: ${a.ok ? 'chạy được ✓' : (KIND[a.kind] ?? 'lỗi') + (a.error ? ` — ${a.error}` : '')}`)
+      const budget = (d?.budget ?? []).filter((b: any) => b.rpd != null).map((b: any) => `• ${b.model}: ${b.usedToday}/${b.rpd} yêu cầu hôm nay (tối đa ${b.rpm}/phút)`)
+      const budgetText = budget.length ? `\n\nHạn mức hôm nay (đếm cục bộ từ lần khởi động máy chủ gần nhất):\n${budget.join('\n')}` : ''
       await noticeDialog('Kết quả kiểm tra AI', d?.okModel
-        ? `AI OK ✓\nModel dùng được: ${d.okModel}\nVí dụ: ${d.preview}`
-        : `AI KHÔNG chạy ✗${d?.configured === false ? ' (chưa cấu hình GOOGLE_API_KEY)' : ''}\n\n${[...(d?.diagnosis ?? []).map((x: string) => `⚠ ${x}`), '', ...lines].join('\n')}`)
+        ? `AI OK ✓\nModel dùng được: ${d.okModel}\nVí dụ: ${d.preview}${budgetText}`
+        : `AI KHÔNG chạy ✗${d?.configured === false ? ' (chưa cấu hình GOOGLE_API_KEY)' : ''}\n\n${[...(d?.diagnosis ?? []).map((x: string) => `⚠ ${x}`), '', ...lines].join('\n')}${budgetText}`)
     } catch { toast.error('Không gọi được self-test', { id: t }) }
   }
 

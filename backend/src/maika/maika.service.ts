@@ -5,7 +5,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { HermesService } from '../hermes/hermes.service';
 import { FundPeriodsService } from '../fund-periods/fund-periods.service';
 import { AiUsageService } from '../ai-usage/ai-usage.service';
-import { GeminiBreaker, GEMINI_KIND_HINT, type GeminiErrorKind } from '../ai-usage/gemini-health';
+import { GeminiBreaker, GeminiBudget, GEMINI_KIND_HINT, type GeminiErrorKind } from '../ai-usage/gemini-health';
+import { createHash } from 'crypto';
 import type {
   ClubSnapshot,
   DailyBrief,
@@ -31,6 +32,7 @@ export class MaikaService {
   ) {
     this.geminiModel =
       this.config.get<string>('GEMINI_MODEL') ?? 'gemini-3.5-flash';
+    GeminiBudget.configure({ tier: this.config.get<string>('GEMINI_TIER'), limits: this.config.get<string>('GEMINI_LIMITS') });
     const apiKey = this.config.get<string>('GOOGLE_API_KEY');
     if (apiKey) {
       this.genAI = new GoogleGenerativeAI(apiKey);
@@ -172,18 +174,38 @@ export class MaikaService {
     return { text, byAi: !!this.genAI && text.trim() !== fallback.trim() };
   }
 
+  /** Chuỗi model theo tầng tác vụ: short → Flash-Lite trước (500 RPD free); long → Flash chính, Lite khi Flash hết hạn mức. */
+  private chain(tier: 'short' | 'long'): string[] {
+    return GeminiBreaker.tiered(tier, {
+      main: this.geminiModel,
+      lite: this.config.get<string>('GEMINI_MODEL_SHORT') ?? this.config.get<string>('GEMINI_MODEL_LITE'),
+      fallbacks: this.config.get<string>('GEMINI_FALLBACK_MODELS'),
+    });
+  }
+
+  /** Cache đáp án AI của prompt NGẮN giống hệt (10 phút) — tránh tốn hạn mức khi làm mới/bấm lặp. */
+  private readonly answerCache = new Map<string, { at: number; text: string }>();
+  private static readonly ANSWER_TTL_MS = 10 * 60_000;
+
   /** Chẩn đoán đường Gemini: thử TỪNG model (bỏ qua cầu dao), trả model chạy được + loại lỗi + gợi ý khắc phục. */
   async selfTest(): Promise<{
     configured: boolean; okModel: string | null; preview: string;
     attempts: { model: string; ok: boolean; kind?: GeminiErrorKind; error?: string }[];
     diagnosis: string[];
+    budget?: { model: string; usedToday: number; rpd: number | null; rpm: number | null }[];
   }> {
     if (!this.genAI) {
       return { configured: false, okModel: null, preview: '', attempts: [], diagnosis: ['Chưa cấu hình GOOGLE_API_KEY — Maika/Lisa đang chạy bản rule-based (không dùng AI).'] };
     }
-    const candidates = GeminiBreaker.candidates(this.geminiModel, this.config.get<string>('GEMINI_FALLBACK_MODELS'));
+    const candidates = Array.from(new Set([...this.chain('short'), ...this.chain('long')]));
     const attempts: { model: string; ok: boolean; kind?: GeminiErrorKind; error?: string }[] = [];
     for (const m of candidates) {
+      const bud = GeminiBudget.canUse(m);
+      if (!bud.ok) {
+        attempts.push({ model: m, ok: false, kind: 'QUOTA', error: `Bỏ qua: đã dùng ${bud.used}/${bud.limit} yêu cầu (${bud.reason === 'RPD' ? 'ngày' : 'phút'}) theo ngân sách hạn mức cục bộ` });
+        continue;
+      }
+      GeminiBudget.note(m);
       try {
         const model = this.genAI.getGenerativeModel({ model: m });
         const result = await model.generateContent('Trả lời đúng một câu tiếng Việt: "Xin chào từ Maika".');
@@ -191,7 +213,7 @@ export class MaikaService {
         if (text) {
           GeminiBreaker.reset(m);
           attempts.push({ model: m, ok: true });
-          return { configured: true, okModel: m, preview: text.slice(0, 160), attempts, diagnosis: [] };
+          return { configured: true, okModel: m, preview: text.slice(0, 160), attempts, diagnosis: [], budget: GeminiBudget.snapshot(candidates) };
         }
         attempts.push({ model: m, ok: false, kind: 'OTHER', error: 'Phản hồi rỗng (bị lọc an toàn?)' });
       } catch (e: any) {
@@ -204,7 +226,7 @@ export class MaikaService {
     }
     const kinds = Array.from(new Set(attempts.filter((a) => !a.ok).map((a) => a.kind as GeminiErrorKind)));
     const diagnosis = kinds.map((k) => `${GEMINI_KIND_HINT[k]} (${attempts.filter((a) => a.kind === k).map((a) => a.model).join(', ')})`);
-    return { configured: true, okModel: null, preview: '', attempts, diagnosis };
+    return { configured: true, okModel: null, preview: '', attempts, diagnosis, budget: GeminiBudget.snapshot(candidates) };
   }
 
   /** Như composeText nhưng cho phép ĐẦU RA DÀI (nâng maxOutputTokens) — báo cáo điều hành nhiều mục. */
@@ -222,10 +244,16 @@ export class MaikaService {
     // 1) Gemini — thử lần lượt danh sách model (tự chữa khi model cấu hình sai/không tồn tại):
     //    model cấu hình → GEMINI_FALLBACK_MODELS (mặc định gemini-2.5-flash). 2.0/1.5 đã bị Google gỡ (404) nên không còn trong chuỗi.
     if (this.genAI) {
-      const candidates = GeminiBreaker.candidates(this.geminiModel, this.config.get<string>('GEMINI_FALLBACK_MODELS'));
-      for (const modelName of candidates) {
-        // Cầu dao: model đang bị khoá (hết hạn mức/đã bị gỡ) → bỏ qua ngay, không chờ lại.
-        if (GeminiBreaker.isBlocked(modelName)) continue;
+      const tier: 'short' | 'long' = maxTokens && maxTokens > 1024 ? 'long' : 'short';
+      const cacheKey = tier === 'short' ? createHash('sha1').update(prompt).digest('hex') : null;
+      if (cacheKey) {
+        const hit = this.answerCache.get(cacheKey);
+        if (hit && Date.now() - hit.at < MaikaService.ANSWER_TTL_MS) return hit.text;
+      }
+      for (const modelName of this.chain(tier)) {
+        // Cầu dao + ngân sách cục bộ: model đang khoá / đã hết hạn mức ngày-phút → bỏ qua ngay, KHÔNG gọi (khỏi đốt thêm request chắc chắn 429).
+        if (GeminiBreaker.isBlocked(modelName) || !GeminiBudget.canUse(modelName).ok) continue;
+        GeminiBudget.note(modelName);
         const t0 = Date.now();
         try {
           const model = this.genAI.getGenerativeModel({
@@ -237,6 +265,7 @@ export class MaikaService {
           if (text) {
             const u = AiUsageService.readGeminiUsage(result);
             void this.aiUsage.record({ clubId, agent: 'MAIKA', provider: 'gemini', model: modelName, ...u, latencyMs: Date.now() - t0, success: true });
+            if (cacheKey) this.answerCache.set(cacheKey, { at: Date.now(), text });
             return text;
           }
         } catch (err: any) {
