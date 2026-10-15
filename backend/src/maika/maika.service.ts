@@ -375,7 +375,7 @@ QUAN TRỌNG: CHỈ dùng đúng các con số đã cung cấp ở trên; TUYỆ
 
     const fallback = `CLB ${snap.clubName} - Tổng quan ${today}: Số dư Quỹ Chính ${snap.clubAssets.toLocaleString('vi-VN')}đ. ${snap.unpaidCount > 0 ? `${snap.unpaidCount} thành viên chưa đóng quỹ cần nhắc.` : 'Tất cả thành viên đã đóng quỹ.'} Điểm sức khỏe CLB: ${healthScore.score}/100.`;
 
-    const summary = await this.askAI(prompt, fallback);
+    const summary = await this.askAI(prompt, fallback, clubId);
 
     const brief: DailyBrief = {
       date: today,
@@ -434,7 +434,7 @@ QUAN TRỌNG: CHỈ dùng đúng các con số đã cung cấp ở trên; TUYỆ
 
     const fallback = `Báo cáo tuần CLB ${snap.clubName}: ${snap.activeMembers} thành viên hoạt động. Thu/Chi Quỹ Chung: ${snap.commonIncome.toLocaleString('vi-VN')}đ / ${snap.commonExpense.toLocaleString('vi-VN')}đ. Số dư: ${snap.commonBalance.toLocaleString('vi-VN')}đ.`;
 
-    const summary = await this.askAI(prompt, fallback);
+    const summary = await this.askAI(prompt, fallback, clubId);
 
     const report: WeeklyReport = {
       weekOf,

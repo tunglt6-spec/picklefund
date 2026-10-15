@@ -12,6 +12,9 @@ export class MaikaScheduler {
     private maika: MaikaService,
   ) {}
 
+  /** Giãn cách giữa các CLB để KHÔNG vượt RPM của Gemini free tier (Flash-Lite 15 RPM): ~12 yêu cầu/phút. */
+  private pace = () => new Promise<void>((r) => setTimeout(r, 5000));
+
   private async getActiveClubIds(): Promise<string[]> {
     const clubs = await this.prisma.club.findMany({
       where: { status: 'active' },
@@ -35,6 +38,8 @@ export class MaikaScheduler {
         this.logger.error(
           `[Maika] Daily brief failed for ${clubId}: ${err.message}`,
         );
+      } finally {
+        await this.pace();
       }
     }
   }
@@ -54,6 +59,8 @@ export class MaikaScheduler {
         this.logger.error(
           `[Maika] Weekly report failed for ${clubId}: ${err.message}`,
         );
+      } finally {
+        await this.pace();
       }
     }
   }

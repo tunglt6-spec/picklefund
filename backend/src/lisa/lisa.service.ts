@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { HermesService } from '../hermes/hermes.service';
 import { AiUsageService } from '../ai-usage/ai-usage.service';
 import { GeminiBreaker, GeminiBudget } from '../ai-usage/gemini-health';
+import { createHash } from 'crypto';
 import { APP_GUIDE } from '../common/app-guide';
 import type {
   MemberContext,
@@ -41,6 +42,8 @@ export class LisaService {
   /** Model Gemini Flash-Lite (đổi qua env GEMINI_MODEL_LITE). Mặc định model
    *  hiện hành — gemini-2.0-flash-lite đã bị Google ngừng từ 01/06/2026. */
   private readonly geminiModel: string;
+  private readonly briefCache = new Map<string, { at: number; text: string }>();
+  private static readonly BRIEF_TTL_MS = 30 * 60_000;
 
   constructor(
     private prisma: PrismaService,
@@ -436,12 +439,26 @@ Số dư quỹ CLB: ${fmt(ctx.clubFundBalance)}${paymentTable}${sessionTable}`;
 
     const contextStr = this.buildContextString(ctx);
     const fallback = `${greeting}, ${ctx.memberName}! ${ctx.currentPeriodPaid ? `Bạn đã đóng quỹ kỳ ${ctx.activePeriodName ?? 'này'} rồi. Số dư quỹ CLB: ${ctx.clubFundBalance.toLocaleString('vi-VN')}đ.` : 'Nhớ đóng quỹ kỳ này nhé!'}`;
-    const greetingText = await this.askAI(
-      contextStr,
-      'Viết lời chào ngắn (2-3 câu) bằng tiếng Việt, thân thiện, đề cập điểm nổi bật nhất từ dữ liệu.',
-      fallback,
-      ctx.clubId,
-    );
+    // Cache lời chào theo (thành viên + dữ liệu hiện tại) 30 phút: mỗi lần mở/làm mới trang KHÔNG tốn 1 request Gemini
+    // (143+ thành viên × nhiều lần tải trang sẽ đốt hết hạn mức free-tier). Dữ liệu đổi → khoá đổi → viết lại.
+    const cacheKey = `${memberId}:${createHash('sha1').update(contextStr + greeting).digest('hex')}`;
+    const hit = this.briefCache.get(cacheKey);
+    let greetingText: string;
+    if (hit && Date.now() - hit.at < LisaService.BRIEF_TTL_MS) {
+      greetingText = hit.text;
+    } else {
+      greetingText = await this.askAI(
+        contextStr,
+        'Viết lời chào ngắn (2-3 câu) bằng tiếng Việt, thân thiện, đề cập điểm nổi bật nhất từ dữ liệu.',
+        fallback,
+        ctx.clubId,
+      );
+      // Chỉ cache khi do AI viết (không cache bản dự phòng để lần sau còn cơ hội dùng AI).
+      if (greetingText.trim() !== fallback.trim()) {
+        if (this.briefCache.size > 2000) this.briefCache.clear();
+        this.briefCache.set(cacheKey, { at: Date.now(), text: greetingText });
+      }
+    }
 
     return {
       greeting: greetingText,
