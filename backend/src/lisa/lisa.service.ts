@@ -108,6 +108,7 @@ export class LisaService {
         } catch (err: any) {
           const kind = GeminiBreaker.trip(modelName, err?.message);
           this.logger.warn(`[Lisa] Gemini ${modelName} lỗi (${kind}): ${String(err?.message ?? '').slice(0, 160)}`);
+          void this.aiUsage.record({ clubId, agent: 'LISA', provider: 'gemini', model: modelName, latencyMs: Date.now() - t0, success: false, errorType: kind });
         }
       }
       this.logger.warn('[Lisa] Mọi model Gemini đều lỗi/đang khoá — trying OpenRouter');

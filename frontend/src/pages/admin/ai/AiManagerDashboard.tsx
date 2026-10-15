@@ -350,8 +350,16 @@ export function AiManagerDashboard() {
         }
       }
       case 'dispatch': {
-        // Nhật ký AI = card điều hướng; số theo agent đã hiển thị ở mục Đội ngũ AI → không lặp lại.
-        return {}
+        // Nhật ký AI: tóm tắt số bản ghi hôm nay theo agent (đồng nguồn với mục Đội ngũ AI) — tránh thẻ trống chiếm chỗ.
+        const g = rt.summary.agents
+        if (!g) return {}
+        return {
+          metrics: [
+            { label: 'Maika phân tích', value: g.maika.analyses },
+            { label: 'Lisa giải đáp', value: g.lisa.answered },
+            { label: 'Mít Đặc thực thi', value: g.mitDac.executed },
+          ],
+        }
       }
       case 'notif': {
         const n = m!.notificationCenter

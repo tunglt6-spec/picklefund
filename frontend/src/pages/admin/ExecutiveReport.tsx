@@ -124,7 +124,10 @@ export function ExecutiveReport() {
     setError(false)
     try {
       const res = await api.get(`/aido/executive-report?fundPeriodId=${pid}`, { timeout: 30000 })
-      setData(res.data?.data ?? res.data)
+      const d = res.data?.data ?? res.data
+      // Phản hồi sai cấu trúc (mảng rỗng/thiếu summary·finance·health) → báo lỗi thay vì làm sập cả trang (ErrorBoundary).
+      if (!d || Array.isArray(d) || !d.summary || !d.finance || !d.health) throw new Error('invalid executive report shape')
+      setData(d)
     } catch {
       setError(true)
     }
@@ -139,7 +142,7 @@ export function ExecutiveReport() {
     try {
       const res = await api.get(`/aido/executive-report/ai-summary?fundPeriodId=${pid}`, { timeout: 45000 })
       const d = res.data?.data ?? res.data
-      setAiSum({ text: d.text, generatedBy: d.generatedBy })
+      setAiSum(d?.text ? { text: d.text, generatedBy: d.generatedBy } : null)
     } catch {
       setAiSum(null)
     }

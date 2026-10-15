@@ -242,6 +242,8 @@ export class MaikaService {
         } catch (err: any) {
           const kind = GeminiBreaker.trip(modelName, err?.message);
           this.logger.warn(`[Maika] Gemini model ${modelName} lỗi (${kind}): ${String(err?.message ?? '').slice(0, 160)}`);
+          // Ghi nhận LẦN LỖI (không token) để Command Center thấy tỉ lệ lỗi AI thật; cầu dao chặn spam (≤1 lần/model/5 phút khi QUOTA).
+          void this.aiUsage.record({ clubId, agent: 'MAIKA', provider: 'gemini', model: modelName, latencyMs: Date.now() - t0, success: false, errorType: kind });
         }
       }
       this.logger.warn('[Maika] Mọi model Gemini đều lỗi — trying OpenRouter/fallback');
