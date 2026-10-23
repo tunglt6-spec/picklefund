@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
-import { Bell, LogOut, User, Menu, BookOpen } from 'lucide-react'
+import { Bell, Menu, BookOpen } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useBrandingStore } from '../../store/brandingStore'
@@ -7,49 +6,26 @@ import { useNotifStore } from '../../store/notifStore'
 import { useGuideStore } from '../../store/guideStore'
 import { PickleFundLogoMark } from '../ui/PickleFundLogoMark'
 import { ThemeToggle } from '../shared/ThemeToggle'
+import { AvatarMenu } from './AvatarMenu'
 
 interface MobileHeaderProps {
   onMenuClick?: () => void
 }
 
-const ROLE_LABEL: Record<string, string> = {
-  SUPER_ADMIN: 'Super Admin', CLUB_ADMIN: 'Quản trị CLB',
-  CLUB_TREASURER: 'Thủ quỹ', MEMBER_VIEW: 'Thành viên',
-}
-
 export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
-  const { user, logout } = useAuthStore()
+  const user = useAuthStore((s) => s.user)
   const branding = useBrandingStore(s => s.branding)
   const navigate = useNavigate()
 
   // Chuông dùng CHUNG nguồn backend (notifStore) với trang Thông báo → đọc hết là về 0.
   const unreadCount = useNotifStore((s) => s.unreadCount)
-  const [open, setOpen] = useState(false)
   const openGuide = useGuideStore((s) => s.openGuide)
-  const ref = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [open])
 
   if (!user) return null
-
-  const initials = user.username ? user.username.slice(0, 2).toUpperCase() : 'U'
 
   const notifRoute = user.role === 'MEMBER_VIEW'
     ? '/member/notifications'
     : '/notifications'
-
-  const handleLogout = () => {
-    setOpen(false)
-    logout()
-    navigate('/login', { replace: true })
-  }
 
   return (
     <header
@@ -97,54 +73,7 @@ export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
           )}
         </button>
 
-        {/* Avatar with dropdown */}
-        <div className="relative" ref={ref}>
-          <button
-            onClick={() => setOpen(v => !v)}
-            className="flex h-11 w-11 items-center justify-center rounded-xl text-xs font-[800] text-white active:opacity-80"
-            style={{ background: 'var(--pf-primary)' }}
-          >
-            {initials}
-          </button>
-
-          {open && (
-            <div className="pf-glass-strong absolute right-0 top-11 w-52 rounded-2xl shadow-xl overflow-hidden z-50">
-              {/* User info */}
-              <div className="px-4 py-3 border-b border-[color:var(--pf-border-soft)]">
-                <div className="flex items-center gap-2.5">
-                  <div
-                    className="h-8 w-8 rounded-xl flex items-center justify-center text-xs font-[800] text-white shrink-0"
-                    style={{ background: 'var(--pf-primary)' }}
-                  >
-                    {initials}
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-sm font-semibold [color:var(--pf-text)] truncate">{user.username}</div>
-                    <div className="text-xs [color:var(--pf-color-muted)]">{ROLE_LABEL[user.role] ?? user.role}</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Profile link */}
-              <button
-                onClick={() => { setOpen(false); navigate(user.role === 'MEMBER_VIEW' ? '/member/dashboard' : '/dashboard') }}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] active:[background:var(--pf-color-muted-soft)]"
-              >
-                <User size={15} className="[color:var(--pf-color-muted)]" />
-                Trang cá nhân
-              </button>
-
-              {/* Logout */}
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)] active:[background:var(--pf-color-danger-soft)] border-t border-[color:var(--pf-border-soft)]"
-              >
-                <LogOut size={15} />
-                Đăng xuất
-              </button>
-            </div>
-          )}
-        </div>
+        <AvatarMenu />
       </div>
     </header>
   )

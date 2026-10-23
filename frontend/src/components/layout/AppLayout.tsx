@@ -4,6 +4,8 @@ import { ArrowLeft } from 'lucide-react'
 import { Sidebar } from './Sidebar'
 import { MobileHeader } from './MobileHeader'
 import { DesktopHeader } from './DesktopHeader'
+import { MobileBottomNav, BOTTOM_NAV_HEIGHT } from './MobileBottomNav'
+import { APPS_ROUTE } from './navConfig'
 import { UserGuideModal } from '../help/UserGuideModal'
 import { PushEnableBanner } from '../member/PushEnableBanner'
 import { useApiSync } from '../../hooks/useApiSync'
@@ -43,6 +45,8 @@ export function AppLayout() {
   const isOnLisa = lisaRoute ? location.pathname === lisaRoute : false
   // Mở màn con từ hub AI Operations Center (card đính ?from=aido) → hiện thanh quay lại cố định,
   // vị trí GIỐNG NHAU cho MỌI màn card (đặt 1 nơi ở AppLayout).
+  // Trang "Ứng dụng" có header riêng (lời chào + tìm kiếm); màn chat Lisa toàn màn không có thanh đáy.
+  const isHub = location.pathname === APPS_ROUTE
   const fromAido = new URLSearchParams(location.search).get('from') === 'aido'
 
   return (
@@ -65,9 +69,11 @@ export function AppLayout() {
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Mobile header — 64px */}
-        <div className="lg:hidden">
-          <MobileHeader onMenuClick={() => setSidebarOpen(true)} />
-        </div>
+        {!isHub && (
+          <div className="lg:hidden">
+            <MobileHeader onMenuClick={() => setSidebarOpen(true)} />
+          </div>
+        )}
 
         {/* Desktop header — tìm kiếm / chuông / toàn màn hình / avatar (mẫu v2.1) */}
         <DesktopHeader />
@@ -91,18 +97,21 @@ export function AppLayout() {
             <div key={location.pathname} className="pf-page">
               <Outlet />
             </div>
-            {lisaRoute && !isOnLisa && <div className="h-24 lg:hidden" aria-hidden />}
+            {!isOnLisa && <div className="lg:hidden" style={{ height: BOTTOM_NAV_HEIGHT + 20 }} aria-hidden />}
           </div>
         </main>
 
+        {/* Thanh điều hướng đáy (mobile/Fold gập <1024px) */}
+        {!isOnLisa && <MobileBottomNav />}
+
         {/* Lisa AI floating button — CHỈ mobile (desktop đã có Lisa to trong sidebar); ẩn khi đang ở trang Lisa */}
-        {lisaRoute && !isOnLisa && (
+        {lisaRoute && !isOnLisa && !isHub && (
           <button
             onClick={() => navigate(lisaRoute)}
             className="lg:hidden fixed z-40 active:scale-95 transition-transform shadow-xl"
             style={{
               right: 14,
-              bottom: 'calc(16px + env(safe-area-inset-bottom))',
+              bottom: `calc(${BOTTOM_NAV_HEIGHT + 12}px + env(safe-area-inset-bottom))`,
               width: 56,
               height: 56,
               borderRadius: 28,

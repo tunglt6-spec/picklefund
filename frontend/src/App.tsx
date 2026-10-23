@@ -130,6 +130,7 @@ const MemberContributions = lz(() => import('./pages/member/MemberContributions'
 const MemberNotifications = lz(() => import('./pages/member/MemberNotifications'), 'MemberNotifications')
 const MemberReceipt = lz(() => import('./pages/member/MemberReceipt'), 'MemberReceipt')
 const MemberLisaChat = lz(() => import('./pages/member/MemberLisaChat'), 'MemberLisaChat')
+const MobileAppHub = lz(() => import('./pages/MobileAppHub'), 'MobileAppHub')
 const MemberOffice = lz(() => import('./pages/member/MemberOffice'), 'MemberOffice')
 const MemberCommunity = lz(() => import('./pages/member/MemberCommunity'), 'default')
 const PaymentApprovals = lz(() => import('./pages/admin/PaymentApprovals'), 'PaymentApprovals')
@@ -263,6 +264,8 @@ export default function App() {
           <Route path="/" element={<RootRedirect />} />
 
           <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+            {/* Trang "Ứng dụng" của bản mobile (mọi vai trò; ≥1024px tự quay về trang chủ) */}
+            <Route path="/ung-dung" element={<MobileAppHub />} />
             {/* Staff (super/admin/treasurer) — member bị chặn khỏi các route này */}
             <Route element={<RoleRoute allow={STAFF_ROLES} />}>
             {/* Super Admin */}
