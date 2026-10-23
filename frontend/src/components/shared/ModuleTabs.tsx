@@ -53,7 +53,7 @@ export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
       {/* Tiêu đề module (như mockup) — cuộn theo trang, tab bar dính bên dưới */}
       {title && (
         <div className="pf-center-x w-full px-4 pt-4 sm:px-6 sm:pt-6" style={{ maxWidth: 1600 }}>
-          <h1 className="text-xl font-bold sm:text-2xl [color:var(--pf-text)]" style={{ letterSpacing: '-0.02em' }}>
+          <h1 className="text-xl font-bold sm:text-2xl [color:var(--pf-text)] max-lg:text-[22px] max-lg:font-[800]" style={{ letterSpacing: '-0.02em' }}>
             {title}
           </h1>
         </div>
@@ -83,7 +83,7 @@ export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
                   tabIndex={isActive ? 0 : -1}
                   onClick={() => select(t.key)}
                   className={cn(
-                    'shrink-0 whitespace-nowrap rounded-xl border px-4 py-2.5 [@media(pointer:coarse)]:py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97]',
+                    'shrink-0 whitespace-nowrap rounded-xl max-lg:rounded-full max-lg:min-h-[44px] border px-4 py-2.5 [@media(pointer:coarse)]:py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97]',
                     isActive
                       ? 'border-transparent text-white [box-shadow:0_8px_18px_-8px_rgba(109,93,251,0.6)]'
                       : '[border-color:var(--pf-border)] [background:var(--pf-surface)] [color:var(--pf-color-muted)] hover:-translate-y-px hover:[color:var(--pf-primary-text)] hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)]',

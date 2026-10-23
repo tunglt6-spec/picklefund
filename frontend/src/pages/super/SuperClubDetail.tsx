@@ -363,7 +363,7 @@ export function SuperClubDetail() {
   if (isMobile) {
     return (
       <div className="min-h-dvh [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center gap-3">
+        <div className="sticky top-0 z-10 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center gap-3">
           <button onClick={() => navigate('/super/clubs')} className="p-1.5 rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]">
             <ArrowLeft size={18} />
           </button>

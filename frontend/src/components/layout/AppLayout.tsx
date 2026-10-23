@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { Sidebar } from './Sidebar'
 import { MobileHeader } from './MobileHeader'
 import { DesktopHeader } from './DesktopHeader'
 import { MobileBottomNav, BOTTOM_NAV_HEIGHT } from './MobileBottomNav'
-import { APPS_ROUTE } from './navConfig'
+import { APPS_ROUTE, LISA_ROUTES } from './navConfig'
 import { UserGuideModal } from '../help/UserGuideModal'
 import { PushEnableBanner } from '../member/PushEnableBanner'
 import { useApiSync } from '../../hooks/useApiSync'
@@ -14,17 +14,10 @@ import { useApplyBranding } from '../../hooks/useApplyBranding'
 import { useAuthStore } from '../../store/authStore'
 import { useGuideStore } from '../../store/guideStore'
 
-const LISA_ROUTES: Record<string, string> = {
-  CLUB_ADMIN: '/lisa',
-  CLUB_TREASURER: '/lisa',
-  MEMBER_VIEW: '/member/lisa',
-}
-
 export function AppLayout() {
   useApiSync()
   useMinigameSync()
   useApplyBranding()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuthStore()
@@ -41,7 +34,7 @@ export function AppLayout() {
     }
   }, [user, openGuide])
 
-  const lisaRoute = user ? LISA_ROUTES[user.role] : null
+  const lisaRoute = user ? LISA_ROUTES[user.role] ?? null : null
   const isOnLisa = lisaRoute ? location.pathname === lisaRoute : false
   // Mở màn con từ hub AI Operations Center (card đính ?from=aido) → hiện thanh quay lại cố định,
   // vị trí GIỐNG NHAU cho MỌI màn card (đặt 1 nơi ở AppLayout).
@@ -56,22 +49,12 @@ export function AppLayout() {
         <Sidebar />
       </div>
 
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-50 flex lg:hidden">
-          <div className="fixed inset-0 bg-black/40" onClick={() => setSidebarOpen(false)} />
-          <div className="relative z-50 flex w-72 flex-col">
-            <Sidebar onClose={() => setSidebarOpen(false)} />
-          </div>
-        </div>
-      )}
-
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Mobile header — 64px */}
         {!isHub && (
           <div className="lg:hidden">
-            <MobileHeader onMenuClick={() => setSidebarOpen(true)} />
+            <MobileHeader />
           </div>
         )}
 
@@ -104,26 +87,7 @@ export function AppLayout() {
         {/* Thanh điều hướng đáy (mobile/Fold gập <1024px) */}
         {!isOnLisa && <MobileBottomNav />}
 
-        {/* Lisa AI floating button — CHỈ mobile (desktop đã có Lisa to trong sidebar); ẩn khi đang ở trang Lisa */}
-        {lisaRoute && !isOnLisa && !isHub && (
-          <button
-            onClick={() => navigate(lisaRoute)}
-            className="lg:hidden fixed z-40 active:scale-95 transition-transform shadow-xl"
-            style={{
-              right: 14,
-              bottom: `calc(${BOTTOM_NAV_HEIGHT + 12}px + env(safe-area-inset-bottom))`,
-              width: 56,
-              height: 56,
-              borderRadius: 28,
-              overflow: 'hidden',
-              padding: 0,
-              border: '2.5px solid var(--pf-surface)',
-            }}
-            aria-label="Hỏi Lisa AI"
-          >
-            <img src="/lisa-avatar.jpg?v=2" alt="Lisa AI" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-          </button>
-        )}
+        {/* Lisa AI trên mobile: nút tròn trong MobileHeader (không còn nút nổi che nội dung); desktop: sidebar. */}
       </div>
 
       {/* Tài liệu Hướng dẫn — render 1 lần, điều khiển qua guideStore (nút header + auto-open) */}

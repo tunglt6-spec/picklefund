@@ -472,7 +472,7 @@ export function SuperClubs() {
   if (isMobile) {
     return (
       <div className="min-h-dvh [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
+        <div className="sticky top-0 z-10 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
           <div>
             <div className="font-bold [color:var(--pf-text)] text-base">Quản lý CLB</div>
             <div className="text-xs [color:var(--pf-color-muted)]">{clubs.length} câu lạc bộ</div>

@@ -15,7 +15,7 @@ import { moneyColor } from '../lib/moneyTone'
 import api from '../lib/api'
 import { PickleFundLogoMark } from '../components/ui/PickleFundLogoMark'
 import { AvatarMenu } from '../components/layout/AvatarMenu'
-import { homeByRole } from '../components/layout/navConfig'
+import { homeByRole, notifRouteByRole } from '../components/layout/navConfig'
 import type { Role } from '../types'
 
 /** Một ứng dụng/chức năng trên lưới "Ứng dụng của tôi". */
@@ -172,7 +172,7 @@ export function MobileAppHub() {
   const fundRoute = role === 'MEMBER_VIEW' ? '/member/tai-chinh' : role === 'CLUB_TREASURER' ? '/treasurer/dashboard' : '/tai-chinh'
   const showCalendar = role !== 'CLUB_TREASURER' // thủ quỹ không có quyền vào module Lịch/Hoạt động
   const calRoute = role === 'MEMBER_VIEW' ? '/member/hoat-dong' : '/hoat-dong'
-  const bellRoute = role === 'MEMBER_VIEW' ? '/member/notifications' : role === 'CLUB_ADMIN' ? '/he-thong?tab=notifications' : '/notifications'
+  const bellRoute = notifRouteByRole[role]
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 pb-4 pt-[max(12px,env(safe-area-inset-top))]">

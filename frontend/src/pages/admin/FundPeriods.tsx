@@ -597,7 +597,7 @@ export function FundPeriods() {
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
         {/* Sticky header */}
-        <div className="sticky top-0 z-20 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
+        <div className="sticky top-0 z-20 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
           <span className="text-lg font-[800] [color:var(--pf-text)]">Kỳ Quỹ</span>
           <div className="flex gap-1.5 items-center">
             {bankInfo && (

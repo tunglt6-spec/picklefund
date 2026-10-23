@@ -59,7 +59,7 @@ export function DataTable<T>({
           <li
             key={rowKey(row, i)}
             onClick={onRowClick ? () => onRowClick(row) : undefined}
-            className={cn('pf-rowcard p-3', onRowClick && 'cursor-pointer', rowClassName?.(row, i))}
+            className={cn('pf-rowcard p-3.5', onRowClick && 'cursor-pointer', rowClassName?.(row, i))}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1 text-sm font-semibold [color:var(--pf-text)]">{titleCol ? cell(titleCol, row, i) : null}</div>

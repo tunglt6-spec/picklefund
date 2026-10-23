@@ -824,7 +824,7 @@ export function Expenses() {
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
         {/* Sticky header */}
-        <div className="sticky top-0 z-20 [background:var(--pf-surface)] backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 pt-3 pb-2 space-y-2">
+        <div className="sticky top-0 z-20 max-lg:static [background:var(--pf-surface)] backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 pt-3 pb-2 space-y-2">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-[700] [color:var(--pf-text)]">Chi Phí</h2>

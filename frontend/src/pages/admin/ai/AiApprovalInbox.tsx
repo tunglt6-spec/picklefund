@@ -113,7 +113,7 @@ export function AiApprovalInbox() {
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
       {/* Header */}
-      <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 sm:px-6 py-4">
+      <div className="sticky top-0 z-10 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">

@@ -109,6 +109,21 @@ export const bottomTabsByRole: Record<Role, BottomTab[]> = {
   ],
 }
 
+/** Lối vào Lisa AI theo vai trò (Super Admin không có Lisa). */
+export const LISA_ROUTES: Partial<Record<Role, string>> = {
+  CLUB_ADMIN: '/lisa',
+  CLUB_TREASURER: '/lisa',
+  MEMBER_VIEW: '/member/lisa',
+}
+
+/** Trang thông báo/nhắc nhở mở từ chuông, theo vai trò. */
+export const notifRouteByRole: Record<Role, string> = {
+  MEMBER_VIEW: '/member/notifications',
+  CLUB_ADMIN: '/he-thong?tab=notifications',
+  CLUB_TREASURER: '/treasurer/reminders',
+  SUPER_ADMIN: '/notifications',
+}
+
 /** Trang chủ theo vai trò (dùng khi mở /ung-dung trên desktop → chuyển về trang chủ). */
 export const homeByRole: Record<Role, string> = {
   CLUB_ADMIN: '/aido', MEMBER_VIEW: '/member/dashboard', CLUB_TREASURER: '/treasurer/dashboard', SUPER_ADMIN: '/super/dashboard',

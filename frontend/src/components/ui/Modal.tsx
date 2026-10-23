@@ -68,7 +68,7 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
         tabIndex={-1}
         className={cn(
         'pf-modal-panel relative z-10 w-full [background:var(--pf-surface)] shadow-2xl overflow-hidden flex flex-col outline-none',
-        'rounded-t-2xl max-h-[90dvh] sm:rounded-2xl sm:max-h-[calc(100dvh-2rem)]',
+        'rounded-t-3xl max-h-[90dvh] sm:rounded-2xl sm:max-h-[calc(100dvh-2rem)]',
         sizeClasses[size]
       )}>
         {/* Header */}

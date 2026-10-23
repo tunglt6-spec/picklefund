@@ -1141,7 +1141,7 @@ export function Settings() {
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
         {/* Sticky header */}
-        <div className="sticky top-0 z-20 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3">
+        <div className="sticky top-0 z-20 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3">
           <p className="text-base font-bold [color:var(--pf-text)]">Cài đặt</p>
           <p className="text-xs [color:var(--pf-color-muted)]">Quản lý thông tin CLB và tài khoản</p>
         </div>

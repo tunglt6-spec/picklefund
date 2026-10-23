@@ -33,6 +33,7 @@ import { useAuthStore } from '../../store/authStore'
 import { AiManagerDashboard } from './ai/AiManagerDashboard'
 import { ExecutiveReport } from './ExecutiveReport'
 import { visibleInterval } from '../../lib/visibleInterval'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 // ── Kiểu dữ liệu nguồn ────────────────────────────────────────────────────────
 interface HealthScore { score?: number; interpretation?: string }
@@ -95,6 +96,8 @@ const fmtLatency = (ms?: number) =>
   typeof ms === 'number' && ms > 0 ? (ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`) : '—'
 
 export function AiDigitalOffice() {
+  // Mobile: tiêu đề rút gọn "AIDO" (1 dòng) — desktop giữ nguyên "AIDO — AI Digital Office".
+  const compactTitle = useIsMobile(1024)
   const navigate = useNavigate()
   // Cho phép mở thẳng 1 tab qua URL (?tab=ops-center) — dùng khi bấm "Quay lại AI Operations Center".
   const [tab, setTab] = useState<string>(
@@ -373,7 +376,7 @@ export function AiDigitalOffice() {
   // lại, thay vì xóa trắng cả màn (tránh cảm giác "chập chờn" khi refresh gặp blip mạng).
   if (error) return (
     <PageShell>
-      <PageHeader title="AIDO — AI Digital Office" />
+      <PageHeader title={compactTitle ? "AIDO" : "AIDO — AI Digital Office"} />
       <div className="space-y-4">
         <OfficeBanner />
         <div
@@ -391,7 +394,7 @@ export function AiDigitalOffice() {
   return (
     <PageShell>
       <PageHeader
-        title="AIDO — AI Digital Office"
+        title={compactTitle ? "AIDO" : "AIDO — AI Digital Office"}
         actions={
           <div className="flex items-center gap-2">
             <span

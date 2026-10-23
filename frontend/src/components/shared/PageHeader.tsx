@@ -51,9 +51,9 @@ export function PageHeader({
       )
     }
     return (
-      <div className={cn('pf-glass-bar border-b px-6 py-4 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between', className)}>
+      <div className={cn('pf-glass-bar border-b px-6 py-4 max-lg:px-4 max-lg:py-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between', className)}>
         <div className="min-w-0">
-          <h1 className="text-base font-bold [color:var(--pf-text)]">{title}</h1>
+          <h1 className="text-base font-bold [color:var(--pf-text)] max-lg:text-[20px] max-lg:font-[800]">{title}</h1>
           {subtitle && <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{subtitle}</p>}
         </div>
         {(aside || actions) && (
@@ -83,7 +83,7 @@ export function PageHeader({
         ) : (
           <span />
         )}
-        <div className="flex items-center gap-2 flex-wrap min-[600px]:ml-auto min-[600px]:shrink-0 min-[600px]:flex-nowrap min-[600px]:justify-end">
+        <div className="flex items-center gap-2 flex-wrap min-[600px]:ml-auto min-[600px]:justify-end max-lg:min-w-0 max-lg:max-w-full lg:shrink-0 lg:flex-nowrap">
           {aside && <div className="hidden sm:flex items-center gap-2">{aside}</div>}
           {actions}
         </div>
@@ -94,13 +94,13 @@ export function PageHeader({
   return (
     <header
       className={cn(
-        'mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between',
+        'mb-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between max-lg:mb-3 max-lg:flex-row max-lg:flex-wrap max-lg:items-center max-lg:justify-between max-lg:gap-x-3 max-lg:gap-y-2',
         className,
       )}
     >
-      <div className="min-w-0">
+      <div className="min-w-0 max-lg:flex-1 max-lg:basis-48">
         <h1
-          className="text-xl font-bold sm:text-2xl [color:var(--pf-text)]"
+          className="text-xl font-bold sm:text-2xl [color:var(--pf-text)] max-lg:text-[22px] max-lg:font-[800]"
           style={{ letterSpacing: '-0.02em' }}
         >
           {title}
@@ -109,7 +109,7 @@ export function PageHeader({
           <p className="mt-0.5 text-sm [color:var(--pf-color-muted)]">{subtitle}</p>
         )}
       </div>
-      <div className="flex items-center gap-2 flex-wrap">
+      <div className="flex items-center gap-2 flex-wrap max-lg:min-w-0 max-lg:max-w-full">
         {aside && <div className="hidden sm:flex items-center gap-2">{aside}</div>}
         {actions}
       </div>

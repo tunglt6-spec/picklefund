@@ -1,80 +1,76 @@
-import { Bell, Menu, BookOpen } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Bell } from 'lucide-react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useBrandingStore } from '../../store/brandingStore'
 import { useNotifStore } from '../../store/notifStore'
-import { useGuideStore } from '../../store/guideStore'
 import { PickleFundLogoMark } from '../ui/PickleFundLogoMark'
-import { ThemeToggle } from '../shared/ThemeToggle'
 import { AvatarMenu } from './AvatarMenu'
+import { APPS_ROUTE, LISA_ROUTES, notifRouteByRole } from './navConfig'
 
-interface MobileHeaderProps {
-  onMenuClick?: () => void
-}
-
-export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
+/**
+ * Header mobile (<1024px) — cùng ngôn ngữ trang Ứng dụng (Modern Enterprise Super App):
+ * thương hiệu bên trái; Lisa (tròn) + chuông (tròn) + avatar (tròn gradient) bên phải.
+ * Hướng dẫn, giao diện sáng/tối, "Tất cả chức năng" nằm trong menu avatar. Không còn nút ☰
+ * (đã có thanh đáy + trang Ứng dụng).
+ */
+export function MobileHeader() {
   const user = useAuthStore((s) => s.user)
-  const branding = useBrandingStore(s => s.branding)
+  const branding = useBrandingStore((s) => s.branding)
   const navigate = useNavigate()
-
+  const { pathname } = useLocation()
   // Chuông dùng CHUNG nguồn backend (notifStore) với trang Thông báo → đọc hết là về 0.
   const unreadCount = useNotifStore((s) => s.unreadCount)
-  const openGuide = useGuideStore((s) => s.openGuide)
 
   if (!user) return null
 
-  const notifRoute = user.role === 'MEMBER_VIEW'
-    ? '/member/notifications'
-    : '/notifications'
+  const lisaRoute = LISA_ROUTES[user.role]
+  const circle =
+    'relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border [background:var(--pf-surface)] [border-color:var(--pf-border)] active:scale-95'
 
   return (
     <header
-      className="pf-glass-bar sticky top-0 z-40 border-b px-3 flex items-center justify-between"
-      style={{ height: 64, paddingTop: 'env(safe-area-inset-top)' }}
+      className="pf-glass-bar sticky top-0 z-40 flex items-center gap-2 border-b px-4"
+      style={{ minHeight: 60, paddingTop: 'env(safe-area-inset-top)' }}
     >
-      {/* Left: Hamburger + Logo + Name */}
-      <div className="flex items-center gap-1.5 min-w-0 flex-1 mr-1">
-        <button
-          onClick={onMenuClick}
-          aria-label="Mở menu"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl [background:var(--pf-surface-muted)] border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] active:[background:var(--pf-color-muted-soft)]"
-        >
-          <Menu size={20} />
-        </button>
+      <button
+        onClick={() => navigate(APPS_ROUTE)}
+        aria-label="Trang Ứng dụng"
+        className="flex min-h-[44px] min-w-0 flex-1 items-center gap-2 text-left"
+      >
         {branding.logoUrl ? (
-          <img src={branding.logoUrl} alt={branding.displayName ?? 'Logo'} className="h-[26px] w-[26px] shrink-0 rounded-lg object-cover" />
+          <img src={branding.logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-lg object-cover" />
         ) : (
-          <div className="shrink-0"><PickleFundLogoMark size={26} /></div>
+          <span className="shrink-0"><PickleFundLogoMark size={32} /></span>
         )}
-        <span className="text-[15px] font-[800] [color:var(--pf-text)] tracking-tighter truncate">{branding.shortName ?? branding.displayName ?? 'PickleFund'}</span>
-      </div>
+        <span className="truncate text-[18px] font-[800] tracking-tight [color:var(--pf-text)]">
+          {branding.shortName ?? branding.displayName ?? 'PickleFund'}
+        </span>
+      </button>
 
-      {/* Right: Hướng dẫn + Bell + Avatar */}
-      <div className="flex items-center gap-1 shrink-0">
+      {lisaRoute && pathname !== lisaRoute && (
         <button
-          onClick={openGuide}
-          aria-label="Hướng dẫn sử dụng"
-          className="flex h-11 w-11 items-center justify-center rounded-xl text-white active:opacity-80"
-          style={{ background: 'var(--pf-grad-brand)', boxShadow: '0 6px 16px -8px rgba(109,93,251,0.7)' }}
+          onClick={() => navigate(lisaRoute)}
+          aria-label="Hỏi Lisa AI"
+          className={`${circle} overflow-hidden p-0`}
+          style={{ boxShadow: 'var(--pf-shadow-pill)', borderColor: 'var(--pf-primary-soft)' }}
         >
-          <BookOpen size={18} />
+          <img src="/lisa-avatar.jpg?v=2" alt="" className="h-full w-full object-cover object-top" />
         </button>
-        <ThemeToggle className="border border-[color:var(--pf-border)] [background:var(--pf-surface-muted)]" />
-        <button
-          onClick={() => navigate(notifRoute)}
-          className="relative flex h-11 w-11 items-center justify-center rounded-xl [background:var(--pf-surface-muted)] border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] active:[background:var(--pf-color-muted-soft)]"
-        >
-          <Bell size={18} />
-          {unreadCount > 0 && (
-            <span className="absolute top-1.5 right-1.5 flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-red-500" />
-            </span>
-          )}
-        </button>
+      )}
 
-        <AvatarMenu />
-      </div>
+      <button
+        onClick={() => navigate(notifRouteByRole[user.role])}
+        aria-label="Thông báo"
+        className={`${circle} [color:var(--pf-primary)]`}
+        style={{ boxShadow: 'var(--pf-shadow-float)' }}
+      >
+        <Bell size={20} />
+        {unreadCount > 0 && (
+          <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-[color:var(--pf-surface)]" />
+        )}
+      </button>
+
+      <AvatarMenu size={44} rounded="rounded-full" background="var(--pf-grad-brand)" extras />
     </header>
   )
 }

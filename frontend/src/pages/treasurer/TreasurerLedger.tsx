@@ -81,7 +81,7 @@ export function TreasurerLedger() {
   if (isMobile) {
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-10 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
+        <div className="sticky top-0 z-10 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
           <div>
             <div className="text-lg font-[800] [color:var(--pf-text)]">Sổ Quỹ</div>
             {activePeriod && <div className="text-xs [color:var(--pf-color-muted)]">{activePeriod.name} · Quỹ Chính</div>}

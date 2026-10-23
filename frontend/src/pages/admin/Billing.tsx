@@ -405,7 +405,7 @@ export function Billing() {
   if (isMobile) {
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-20 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3">
+        <div className="sticky top-0 z-20 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3">
           <p className="text-lg font-[800] [color:var(--pf-text)]">Gói dịch vụ</p>
           <p className="text-xs [color:var(--pf-color-muted)]">Quản lý subscription & AI usage</p>
         </div>
