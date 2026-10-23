@@ -12,7 +12,7 @@
  * Tab Operations/Analytics tóm tắt + điều hướng tới các màn AI Operations Center đã có.
  */
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Bot, Sparkles, Workflow, Zap, Bell, Activity, CheckCircle2, Clock,
   AlertTriangle, PlayCircle, ArrowRight, Gauge, RefreshCw, ShieldCheck,
@@ -104,18 +104,16 @@ export function AiDigitalOffice() {
   const navigate = useNavigate()
   // Cho phép mở thẳng 1 tab qua URL (?tab=ops-center) — dùng khi bấm "Quay lại AI Operations Center".
   // Mobile (<1024px): mở /aido → MENU icon (5 chức năng) thay cho thanh tab; chọn 1 ô → vào chức năng đó, có nút quay lại menu.
-  const [rawTab, setTab] = useState<string>(
-    () => new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('tab')
-      || (typeof window !== 'undefined' && window.innerWidth < 1024 ? 'menu' : 'office'),
-  )
-  const tab = rawTab === 'menu' && !compactTitle ? 'office' : rawTab
-  // Sau khi đã đọc ?tab để mở đúng tab (deep-link từ nút back), XOÁ query khỏi URL → mọi lần
-  // refresh/login sau đó về MÀN HÌNH CHÍNH = Office View (không dính lại AI Operations Center).
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.location.search.includes('tab=')) {
-      window.history.replaceState(null, '', window.location.pathname)
-    }
-  }, [])
+  // Tab nằm trên URL (?tab=) như ModuleTabs → nút Back của trình duyệt về đúng menu, deep-link ?tab=ops-center vẫn hoạt động.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const VALID_TABS = ['office', 'report', 'operations', 'analytics', 'ops-center']
+  const urlTab = searchParams.get('tab')
+  const tab = urlTab && VALID_TABS.includes(urlTab) ? urlTab : (compactTitle ? 'menu' : 'office')
+  const setTab = (key: string) => {
+    const next = new URLSearchParams(searchParams)
+    if (key === 'menu') next.delete('tab'); else next.set('tab', key)
+    setSearchParams(next, { replace: key === 'menu' })
+  }
   const [summary, setSummary] = useState<AiActionSummary | null>(null)
   const [health, setHealth] = useState<HealthScore | null>(null)
   const [runtime, setRuntime] = useState<RuntimeStatus | null>(null)
@@ -478,7 +476,7 @@ export function AiDigitalOffice() {
       {compactTitle && (
         <button
           onClick={() => setTab('menu')}
-          className="mb-4 flex min-h-[44px] items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary)] active:scale-[0.98]"
+          className="mb-4 flex min-h-[44px] items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary-text)] active:scale-[0.98]"
           style={{ boxShadow: 'var(--pf-shadow-float)' }}
         >
           <ChevronLeft size={18} />

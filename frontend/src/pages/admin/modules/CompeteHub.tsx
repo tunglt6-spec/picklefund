@@ -20,6 +20,7 @@ import api from '../../../lib/api'
 import { sportEmoji, normalizeMinigameStatus, type MiniGame, type MinigameStatus } from '../../../types/minigame'
 import { cn } from '../../../lib/utils'
 import { ModuleSummary } from '../../../components/mobile/ModuleSummary'
+import { useIsMobile } from '../../../hooks/useIsMobile'
 
 const SPORTS: { v: string; label: string }[] = [
   { v: 'PICKLEBALL', label: 'Pickleball' },
@@ -67,6 +68,27 @@ function TournamentsTab() {
   const { user } = useAuthStore()
   const isMember = user?.role === 'MEMBER_VIEW'
   const [sport, setSport] = useState('PICKLEBALL')
+  // Mobile (<1024px): danh sách giải trước; form tạo giải (wizard dài) mở sau nút "+ Tạo giải".
+  const mobile = useIsMobile(1024)
+  const [creating, setCreating] = useState(false)
+  if (mobile && !isMember) {
+    return (
+      <div className="flex flex-col gap-4 p-4">
+        <div className="flex items-center justify-between gap-2">
+          <button onClick={() => setCreating((v) => !v)} className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-4 text-sm font-bold text-white" style={{ background: 'var(--pf-grad-brand)', boxShadow: 'var(--pf-shadow-pill)' }}>
+            {creating ? 'Đóng form' : '+ Tạo giải'}
+          </button>
+          <button onClick={() => navigate('/minigames')} className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold [color:var(--pf-primary-text)] [border-color:var(--pf-border)] [background:var(--pf-surface)]">
+            <ListChecks size={16} /> Tất cả giải
+          </button>
+        </div>
+        {creating && (
+          <div className="pf-glass-strong overflow-hidden"><MinigameForm embedded onSportChange={setSport} /></div>
+        )}
+        <MinigameOverviewPanel sport={sport} />
+      </div>
+    )
+  }
 
   return (
     <div className="p-4 sm:p-6 flex flex-col gap-4">

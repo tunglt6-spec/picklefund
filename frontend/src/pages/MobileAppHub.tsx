@@ -21,7 +21,10 @@ export function MobileAppHub() {
   const [order, setOrder] = useState<string[]>([])
   useEffect(() => {
     if (!orderKey) return
-    try { setOrder(JSON.parse(localStorage.getItem(orderKey) ?? '[]')) } catch { setOrder([]) }
+    try {
+      const v = JSON.parse(localStorage.getItem(orderKey) ?? '[]')
+      setOrder(Array.isArray(v) ? v.filter((k) => typeof k === 'string') : [])
+    } catch { setOrder([]) }
   }, [orderKey])
   const saveOrder = (next: string[]) => {
     setOrder(next)
@@ -59,7 +62,7 @@ export function MobileAppHub() {
         right={!q && (
           <button
             onClick={() => setEditing((v) => !v)}
-            className="flex min-h-[44px] items-center gap-1.5 px-1 text-sm font-semibold [color:var(--pf-primary)] active:opacity-70"
+            className="flex min-h-[44px] items-center gap-1.5 px-1 text-sm font-semibold [color:var(--pf-primary-text)] active:opacity-70"
           >
             {editing ? <Check size={16} /> : <ArrowUpDown size={16} />}
             {editing ? 'Xong' : 'Sắp xếp'}

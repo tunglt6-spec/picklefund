@@ -224,7 +224,7 @@ export function ScheduleCalendar() {
     <PageShell>
       <PageHeader
         title="Lịch sinh hoạt"
-        actions={isMember ? undefined : <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/attendance')}>Tạo buổi chơi</ActionButton>}
+        actions={isMember ? undefined : <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/hoat-dong?tab=attendance')}>Tạo buổi chơi</ActionButton>}
       />
 
       {sessions.length === 0 ? (
@@ -232,7 +232,7 @@ export function ScheduleCalendar() {
           icon={<CalendarDays size={24} />}
           title="Chưa có buổi chơi"
           description="Tạo buổi chơi ở mục Điểm Danh để hiển thị trên lịch."
-          action={isMember ? undefined : <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/attendance')}>Tạo buổi chơi</ActionButton>}
+          action={isMember ? undefined : <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/hoat-dong?tab=attendance')}>Tạo buổi chơi</ActionButton>}
         />
       ) : (
         <div className="flex flex-col gap-5">
@@ -356,7 +356,7 @@ export function ScheduleCalendar() {
                     <CalendarDays size={22} className="[color:var(--pf-primary-text)]" />
                   </div>
                   <p className="text-sm font-medium [color:var(--pf-text)]">Không có buổi chơi trong ngày này</p>
-                  {!isMember && <ActionButton icon={<Plus size={15} />} onClick={() => navigate('/attendance')}>Tạo buổi chơi</ActionButton>}
+                  {!isMember && <ActionButton icon={<Plus size={15} />} onClick={() => navigate('/hoat-dong?tab=attendance')}>Tạo buổi chơi</ActionButton>}
                 </div>
               ) : (
                 <div className="flex flex-col gap-3">
@@ -443,7 +443,7 @@ export function ScheduleCalendar() {
                         {/* Thao tác nhanh (chỉ admin) */}
                         {!isMember && (
                           <div className="mt-2 flex items-center gap-1 border-t pt-2 [border-color:var(--pf-border)]">
-                            <button onClick={() => navigate('/attendance')} aria-label="Chỉnh sửa buổi" className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]">
+                            <button onClick={() => navigate('/hoat-dong?tab=attendance')} aria-label="Chỉnh sửa buổi" className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]">
                               <Pencil size={12} />Sửa
                             </button>
                             <button onClick={() => handleCopy(s)} aria-label="Sao chép buổi" className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-text)]">

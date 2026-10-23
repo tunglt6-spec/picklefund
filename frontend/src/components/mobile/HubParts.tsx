@@ -14,9 +14,7 @@ import { notifRouteByRole } from '../layout/navConfig'
 import type { AppItem } from './hubApps'
 import type { Role } from '../../types'
 
-/** Bỏ dấu + hạ chữ để tìm "diem danh" ra "Điểm danh". */
-export const fold = (s: string) =>
-  s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase()
+export { fold } from '../../lib/fold'
 
 export function greeting(h = new Date().getHours()) {
   return h < 11 ? 'Chào buổi sáng' : h < 14 ? 'Chào buổi trưa' : h < 18 ? 'Chào buổi chiều' : 'Chào buổi tối'
@@ -101,7 +99,7 @@ export function HubHeader({ hasClub, clubName }: { hasClub: boolean; clubName?: 
       <button
         onClick={() => navigate(notifRouteByRole[user.role])}
         aria-label="Thông báo"
-        className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary)] active:scale-95"
+        className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary-text)] active:scale-95"
         style={{ boxShadow: 'var(--pf-shadow-float)' }}
       >
         <Bell size={20} />
@@ -116,7 +114,7 @@ export function HubHeader({ hasClub, clubName }: { hasClub: boolean; clubName?: 
 export function HubSearch({ value, onChange, placeholder = 'Tìm chức năng…' }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
   return (
     <label
-      className="mt-4 flex h-12 items-center gap-3 rounded-full border px-4 [background:var(--pf-surface)] [border-color:var(--pf-border)] focus-within:ring-2 focus-within:ring-[color:var(--pf-primary)]"
+      className="mt-4 flex h-12 items-center gap-3 rounded-full border px-4 [background:var(--pf-surface)] [border-color:var(--pf-border)] focus-within:ring-2 focus-within:ring-[color:var(--pf-primary-text)]"
       style={{ boxShadow: 'var(--pf-shadow-field)' }}
     >
       <Search size={20} className="shrink-0 [color:var(--pf-color-muted)]" />
@@ -148,7 +146,7 @@ export function SummaryCard({
       style={{ boxShadow: 'var(--pf-shadow-card)' }}
     >
       <button onClick={onOpen} className="flex min-h-[44px] items-center gap-2 text-left" aria-label={title}>
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)] [color:var(--pf-primary)]">{icon}</span>
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">{icon}</span>
         <span className="min-w-0 flex-1 truncate text-sm font-bold [color:var(--pf-text)]">{title}</span>
         <ChevronRight size={16} className="shrink-0 [color:var(--pf-color-muted)]" />
       </button>
@@ -158,7 +156,7 @@ export function SummaryCard({
         onClick={onOpen}
         className={cn(
           'mt-3 flex min-h-[44px] items-center justify-center gap-1.5 rounded-full px-3 text-sm font-bold active:scale-[0.98]',
-          outline ? 'border [color:var(--pf-primary)] [border-color:var(--pf-primary)] [background:var(--pf-surface)]' : 'text-white',
+          outline ? 'border [color:var(--pf-primary-text)] [border-color:var(--pf-primary)] [background:var(--pf-surface)]' : 'text-white',
         )}
         style={outline ? undefined : { background: 'var(--pf-grad-brand)', boxShadow: 'var(--pf-shadow-pill)' }}
       >
@@ -249,12 +247,12 @@ export function TileGrid({
               >
                 <Icon size={28} strokeWidth={1.9} />
                 {a.badge && unread > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-bold text-white">
                     {unread > 9 ? '9+' : unread}
                   </span>
                 )}
                 {(a.badgeCount ?? 0) > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-bold text-white">
                     {(a.badgeCount ?? 0) > 9 ? '9+' : a.badgeCount}
                   </span>
                 )}

@@ -33,14 +33,15 @@ export function MobileHeader() {
 
   return (
     <header
-      className="pf-glass-bar sticky top-0 z-40 flex items-center gap-2 border-b px-4"
+      className="pf-glass-bar sticky top-0 z-40 border-b px-4"
       style={{ minHeight: 60, paddingTop: 'env(safe-area-inset-top)' }}
     >
+      <div className="mx-auto flex w-full max-w-2xl items-center gap-2">
       {isDetail && (
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => { if ((window.history.state?.idx ?? 0) > 0) navigate(-1); else navigate(APPS_ROUTE) }}
           aria-label="Quay lại"
-          className={`${circle} [color:var(--pf-primary)]`}
+          className={`${circle} [color:var(--pf-primary-text)]`}
           style={{ boxShadow: 'var(--pf-shadow-float)' }}
         >
           <ChevronLeft size={22} />
@@ -75,7 +76,7 @@ export function MobileHeader() {
       <button
         onClick={() => navigate(notifRouteByRole[user.role])}
         aria-label="Thông báo"
-        className={`${circle} [color:var(--pf-primary)]`}
+        className={`${circle} [color:var(--pf-primary-text)]`}
         style={{ boxShadow: 'var(--pf-shadow-float)' }}
       >
         <Bell size={20} />
@@ -85,6 +86,7 @@ export function MobileHeader() {
       </button>
 
       <AvatarMenu size={44} rounded="rounded-full" background="var(--pf-grad-brand)" extras />
+      </div>
     </header>
   )
 }

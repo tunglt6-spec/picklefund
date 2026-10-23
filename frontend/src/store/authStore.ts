@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { User } from '../types'
+import { useClubDataStore } from './clubDataStore'
 
 interface AuthStore {
   user: User | null
@@ -25,8 +26,11 @@ export const useAuthStore = create<AuthStore>()(
       setTokens: (accessToken, refreshToken) =>
         set({ accessToken, refreshToken }),
       setUser: (user) => set({ user }),
-      logout: () =>
-        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false }),
+      logout: () => {
+        // Xoá dữ liệu CLB đã cache trên máy (thành viên, buổi tham gia cá nhân…) để tài khoản đăng nhập sau không thấy dữ liệu cũ.
+        useClubDataStore.setState({ dataByClub: {} })
+        set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false })
+      },
     }),
     { name: 'auth-storage' }
   )

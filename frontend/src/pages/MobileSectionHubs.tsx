@@ -75,7 +75,7 @@ export function MobileHome() {
   if (!role) return null
   const tk = todayKey()
   const monthKey = tk.slice(0, 7)
-  const members = clubData?.members?.length ?? 0
+  const members = (clubData?.members ?? []).filter((m) => m.status === 'active').length
   const monthSessions = (clubData?.sessions ?? []).filter((s) => (s.sessionDate ?? '').startsWith(monthKey) && s.status !== 'cancelled').length
   const attended = clubData?.myAttendedSessionIds?.length ?? 0
   const base = role === 'MEMBER_VIEW' ? '/member/hoat-dong' : '/hoat-dong'
@@ -162,12 +162,15 @@ export function MobileCalendarHub() {
 /* ───────────────────────── Thi đấu ───────────────────────── */
 export function MobileCompeteHub() {
   const navigate = useNavigate()
-  const { role } = useHubData()
-  const minigames = useMinigameStore((s) => s.minigames)
+  const { role, user } = useHubData()
+  const allMinigames = useMinigameStore((s) => s.minigames)
+  const clubId = user?.clubId
   const stats = useMemo(() => {
+    // Chỉ giải của CLB hiện tại (store còn giải mock/CLB khác lưu trên máy).
+    const minigames = allMinigames.filter((m) => m.clubId === clubId)
     const live = minigames.filter((m) => normalizeMinigameStatus(m.status) === 'IN_PROGRESS')
     return { total: minigames.length, live }
-  }, [minigames])
+  }, [allMinigames, clubId])
   if (!role) return null
   if (role === 'CLUB_TREASURER' || role === 'SUPER_ADMIN') return <Navigate to={homeByRole[role]} replace />
   const base = role === 'MEMBER_VIEW' ? '/member/thi-dau' : '/thi-dau'

@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, Suspense } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { Sidebar } from './Sidebar'
@@ -78,7 +78,10 @@ export function AppLayout() {
             {/* Page transition (Elite): keyed theo pathname → replay hiệu ứng vào mỗi lần
                 đổi route. Đổi ?tab= KHÔNG replay (chỉ đổi search) — tránh nháy khi chuyển tab. */}
             <div key={location.pathname} className="pf-page">
-              <Outlet />
+              {/* Suspense NGAY TRONG khung app: khi chunk của màn con đang tải, header + thanh đáy vẫn hiện (không nháy cả màn). */}
+              <Suspense fallback={<div className="flex min-h-[40vh] items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-[color:var(--pf-border)] border-t-[color:var(--pf-primary-text)]" /></div>}>
+                <Outlet />
+              </Suspense>
             </div>
             {!isOnLisa && <div className="lg:hidden" style={{ height: BOTTOM_NAV_HEIGHT + 20 }} aria-hidden />}
           </div>

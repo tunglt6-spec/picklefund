@@ -17,7 +17,7 @@ export function ModuleSummary({ kind }: { kind: ModuleSummaryKind }) {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const go = (tab: string) => navigate(`${pathname}?tab=${tab}`)
-  const { role, clubData, activePeriod, balance, totalExpense, nextSession } = useHubData()
+  const { user, role, clubData, activePeriod, balance, totalExpense, nextSession } = useHubData()
   const unread = useNotifStore((s) => s.unreadCount)
   const minigames = useMinigameStore((s) => s.minigames)
 
@@ -27,9 +27,11 @@ export function ModuleSummary({ kind }: { kind: ModuleSummaryKind }) {
     const inactive = members.filter((m) => m.status === 'inactive').length
     const monthKey = todayKey().slice(0, 7)
     const monthSessions = (clubData?.sessions ?? []).filter((s) => (s.sessionDate ?? '').startsWith(monthKey) && s.status !== 'cancelled').length
-    const live = minigames.filter((m) => normalizeMinigameStatus(m.status) === 'IN_PROGRESS').length
-    return { active, inactive, monthSessions, live, total: minigames.length, attended: clubData?.myAttendedSessionIds?.length ?? 0 }
-  }, [clubData, minigames])
+    // Chỉ giải của CLB hiện tại (store còn giải mock/CLB khác lưu trên máy).
+    const mine = minigames.filter((m) => m.clubId === user?.clubId)
+    const live = mine.filter((m) => normalizeMinigameStatus(m.status) === 'IN_PROGRESS').length
+    return { active, inactive, monthSessions, live, total: mine.length, attended: clubData?.myAttendedSessionIds?.length ?? 0 }
+  }, [clubData, minigames, user?.clubId])
 
   if (!role) return null
   const isToday = nextSession?.sessionDate.slice(0, 10) === todayKey()

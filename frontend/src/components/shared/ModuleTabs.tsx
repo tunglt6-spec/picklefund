@@ -94,7 +94,7 @@ export function ModuleTabs({ tabs, title, defaultKey, summary }: ModuleTabsProps
   const backToMenu = () => {
     const next = new URLSearchParams(params)
     next.delete('tab')
-    setParams(next)
+    setParams(next, { replace: true })
   }
 
   return (
@@ -104,7 +104,7 @@ export function ModuleTabs({ tabs, title, defaultKey, summary }: ModuleTabsProps
         <div className="px-4 pt-4">
           <button
             onClick={backToMenu}
-            className="flex min-h-[44px] items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary)] active:scale-[0.98]"
+            className="flex min-h-[44px] items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary-text)] active:scale-[0.98]"
             style={{ boxShadow: 'var(--pf-shadow-float)' }}
           >
             <ChevronLeft size={18} />

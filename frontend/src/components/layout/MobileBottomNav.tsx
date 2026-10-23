@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import {
   Home, CalendarDays, Trophy, Users, ListOrdered, BadgeCheck, Bell, Building2, CreditCard, LayoutGrid,
 } from 'lucide-react'
@@ -33,18 +33,18 @@ export function MobileBottomNav() {
           const active = [t.to, ...(t.match ?? [])].some((p) => pathname === p || pathname.startsWith(`${p}/`))
           return (
             <li key={t.to} className="min-w-0 flex-1">
-              <NavLink
+              <Link
                 to={t.to}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'flex h-full min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-[11px] font-semibold leading-none transition-colors active:scale-[0.97]',
-                  active ? '[color:var(--pf-primary)]' : '[color:var(--pf-color-muted)]',
+                  'flex h-full min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-xs font-semibold leading-none transition-colors active:scale-[0.97]',
+                  active ? '[color:var(--pf-primary-text)]' : '[color:var(--pf-color-muted)]',
                 )}
                 style={active ? { background: 'var(--pf-primary-soft)', boxShadow: 'inset 0 0 0 1px color-mix(in srgb, var(--pf-primary) 18%, transparent)' } : undefined}
               >
                 <Icon size={22} strokeWidth={active ? 2.4 : 1.9} />
                 <span className="max-w-full truncate">{t.label}</span>
-              </NavLink>
+              </Link>
             </li>
           )
         })}

@@ -29,17 +29,21 @@ export function AvatarMenu({ size = 44, rounded = 'rounded-xl', background = 'va
   const { theme, setTheme } = useThemeStore()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+  const btnRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (!open) return
     const handler = (e: Event) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); btnRef.current?.focus() } }
     document.addEventListener('mousedown', handler)
     document.addEventListener('touchstart', handler)
+    document.addEventListener('keydown', onKey)
     return () => {
       document.removeEventListener('mousedown', handler)
       document.removeEventListener('touchstart', handler)
+      document.removeEventListener('keydown', onKey)
     }
   }, [open])
 
@@ -55,8 +59,11 @@ export function AvatarMenu({ size = 44, rounded = 'rounded-xl', background = 'va
   return (
     <div className="relative" ref={ref}>
       <button
+        ref={btnRef}
         onClick={() => setOpen((v) => !v)}
         aria-label="Tài khoản"
+        aria-haspopup="menu"
+        aria-expanded={open}
         className={`flex items-center justify-center ${rounded} text-xs font-[800] text-white active:opacity-80`}
         style={{ background, width: size, height: size, boxShadow: 'var(--pf-shadow-pill)' }}
       >
@@ -65,7 +72,7 @@ export function AvatarMenu({ size = 44, rounded = 'rounded-xl', background = 'va
 
       {open && (
         <div
-          className="pf-glass-strong absolute right-0 top-[calc(100%+6px)] z-50 w-60 overflow-y-auto overflow-x-hidden rounded-2xl shadow-xl"
+          role="menu" className="pf-glass-strong absolute right-0 top-[calc(100%+6px)] z-50 w-60 overflow-y-auto overflow-x-hidden rounded-2xl shadow-xl"
           style={{ maxHeight: 'calc(100dvh - 96px)' }}
         >
           <div className="border-b border-[color:var(--pf-border-soft)] px-4 py-3">
@@ -86,17 +93,17 @@ export function AvatarMenu({ size = 44, rounded = 'rounded-xl', background = 'va
           {extras && (
             <>
               <button onClick={() => { setOpen(false); navigate(APPS_ROUTE) }} className={`${ITEM} [color:var(--pf-text)]`}>
-                <LayoutGrid size={16} className="[color:var(--pf-primary)]" />
+                <LayoutGrid size={16} className="[color:var(--pf-primary-text)]" />
                 Tất cả chức năng
               </button>
               <button onClick={() => { setOpen(false); openGuide() }} className={`${ITEM} [color:var(--pf-text)]`}>
-                <BookOpen size={16} className="[color:var(--pf-primary)]" />
+                <BookOpen size={16} className="[color:var(--pf-primary-text)]" />
                 Hướng dẫn sử dụng
               </button>
               <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className={`${ITEM} [color:var(--pf-text)]`}>
                 {theme === 'dark'
-                  ? <Sun size={16} className="[color:var(--pf-primary)]" />
-                  : <Moon size={16} className="[color:var(--pf-primary)]" />}
+                  ? <Sun size={16} className="[color:var(--pf-primary-text)]" />
+                  : <Moon size={16} className="[color:var(--pf-primary-text)]" />}
                 {theme === 'dark' ? 'Giao diện sáng' : 'Giao diện tối'}
               </button>
             </>
