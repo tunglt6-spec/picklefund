@@ -19,6 +19,7 @@ import { useAuthStore } from '../../../store/authStore'
 import api from '../../../lib/api'
 import { sportEmoji, normalizeMinigameStatus, type MiniGame, type MinigameStatus } from '../../../types/minigame'
 import { cn } from '../../../lib/utils'
+import { ModuleSummary } from '../../../components/mobile/ModuleSummary'
 
 const SPORTS: { v: string; label: string }[] = [
   { v: 'PICKLEBALL', label: 'Pickleball' },
@@ -165,6 +166,7 @@ export function CompeteHub() {
   return (
     <ModuleTabs
       title="Thi đấu"
+      summary={<ModuleSummary kind="compete" />}
       tabs={[
         { key: 'overview', label: 'Tổng quan', element: <OverviewTab /> },
         { key: 'tournaments', label: 'Giải đấu', element: <TournamentsTab /> },

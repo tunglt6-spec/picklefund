@@ -9,11 +9,13 @@ import { Expenses } from '../Expenses'
 import { Debts } from '../Debts'
 import { Reports } from '../Reports'
 import { PaymentApprovals } from '../PaymentApprovals'
+import { ModuleSummary } from '../../../components/mobile/ModuleSummary'
 
 export function FinanceModule() {
   return (
     <ModuleTabs
       title="Tài chính"
+      summary={<ModuleSummary kind="finance" />}
       tabs={[
         { key: 'periods', label: 'Kỳ Quỹ', element: <FundPeriods /> },
         { key: 'income', label: 'Thu', element: <Contributions /> },

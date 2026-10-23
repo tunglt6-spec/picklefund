@@ -7,7 +7,7 @@
  * query `?tab=` nên deep-link + nút Back hoạt động; RBAC do từng page tự đọc `useAuthStore`
  * nên giữ nguyên. Không đổi bất kỳ nghiệp vụ nào — chỉ tinh gọn điều hướng.
  */
-import { createContext, useContext, type ReactNode } from 'react'
+import { createContext, useContext, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   CalendarDays, UserPlus, LogIn, ClipboardCheck, BarChart3, LayoutList, Trophy, FileCheck2, Medal, Wallet,
@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { TileGrid } from '../mobile/HubParts'
+import { TileGrid, HubSearch, fold } from '../mobile/HubParts'
 import type { AppItem } from '../mobile/hubApps'
 
 /** Icon cho ô menu (mobile) theo key tab; thiếu key → LayoutGrid. */
@@ -51,9 +51,11 @@ interface ModuleTabsProps {
   title?: string
   /** Tab mặc định khi URL chưa có ?tab= (mặc định: tab đầu tiên). */
   defaultKey?: string
+  /** Thẻ tóm tắt hiện ở đầu MENU mobile (dưới ô tìm kiếm). */
+  summary?: ReactNode
 }
 
-export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
+export function ModuleTabs({ tabs, title, defaultKey, summary }: ModuleTabsProps) {
   const embedded = !!title
   const [params, setParams] = useSearchParams()
   const fallback = defaultKey ?? tabs[0]?.key
@@ -69,17 +71,23 @@ export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
 
   // Mobile (<1024px) — module có tiêu đề: mở module (chưa chọn tab) → MENU ô icon thay cho thanh tab ngang;
   // chọn 1 ô → vào chức năng, có nút quay lại menu. Deep-link ?tab=… vẫn vào thẳng chức năng.
+  const [menuQuery, setMenuQuery] = useState('')
   const mobile = useIsMobile(1024)
   const mobileMenu = mobile && !!title && tabs.length > 1
   const hasChosen = tabs.some((t) => t.key === requested)
   if (mobileMenu && !hasChosen) {
-    const items: AppItem[] = tabs.map((t) => ({
-      key: t.key, label: t.label, to: '', icon: TAB_ICONS[t.key] ?? t.icon ?? LayoutGrid, badgeCount: t.badge,
-    }))
+    const q = fold(menuQuery.trim())
+    const items: AppItem[] = tabs
+      .filter((t) => !q || fold(t.label).includes(q))
+      .map((t) => ({ key: t.key, label: t.label, to: '', icon: TAB_ICONS[t.key] ?? t.icon ?? LayoutGrid, badgeCount: t.badge }))
     return (
       <div className="mx-auto w-full max-w-2xl px-4 pb-4 pt-4">
         <h1 className="text-[22px] font-[800] [color:var(--pf-text)]" style={{ letterSpacing: '-0.02em' }}>{title}</h1>
-        <TileGrid items={items} onSelect={(it) => select(it.key)} />
+        <HubSearch value={menuQuery} onChange={setMenuQuery} placeholder={`Tìm trong ${title}…`} />
+        {!q && summary}
+        <div className="mt-5">
+          <TileGrid items={items} onSelect={(it) => select(it.key)} empty={`Không tìm thấy chức năng “${menuQuery}”.`} />
+        </div>
       </div>
     )
   }

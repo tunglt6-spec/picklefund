@@ -7,11 +7,13 @@ import { ModuleTabs } from '../../../components/shared'
 import { TreasurerIncome } from '../TreasurerIncome'
 import { TreasurerExpense } from '../TreasurerExpense'
 import { TreasurerLedger } from '../TreasurerLedger'
+import { ModuleSummary } from '../../../components/mobile/ModuleSummary'
 
 export function TreasurerCashbookModule() {
   return (
     <ModuleTabs
       title="Sổ quỹ"
+      summary={<ModuleSummary kind="cashbook" />}
       tabs={[
         { key: 'income', label: 'Nhập thu', element: <TreasurerIncome /> },
         { key: 'expense', label: 'Nhập chi', element: <TreasurerExpense /> },

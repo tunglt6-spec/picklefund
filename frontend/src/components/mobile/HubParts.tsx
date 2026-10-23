@@ -48,19 +48,24 @@ export function useHubData() {
   const hasClub = !!user?.clubId && role !== 'SUPER_ADMIN'
   const activePeriod = clubData ? getActiveChungPeriod(clubData.fundPeriods) : undefined
 
-  const [balance, setBalance] = useState<number | null>(null)
+  const [fin, setFin] = useState<{ balance: number; totalExpense: number } | null>(null)
   useEffect(() => {
-    if (!hasClub || !activePeriod?.id) { setBalance(null); return }
+    if (!hasClub || !activePeriod?.id) { setFin(null); return }
     let off = false
     api.get(`/fund-periods/${activePeriod.id}/summary`)
       .then((res) => {
         if (off) return
         const f = res.data?.data
-        setBalance(Number(f?.balance ?? 0) + Number(f?.carryForward?.balance ?? 0))
+        const common = Number(f?.balance ?? 0)
+        const carry = Number(f?.carryForward?.balance ?? 0)
+        // Tổng tài sản CLB = Quỹ Chính + số dư chuyển kỳ (khớp màn Thủ quỹ); Chi = tổng chi đã duyệt/đã chi của kỳ.
+        setFin({ balance: Number(f?.clubAssets?.balance ?? (common + carry)), totalExpense: Number(f?.totalExpenses ?? 0) })
       })
-      .catch(() => { if (!off) setBalance(null) })
+      .catch(() => { if (!off) setFin(null) })
     return () => { off = true }
   }, [hasClub, activePeriod?.id])
+  const balance = fin ? fin.balance : null
+  const totalExpense = fin ? fin.totalExpense : null
 
   const upcoming = useMemo(() => {
     const tk = todayKey()
@@ -69,7 +74,7 @@ export function useHubData() {
       .sort((a, b) => (a.sessionDate.slice(0, 10) + (a.startTime ?? '')).localeCompare(b.sessionDate.slice(0, 10) + (b.startTime ?? '')))
   }, [clubData?.sessions])
 
-  return { user, role, clubData, hasClub, activePeriod, balance, upcoming, nextSession: upcoming[0] }
+  return { user, role, clubData, hasClub, activePeriod, balance, totalExpense, upcoming, nextSession: upcoming[0] }
 }
 
 /** Header lớn: logo + thương hiệu + lời chào + tên CLB + chuông + avatar. */

@@ -7,11 +7,13 @@ import { FundPeriods } from '../../admin/FundPeriods'
 import { Contributions } from '../../admin/Contributions'
 import { Expenses } from '../../admin/Expenses'
 import { Reports } from '../../admin/Reports'
+import { ModuleSummary } from '../../../components/mobile/ModuleSummary'
 
 export function MemberFinanceModule() {
   return (
     <ModuleTabs
       title="Tài chính"
+      summary={<ModuleSummary kind="finance" />}
       tabs={[
         { key: 'periods', label: 'Kỳ Quỹ', element: <FundPeriods /> },
         { key: 'income', label: 'Thu', element: <Contributions /> },

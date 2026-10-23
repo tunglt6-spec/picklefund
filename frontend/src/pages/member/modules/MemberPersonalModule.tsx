@@ -7,11 +7,13 @@ import { MemberReceipt } from '../MemberReceipt'
 import { MemberContributions } from '../MemberContributions'
 import { MemberAttendance } from '../MemberAttendance'
 import { MemberDebts } from '../MemberDebts'
+import { ModuleSummary } from '../../../components/mobile/ModuleSummary'
 
 export function MemberPersonalModule() {
   return (
     <ModuleTabs
       title="Cá nhân"
+      summary={<ModuleSummary kind="personal" />}
       tabs={[
         { key: 'receipt', label: 'Phiếu thu', element: <MemberReceipt /> },
         { key: 'contrib', label: 'Lịch sử đóng', element: <MemberContributions /> },
