@@ -7,7 +7,16 @@ import {
 import type { Role } from '../../types'
 
 /** Một ứng dụng/chức năng trên lưới tile của bản mobile. */
-export interface AppItem { key: string; label: string; to: string; icon: typeof Users; badge?: boolean }
+export interface AppItem {
+  key: string
+  label: string
+  to: string
+  icon: typeof Users
+  /** Hiện số thông báo chưa đọc (dùng chung notifStore). */
+  badge?: boolean
+  /** Hiện số đếm riêng của chức năng (vd. số tác vụ chờ duyệt). */
+  badgeCount?: number
+}
 
 /**
  * Toàn bộ chức năng theo vai trò (trang Ứng dụng). Mỗi vai trò thấy đúng các chức năng mình được phép

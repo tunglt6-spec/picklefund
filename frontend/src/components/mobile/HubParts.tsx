@@ -213,9 +213,12 @@ export function HubSectionTitle({ children, right }: { children: ReactNode; righ
 
 /** Lưới ô icon 4 cột (6 cột từ 640px). `editing` hiện nút ←/→ để sắp xếp. */
 export function TileGrid({
-  items, unread = 0, editing = false, onMove, empty,
+  items, unread = 0, editing = false, onMove, onSelect, empty,
 }: {
-  items: AppItem[]; unread?: number; editing?: boolean; onMove?: (key: string, dir: -1 | 1) => void; empty?: string
+  items: AppItem[]; unread?: number; editing?: boolean; onMove?: (key: string, dir: -1 | 1) => void
+  /** Có → bấm ô gọi hàm này thay vì chuyển trang (dùng cho menu trong-trang như AIDO). */
+  onSelect?: (item: AppItem) => void
+  empty?: string
 }) {
   const navigate = useNavigate()
   if (items.length === 0) return <p className="py-10 text-center text-sm [color:var(--pf-color-muted)]">{empty ?? 'Không có chức năng phù hợp.'}</p>
@@ -226,7 +229,7 @@ export function TileGrid({
         return (
           <li key={a.key} className="relative min-w-0">
             <button
-              onClick={() => !editing && navigate(a.to)}
+              onClick={() => { if (editing) return; if (onSelect) onSelect(a); else navigate(a.to) }}
               className="flex w-full flex-col items-center gap-1.5 active:scale-95"
               aria-label={a.label}
             >
@@ -243,6 +246,11 @@ export function TileGrid({
                 {a.badge && unread > 0 && (
                   <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">
                     {unread > 9 ? '9+' : unread}
+                  </span>
+                )}
+                {(a.badgeCount ?? 0) > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[11px] font-bold text-white">
+                    {(a.badgeCount ?? 0) > 9 ? '9+' : a.badgeCount}
                   </span>
                 )}
               </span>

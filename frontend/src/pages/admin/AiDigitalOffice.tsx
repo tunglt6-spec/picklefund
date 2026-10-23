@@ -17,6 +17,7 @@ import {
   Bot, Sparkles, Workflow, Zap, Bell, Activity, CheckCircle2, Clock,
   AlertTriangle, PlayCircle, ArrowRight, Gauge, RefreshCw, ShieldCheck,
   ListChecks, BarChart3, Inbox, GitBranch, ShieldAlert, PieChart, CalendarDays,
+  LayoutDashboard, FileText, Cpu, ChevronLeft,
 } from 'lucide-react'
 import api from '../../lib/api'
 import type { AiActionSummary, AiActionListItem } from '../../hooks/useAiManager'
@@ -34,6 +35,8 @@ import { AiManagerDashboard } from './ai/AiManagerDashboard'
 import { ExecutiveReport } from './ExecutiveReport'
 import { visibleInterval } from '../../lib/visibleInterval'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { HubSectionTitle, TileGrid } from '../../components/mobile/HubParts'
+import type { AppItem } from '../../components/mobile/hubApps'
 
 // ── Kiểu dữ liệu nguồn ────────────────────────────────────────────────────────
 interface HealthScore { score?: number; interpretation?: string }
@@ -100,9 +103,12 @@ export function AiDigitalOffice() {
   const compactTitle = useIsMobile(1024)
   const navigate = useNavigate()
   // Cho phép mở thẳng 1 tab qua URL (?tab=ops-center) — dùng khi bấm "Quay lại AI Operations Center".
-  const [tab, setTab] = useState<string>(
-    () => new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('tab') || 'office',
+  // Mobile (<1024px): mở /aido → MENU icon (5 chức năng) thay cho thanh tab; chọn 1 ô → vào chức năng đó, có nút quay lại menu.
+  const [rawTab, setTab] = useState<string>(
+    () => new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '').get('tab')
+      || (typeof window !== 'undefined' && window.innerWidth < 1024 ? 'menu' : 'office'),
   )
+  const tab = rawTab === 'menu' && !compactTitle ? 'office' : rawTab
   // Sau khi đã đọc ?tab để mở đúng tab (deep-link từ nút back), XOÁ query khỏi URL → mọi lần
   // refresh/login sau đó về MÀN HÌNH CHÍNH = Office View (không dính lại AI Operations Center).
   useEffect(() => {
@@ -371,6 +377,15 @@ export function AiDigitalOffice() {
     { key: 'ops-center', label: 'Trung tâm điều hành AI' },
   ]
 
+  const menuTiles: AppItem[] = [
+    { key: 'office', label: 'Tổng quan', to: '', icon: LayoutDashboard },
+    { key: 'report', label: 'Báo cáo điều hành', to: '', icon: FileText },
+    { key: 'operations', label: 'Vận hành', to: '', icon: Activity, badgeCount: pending },
+    { key: 'analytics', label: 'Phân tích', to: '', icon: BarChart3 },
+    { key: 'ops-center', label: 'Trung tâm điều hành AI', to: '', icon: Cpu },
+  ]
+  const currentLabel = tabs.find((t) => t.key === tab)?.label
+
   if (loading && !summary) return <PageShell><LoadingState /></PageShell>
   // Lỗi tải dữ liệu vận hành → VẪN giữ Office View (banner không cần API) + báo lỗi gọn + thử
   // lại, thay vì xóa trắng cả màn (tránh cảm giác "chập chờn" khi refresh gặp blip mạng).
@@ -387,6 +402,39 @@ export function AiDigitalOffice() {
           <p className="text-xs [color:var(--pf-color-muted)]">Kết nối đang chập chờn — bảng số liệu tạm thời chưa hiện. Hệ thống sẽ tự thử lại.</p>
           <ActionButton onClick={() => void load()}>Thử lại</ActionButton>
         </div>
+      </div>
+    </PageShell>
+  )
+
+  if (compactTitle && tab === 'menu') return (
+    <PageShell>
+      <PageHeader
+        title="AIDO"
+        actions={
+          <ActionButton
+            variant="ghost"
+            icon={<RefreshCw size={15} className={loading ? 'animate-spin' : ''} />}
+            onClick={() => void load()}
+            disabled={loading}
+          >
+            {loading ? 'Đang tải…' : 'Làm mới'}
+          </ActionButton>
+        }
+      />
+      <div className="space-y-2">
+        <OfficeBanner
+          badge={
+            <div
+              className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-white"
+              style={{ background: 'rgba(17,24,39,0.72)' }}
+            >
+              <LiveDot color={connected ? 'var(--pf-green)' : 'var(--pf-accent-amber, #F59E0B)'} size={8} active={connected} />
+              {connected ? 'REAL-TIME' : 'ĐỊNH KỲ'}{updatedAt ? ` · ${updatedAt.toLocaleTimeString('vi-VN')}` : ''}
+            </div>
+          }
+        />
+        <HubSectionTitle>Chức năng AIDO</HubSectionTitle>
+        <TileGrid items={menuTiles} onSelect={(it) => setTab(it.key)} />
       </div>
     </PageShell>
   )
@@ -426,9 +474,21 @@ export function AiDigitalOffice() {
         }
       />
 
+      {/* Mobile: quay lại menu AIDO (thay cho thanh tab). */}
+      {compactTitle && (
+        <button
+          onClick={() => setTab('menu')}
+          className="mb-4 flex min-h-[44px] items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary)] active:scale-[0.98]"
+          style={{ boxShadow: 'var(--pf-shadow-float)' }}
+        >
+          <ChevronLeft size={18} />
+          AIDO{currentLabel ? ` · ${currentLabel}` : ''}
+        </button>
+      )}
+
       {/* Thanh tab — bar trắng sticky full-bleed + kẻ dưới, nội dung căn max-w-1600
-          (đúng chuẩn ModuleTabs màn Thành viên: căn lề thẳng tiêu đề + nội dung). */}
-      <div className="-mx-4 mb-5 sticky top-0 z-20 border-b [border-color:var(--pf-border)] sm:-mx-6" style={{ background: 'var(--pf-surface)' }}>
+          (đúng chuẩn ModuleTabs màn Thành viên: căn lề thẳng tiêu đề + nội dung). Chỉ desktop. */}
+      <div className="-mx-4 mb-5 sticky top-0 z-20 border-b [border-color:var(--pf-border)] sm:-mx-6 max-lg:hidden" style={{ background: 'var(--pf-surface)' }}>
         <div className="pf-center-x w-full px-4 sm:px-6" style={{ maxWidth: 1600 }}>
           <ResponsiveTabs tabs={tabs} active={tab} onChange={setTab} className="py-2.5" />
         </div>
@@ -486,6 +546,7 @@ export function AiDigitalOffice() {
               (trùng lặp) — xem đầy đủ ở tab Operations/Analytics + /admin/ai-manager. */}
           <div className="grid gap-5 lg:grid-cols-2">
             {/* Lịch hôm nay = buổi chơi trong ngày (client store) */}
+            <div className="max-lg:hidden">
             <Panel icon={<CalendarDays size={16} />} title="Lịch hôm nay" sub="Buổi chơi trong ngày">
               {todaySessions.length === 0 ? (
                 <p className="text-sm [color:var(--pf-color-muted)]">Hôm nay chưa có buổi chơi nào.</p>
@@ -504,6 +565,7 @@ export function AiDigitalOffice() {
                 </div>
               )}
             </Panel>
+            </div>
 
             {/* Cảnh báo & lưu ý = tín hiệu vận hành Maika */}
             <Panel icon={<AlertTriangle size={16} />} title="Cảnh báo & lưu ý" sub="Tín hiệu vận hành">
