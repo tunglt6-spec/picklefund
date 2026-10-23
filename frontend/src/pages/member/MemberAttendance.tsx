@@ -244,7 +244,7 @@ export function MemberAttendance() {
       {/* Bố cục giống Tổng Quan: trái 2/3 (KPI 2×2 + danh sách buổi) · phải 1/3 (tiến độ tham gia) */}
       <div className="grid gap-4 lg:grid-cols-3">
         {/* CỘT TRÁI (2/3) */}
-        <div className="space-y-4 lg:col-span-2">
+        <div className="min-w-0 space-y-4 lg:col-span-2">
           <div className="grid grid-cols-2 gap-4">
             <MetricCard label="Buổi tham gia" value={`${attendedCount} / ${completedSessions.length}`} sub={`Tỷ lệ: ${rate}%`} accent="blue" icon={<CheckCircle size={18} />} />
             <MetricCard label="Tỷ lệ tham gia" value={`${rate}%`} sub="So với toàn kỳ" accent={rate >= 50 ? 'green' : 'amber'} icon={<TrendingUp size={18} />} />

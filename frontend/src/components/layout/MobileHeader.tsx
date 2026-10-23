@@ -1,4 +1,4 @@
-import { Bell } from 'lucide-react'
+import { Bell, ChevronLeft } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useBrandingStore } from '../../store/brandingStore'
@@ -6,6 +6,9 @@ import { useNotifStore } from '../../store/notifStore'
 import { PickleFundLogoMark } from '../ui/PickleFundLogoMark'
 import { AvatarMenu } from './AvatarMenu'
 import { APPS_ROUTE, LISA_ROUTES, notifRouteByRole } from './navConfig'
+
+/** Màn chi tiết (không nằm trên thanh đáy/trang hub) → hiện nút Quay lại. */
+const DETAIL_PATHS = [/^\/minigames\/.+/, /^\/super\/clubs\/.+/, /^\/admin\/.+/]
 
 /**
  * Header mobile (<1024px) — cùng ngôn ngữ trang Ứng dụng (Modern Enterprise Super App):
@@ -24,6 +27,7 @@ export function MobileHeader() {
   if (!user) return null
 
   const lisaRoute = LISA_ROUTES[user.role]
+  const isDetail = DETAIL_PATHS.some((re) => re.test(pathname))
   const circle =
     'relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border [background:var(--pf-surface)] [border-color:var(--pf-border)] active:scale-95'
 
@@ -32,6 +36,16 @@ export function MobileHeader() {
       className="pf-glass-bar sticky top-0 z-40 flex items-center gap-2 border-b px-4"
       style={{ minHeight: 60, paddingTop: 'env(safe-area-inset-top)' }}
     >
+      {isDetail && (
+        <button
+          onClick={() => navigate(-1)}
+          aria-label="Quay lại"
+          className={`${circle} [color:var(--pf-primary)]`}
+          style={{ boxShadow: 'var(--pf-shadow-float)' }}
+        >
+          <ChevronLeft size={22} />
+        </button>
+      )}
       <button
         onClick={() => navigate(APPS_ROUTE)}
         aria-label="Trang Ứng dụng"

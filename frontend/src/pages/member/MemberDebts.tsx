@@ -135,7 +135,7 @@ export function MemberDebts() {
       ) : (
         <div className="grid gap-4 lg:grid-cols-3">
           {/* CỘT TRÁI (2/3) — KPI 2×2 + bảng thành viên */}
-          <div className="space-y-4 lg:col-span-2">
+          <div className="min-w-0 space-y-4 lg:col-span-2">
             <div className="grid grid-cols-2 gap-4">
               <MetricCard accent="rose" icon={<AlertCircle size={18} />} label="Còn nợ" value={stats.unpaid} sub="thành viên chưa đóng" />
               <MetricCard accent="teal" icon={<Users size={18} />} label="Đã đóng" value={stats.paid} sub="thành viên đã đóng đủ" />

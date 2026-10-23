@@ -296,7 +296,7 @@ export function MemberDashboard() {
       ) : (
         <div className="grid gap-4 lg:grid-cols-3">
           {/* CỘT TRÁI (2/3): KPI + tiến độ trực quan */}
-          <div className="space-y-4 lg:col-span-2">
+          <div className="min-w-0 space-y-4 lg:col-span-2">
             <div className="grid grid-cols-2 gap-4">
               <MetricCard label="Đã Đóng Quỹ" value={formatVND(amountPaid)} money={{ value: amountPaid, kind: 'income' }} sub="Kỳ hiện tại" accent="green" icon={<DollarSign size={18} />} />
               <MetricCard label="Buổi Tham Gia" value={`${myAttendance}/${totalSessions}`} sub="Số buổi có mặt" accent="blue" icon={<Calendar size={18} />} />

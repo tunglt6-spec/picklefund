@@ -67,7 +67,7 @@ export function MetricCard({
   return (
     <div
       className={cn(
-        'pf-stat-card @container',
+        'pf-stat-card @container min-w-0',
         'flex flex-col gap-2 rounded-[20px] p-4 lg:gap-3 lg:p-5 pf-hover-lift',
         compact && 'max-sm:gap-1.5 max-sm:p-3',
         className,

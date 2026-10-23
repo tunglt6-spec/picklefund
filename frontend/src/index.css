@@ -1024,3 +1024,20 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   main :is(button, [role="tab"]):not(.pf-nominh):not([class*="absolute"]):not([class*="fixed"]) { min-height: 44px; }
   main button:has(> svg:only-child):not(.pf-nominh):not([class*="absolute"]):not([class*="fixed"]) { min-width: 44px; }
 }
+
+/* ── MOBILE (<1024px): điều khiển đồng bộ chuẩn trang Ứng dụng.
+   Nút điều khiển (chữ/icon) dạng PILL; ô nhập/chọn cao 48px bo 16px. Không bọc @layer để thắng utility
+   rounded-* đặt tay. Loại trừ: nút đã pill, tab (role=tab có kiểu riêng), nút-thẻ chứa khối (div/p/img…),
+   checkbox/radio/range/file, và phần tử đã bo tròn hoàn toàn. ── */
+@media (max-width: 1023px) {
+  button:is([class*="rounded-md"], [class*="rounded-lg"], [class*="rounded-xl"], [class*="rounded-2xl"], [class*="rounded-[8px]"], [class*="rounded-[10px]"], [class*="rounded-[12px]"], [class*="rounded-[14px]"], [class*="rounded-[16px]"]):not([class*="rounded-full"]):not([role="tab"]):not(.pf-nominh):not(:has(> :is(div, p, ul, ol, table, img, h1, h2, h3, h4, section))) {
+    border-radius: 9999px;
+  }
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="hidden"], [type="color"]):not([class*="rounded-full"]),
+  select:not([class*="rounded-full"]) {
+    border-radius: 16px; min-height: 48px;
+  }
+  textarea:not([class*="rounded-full"]) { border-radius: 16px; }
+  /* Ô nhập/chọn dạng pill (đã bo tròn) vẫn đạt vùng bấm 44px. */
+  input[class*="rounded-full"]:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="hidden"]), select[class*="rounded-full"] { min-height: 44px; }
+}
