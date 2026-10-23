@@ -170,8 +170,8 @@ export function FundAndCalendarCards() {
   const { role, hasClub, activePeriod, balance, nextSession } = useHubData()
   if (!hasClub || !role) return null
   const isToday = nextSession?.sessionDate.slice(0, 10) === todayKey()
-  const fundRoute = role === 'MEMBER_VIEW' ? '/member/tai-chinh' : role === 'CLUB_TREASURER' ? '/treasurer/dashboard' : '/tai-chinh'
-  const calRoute = role === 'MEMBER_VIEW' ? '/member/hoat-dong' : '/hoat-dong'
+  const fundRoute = role === 'MEMBER_VIEW' ? '/member/tai-chinh?tab=periods' : role === 'CLUB_TREASURER' ? '/treasurer/dashboard' : '/tai-chinh?tab=periods'
+  const calRoute = role === 'MEMBER_VIEW' ? '/member/hoat-dong?tab=schedule' : '/hoat-dong?tab=schedule'
   const showCalendar = role !== 'CLUB_TREASURER'
   return (
     <div className={cn('mt-4 grid gap-3', showCalendar ? 'grid-cols-2' : 'grid-cols-1')}>
