@@ -5,7 +5,7 @@ import { Sidebar } from './Sidebar'
 import { MobileHeader } from './MobileHeader'
 import { DesktopHeader } from './DesktopHeader'
 import { MobileBottomNav, BOTTOM_NAV_HEIGHT } from './MobileBottomNav'
-import { APPS_ROUTE, LISA_ROUTES } from './navConfig'
+import { HUB_PATHS, LISA_ROUTES } from './navConfig'
 import { UserGuideModal } from '../help/UserGuideModal'
 import { PushEnableBanner } from '../member/PushEnableBanner'
 import { useApiSync } from '../../hooks/useApiSync'
@@ -39,7 +39,7 @@ export function AppLayout() {
   // Mở màn con từ hub AI Operations Center (card đính ?from=aido) → hiện thanh quay lại cố định,
   // vị trí GIỐNG NHAU cho MỌI màn card (đặt 1 nơi ở AppLayout).
   // Trang "Ứng dụng" có header riêng (lời chào + tìm kiếm); màn chat Lisa toàn màn không có thanh đáy.
-  const isHub = location.pathname === APPS_ROUTE
+  const isHub = HUB_PATHS.includes(location.pathname)
   const fromAido = new URLSearchParams(location.search).get('from') === 'aido'
 
   return (

@@ -30,7 +30,7 @@ export function MobileBottomNav() {
       <ul className="mx-auto flex h-[64px] max-w-2xl items-stretch gap-1 py-1.5">
         {tabs.map((t) => {
           const Icon = ICONS[t.icon]
-          const active = pathname === t.to || (t.to !== '/' && pathname.startsWith(`${t.to}/`))
+          const active = [t.to, ...(t.match ?? [])].some((p) => pathname === p || pathname.startsWith(`${p}/`))
           return (
             <li key={t.to} className="min-w-0 flex-1">
               <NavLink

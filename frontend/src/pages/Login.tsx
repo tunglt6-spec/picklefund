@@ -10,6 +10,7 @@ import { useAuthStore } from '../store/authStore'
 import api from '../lib/api'
 import toast from 'react-hot-toast'
 import type { User, Role } from '../types'
+import { landingRoute } from '../components/layout/navConfig'
 
 /* ─── Constants ─── */
 // P0-1: demo accounts CHỈ hiện ở dev hoặc khi bật tường minh VITE_SHOW_DEMO_ACCOUNTS=true.
@@ -351,7 +352,7 @@ export function Login() {
       }
       login(user, accessToken, refreshToken)
       toast.success(`Chào mừng, ${apiUser.username}!`)
-      navigate(routeByRole[user.role])
+      navigate(landingRoute(routeByRole[user.role]))
     } catch (err: any) {
       const status = err?.response?.status
       if (status === 401) {

@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Toaster } from 'react-hot-toast'
 import { useAuthStore } from './store/authStore'
 import { AppLayout } from './components/layout/AppLayout'
+import { landingRoute } from './components/layout/navConfig'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { lazy, Suspense, type ComponentType } from 'react'
 
@@ -131,6 +132,10 @@ const MemberNotifications = lz(() => import('./pages/member/MemberNotifications'
 const MemberReceipt = lz(() => import('./pages/member/MemberReceipt'), 'MemberReceipt')
 const MemberLisaChat = lz(() => import('./pages/member/MemberLisaChat'), 'MemberLisaChat')
 const MobileAppHub = lz(() => import('./pages/MobileAppHub'), 'MobileAppHub')
+const MobileHome = lz(() => import('./pages/MobileSectionHubs'), 'MobileHome')
+const MobileCalendarHub = lz(() => import('./pages/MobileSectionHubs'), 'MobileCalendarHub')
+const MobileCompeteHub = lz(() => import('./pages/MobileSectionHubs'), 'MobileCompeteHub')
+const MobileCommunityHub = lz(() => import('./pages/MobileSectionHubs'), 'MobileCommunityHub')
 const MemberOffice = lz(() => import('./pages/member/MemberOffice'), 'MemberOffice')
 const MemberCommunity = lz(() => import('./pages/member/MemberCommunity'), 'default')
 const PaymentApprovals = lz(() => import('./pages/admin/PaymentApprovals'), 'PaymentApprovals')
@@ -209,6 +214,9 @@ function RootRedirect() {
   const { user, isAuthenticated } = useAuthStore()
   // Khách chưa đăng nhập → trang giới thiệu công khai (V2.2 commercial).
   if (!isAuthenticated) return <Landing />
+  // Mobile/Fold gập (<1024px): vào thẳng màn Tổng quan kiểu "Ứng dụng" (Modern Enterprise Super App).
+  const mobile = landingRoute('')
+  if (mobile) return <Navigate to={mobile} replace />
   if (user?.role === 'SUPER_ADMIN') return <Navigate to="/super/dashboard" replace />
   // CLUB_ADMIN vào thẳng AIDO (trung tâm điều hành) sau login — UI Consolidation v2.1.
   if (user?.role === 'CLUB_ADMIN') return <Navigate to="/aido" replace />
@@ -266,6 +274,10 @@ export default function App() {
           <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
             {/* Trang "Ứng dụng" của bản mobile (mọi vai trò; ≥1024px tự quay về trang chủ) */}
             <Route path="/ung-dung" element={<MobileAppHub />} />
+            <Route path="/m/tong-quan" element={<MobileHome />} />
+            <Route path="/m/lich" element={<MobileCalendarHub />} />
+            <Route path="/m/thi-dau" element={<MobileCompeteHub />} />
+            <Route path="/m/cong-dong" element={<MobileCommunityHub />} />
             {/* Staff (super/admin/treasurer) — member bị chặn khỏi các route này */}
             <Route element={<RoleRoute allow={STAFF_ROLES} />}>
             {/* Super Admin */}
