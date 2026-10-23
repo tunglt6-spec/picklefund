@@ -4,7 +4,7 @@ import {
   Bell, Search, ChevronRight, ArrowUpDown, Check, ArrowLeft, ArrowRight, X,
   Users, Wallet, ClipboardCheck, BarChart3, Trophy, CalendarDays, FileCheck2, Medal,
   MessageSquare, Cpu, Settings, Sparkles, Receipt, LayoutDashboard, Building2, CreditCard,
-  ScrollText, ListOrdered, BadgeCheck, Award, FileText, HandCoins,
+  ScrollText, ListOrdered, BadgeCheck, Award, FileText, HandCoins, BellRing,
 } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 import { useBrandingStore } from '../store/brandingStore'
@@ -63,7 +63,7 @@ const APPS: Record<Role, AppItem[]> = {
     { key: 'ledger', label: 'Sổ quỹ', to: '/treasurer/so-quy', icon: ListOrdered },
     { key: 'scoring', label: 'Chấm điểm', to: '/scoring', icon: Award },
     { key: 'approve', label: 'Xác nhận nộp quỹ', to: '/payments', icon: BadgeCheck },
-    { key: 'reminders', label: 'Nhắc nhở', to: '/treasurer/reminders', icon: Bell },
+    { key: 'reminders', label: 'Nhắc nhở', to: '/treasurer/reminders', icon: BellRing },
     { key: 'community', label: 'Cộng đồng', to: '/community', icon: MessageSquare },
     { key: 'notifications', label: 'Thông báo', to: '/notifications', icon: Bell, badge: true },
     { key: 'lisa', label: 'Lisa AI', to: '/lisa', icon: Sparkles },
@@ -170,6 +170,7 @@ export function MobileAppHub() {
 
   const isToday = nextSession?.sessionDate.slice(0, 10) === todayKey()
   const fundRoute = role === 'MEMBER_VIEW' ? '/member/tai-chinh' : role === 'CLUB_TREASURER' ? '/treasurer/dashboard' : '/tai-chinh'
+  const showCalendar = role !== 'CLUB_TREASURER' // thủ quỹ không có quyền vào module Lịch/Hoạt động
   const calRoute = role === 'MEMBER_VIEW' ? '/member/hoat-dong' : '/hoat-dong'
   const bellRoute = role === 'MEMBER_VIEW' ? '/member/notifications' : role === 'CLUB_ADMIN' ? '/he-thong?tab=notifications' : '/notifications'
 
@@ -187,7 +188,7 @@ export function MobileAppHub() {
             </span>
           </div>
           <p className="mt-1.5 truncate text-[15px] font-semibold [color:var(--pf-text)]">{greeting()}, {user.username}</p>
-          {clubData?.settings?.name && <p className="truncate text-xs [color:var(--pf-color-muted)]">{clubData.settings.name}</p>}
+          {hasClub && clubData?.settings?.name && <p className="truncate text-xs [color:var(--pf-color-muted)]">{clubData.settings.name}</p>}
         </div>
         <button
           onClick={() => navigate(bellRoute)}
@@ -223,7 +224,7 @@ export function MobileAppHub() {
 
       {/* ── 2 thẻ tóm tắt (ẩn khi đang tìm kiếm, và với Super Admin không gắn CLB) ── */}
       {hasClub && !q && (
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className={cn('mt-4 grid gap-3', showCalendar ? 'grid-cols-2' : 'grid-cols-1')}>
           <SummaryCard
             icon={<Wallet size={18} />}
             title="Quỹ CLB"
@@ -233,17 +234,19 @@ export function MobileAppHub() {
             sub={activePeriod ? 'Số dư hiện tại' : 'Chưa có kỳ quỹ mở'}
             cta="Xem chi tiết"
           />
-          <SummaryCard
-            icon={<CalendarDays size={18} />}
-            title={isToday ? 'Lịch hôm nay' : 'Sắp tới'}
-            onOpen={() => navigate(calRoute)}
-            value={nextSession ? (nextSession.startTime ?? '--:--') : '—'}
-            sub={nextSession
-              ? [!isToday ? `${nextSession.sessionDate.slice(8, 10)}/${nextSession.sessionDate.slice(5, 7)}` : null, nextSession.courtName].filter(Boolean).join(' · ') || 'Buổi sinh hoạt'
-              : 'Chưa có lịch'}
-            cta="Xem lịch"
-            outline
-          />
+          {showCalendar && (
+            <SummaryCard
+              icon={<CalendarDays size={18} />}
+              title={isToday ? 'Lịch hôm nay' : 'Sắp tới'}
+              onOpen={() => navigate(calRoute)}
+              value={nextSession ? (nextSession.startTime ?? '--:--') : '—'}
+              sub={nextSession
+                ? [!isToday ? `${nextSession.sessionDate.slice(8, 10)}/${nextSession.sessionDate.slice(5, 7)}` : null, nextSession.courtName].filter(Boolean).join(' · ') || 'Buổi sinh hoạt'
+                : 'Chưa có lịch'}
+              cta="Xem lịch"
+              outline
+            />
+          )}
         </div>
       )}
 
