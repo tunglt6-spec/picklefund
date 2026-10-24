@@ -1,5 +1,5 @@
 import {
-  Users, Wallet, ClipboardCheck, BarChart3, Trophy, CalendarDays,
+  Users, Wallet, ClipboardCheck, BarChart3, Trophy, CalendarDays, FileCheck2, Medal,
   MessageSquare, Cpu, Settings, Sparkles, Receipt, LayoutDashboard, Building2, CreditCard,
   ScrollText, ListOrdered, BadgeCheck, Award, FileText, HandCoins, BellRing, Bell,
   LogIn, UserPlus, Swords, ShieldCheck, Newspaper, ArrowDownCircle, ArrowUpCircle, Zap, UserCog,
@@ -30,6 +30,8 @@ export const APP_GROUPS: Record<Role, AppGroup[]> = {
       { key: 'members', label: 'Thành viên', to: '/thanh-vien?tab=list', icon: Users },
       { key: 'scoring', label: 'Chấm điểm', to: '/thanh-vien?tab=scoring', icon: Award },
       { key: 'accounts', label: 'Tài khoản', to: '/thanh-vien?tab=accounts', icon: UserCog },
+      { key: 'roles', label: 'Vai trò & phân quyền', to: '/thanh-vien?tab=roles', icon: ShieldCheck },
+      { key: 'history', label: 'Lịch sử hoạt động', to: '/thanh-vien?tab=activity', icon: ScrollText },
     ] },
     { key: 'finance', title: 'Tài chính', items: [
       { key: 'fund', label: 'Kỳ quỹ', to: '/tai-chinh?tab=periods', icon: Wallet },
@@ -47,10 +49,14 @@ export const APP_GROUPS: Record<Role, AppGroup[]> = {
       { key: 'weekly', label: 'Hoạt động tuần', to: '/hoat-dong?tab=weekly', icon: BarChart3 },
     ] },
     { key: 'compete', title: 'Thi đấu', items: [
+      { key: 'compete-overview', label: 'Tổng quan thi đấu', to: '/thi-dau?tab=overview', icon: LayoutDashboard },
       { key: 'tournaments', label: 'Giải đấu', to: '/thi-dau?tab=tournaments', icon: Trophy },
+      { key: 'matches', label: 'Lịch đấu', to: '/thi-dau?tab=schedule', icon: Swords },
+      { key: 'results', label: 'Kết quả', to: '/thi-dau?tab=results', icon: FileCheck2 },
+      { key: 'standings', label: 'Xếp hạng', to: '/thi-dau?tab=standings', icon: Medal },
     ] },
     { key: 'community', title: 'Cộng đồng', items: [
-      { key: 'feed', label: 'Bảng tin', to: '/community', icon: Newspaper },
+      { key: 'feed', label: 'Bảng tin', to: '/community?tab=feed', icon: Newspaper },
       { key: 'matchmaking', label: 'Tìm kèo', to: '/community?tab=matchmaking', icon: Swords },
       { key: 'moderation', label: 'Kiểm duyệt', to: '/community?tab=moderation', icon: ShieldCheck },
     ] },
@@ -83,9 +89,12 @@ export const APP_GROUPS: Record<Role, AppGroup[]> = {
     ] },
     { key: 'compete', title: 'Thi đấu', items: [
       { key: 'tournaments', label: 'Giải đấu', to: '/member/thi-dau?tab=tournaments', icon: Trophy },
+      { key: 'matches', label: 'Lịch đấu', to: '/member/thi-dau?tab=schedule', icon: Swords },
+      { key: 'results', label: 'Kết quả', to: '/member/thi-dau?tab=results', icon: FileCheck2 },
+      { key: 'standings', label: 'Xếp hạng', to: '/member/thi-dau?tab=standings', icon: Medal },
     ] },
     { key: 'community', title: 'Cộng đồng', items: [
-      { key: 'feed', label: 'Bảng tin', to: '/community', icon: Newspaper },
+      { key: 'feed', label: 'Bảng tin', to: '/community?tab=feed', icon: Newspaper },
       { key: 'matchmaking', label: 'Tìm kèo', to: '/community?tab=matchmaking', icon: Swords },
     ] },
     { key: 'assistant', title: 'Trợ lý & thông báo', items: [

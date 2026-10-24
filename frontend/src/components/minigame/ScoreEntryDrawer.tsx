@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { DateInput } from '../ui/DateTimeFields'
 import { Minus, Plus } from 'lucide-react'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
@@ -129,8 +130,8 @@ export function ScoreEntryDrawer({ open, onClose, match, minigame }: Props) {
 
         <div>
           <label htmlFor="f-ScoreEntryDrawer-1" className="text-xs font-medium [color:var(--pf-color-muted)] mb-1 block">Ngày thi đấu</label>
-          <input id="f-ScoreEntryDrawer-1"
-            type="date"
+          <DateInput id="f-ScoreEntryDrawer-1"
+           
             value={matchDate}
             onChange={e => setMatchDate(e.target.value)}
             className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]"

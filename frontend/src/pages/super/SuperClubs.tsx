@@ -234,7 +234,7 @@ export function SuperClubs() {
   const createModal = (
     <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Tạo CLB mới" size="lg">
       <form onSubmit={handleCreate} className="space-y-5">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 max-[480px]:grid-cols-1">
           <div className="col-span-2">
             <label htmlFor="sc-name" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên CLB *</label>
             <input id="sc-name" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className={inputCls} />
@@ -262,7 +262,7 @@ export function SuperClubs() {
         <div className="rounded-lg border [border-color:var(--pf-primary-soft)] [background:var(--pf-primary-soft)] p-4">
           <p className="text-sm font-semibold [color:var(--pf-text)] mb-1">Tài khoản Admin CLB *</p>
           <p className="text-xs [color:var(--pf-color-muted)] mb-3">Người quản trị CLB. Email admin sẽ là email gửi thông báo tới thành viên. Admin phải đổi mật khẩu ở lần đăng nhập đầu.</p>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 max-[480px]:grid-cols-1">
             <div>
               <label htmlFor="sc-admin-user" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên đăng nhập admin *</label>
               <input id="sc-admin-user" required value={form.adminUsername}
@@ -295,7 +295,7 @@ export function SuperClubs() {
   const editModal = (
     <Modal open={!!editClub} onClose={() => setEditClub(null)} title={`Sửa: ${editClub?.name ?? ''}`} size="lg">
       <form onSubmit={handleEdit} className="space-y-5">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 max-[480px]:grid-cols-1">
           <div className="col-span-2">
             <label htmlFor="f-SuperClubs-1" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên CLB *</label>
             <input id="f-SuperClubs-1" required value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} className={inputCls} />
@@ -538,12 +538,13 @@ export function SuperClubs() {
                   </button>
                   <button
                     onClick={e => { e.stopPropagation(); setPendingAction({ club, kind: 'status' }) }}
+                    aria-label={club.status === 'active' ? 'Tạm khóa CLB' : 'Mở khóa CLB'}
                     className="p-2 rounded-lg"
                     style={{ background: club.status === 'active' ? 'var(--pf-color-warning-soft)' : 'var(--pf-color-success-soft)', color: club.status === 'active' ? 'var(--pf-color-warning)' : 'var(--pf-color-success)' }}
                   >
                     {club.status === 'active' ? <Lock size={14} /> : <Unlock size={14} />}
                   </button>
-                  <button onClick={e => { e.stopPropagation(); setDeleteClub(club) }} className="p-2 rounded-lg" style={{ background: 'var(--pf-color-danger-soft)', color: 'var(--pf-color-danger)' }}>
+                  <button onClick={e => { e.stopPropagation(); setDeleteClub(club) }} aria-label="Xóa CLB" className="p-2 rounded-lg" style={{ background: 'var(--pf-color-danger-soft)', color: 'var(--pf-color-danger)' }}>
                     <Trash2 size={14} />
                   </button>
                 </div>

@@ -4,6 +4,7 @@
  * PUT /attendance/:id/attendance. KHÔNG đổi backend. Ưu tiên hiển thị member đã đăng ký (RSVP).
  * V2.2 Clean Modern SaaS, có loading/error/empty state.
  */
+import { useSearchParams } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { UserCheck, Users, Save, ClipboardCheck, Check, ChevronDown } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -50,7 +51,9 @@ export function CheckIn() {
       .slice(0, 12)
   }, [sessions])
 
-  const [sessionId, setSessionId] = useState('')
+  // Mở từ thẻ buổi chơi (mobile) → chọn sẵn đúng buổi qua ?session=.
+  const [urlParams] = useSearchParams()
+  const [sessionId, setSessionId] = useState(urlParams.get('session') ?? '')
   const [rows, setRows] = useState<Row[]>([])
   const [present, setPresent] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)

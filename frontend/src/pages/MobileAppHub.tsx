@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useModerationPending } from '../hooks/useModerationPending'
 import { Navigate } from 'react-router-dom'
 import { ArrowUpDown, Check } from 'lucide-react'
 import { useNotifStore } from '../store/notifStore'
@@ -31,13 +32,14 @@ export function MobileAppHub() {
     try { localStorage.setItem(orderKey, JSON.stringify(next)) } catch { /* noop */ }
   }
 
+  const modPending = useModerationPending(role === 'CLUB_ADMIN')
   const groups = useMemo(() => {
     const rank = new Map(order.map((k, i) => [k, i]))
     return (role ? APP_GROUPS[role] : []).map((g) => ({
       ...g,
-      items: [...g.items].sort((a, b) => (rank.get(a.key) ?? 1e6 + g.items.indexOf(a)) - (rank.get(b.key) ?? 1e6 + g.items.indexOf(b))),
+      items: [...g.items].map((a) => (a.key === 'moderation' && modPending > 0 ? { ...a, badgeCount: modPending } : a)).sort((a, b) => (rank.get(a.key) ?? 1e6 + g.items.indexOf(a)) - (rank.get(b.key) ?? 1e6 + g.items.indexOf(b))),
     }))
-  }, [role, order])
+  }, [role, order, modPending])
 
   const q = fold(query.trim())
   const matches: AppItem[] = q ? groups.flatMap((g) => g.items).filter((a) => fold(a.label).includes(q) || fold(g_title(groups, a)).includes(q)) : []

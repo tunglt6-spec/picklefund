@@ -4,6 +4,7 @@
  * màu semantic chỉ dùng khi cảnh báo. Dữ liệu THẬT; chỉ số chưa có nguồn → "chưa có dữ liệu".
  * PDF xuất server-side (bìa + 9 mục + đánh giá Maika). Đánh giá chi tiết Maika theo từng mục.
  */
+import { DateInput } from '../../components/ui/DateTimeFields'
 import { noticeDialog } from '../../components/ui/ConfirmHost'
 import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -219,8 +220,8 @@ export function SuperDashboard() {
           </select>
           {range === 'custom' && (
             <>
-              <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="h-10 rounded-full border px-3 text-sm [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)]" />
-              <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-10 rounded-full border px-3 text-sm [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)]" />
+              <DateInput value={from} onChange={(e) => setFrom(e.target.value)} className="h-10 rounded-full border px-3 text-sm [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)]" />
+              <DateInput value={to} onChange={(e) => setTo(e.target.value)} className="h-10 rounded-full border px-3 text-sm [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)]" />
             </>
           )}
           <select value={clubId} onChange={(e) => setClubId(e.target.value)} aria-label="Câu lạc bộ"

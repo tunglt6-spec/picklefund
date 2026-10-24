@@ -40,7 +40,7 @@ test('thanh đáy: mỗi vai 5 mục, đích duy nhất, mục cuối là Ứng 
 test('thanh đáy admin/member đi THẲNG vào nội dung (lịch, thi đấu, cộng đồng) — không qua trang menu', () => {
   for (const r of ['CLUB_ADMIN', 'MEMBER_VIEW'] as Role[]) {
     const [, cal, compete, community] = bottomTabsByRole[r]
-    assert.ok(cal.to.includes('hoat-dong?tab=schedule'), r)
+    assert.ok(cal.to.includes('hoat-dong'), r)
     assert.ok(compete.to.endsWith('thi-dau'), r)
     assert.equal(community.to, '/community')
   }

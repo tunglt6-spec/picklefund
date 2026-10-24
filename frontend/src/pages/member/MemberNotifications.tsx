@@ -324,7 +324,7 @@ export function MemberNotifications() {
           {/* CỘT TRÁI — KPI-lọc xếp DỌC, sát lề trái; desktop đứng yên khi cuộn */}
           <div className="lg:w-[260px] lg:shrink-0 lg:sticky lg:top-4 lg:self-start">
             <div className="lg:hidden"><FilterChips tabs={TABS as [TabKey, string][]} active={tab} counts={counts} onChange={setTab} label="Lọc thông báo" primary={["all", "unread"]} moreLabel="Loại thông báo" /></div>
-            <div className="max-lg:hidden"><FilterKpiList tab={tab} counts={counts} onChange={setTab} /></div>
+            <div className="contents max-lg:hidden"><FilterKpiList tab={tab} counts={counts} onChange={setTab} /></div>
           </div>
 
           {/* CỘT PHẢI — danh sách thông báo 1 CỘT; desktop có thanh cuộn riêng (header + KPI đứng yên) */}

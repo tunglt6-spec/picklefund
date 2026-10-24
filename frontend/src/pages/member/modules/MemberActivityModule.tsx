@@ -2,6 +2,7 @@
  * MemberActivityModule — module "Hoạt động" cho MEMBER_VIEW: lịch sinh hoạt, đăng ký buổi,
  * check-in, hoạt động tuần. Tái dùng màn đã có (view-only theo isMember). Tự embedded.
  */
+import { Activity, CalendarDays, CalendarPlus, LogIn } from 'lucide-react'
 import { ModuleTabs } from '../../../components/shared'
 import { ScheduleCalendar } from '../../admin/ScheduleCalendar'
 import { SessionRegistration } from '../../admin/SessionRegistration'
@@ -13,10 +14,10 @@ export function MemberActivityModule() {
     <ModuleTabs
       title="Hoạt động"
       tabs={[
-        { key: 'schedule', label: 'Lịch sinh hoạt', element: <ScheduleCalendar /> },
-        { key: 'registration', label: 'Đăng ký buổi', element: <SessionRegistration /> },
-        { key: 'checkin', label: 'Check-in', element: <CheckIn /> },
-        { key: 'weekly', label: 'Hoạt động tuần', element: <WeeklyActivity /> },
+        { key: 'schedule', icon: CalendarDays, menuLabel: 'Lịch sinh hoạt', label: 'Lịch sinh hoạt', element: <ScheduleCalendar /> },
+        { key: 'registration', icon: CalendarPlus, menuLabel: 'Đăng ký buổi', label: 'Đăng ký buổi', element: <SessionRegistration /> },
+        { key: 'checkin', icon: LogIn, label: 'Check-in', element: <CheckIn /> },
+        { key: 'weekly', icon: Activity, label: 'Hoạt động tuần', element: <WeeklyActivity /> },
       ]}
     />
   )

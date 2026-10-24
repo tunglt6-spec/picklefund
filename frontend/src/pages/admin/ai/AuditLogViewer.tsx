@@ -3,6 +3,7 @@
  * Nối endpoint MỚI (read-only, tenant-safe): GET /audit-logs/club — clubId ÉP TỪ JWT
  * ở backend (client không override). Chỉ log của CLB mình. V2.2 shared-kit + trạng thái.
  */
+import { DateInput } from '../../../components/ui/DateTimeFields'
 import { useCallback, useEffect, useState } from 'react'
 import { ScrollText, Search, ChevronLeft, ChevronRight } from 'lucide-react'
 import api from '../../../lib/api'
@@ -140,10 +141,10 @@ export function AuditLogViewer() {
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs [color:var(--pf-color-muted)]">
             <span>Từ ngày</span>
-            <input type="date" value={from} max={to || undefined} onChange={e => setFrom(e.target.value)}
+            <DateInput value={from} max={to || undefined} onChange={e => setFrom(e.target.value)}
               className="rounded-lg border border-[color:var(--pf-border)] px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" />
             <span>đến</span>
-            <input type="date" value={to} min={from || undefined} onChange={e => setTo(e.target.value)}
+            <DateInput value={to} min={from || undefined} onChange={e => setTo(e.target.value)}
               className="rounded-lg border border-[color:var(--pf-border)] px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" />
             {(from || to) && (
               <button onClick={() => { setFrom(''); setTo('') }} className="[color:var(--pf-primary-text)] hover:underline font-medium">Xóa lọc ngày</button>

@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react'
+import { HuyLabel } from '../../components/ui/HuyLabel'
+import { DateInput, TimeInput } from '../../components/ui/DateTimeFields'
 import { AmountHint } from '../../components/ui/AmountHint'
 import { Plus, CheckSquare, CalendarX, Clock, MapPin, Users, Edit2, Trash2, CalendarDays, UserCheck, TrendingUp } from 'lucide-react'
 import api from '../../lib/api'
@@ -262,7 +264,7 @@ export function Attendance() {
                 Chuyển kỳ ({sessions.length} buổi)
               </button>
             )}
-            {exportSessions.length > 0 && <div className="max-lg:hidden"><ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /></div>}
+            {exportSessions.length > 0 && <div className="contents max-lg:hidden"><ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /></div>}
             <ActionButton icon={<Plus size={16} />} onClick={() => setShowCreate(true)}>Tạo buổi chơi</ActionButton>
             {/* Mobile: thao tác phụ gom vào menu "Thao tác" */}
             <ActionMenu items={[
@@ -405,16 +407,16 @@ export function Attendance() {
         <form id="form-edit-session" onSubmit={handleEditSession} className="space-y-4">
           <div>
             <label htmlFor="f-Attendance-1" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày chơi <span className="text-red-500">*</span></label>
-            <input id="f-Attendance-1" required type="date" value={editForm.sessionDate} onChange={e => setEditForm({ ...editForm, sessionDate: e.target.value })} className="input-base" />
+            <DateInput id="f-Attendance-1" required value={editForm.sessionDate} onChange={e => setEditForm({ ...editForm, sessionDate: e.target.value })} className="input-base" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
             <div>
               <label htmlFor="f-Attendance-2" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Giờ bắt đầu</label>
-              <input id="f-Attendance-2" type="time" value={editForm.startTime} onChange={e => setEditForm({ ...editForm, startTime: e.target.value })} className="input-base" />
+              <TimeInput id="f-Attendance-2" value={editForm.startTime} onChange={e => setEditForm({ ...editForm, startTime: e.target.value })} className="input-base" />
             </div>
             <div>
               <label htmlFor="f-Attendance-3" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Giờ kết thúc</label>
-              <input id="f-Attendance-3" type="time" value={editForm.endTime} onChange={e => setEditForm({ ...editForm, endTime: e.target.value })} className="input-base" />
+              <TimeInput id="f-Attendance-3" value={editForm.endTime} onChange={e => setEditForm({ ...editForm, endTime: e.target.value })} className="input-base" />
             </div>
           </div>
           <div>
@@ -471,7 +473,7 @@ export function Attendance() {
         subtitle="Lên lịch buổi chơi cho kỳ quỹ hiện tại"
         footer={
           <div className="flex gap-3 justify-end">
-            <Button variant="outline" type="button" onClick={() => setShowCreate(false)} disabled={isSaving}>Hủy bỏ</Button>
+            <Button variant="outline" type="button" onClick={() => setShowCreate(false)} disabled={isSaving}><HuyLabel /></Button>
             <Button type="submit" form="form-session" disabled={isSaving}>{isSaving ? 'Đang tạo...' : 'Tạo buổi chơi'}</Button>
           </div>
         }
@@ -484,18 +486,18 @@ export function Attendance() {
           )}
           <div>
             <label htmlFor="f-Attendance-6" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày chơi <span className="text-red-500">*</span></label>
-            <input id="f-Attendance-6" required type="date" value={form.sessionDate}
+            <DateInput id="f-Attendance-6" required value={form.sessionDate}
               onChange={e => setForm({ ...form, sessionDate: e.target.value })} className="input-base" />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
             <div>
               <label htmlFor="f-Attendance-7" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Giờ bắt đầu</label>
-              <input id="f-Attendance-7" type="time" value={form.startTime}
+              <TimeInput id="f-Attendance-7" value={form.startTime}
                 onChange={e => setForm({ ...form, startTime: e.target.value })} className="input-base" />
             </div>
             <div>
               <label htmlFor="f-Attendance-8" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Giờ kết thúc</label>
-              <input id="f-Attendance-8" type="time" value={form.endTime}
+              <TimeInput id="f-Attendance-8" value={form.endTime}
                 onChange={e => setForm({ ...form, endTime: e.target.value })} className="input-base" />
             </div>
           </div>

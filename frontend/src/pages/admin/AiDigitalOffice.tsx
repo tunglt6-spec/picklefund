@@ -11,13 +11,14 @@
  * Trạng thái agent được SUY RA từ dữ liệu hoạt động thật (không có endpoint status live).
  * Tab Operations/Analytics tóm tắt + điều hướng tới các màn AI Operations Center đã có.
  */
+import { MobileFunctionHeader } from '../../components/mobile/ModuleNav'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Bot, Sparkles, Workflow, Zap, Bell, Activity, CheckCircle2, Clock,
   AlertTriangle, PlayCircle, ArrowRight, Gauge, RefreshCw, ShieldCheck,
   ListChecks, BarChart3, Inbox, GitBranch, ShieldAlert, PieChart, CalendarDays,
-  LayoutDashboard, FileText, Cpu, ChevronLeft,
+  LayoutDashboard, FileText, Cpu,
 } from 'lucide-react'
 import api from '../../lib/api'
 import type { AiActionSummary, AiActionListItem } from '../../hooks/useAiManager'
@@ -472,17 +473,8 @@ export function AiDigitalOffice() {
         }
       />
 
-      {/* Mobile: quay lại menu AIDO (thay cho thanh tab). */}
-      {compactTitle && (
-        <button
-          onClick={() => setTab('menu')}
-          className="mb-4 flex min-h-[44px] items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary-text)] active:scale-[0.98]"
-          style={{ boxShadow: 'var(--pf-shadow-float)' }}
-        >
-          <ChevronLeft size={18} />
-          AIDO{currentLabel ? ` · ${currentLabel}` : ''}
-        </button>
-      )}
+      {/* Mobile: header gọn dùng chung (quay lại lưới chức năng AIDO + tên chức năng). */}
+      {compactTitle && <MobileFunctionHeader title={currentLabel ?? 'AIDO'} parent="AIDO" onBack={() => setTab('menu')} />}
 
       {/* Thanh tab — bar trắng sticky full-bleed + kẻ dưới, nội dung căn max-w-1600
           (đúng chuẩn ModuleTabs màn Thành viên: căn lề thẳng tiêu đề + nội dung). Chỉ desktop. */}
@@ -544,7 +536,7 @@ export function AiDigitalOffice() {
               (trùng lặp) — xem đầy đủ ở tab Operations/Analytics + /admin/ai-manager. */}
           <div className="grid gap-5 lg:grid-cols-2">
             {/* Lịch hôm nay = buổi chơi trong ngày (client store) */}
-            <div className="max-lg:hidden">
+            <div className="contents max-lg:hidden">
             <Panel icon={<CalendarDays size={16} />} title="Lịch hôm nay" sub="Buổi chơi trong ngày">
               {todaySessions.length === 0 ? (
                 <p className="text-sm [color:var(--pf-color-muted)]">Hôm nay chưa có buổi chơi nào.</p>

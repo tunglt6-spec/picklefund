@@ -131,7 +131,7 @@ export function CommunityModeration({ embedded }: { embedded?: boolean } = {}) {
           accent="amber"
           icon={<Flag size={18} />}
         />
-        <div className="max-lg:hidden"><MetricCard
+        <div className="contents max-lg:hidden"><MetricCard
           label="Đang xem"
           value={TABS.find((t) => t.key === tab)?.label ?? ''}
           accent="blue"

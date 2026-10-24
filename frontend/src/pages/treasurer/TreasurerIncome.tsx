@@ -1,4 +1,5 @@
 ﻿import { moneyColor } from '../../lib/moneyTone'
+import { DateInput } from '../../components/ui/DateTimeFields'
 import { AmountHint } from '../../components/ui/AmountHint'
 import { useState, useEffect } from 'react'
 import { Plus, CheckCircle, XCircle, Edit2, Trash2, DollarSign, Wallet, Download, FileText } from 'lucide-react'
@@ -343,15 +344,15 @@ export function TreasurerIncome() {
                       <Badge variant="gray">{c.paymentMethod === 'bank_transfer' ? 'Chuyển khoản' : 'Tiền mặt'}</Badge>
                       <div className="flex items-center gap-1">
                         {!isMiniRow && (
-                          <button onClick={() => toggleConfirm(c.id)}
-                            className={`h-8 w-8 flex items-center justify-center rounded-[10px] ${c.isConfirmed ? 'bg-emerald-50 text-emerald-600' : '[background:var(--pf-surface-muted)] [color:var(--pf-color-muted)]'} active:opacity-70`}>
+                          <button onClick={() => toggleConfirm(c.id)} aria-label={c.isConfirmed ? 'Bỏ xác nhận khoản thu' : 'Xác nhận khoản thu'}
+                            className={`max-lg:h-11 max-lg:w-11 h-8 w-8 flex items-center justify-center rounded-[10px] ${c.isConfirmed ? 'bg-emerald-50 text-emerald-600' : '[background:var(--pf-surface-muted)] [color:var(--pf-color-muted)]'} active:opacity-70`}>
                             {c.isConfirmed ? <CheckCircle size={15} /> : <XCircle size={15} />}
                           </button>
                         )}
-                        <button onClick={() => openEdit(c)} className="h-8 w-8 flex items-center justify-center rounded-[10px] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] active:[background:var(--pf-primary-soft)] active:[color:var(--pf-primary-text)]">
+                        <button onClick={() => openEdit(c)} aria-label="Sửa khoản thu" className="max-lg:h-11 max-lg:w-11 h-8 w-8 flex items-center justify-center rounded-[10px] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] active:[background:var(--pf-primary-soft)] active:[color:var(--pf-primary-text)]">
                           <Edit2 size={14} />
                         </button>
-                        <button onClick={() => setDeleteId(c.id)} className="h-8 w-8 flex items-center justify-center rounded-[10px] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] active:bg-red-50 active:text-red-500">
+                        <button onClick={() => setDeleteId(c.id)} aria-label="Xóa khoản thu" className="max-lg:h-11 max-lg:w-11 h-8 w-8 flex items-center justify-center rounded-[10px] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] active:bg-red-50 active:text-red-500">
                           <Trash2 size={14} />
                         </button>
                       </div>
@@ -426,7 +427,7 @@ export function TreasurerIncome() {
                 </div>
               </>
             )}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
               <div>
                 <label htmlFor="ti-m-amount" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền <span className="text-red-500">*</span></label>
                 <input id="ti-m-amount" required type="number" min={1} value={form.amount} onChange={e => setForm({ ...form, amount: Number(e.target.value) })}
@@ -435,7 +436,7 @@ export function TreasurerIncome() {
               </div>
               <div>
                 <label htmlFor="ti-m-date" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày đóng</label>
-                <input id="ti-m-date" type="date" value={form.paymentDate} onChange={e => setForm({ ...form, paymentDate: e.target.value })}
+                <DateInput id="ti-m-date" value={form.paymentDate} onChange={e => setForm({ ...form, paymentDate: e.target.value })}
                   className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none [background:var(--pf-surface)]" />
               </div>
             </div>
@@ -724,7 +725,7 @@ export function TreasurerIncome() {
             </>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
             <div>
               <label htmlFor="ti-d-amount" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
               <input id="ti-d-amount" required type="number" min={1} value={form.amount}
@@ -734,7 +735,7 @@ export function TreasurerIncome() {
             </div>
             <div>
               <label htmlFor="ti-d-date" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày đóng</label>
-              <input id="ti-d-date" type="date" value={form.paymentDate}
+              <DateInput id="ti-d-date" value={form.paymentDate}
                 onChange={e => setForm({ ...form, paymentDate: e.target.value })}
                 className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]" />
             </div>

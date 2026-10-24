@@ -3,6 +3,7 @@
  * viên đăng ký, lưu. Dùng endpoint mới GET/PUT /attendance/:id/registrations.
  * RSVP TÁCH BIỆT điểm danh thực tế (không ảnh hưởng tính quỹ). V2.2 Clean Modern SaaS.
  */
+import { useSearchParams } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CalendarPlus, Check, Users, Save, ChevronDown } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -40,7 +41,9 @@ export function SessionRegistration() {
       .sort((a, b) => (a.sessionDate < b.sessionDate ? -1 : 1))
   }, [sessions])
 
-  const [sessionId, setSessionId] = useState<string>('')
+  // Mở từ thẻ buổi chơi (mobile) → chọn sẵn đúng buổi qua ?session=.
+  const [urlParams] = useSearchParams()
+  const [sessionId, setSessionId] = useState<string>(urlParams.get('session') ?? '')
   const [rows, setRows] = useState<RegRow[]>([])
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(false)

@@ -275,7 +275,7 @@ export function WorkflowRules() {
               <div key={t} className="flex flex-wrap items-center gap-2">
                 <div className="w-44 shrink-0" title={t}>
                   <p className="text-xs font-medium [color:var(--pf-text)]">{triggerLabel(t)}</p>
-                  <p className="text-xs font-mono [color:var(--pf-color-muted)]">{t}</p>
+                  <p className="text-xs font-mono [color:var(--pf-color-muted)] max-lg:hidden">{t}</p>
                 </div>
                 <button
                   onClick={() => void run(async () => { const r = await dispatchLiveTrigger(t); setLiveResult(r); setDispatchResult(null); toast(`Khớp ${r.matchedRules} rule · tạo ${r.createdActions} AiAction`) }, `Đã chạy dữ liệu thật: ${t}`)}
@@ -300,7 +300,7 @@ export function WorkflowRules() {
             return (
               <div className="mt-4 rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-surface-muted)] p-3">
                 <p className="text-xs font-semibold [color:var(--pf-color-muted)] mb-2">
-                  Kết quả {isLive ? '(dữ liệu thật)' : '(test rỗng)'}: {r.triggerType}
+                  Kết quả {isLive ? '(dữ liệu thật)' : '(test rỗng)'}: <span className="lg:hidden">{triggerLabel(r.triggerType)}</span><span className="max-lg:hidden">{r.triggerType}</span>
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
                   {([
@@ -362,7 +362,7 @@ export function WorkflowRules() {
                     <div className="min-w-0">
                       <p className="text-sm font-semibold [color:var(--pf-text)]">{r.name}</p>
                       <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">
-                        {r.triggerType} · ưu tiên {r.priority}
+                        <span className="lg:hidden">{triggerLabel(r.triggerType)}</span><span className="max-lg:hidden">{r.triggerType}</span> · ưu tiên {r.priority}
                       </p>
                     </div>
                     <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ${r.enabled ? 'bg-emerald-50 text-emerald-700' : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>
@@ -478,7 +478,7 @@ export function WorkflowRules() {
                 >
                   <div className="min-w-0">
                     <p className="text-xs font-medium [color:var(--pf-text)]">{triggerLabel(run.triggerType)}</p>
-                    <p className="text-xs [color:var(--pf-color-muted)]">{fmtTime(run.createdAt)} · <span className="font-mono">{run.triggerType}</span></p>
+                    <p className="text-xs [color:var(--pf-color-muted)]">{fmtTime(run.createdAt)}<span className="font-mono max-lg:hidden"> · {run.triggerType}</span></p>
                     {run.errorMessage && <p className="text-xs text-red-500 truncate">{run.errorMessage}</p>}
                   </div>
                   <span className={`shrink-0 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${RUN_STATUS_STYLE[run.status] ?? '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'}`}>

@@ -5,6 +5,7 @@
  * (GET /attendance/:id/registrations). Session CRUD dùng API hiện có (POST/PUT/DELETE
  * /attendance). KHÔNG mock dữ liệu; KPI tính từ dữ liệu thật. Mobile-first, không tràn ngang.
  */
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -66,6 +67,10 @@ export function ScheduleCalendar() {
   const navigate = useNavigate()
   const { user, accessToken } = useAuthStore()
   const isMember = user?.role === 'MEMBER_VIEW'
+  const compact = useIsMobile(1024)
+  const actBase = isMember ? '/member/hoat-dong' : '/hoat-dong'
+  // Mobile: Đăng ký/Check-in mở ngay trong module Hoạt động, đúng buổi đang xem.
+  const goSession = (tab: 'registration' | 'checkin', id: string, legacy: string) => navigate(compact ? `${actBase}?tab=${tab}&session=${id}` : legacy)
   const clubId = user?.clubId ?? ''
   const { sessions, members } = useClubDataStore((s) => s.getClubData(clubId))
   const setSessions = useClubDataStore((s) => s.setSessions)
@@ -224,7 +229,10 @@ export function ScheduleCalendar() {
     <PageShell>
       <PageHeader
         title="Lịch sinh hoạt"
-        actions={isMember ? undefined : <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/hoat-dong?tab=attendance')}>Tạo buổi chơi</ActionButton>}
+        actions={(compact || !isMember) ? <>
+          <button type="button" onClick={() => navigate(`${actBase}?tab=weekly`)} className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border px-3.5 text-sm font-semibold [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-text)] lg:hidden">Thống kê</button>
+          {!isMember && <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/hoat-dong?tab=attendance')}>Tạo buổi chơi</ActionButton>}
+        </> : undefined}
       />
 
       {sessions.length === 0 ? (
@@ -244,8 +252,15 @@ export function ScheduleCalendar() {
             <MetricCard accent="amber" icon={<Gauge size={18} />} label="Tỷ lệ lấp đầy" value={regLoading ? '…' : `${kpi.fillRate}%`} sub="đăng ký / thành viên" />
           </div>
 
+          {/* Mobile: ô chọn gọn cho loại sự kiện (không có hàng phải vuốt ngang). */}
+          <label className="block lg:hidden">
+            <span className="sr-only">Loại sự kiện</span>
+            <select value={filter} onChange={(e) => setFilter(e.target.value as FilterKey)} className="input-base w-full" aria-label="Lọc loại sự kiện">
+              {FILTERS.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
+            </select>
+          </label>
           {/* Filter chips */}
-          <div className="flex flex-wrap items-center gap-2 max-lg:-mx-4 max-lg:flex-nowrap max-lg:overflow-x-auto max-lg:px-4 max-lg:no-scrollbar" role="tablist" aria-label="Lọc loại sự kiện">
+          <div className="flex flex-wrap items-center gap-2 max-lg:hidden" role="tablist" aria-label="Lọc loại sự kiện">
             {FILTERS.map((f) => {
               const active = filter === f.key
               return (
@@ -415,7 +430,7 @@ export function ScheduleCalendar() {
                         {/* Nút chính */}
                         <div className="mt-3 flex gap-2">
                           {!isMember && (
-                            <button onClick={() => navigate('/check-in')} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)]">
+                            <button onClick={() => goSession('checkin', s.id, '/check-in')} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)]">
                               <UserCheck size={14} />Điểm danh
                             </button>
                           )}
@@ -434,7 +449,7 @@ export function ScheduleCalendar() {
                               )
                             })()
                           ) : (
-                            <button onClick={() => navigate('/session-registration')} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold [border-color:var(--pf-border)] [color:var(--pf-text)] hover:[background:var(--pf-surface-muted)]">
+                            <button onClick={() => goSession('registration', s.id, '/session-registration')} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold [border-color:var(--pf-border)] [color:var(--pf-text)] hover:[background:var(--pf-surface-muted)]">
                               <CalendarPlus size={14} />Đăng ký
                             </button>
                           )}

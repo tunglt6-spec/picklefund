@@ -145,7 +145,7 @@ export function ListRow({ title, sub, onClick, trailing, icon }: { title: string
   )
 }
 
-/** Lưới ô icon 4 cột. `editing` hiện nút ‹/› để sắp xếp (trang Ứng dụng). */
+/** Lưới ô icon 3 cột (mobile). `editing` hiện nút ‹/› để sắp xếp (trang Ứng dụng). */
 export function TileGrid({
   items, unread = 0, editing = false, onMove, onSelect, empty,
 }: {
@@ -157,7 +157,7 @@ export function TileGrid({
   const navigate = useNavigate()
   if (items.length === 0) return <p className="py-10 text-center text-sm [color:var(--pf-color-muted)]">{empty ?? 'Không có chức năng phù hợp.'}</p>
   return (
-    <ul className="mt-3 grid grid-cols-4 gap-x-2 gap-y-4 min-[640px]:grid-cols-6">
+    <ul className="mt-3 grid grid-cols-3 gap-x-3 gap-y-5 min-[640px]:grid-cols-6">
       {items.map((a, i) => {
         const Icon = a.icon
         const count = a.badge ? unread : (a.badgeCount ?? 0)
@@ -169,10 +169,10 @@ export function TileGrid({
               aria-label={count > 0 ? `${a.label} (${count} mới)` : a.label}
             >
               <span
-                className="relative flex aspect-square w-full max-w-[64px] items-center justify-center rounded-[var(--pf-radius-tile)]"
+                className="relative flex aspect-square w-full max-w-[72px] items-center justify-center rounded-[var(--pf-radius-tile)]"
                 style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary-text)' }}
               >
-                <Icon size={26} strokeWidth={1.9} aria-hidden />
+                <Icon size={28} strokeWidth={1.9} aria-hidden />
                 {count > 0 && (
                   <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#DC2626] px-1 text-xs font-bold text-white">
                     {count > 9 ? '9+' : count}

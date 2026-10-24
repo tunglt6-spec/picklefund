@@ -10,6 +10,7 @@
  * chỉ bổ sung competition/scheduledAt vào settings (an toàn, backend merge). formatType map từ
  * preset.dbFormat nên hành vi engine không đổi.
  */
+import { DateInput, DateTimeInput } from '../../../components/ui/DateTimeFields'
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ChevronRight, ChevronLeft, Check, UserPlus, X, Info } from 'lucide-react'
@@ -336,8 +337,8 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                 <textarea id="mgf-desc" rows={2} value={form.description} onChange={e => set({ description: e.target.value })} placeholder="Mô tả giải đấu..."
                   className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] resize-none" /></div>
               <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-3 sm:gap-4">
-                <div><Label htmlFor="mgf-start">Ngày bắt đầu</Label><input id="mgf-start" type="date" value={form.startDate} onChange={e => set({ startDate: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
-                <div><Label htmlFor="mgf-end">Ngày kết thúc</Label><input id="mgf-end" type="date" value={form.endDate} onChange={e => set({ endDate: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
+                <div><Label htmlFor="mgf-start">Ngày bắt đầu</Label><DateInput id="mgf-start" value={form.startDate} onChange={e => set({ startDate: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
+                <div><Label htmlFor="mgf-end">Ngày kết thúc</Label><DateInput id="mgf-end" value={form.endDate} onChange={e => set({ endDate: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
               </div>
               <div><Label htmlFor="mgf-notes">Ghi chú</Label><textarea id="mgf-notes" rows={2} value={form.notes} onChange={e => set({ notes: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] resize-none" /></div>
             </div>
@@ -438,7 +439,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
                   )}
                   <div className="flex items-center justify-between p-3 [background:var(--pf-surface-muted)] rounded-lg">
                     <div><p className="text-sm font-medium [color:var(--pf-text)]">Cho phép hòa</p><p className="text-xs [color:var(--pf-color-muted)]">Trận có thể kết thúc với tỷ số bằng nhau</p></div>
-                    <button onClick={() => set({ allowDraw: !form.allowDraw })} className={cn('relative inline-flex h-6 w-11 rounded-full transition-colors', form.allowDraw ? '[background:var(--pf-primary)]' : '[background:var(--pf-border)]')}>
+                    <button type="button" role="switch" aria-checked={form.allowDraw} aria-label="Cho phép hòa" onClick={() => set({ allowDraw: !form.allowDraw })} className={cn('relative inline-flex h-6 w-11 rounded-full transition-colors', form.allowDraw ? '[background:var(--pf-primary)]' : '[background:var(--pf-border)]')}>
                       <span className={cn('inline-block h-5 w-5 rounded-full [background:var(--pf-surface)] shadow transition-transform mt-0.5', form.allowDraw ? 'translate-x-5 ml-0.5' : 'translate-x-0.5')} />
                     </button>
                   </div>
@@ -509,7 +510,7 @@ export function MinigameForm({ embedded = false, onSportChange }: { embedded?: b
           {step === 'schedule' && (
             <div className="space-y-4">
               <div><Label htmlFor="mgf-scheduled">Thời gian dự kiến bắt đầu</Label>
-                <input id="mgf-scheduled" type="datetime-local" value={form.scheduledAt} onChange={e => set({ scheduledAt: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
+                <DateTimeInput id="mgf-scheduled" value={form.scheduledAt} onChange={e => set({ scheduledAt: e.target.value })} className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" /></div>
               <div className="rounded-lg border border-[color:var(--pf-color-info-soft)] [background:var(--pf-color-info-soft)] px-3 py-2.5 text-xs [color:var(--pf-color-info)] flex gap-2">
                 <Info size={15} className="shrink-0 mt-0.5" />
                 <span>Lịch thi đấu chi tiết ({preset.resourceTerm}, vòng, cặp/đội) được tạo & điều chỉnh ở tab <b>Lịch đấu</b> sau khi tạo giải — nơi bốc thăm/sinh vòng đấu và khóa lịch.</span>

@@ -174,7 +174,7 @@ export function KnockoutDashboardPage() {
       <PageHeader variant="bar" title={`${de ? 'Loại kép' : ((mg as unknown as { sport?: string }).sport === 'GOLF' ? 'Golf Match Play' : 'Loại trực tiếp')} – ${mg.name}`} subtitle={de ? 'Double-elimination · WB / LB / Chung kết' : ((mg as unknown as { sport?: string }).sport === 'GOLF' ? 'Match Play · loại trực tiếp — nhập số HỐ THẮNG mỗi trận' : 'Single-elimination · nhánh đấu tìm nhà vô địch')}
         actions={
           <div className="flex items-center gap-2">
-            {koRows.length > 0 && <div className="max-lg:hidden"><ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /></div>}
+            {koRows.length > 0 && <div className="contents max-lg:hidden"><ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /></div>}
             {koRows.length > 0 && <ActionMenu items={[{ key: 'xlsx', label: 'Xuất Excel', onClick: doExportExcel }, { key: 'pdf', label: 'Xuất PDF', onClick: doExportPdf }]} />}
             {matches.length === 0
               ? <Button size="sm" onClick={generate} disabled={busy}><Swords size={14} /> Tạo nhánh đấu</Button>

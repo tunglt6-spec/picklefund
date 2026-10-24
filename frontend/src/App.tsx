@@ -212,7 +212,7 @@ function MobileSectionRedirect({ to }: { to: 'calendar' | 'compete' | 'community
   const role = useAuthStore((s) => s.user?.role)
   const member = role === 'MEMBER_VIEW'
   const dest = to === 'calendar'
-    ? (member ? '/member/hoat-dong?tab=schedule' : '/hoat-dong?tab=schedule')
+    ? (member ? '/member/hoat-dong' : '/hoat-dong')
     : to === 'compete' ? (member ? '/member/thi-dau' : '/thi-dau') : '/community'
   return <Navigate to={role === 'CLUB_TREASURER' || role === 'SUPER_ADMIN' ? '/m/tong-quan' : dest} replace />
 }

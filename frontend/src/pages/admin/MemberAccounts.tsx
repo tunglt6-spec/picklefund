@@ -391,13 +391,13 @@ export function MemberAccounts() {
             </div>
             <div className="flex items-center gap-1.5">
               {noAccountMembers.length > 0 && (
-                <button onClick={() => setShowBulk(true)}
+                <button onClick={() => setShowBulk(true)} aria-label={`Tạo tài khoản hàng loạt (${noAccountMembers.length} thành viên)`}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] text-xs font-[700] border [border-color:var(--pf-primary-soft)] [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)] active:opacity-80">
                   <Users size={11} />{noAccountMembers.length}
                 </button>
               )}
-              <Button size="sm" onClick={() => setShowSingle(true)}>
-                <UserPlus size={14} />
+              <Button size="sm" onClick={() => setShowSingle(true)} aria-label="Tạo tài khoản">
+                <UserPlus size={14} /> Tạo tài khoản
               </Button>
             </div>
           </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { DateInput } from '../ui/DateTimeFields'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import api from '../../lib/api'
@@ -112,7 +113,7 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
           </div>
         ) : (
           /* Players (điểm đơn) */
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4 max-[480px]:grid-cols-1">
             <div className="text-center">
               <p className="font-semibold [color:var(--pf-text)] text-sm mb-2">{match.player1Name}</p>
               <input type="number" min={0} value={p1Score} onChange={e => setP1Score(e.target.value)} placeholder="0"
@@ -142,9 +143,9 @@ export function ScoreEntryModal({ open, onClose, match, minigame, groupName }: P
         {/* Date */}
         <div>
           <label htmlFor="sem-date" className="text-xs font-medium [color:var(--pf-color-muted)] mb-1 block">Ngày thi đấu</label>
-          <input
+          <DateInput
             id="sem-date"
-            type="date"
+           
             value={matchDate}
             onChange={e => setMatchDate(e.target.value)}
             className="w-full border border-[color:var(--pf-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]"

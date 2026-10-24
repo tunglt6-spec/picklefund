@@ -8,6 +8,8 @@
  * + token --pf-*. KHÔNG đổi logic/API/finance/attendance/account. UI chỉ render dữ liệu
  * hiện có; thiếu dữ liệu → EmptyState / "Chưa có dữ liệu" (không bịa số).
  */
+import { HuyLabel } from '../../components/ui/HuyLabel'
+import { DateInput } from '../../components/ui/DateTimeFields'
 import { ActionMenu } from '../../components/shared/ActionMenu'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getBrandClubName } from '../../store/brandingStore'
@@ -151,7 +153,7 @@ function MemberFormDrawer({
       subtitle={isEdit ? `Cập nhật thông tin của ${editMember!.fullName}` : 'Nhập thông tin thành viên CLB'}
       footer={
         <>
-          <ActionButton type="button" variant="secondary" fullWidth onClick={onClose}>Hủy bỏ</ActionButton>
+          <ActionButton type="button" variant="secondary" fullWidth onClick={onClose}><HuyLabel /></ActionButton>
           <ActionButton type="submit" form="member-form" fullWidth disabled={isSaving}>
             {isSaving ? 'Đang lưu...' : isEdit ? 'Lưu thay đổi' : 'Thêm thành viên'}
           </ActionButton>
@@ -169,7 +171,7 @@ function MemberFormDrawer({
               <input id="mf-name" required value={form.fullName} onChange={e => setForm({ ...form, fullName: e.target.value })}
                 placeholder="Nguyễn Văn A" className="input-base" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
               <div>
                 <label htmlFor="mf-phone" className="mb-1.5 block text-xs font-medium [color:var(--pf-text)]">Số điện thoại</label>
                 <input id="mf-phone" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
@@ -177,7 +179,7 @@ function MemberFormDrawer({
               </div>
               <div>
                 <label htmlFor="mf-join" className="mb-1.5 block text-xs font-medium [color:var(--pf-text)]">Ngày gia nhập</label>
-                <input id="mf-join" type="date" value={form.joinDate} onChange={e => setForm({ ...form, joinDate: e.target.value })}
+                <DateInput id="mf-join" value={form.joinDate} onChange={e => setForm({ ...form, joinDate: e.target.value })}
                   className="input-base" />
               </div>
             </div>
@@ -693,8 +695,8 @@ export function Members() {
   /* ── Header actions (chỉ hiển thị action có backend hỗ trợ) ── */
   const headerActions = (
     <>
-      {canExport && <div className="max-lg:hidden"><ExportActions onExcel={doExportExcel} onPdf={doExportPDF} /></div>}
-      <div className="max-lg:hidden"><ActionButton variant="secondary" icon={<KeyRound size={15} />} onClick={() => navigate('/member-accounts')}>Tạo tài khoản</ActionButton></div>
+      {canExport && <div className="contents max-lg:hidden"><ExportActions onExcel={doExportExcel} onPdf={doExportPDF} /></div>}
+      <div className="contents max-lg:hidden"><ActionButton variant="secondary" icon={<KeyRound size={15} />} onClick={() => navigate('/member-accounts')}>Tạo tài khoản</ActionButton></div>
       <ActionButton icon={<Plus size={16} />} onClick={openCreate}>Thêm thành viên</ActionButton>
       <ActionMenu items={[
         ...(canExport ? [{ key: 'xlsx', label: 'Xuất Excel', onClick: doExportExcel }, { key: 'pdf', label: 'Xuất PDF', onClick: doExportPDF }] : []),
@@ -909,14 +911,14 @@ export function Members() {
             </div>
             <div>
               <p className="mb-2 text-xs font-bold uppercase tracking-widest [color:var(--pf-color-muted)]">Ngày gia nhập</p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
                 <div>
                   <label htmlFor="ff-from" className="mb-1 block text-xs [color:var(--pf-color-muted)]">Từ ngày</label>
-                  <input id="ff-from" type="date" value={joinFrom} onChange={e => setJoinFrom(e.target.value)} className="input-base" />
+                  <DateInput id="ff-from" value={joinFrom} onChange={e => setJoinFrom(e.target.value)} className="input-base" />
                 </div>
                 <div>
                   <label htmlFor="ff-to" className="mb-1 block text-xs [color:var(--pf-color-muted)]">Đến ngày</label>
-                  <input id="ff-to" type="date" value={joinTo} onChange={e => setJoinTo(e.target.value)} className="input-base" />
+                  <DateInput id="ff-to" value={joinTo} onChange={e => setJoinTo(e.target.value)} className="input-base" />
                 </div>
               </div>
             </div>

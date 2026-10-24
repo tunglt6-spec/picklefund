@@ -1123,5 +1123,7 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   .pf-rowcard { border-color: var(--pf-border); }
   .pf-toolbar, .pf-seg { background-image: none; border-color: var(--pf-border); box-shadow: none; }
   .pf-stat-card, .pf-rowcard, .pf-cardlist, table, .pf-num { font-variant-numeric: tabular-nums; }
+  /* Ô ngày/giờ: che chữ gốc của trình duyệt (phụ thuộc ngôn ngữ máy), thay bằng dd/mm/yyyy · HH:mm do DateTimeFields vẽ. */
+  input.pf-dt-mask { color: transparent; }
+  input.pf-dt-mask::-webkit-datetime-edit, input.pf-dt-mask::-webkit-datetime-edit-fields-wrapper { color: transparent; }
 }
-

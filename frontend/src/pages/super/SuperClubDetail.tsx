@@ -271,7 +271,7 @@ export function SuperClubDetail() {
               <Zap size={15} className="[color:var(--pf-primary-text)]" />
               <span className="font-semibold text-sm [color:var(--pf-text)]">Nâng cấp gói</span>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
               <div>
                 <label htmlFor="f-SuperClubDetail-1" className="block text-xs [color:var(--pf-color-muted)] mb-1">Gói</label>
                 <select id="f-SuperClubDetail-1"

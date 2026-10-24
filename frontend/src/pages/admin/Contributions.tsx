@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
+import { HuyLabel } from '../../components/ui/HuyLabel'
+import { DateInput } from '../../components/ui/DateTimeFields'
 import { AmountHint } from '../../components/ui/AmountHint'
 import { getBrandClubName } from '../../store/brandingStore'
 import { Plus, CheckCircle, XCircle, DollarSign, Edit2, Trash2, FileText, FileSpreadsheet, Wallet } from 'lucide-react'
@@ -21,7 +23,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { moneyColor } from '../../lib/moneyTone'
 import { MobileTransactionCard } from '../../components/mobile/MobileTransactionCard'
 import { PeriodSelector } from '../../components/ui/PeriodSelector'
-import { BulkActionBar, RowCheckbox, DataTable, type Column } from '../../components/shared'
+import { BulkActionBar, RowCheckbox, DataTable, type Column , useEmbedded } from '../../components/shared'
 import { useBulkSelection } from '../../hooks/useBulkSelection'
 
 const BLANK_COMMON = {
@@ -387,6 +389,7 @@ export function Contributions() {
   const [mobileTab, setMobileTab] = useState<'COMMON' | 'MINI'>('COMMON')
 
   const isMobile = useIsMobile(1024)
+  const embedded = useEmbedded() // trong module Tài chính: ẩn tiêu đề trùng với header chức năng
 
   /* ── Mobile layout ── */
   if (isMobile) {
@@ -397,7 +400,7 @@ export function Contributions() {
         <div className="sticky top-0 z-20 max-lg:static [background:var(--pf-surface)] backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 py-3 space-y-2">
           <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-[700] [color:var(--pf-text)]">Thu Quỹ</h2>
+            {!embedded && <h2 className="text-base font-[700] [color:var(--pf-text)]">Thu Quỹ</h2>}
             <p className="text-xs [color:var(--pf-color-muted)]">{chungPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name ?? 'Chưa có kỳ quỹ'}</p>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
@@ -608,7 +611,7 @@ export function Contributions() {
                 </div>
               </>
             )}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
               <div>
                 <label htmlFor="f-Contributions-2" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
                 <input id="f-Contributions-2" required type="number" min={1} value={form.amount}
@@ -617,7 +620,7 @@ export function Contributions() {
               </div>
               <div>
                 <label htmlFor="f-Contributions-3" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày thu</label>
-                <input id="f-Contributions-3" type="date" value={form.paymentDate}
+                <DateInput id="f-Contributions-3" value={form.paymentDate}
                   onChange={e => setForm({ ...form, paymentDate: e.target.value })} className="input-base" />
               </div>
             </div>
@@ -849,7 +852,7 @@ export function Contributions() {
         subtitle={editTarget ? 'Cập nhật thông tin đóng quỹ' : 'Chọn nguồn quỹ để ghi nhận'}
         footer={
           <div className="flex gap-3 justify-end">
-            <Button variant="outline" type="button" onClick={() => setShowCreate(false)}>Hủy bỏ</Button>
+            <Button variant="outline" type="button" onClick={() => setShowCreate(false)}><HuyLabel /></Button>
             <Button type="submit" form="form-contrib" disabled={isSaving || (form.fundSource === 'COMMON' && !activePeriod)}>{isSaving ? 'Đang lưu...' : (editTarget ? 'Lưu thay đổi' : 'Ghi nhận')}</Button>
           </div>
         }
@@ -932,7 +935,7 @@ export function Contributions() {
             </>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
             <div>
               <label htmlFor="f-Contributions-6" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
               <input id="f-Contributions-6" required type="number" min={1} value={form.amount}
@@ -941,7 +944,7 @@ export function Contributions() {
             </div>
             <div>
               <label htmlFor="ctb-d-date" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày thu</label>
-              <input id="ctb-d-date" type="date" value={form.paymentDate}
+              <DateInput id="ctb-d-date" value={form.paymentDate}
                 onChange={e => setForm({ ...form, paymentDate: e.target.value })} className="input-base" />
             </div>
           </div>

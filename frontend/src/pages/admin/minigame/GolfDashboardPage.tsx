@@ -4,6 +4,9 @@
  * Bảng xếp hạng (tổng gậy nhỏ nhất đứng đầu). Tính leaderboard client từ scores.
  * Endpoint: POST :id/golfers · DELETE golfers/:id · PATCH golfers/:id/score.
  */
+import { ActionMenu } from '../../../components/shared/ActionMenu'
+import { useMobileView } from '../../../components/mobile/useMobileView'
+import { MobileFunctionHeader, MobileModuleMenu } from '../../../components/mobile/ModuleNav'
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
@@ -43,6 +46,8 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
   }, [members])
 
   const [tab, setTab] = useState<Tab>('golfers')
+  const mv = useMobileView(['golfers','scores','leaderboard'] as const)
+  useEffect(() => { if (mv.view) setTab(mv.view as Tab) }, [mv.view])
   const [golfers, setGolfers] = useState<Golfer[]>([])
   const [rounds, setRounds] = useState(1)
   const [loading, setLoading] = useState(true)
@@ -223,6 +228,20 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
     { key: 'leaderboard', label: 'Bảng xếp hạng', icon: <BarChart2 size={16} /> },
   ]
 
+  // Mobile (<1024px): các nhóm chức năng của giải hiện bằng lưới icon (cùng hệ thống trang Ứng dụng), không dùng tab.
+  if (mv.mobile && !mv.view) {
+    return (
+      <MobileModuleMenu
+        title={mg.name}
+        subtitle="Chọn chức năng của giải đấu"
+        scrollId={`/minigames/${id}`}
+        onBack={() => navigate('/minigames')}
+        items={[{ key: 'golfers', label: TABS.find(t => t.key === 'golfers')!.label, to: '', icon: Users }, { key: 'scores', label: TABS.find(t => t.key === 'scores')!.label, to: '', icon: ClipboardList }, { key: 'leaderboard', label: TABS.find(t => t.key === 'leaderboard')!.label, to: '', icon: BarChart2 }]}
+        onSelect={(it) => mv.open(it.key as never)}
+      />
+    )
+  }
+
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
       <PageHeader variant="bar"
@@ -240,12 +259,14 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
           <ArrowLeft size={14} /> Danh Sách Giải Đấu
         </button>
 
-        <ResponsiveTabs
-          tabs={TABS.map(t => ({ key: t.key, label: t.label }))}
-          active={tab}
-          onChange={(k) => setTab(k as Tab)}
-          className="sm:max-w-xl"
-        />
+        {mv.mobile
+          ? <MobileFunctionHeader title={TABS.find(t => t.key === tab)?.label ?? ''} parent={mg.name} onBack={mv.back} />
+          : <ResponsiveTabs
+              tabs={TABS.map(t => ({ key: t.key, label: t.label }))}
+              active={tab}
+              onChange={(k) => setTab(k as Tab)}
+              className="sm:max-w-xl"
+            />}
 
         {/* KPI */}
         <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:max-w-md">
@@ -386,8 +407,9 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
           ) : (
             <>
               <div className="flex justify-end gap-2">
-                <button onClick={() => exportLeaderboard('png')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-color-muted-soft)] transition-colors"><ImageIcon size={14} /> Xuất ảnh</button>
-                <button onClick={() => exportLeaderboard('pdf')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-color-muted-soft)] transition-colors"><FileDown size={14} /> Xuất PDF</button>
+                <ActionMenu items={[{ key: 'png', label: 'Xuất ảnh BXH', onClick: () => exportLeaderboard('png') }, { key: 'pdf', label: 'Xuất PDF BXH', onClick: () => exportLeaderboard('pdf') }]} />
+                <button onClick={() => exportLeaderboard('png')} className="max-lg:hidden inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-color-muted-soft)] transition-colors"><ImageIcon size={14} /> Xuất ảnh</button>
+                <button onClick={() => exportLeaderboard('pdf')} className="max-lg:hidden inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-color-muted-soft)] transition-colors"><FileDown size={14} /> Xuất PDF</button>
               </div>
             <div id={`golf-lb-${id}`} className="pf-glass-strong rounded-[16px] overflow-hidden">
               <div className="overflow-x-auto">

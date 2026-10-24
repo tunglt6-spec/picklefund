@@ -11,6 +11,8 @@ import {
 } from '../../../hooks/useAiManager'
 import { useOperationsRuntime, type RuntimeSummary } from '../../../hooks/useOperationsRuntime'
 import { useAuthStore } from '../../../store/authStore'
+import { TileGrid } from '../../../components/mobile/HubParts'
+import type { AppItem } from '../../../components/mobile/hubApps'
 
 /** Các khu vực của AI Operations Center. Trạng thái:
  *  - 'here'   : chính trang hub này (không điều hướng).
@@ -25,6 +27,11 @@ interface OpsSection {
   to: string | null
   status: 'here' | 'active' | 'soon'
   group: string
+}
+
+const SECTION_ICON: Record<string, typeof Bot> = {
+  hermes: Bot, workflow: Workflow, approval: ClipboardCheck, dispatch: Send, notif: Bell, scheduler: CalendarClock,
+  alert: AlertTriangle, monitor: Database, kpi: Gauge, memory: BookOpen, audit: ScrollText,
 }
 
 function buildSections(isSuper: boolean): OpsSection[] {
@@ -589,7 +596,18 @@ export function AiManagerDashboard() {
 
         {/* Hub điều hướng — TẤT CẢ card trong 1 lưới gọn, 4 card/hàng từ ~1024px (laptop 1280 luôn
             thấy 4 cột), sát nhau, hết trống chỗ. Mọi card dùng CHUNG 1 tông tím Hermes cho đồng nhất. */}
-        <Card className="max-lg:-order-1">
+        {/* Mobile: lưới icon chọn khu vực (cùng hệ thống trang Ứng dụng). */}
+        <Card className="max-lg:-order-1 lg:hidden">
+          <PanelTitle icon={<LayoutGrid size={16} />}>Khu Vực Vận Hành</PanelTitle>
+          <TileGrid
+            items={sections.filter(s => s.to).map((s): AppItem => ({
+              key: s.key, label: s.label, to: '', icon: SECTION_ICON[s.key] ?? LayoutGrid,
+              badgeCount: s.key === 'approval' ? rt.summary?.modules?.hermes?.waitingApproval : undefined,
+            }))}
+            onSelect={(it) => { const t = sections.find(x => x.key === it.key)?.to; if (t) goHub(t) }}
+          />
+        </Card>
+        <Card className="max-lg:hidden">
           <PanelTitle icon={<LayoutGrid size={16} />}>Khu Vực Vận Hành</PanelTitle>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {sections.map(s => {

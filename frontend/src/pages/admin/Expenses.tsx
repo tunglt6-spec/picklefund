@@ -1,4 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
+import { HuyLabel } from '../../components/ui/HuyLabel'
+import { DateInput } from '../../components/ui/DateTimeFields'
 import { AmountHint } from '../../components/ui/AmountHint'
 import { useDialogA11y } from '../../hooks/useDialogA11y'
 import { confirmDialog } from '../../components/ui/ConfirmHost'
@@ -196,7 +198,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
             </div>
 
             {/* 4 · Số tiền + Ngày */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
               <div>
                 <label htmlFor="f-Expenses-3" className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Số tiền <span className="text-red-500">*</span></label>
                 <div className="relative">
@@ -208,7 +210,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
               </div>
               <div>
                 <label htmlFor="f-Expenses-4" className="block text-xs font-semibold [color:var(--pf-color-muted)] mb-1.5">Ngày chi <span className="text-red-500">*</span></label>
-                <input id="f-Expenses-4" required type="date" value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })} className="input-base" />
+                <DateInput id="f-Expenses-4" required value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })} className="input-base" />
               </div>
             </div>
 
@@ -312,7 +314,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
           </div>
 
           <div className="flex items-center gap-3 px-5 py-4 border-t border-[color:var(--pf-border)] [background:var(--pf-color-muted-soft)]">
-            <Button type="button" variant="outline" onClick={() => { setForm(emptyForm); onClose() }} className="flex-1" disabled={isSaving}>Hủy bỏ</Button>
+            <Button type="button" variant="outline" onClick={() => { setForm(emptyForm); onClose() }} className="flex-1" disabled={isSaving}><HuyLabel /></Button>
             <Button type="submit" className="flex-1" disabled={isSaving}><CheckCircle size={14} />{isSaving ? 'Đang lưu…' : (isEdit ? 'Lưu thay đổi' : 'Thêm khoản chi')}</Button>
           </div>
         </form>
@@ -377,9 +379,9 @@ function FilterPanel({ open, onClose, values, onApply }: {
           </div>
           <div>
             <label htmlFor="f-Expenses-11" className="block text-xs font-medium [color:var(--pf-text)] mb-2">Khoảng thời gian</label>
-            <div className="grid grid-cols-2 gap-2">
-              <input id="f-Expenses-11" type="date" value={from} onChange={e => setFrom(e.target.value)} className="input-base text-xs" />
-              <input type="date" value={to}   onChange={e => setTo(e.target.value)}   className="input-base text-xs" />
+            <div className="grid grid-cols-2 gap-2 max-[480px]:grid-cols-1">
+              <DateInput id="f-Expenses-11" value={from} onChange={e => setFrom(e.target.value)} className="input-base text-xs" />
+              <DateInput value={to}   onChange={e => setTo(e.target.value)}   className="input-base text-xs" />
             </div>
           </div>
         </div>
@@ -829,7 +831,7 @@ export function Expenses() {
         <div className="sticky top-0 z-20 max-lg:static [background:var(--pf-surface)] backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 pt-3 pb-2 space-y-2">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-[700] [color:var(--pf-text)]">Chi Phí</h2>
+              {!embedded && <h2 className="text-base font-[700] [color:var(--pf-text)]">Chi Phí</h2>}
               {(selectedPeriodId || activePeriod) && <p className="text-xs [color:var(--pf-color-muted)]">{allPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name}</p>}
             </div>
             <div className="flex flex-wrap items-center justify-end gap-1.5">

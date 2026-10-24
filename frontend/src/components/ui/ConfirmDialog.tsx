@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { HuyLabel } from './HuyLabel'
 import { AlertTriangle, X } from 'lucide-react'
 import { Button } from './Button'
 import { Portal } from './Portal'
@@ -71,7 +72,7 @@ export function ConfirmDialog({
 
         {/* Footer */}
         <div className="flex gap-3 px-6 pb-6">
-          <Button ref={cancelRef} variant="outline" className="flex-1 min-h-11" onClick={onCancel}>{cancelLabel}</Button>
+          <Button ref={cancelRef} variant="outline" className="flex-1 min-h-11" onClick={onCancel}>{cancelLabel === 'Hủy bỏ' ? <HuyLabel /> : cancelLabel}</Button>
           <button
             onClick={onConfirm}
             style={{ background: accent }}

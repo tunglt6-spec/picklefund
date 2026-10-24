@@ -4,6 +4,7 @@
  * (mm:ss) mỗi lần chạy/cự ly, tổng thời gian NHỎ NHẤT đứng đầu. Điểm lưu = tổng giây (dùng cột
  * strokes). Không GPS/tracking (ngoài scope).
  */
+import { ActionMenu } from '../../../components/shared/ActionMenu'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, UserPlus, Trash2, Save, Crown, Timer } from 'lucide-react'
@@ -120,7 +121,7 @@ export function RunningDashboardPage() {
 
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
-      <PageHeader variant="bar" title={`🏃 Chạy bộ – ${mg.name}`}        actions={leaderboard.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined} />
+      <PageHeader variant="bar" title={`🏃 Chạy bộ – ${mg.name}`}        actions={leaderboard.length > 0 ? <><div className="contents max-lg:hidden"><ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /></div><ActionMenu items={[{ key: 'xlsx', label: 'Xuất Excel', onClick: doExportExcel }, { key: 'pdf', label: 'Xuất PDF', onClick: doExportPdf }]} /></> : undefined} />
       <div className="p-4 sm:p-6 space-y-5">
         <button onClick={() => navigate('/minigames')} className="max-lg:hidden flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors"><ArrowLeft size={14} /> Danh Sách Giải Đấu</button>
 

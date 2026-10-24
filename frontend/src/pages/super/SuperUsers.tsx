@@ -137,7 +137,10 @@ export function SuperUsers() {
 
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
         <FilterBar className="flex-1" searchValue={search} onSearchChange={setSearch} searchPlaceholder="Tìm theo tên, email, tài khoản…" />
-        <div className="flex max-w-full gap-1 self-start overflow-x-auto rounded-full border p-1 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
+        <select aria-label="Lọc theo vai trò" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)} className="input-base w-full lg:hidden">
+          {roleOptions.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+        </select>
+        <div className="flex max-w-full gap-1 self-start overflow-x-auto rounded-full border p-1 [background:var(--pf-surface)] border-[color:var(--pf-border)] max-lg:hidden">
           {roleOptions.map((opt) => (
             <button
               key={opt.value}

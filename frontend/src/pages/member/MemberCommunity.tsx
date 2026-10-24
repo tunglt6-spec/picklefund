@@ -5,6 +5,7 @@
  *
  * File độc lập theo yêu cầu: mọi subcomponent nằm trong file này.
  */
+import { DateInput, TimeInput } from '../../components/ui/DateTimeFields'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import {
@@ -23,8 +24,11 @@ import {
   Loader2,
   Check,
   Search,
+  Newspaper,
+  Swords,
+  ShieldCheck,
 } from 'lucide-react'
-import { useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import {
   PageShell,
@@ -38,7 +42,9 @@ import {
 } from '../../components/shared'
 import { Modal } from '../../components/ui/Modal'
 import { ActionMenu } from '../../components/shared/ActionMenu'
+import { MobileFunctionHeader, MobileModuleMenu, type MenuItem } from '../../components/mobile/ModuleNav'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { useModerationPending } from '../../hooks/useModerationPending'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
@@ -1555,18 +1561,18 @@ function CreateMatchModal({
         </div>
         <div>
           <label htmlFor="f-MemberCommunity-2" className={labelCls}>Ngày chơi *</label>
-          <input id="f-MemberCommunity-2"
-            type="date"
+          <DateInput id="f-MemberCommunity-2"
+           
             className={inputCls}
             value={form.playDate}
             onChange={(e) => set('playDate', e.target.value)}
           />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
           <div>
             <label htmlFor="f-MemberCommunity-3" className={labelCls}>Giờ bắt đầu</label>
-            <input id="f-MemberCommunity-3"
-              type="time"
+            <TimeInput id="f-MemberCommunity-3"
+             
               className={inputCls}
               value={form.startTime}
               onChange={(e) => set('startTime', e.target.value)}
@@ -1574,8 +1580,8 @@ function CreateMatchModal({
           </div>
           <div>
             <label htmlFor="f-MemberCommunity-4" className={labelCls}>Giờ kết thúc</label>
-            <input id="f-MemberCommunity-4"
-              type="time"
+            <TimeInput id="f-MemberCommunity-4"
+             
               className={inputCls}
               value={form.endTime}
               onChange={(e) => set('endTime', e.target.value)}
@@ -1641,11 +1647,17 @@ export default function MemberCommunity() {
   const user = useAuthStore((s) => s.user)
   const isAdmin = user?.role === 'CLUB_ADMIN' || user?.role === 'SUPER_ADMIN'
   const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const mobileView = useIsMobile(1024)
 
   const tabParam = searchParams.get('tab')
   const initialTab: TabKey =
     tabParam === 'matchmaking' ? 'matchmaking' : tabParam === 'moderation' && isAdmin ? 'moderation' : 'feed'
   const [tab, setTab] = useState<TabKey>(initialTab)
+  // Mobile: chức năng đang mở lấy từ URL (?tab=) để nút Quay lại hoạt động; không có ?tab= ⇒ hiện lưới chức năng.
+  const mobileTab: TabKey | null = mobileView ? (tabParam === 'feed' || tabParam === 'matchmaking' || (tabParam === 'moderation' && isAdmin) ? tabParam : searchParams.get('post') ? 'feed' : null) : null
+  useEffect(() => { if (mobileTab) setTab(mobileTab) }, [mobileTab])
   const highlightPostId = searchParams.get('post')
 
   /* feed state */
@@ -1802,19 +1814,50 @@ export default function MemberCommunity() {
   const handleMatchChange = (m: Match) =>
     setMatches((prev) => prev.map((x) => (x.id === m.id ? m : x)))
 
-  // Mobile (<1024px): Cộng đồng chỉ giữ Bảng tin / Tìm kèo; Kiểm duyệt là màn quản trị riêng (mở từ Ứng dụng).
-  const mobileView = useIsMobile(1024)
-  const modOnly = mobileView && tab === 'moderation'
+  const modPending = useModerationPending(isAdmin && mobileView)
   const tabs = [
     { key: 'feed', label: 'Bảng tin' },
     { key: 'matchmaking', label: 'Tìm kèo' },
-    ...(isAdmin && !mobileView ? [{ key: 'moderation', label: 'Kiểm duyệt' }] : []),
+    ...(isAdmin ? [{ key: 'moderation', label: 'Kiểm duyệt' }] : []),
   ]
 
+  // ── Mobile (<1024px): lưới icon chọn chức năng (cùng hệ thống trang Ứng dụng) thay tab Bảng tin / Tìm kèo / Kiểm duyệt. ──
+  const MOBILE_FN: Record<TabKey, { label: string; icon: typeof Newspaper }> = {
+    feed: { label: 'Bảng tin', icon: Newspaper },
+    matchmaking: { label: 'Tìm kèo', icon: Swords },
+    moderation: { label: 'Kiểm duyệt', icon: ShieldCheck },
+  }
+  const selectMobile = (key: TabKey) => {
+    const params = new URLSearchParams(searchParams)
+    params.set('tab', key)
+    navigate({ pathname: location.pathname, search: `?${params.toString()}` }, { state: { pfMenu: true } })
+  }
+  const backToMenu = () => {
+    if ((location.state as { pfMenu?: boolean } | null)?.pfMenu) { navigate(-1); return }
+    const params = new URLSearchParams(searchParams)
+    params.delete('tab')
+    navigate({ pathname: location.pathname, search: params.toString() ? `?${params.toString()}` : '' }, { replace: true })
+  }
+  if (mobileView && !mobileTab) {
+    const items: MenuItem[] = (['feed', 'matchmaking', ...(isAdmin ? ['moderation'] : [])] as TabKey[]).map((k) => ({
+      key: k, label: MOBILE_FN[k].label, to: '', icon: MOBILE_FN[k].icon, badgeCount: k === 'moderation' ? modPending : undefined,
+    }))
+    return <MobileModuleMenu title="Cộng đồng" items={items} scrollId="/community" onSelect={(it) => selectMobile(it.key as TabKey)} />
+  }
+
   return (
+    <>
+    {mobileView && <MobileFunctionHeader title={MOBILE_FN[tab].label} parent="Cộng đồng" onBack={backToMenu} />}
     <PageShell maxWidth={1760}>
+      {mobileView ? (
+        tab === 'matchmaking' && (
+          <div className="mb-3">
+            <ActionButton type="button" variant="primary" className="min-h-11" icon={<Plus size={16} />} onClick={() => setCreateOpen(true)}>Tạo kèo</ActionButton>
+          </div>
+        )
+      ) : (
       <PageHeader
-        title={modOnly ? 'Kiểm duyệt nội dung' : 'Cộng đồng CLB'}
+        title="Cộng đồng CLB"
         actions={
           tab === 'matchmaking' ? (
             <ActionButton
@@ -1829,15 +1872,9 @@ export default function MemberCommunity() {
           ) : undefined
         }
       />
-
-      {modOnly ? (
-        <button type="button" onClick={() => changeTab('feed')}
-          className="mb-4 inline-flex min-h-[44px] items-center gap-1.5 text-sm font-semibold [color:var(--pf-primary-text)]">
-          ‹ Về Bảng tin
-        </button>
-      ) : (
-        <ResponsiveTabs tabs={tabs} active={tab} onChange={changeTab} className="mb-5" />
       )}
+
+      {!mobileView && <ResponsiveTabs tabs={tabs} active={tab} onChange={changeTab} className="mb-5" />}
 
       {tab === 'feed' ? (
         <div className="flex flex-col gap-4">
@@ -1926,5 +1963,6 @@ export default function MemberCommunity() {
         onCreated={handleMatchCreated}
       />
     </PageShell>
+    </>
   )
 }

@@ -10,7 +10,7 @@
  */
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ListChecks, CalendarDays, ClipboardList, Trophy, RefreshCw } from 'lucide-react'
+import { ListChecks, CalendarDays, ClipboardList, Trophy, RefreshCw, LayoutDashboard, Swords, FileCheck2, Medal } from 'lucide-react'
 import { ModuleTabs, StatusBadge } from '../../../components/shared'
 import { Button } from '../../../components/ui/Button'
 import { MinigameForm } from '../minigame/MinigameForm'
@@ -90,6 +90,12 @@ function TournamentsTab() {
         {creating && (
           <div className="pf-glass-strong overflow-hidden"><MinigameForm embedded onSportChange={setSport} /></div>
         )}
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold [color:var(--pf-color-muted)]">Bộ môn</span>
+          <select value={sport} onChange={(e) => setSport(e.target.value)} className="input-base w-full">
+            {SPORTS.map((x) => <option key={x.v} value={x.v}>{x.label}</option>)}
+          </select>
+        </label>
         <MinigameOverviewPanel sport={sport} />
       </div>
     )
@@ -190,17 +196,16 @@ function TournamentNavList({ kind }: { kind: NavKind }) {
 }
 
 export function CompeteHub() {
-  // Mobile (<1024px): mở danh sách giải trước; Lịch đấu/Kết quả/Xếp hạng chỉ là bộ chọn giải nên bỏ khỏi hàng tab —
-  // vào một giải mới xem lịch, kết quả, xếp hạng. Màn lớn giữ nguyên 5 tab.
-  const mobile = useIsMobile(1024)
-  const tabs = [
-    { key: 'overview', label: 'Tổng quan', element: <OverviewTab /> },
-    { key: 'tournaments', label: 'Giải đấu', element: <TournamentsTab /> },
-    { key: 'schedule', label: 'Lịch đấu', element: <TournamentNavList kind="schedule" /> },
-    { key: 'results', label: 'Kết quả', element: <TournamentNavList kind="results" /> },
-    { key: 'standings', label: 'Xếp hạng', element: <TournamentNavList kind="standings" /> },
-  ]
-  return mobile
-    ? <ModuleTabs title="Thi đấu" mobileMode="tabs" defaultKey="tournaments" tabs={[tabs[1], tabs[0]]} />
-    : <ModuleTabs title="Thi đấu" tabs={tabs} />
+  return (
+    <ModuleTabs
+      title="Thi đấu"
+      tabs={[
+        { key: 'overview', icon: LayoutDashboard, label: 'Tổng quan', element: <OverviewTab /> },
+        { key: 'tournaments', icon: Trophy, label: 'Giải đấu', element: <TournamentsTab /> },
+        { key: 'schedule', icon: Swords, label: 'Lịch đấu', element: <TournamentNavList kind="schedule" /> },
+        { key: 'results', icon: FileCheck2, label: 'Kết quả', element: <TournamentNavList kind="results" /> },
+        { key: 'standings', icon: Medal, label: 'Xếp hạng', element: <TournamentNavList kind="standings" /> },
+      ]}
+    />
+  )
 }

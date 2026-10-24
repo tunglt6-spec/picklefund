@@ -1,4 +1,6 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
+import { HuyLabel } from '../../components/ui/HuyLabel'
+import { DateInput } from '../../components/ui/DateTimeFields'
 import { AmountHint } from '../../components/ui/AmountHint'
 import { confirmDialog } from '../../components/ui/ConfirmHost'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -1689,7 +1691,7 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
     <Modal open={open} onClose={onClose} title={title} subtitle={subtitle} size="lg"
       footer={
         <div className="flex gap-3 justify-end">
-          <Button variant="outline" type="button" onClick={onClose} disabled={isSaving}>Hủy bỏ</Button>
+          <Button variant="outline" type="button" onClick={onClose} disabled={isSaving}><HuyLabel /></Button>
           <Button type="submit" form={formId} disabled={isSaving}>{isSaving ? 'Đang lưu...' : (editing ? 'Cập nhật kỳ quỹ' : 'Tạo kỳ quỹ')}</Button>
         </div>
       }
@@ -1700,10 +1702,10 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
           <input id="f-FundPeriods-2" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
             placeholder="VD: Quý 3/2026" className="input-base" />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
           <div>
             <label htmlFor="f-FundPeriods-3" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày bắt đầu <span className="text-red-500">*</span></label>
-            <input id="f-FundPeriods-3" required type="date" value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })} className="input-base" />
+            <DateInput id="f-FundPeriods-3" required value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })} className="input-base" />
           </div>
           <div>
             <label htmlFor="f-FundPeriods-4" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày kết thúc <span className="text-red-500">*</span></label>
@@ -1711,7 +1713,7 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
               const endBeforeStart = !!(form.startDate && form.endDate && new Date(form.endDate) <= new Date(form.startDate))
               return (
                 <>
-                  <input id="f-FundPeriods-4" required type="date" value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} aria-invalid={endBeforeStart ? true : undefined} aria-describedby={endBeforeStart ? 'f-FundPeriods-4-err' : undefined} className="input-base" />
+                  <DateInput id="f-FundPeriods-4" required value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} aria-invalid={endBeforeStart ? true : undefined} aria-describedby={endBeforeStart ? 'f-FundPeriods-4-err' : undefined} className="input-base" />
                   {endBeforeStart && <p id="f-FundPeriods-4-err" role="alert" className="mt-1 text-xs [color:var(--pf-color-danger)]">Ngày kết thúc phải sau ngày bắt đầu</p>}
                 </>
               )
@@ -1719,7 +1721,7 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
           </div>
           <div>
             <label htmlFor="f-FundPeriods-5" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Hạn đóng quỹ</label>
-            <input id="f-FundPeriods-5" type="date" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} className="input-base" />
+            <DateInput id="f-FundPeriods-5" value={form.dueDate} onChange={e => setForm({ ...form, dueDate: e.target.value })} className="input-base" />
             <p className="mt-1 text-xs [color:var(--pf-color-muted)]">Tùy chọn — dùng tính công nợ quá hạn & thu đúng hạn.</p>
           </div>
           <div>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { ChevronLeft, Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard, Send, Zap, Palette, Smartphone, Mail, Check, X, AlertTriangle } from 'lucide-react'
+import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard, Send, Zap, Palette, Smartphone, Mail, Check, X, AlertTriangle } from 'lucide-react'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -11,9 +11,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { useBranding, saveBranding, type ClubBranding } from '../../hooks/useBranding'
 import toast from 'react-hot-toast'
 import type { LucideIcon } from 'lucide-react'
-import { ListRow, HubSearch } from '../../components/mobile/HubParts'
-import { fold } from '../../lib/fold'
-import type { AppItem } from '../../components/mobile/hubApps'
+import { ModuleTabs, useEmbedded } from '../../components/shared'
 import { VietQrImage } from '../../components/ui/VietQrImage'
 
 type Tab = 'club' | 'branding' | 'account' | 'notifications' | 'payment' | 'telegram' | 'billing'
@@ -22,16 +20,8 @@ const MOBILE_ICONS: Record<Tab, LucideIcon> = {
   club: Building2, branding: Palette, account: User, notifications: Bell, payment: CreditCard, telegram: Send, billing: Zap,
 }
 
-/** Mô tả ngắn của từng mục trong menu Cài đặt (mobile). */
-const SETTINGS_SUB: Record<Tab, string> = {
-  club: 'Tên, liên hệ, địa chỉ CLB',
-  branding: 'Logo, màu sắc, nhận diện',
-  account: 'Hồ sơ và mật khẩu của bạn',
-  notifications: 'Kênh và tần suất nhận thông báo',
-  payment: 'Tài khoản ngân hàng, mã QR thu quỹ',
-  telegram: 'Kết nối bot Telegram nhận tin',
-  billing: 'Gói dịch vụ và thanh toán',
-}
+/** Nhãn ô/tiêu đề trên mobile (khi khác nhãn tab desktop). */
+const SETTINGS_MENU_LABEL: Partial<Record<Tab, string>> = { account: 'Tài khoản cá nhân', payment: 'Thanh toán', billing: 'Gói dịch vụ' }
 
 const ALL_TABS: { id: Tab; label: string; icon: React.ReactNode; superAdminOnly?: boolean }[] = [
   { id: 'club',          label: 'Thông tin CLB', icon: <Building2 size={16} /> },
@@ -364,7 +354,7 @@ function AccountTab() {
                   onChange={e => setPw(p => ({ ...p, [field.key]: e.target.value }))}
                   placeholder="••••••••"
                 />
-                <button type="button" onClick={field.toggle}
+                <button type="button" aria-label={field.show ? "Ẩn mật khẩu" : "Hiện mật khẩu"} onClick={field.toggle}
                   className="absolute right-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] hover:[color:var(--pf-color-muted)]">
                   {field.show ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -424,9 +414,9 @@ const defaultPref: HermesPref = {
   enabled: true,
 }
 
-function Toggle({ value, onChange }: { value: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ value, onChange, label }: { value: boolean; onChange: (v: boolean) => void; label?: string }) {
   return (
-    <button onClick={() => onChange(!value)}
+    <button type="button" role="switch" aria-checked={value} aria-label={label} onClick={() => onChange(!value)}
       className={cn('relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full transition-colors duration-200',
         value ? '[background:var(--pf-primary)]' : 'bg-gray-200')}>
       <span className={cn('inline-block h-5 w-5 transform rounded-full [background:var(--pf-surface)] shadow-sm transition-transform duration-200 mt-0.5',
@@ -514,7 +504,7 @@ function NotificationsTab(_: { clubId: string }) {
             <h3 className="font-semibold [color:var(--pf-text)]">Nhận thông báo</h3>
             <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">Bật/tắt toàn bộ thông báo từ hệ thống</p>
           </div>
-          <Toggle value={pref.enabled} onChange={v => set({ enabled: v })} />
+          <Toggle value={pref.enabled} onChange={v => set({ enabled: v })} label="Bật nhận thông báo" />
         </div>
       </div>
 
@@ -602,7 +592,7 @@ function NotificationsTab(_: { clubId: string }) {
       {/* Giới hạn/ngày */}
       <div className="pf-glass rounded-xl p-5 md:p-6">
         <h3 className="font-semibold [color:var(--pf-text)] mb-4">Giới hạn thông báo mỗi ngày</h3>
-        <div className="grid grid-cols-2 gap-4 max-w-sm">
+        <div className="grid grid-cols-2 gap-4 max-w-sm max-[480px]:grid-cols-1">
           <div>
             <label htmlFor="f-Settings-14" className="block text-xs [color:var(--pf-color-muted)] mb-1">Email tối đa</label>
             <input id="f-Settings-14" type="number" min={0} max={10}
@@ -1171,59 +1161,33 @@ export function Settings() {
   const isSuperAdmin = user?.role === 'SUPER_ADMIN'
   const tabs = ALL_TABS.filter(t => !t.superAdminOnly || isSuperAdmin)
   const [activeTab, setActiveTab] = useState<Tab>('club')
-  // Mobile/Fold gập (<1024px): MENU ô icon thay cho dải tab → chọn mục → nội dung + nút quay lại menu.
+  // Mobile/Fold gập (<1024px): lưới icon chọn mục (cùng hệ thống trang Ứng dụng) → màn mục có header gọn.
   const isMobile = useIsMobile(1024)
-  const [section, setSection] = useState<Tab | null>(null)
-  const [sectionQuery, setSectionQuery] = useState('')
+  const embedded = useEmbedded()
 
   if (isMobile) {
-    const q = fold(sectionQuery.trim())
-    const items: AppItem[] = tabs
-      .filter((t) => !q || fold(t.label).includes(q))
-      .map((t) => ({ key: t.id, label: t.label, to: '', icon: MOBILE_ICONS[t.id] }))
-    if (section === null) {
-      return (
-        <div className="mx-auto w-full max-w-2xl px-4 pb-4 pt-2">
-          <p className="text-sm [color:var(--pf-color-muted)]">Quản lý thông tin CLB và tài khoản</p>
-          <HubSearch value={sectionQuery} onChange={setSectionQuery} placeholder="Tìm trong Cài đặt…" />
-          <div className="mt-5">
-            {items.length === 0 ? (
-              <p className="py-10 text-center text-sm [color:var(--pf-color-muted)]">{`Không tìm thấy mục “${sectionQuery}”.`}</p>
-            ) : (
-              <ul className="overflow-hidden rounded-2xl border divide-y [background:var(--pf-surface)] [border-color:var(--pf-border)] [&>li]:border-[color:var(--pf-border)]">
-                {items.map((it) => {
-                  const Ico = it.icon
-                  return <ListRow key={it.key} title={it.label} sub={SETTINGS_SUB[it.key as Tab]} icon={<Ico size={20} />} onClick={() => setSection(it.key as Tab)} />
-                })}
-              </ul>
-            )}
-          </div>
-        </div>
-      )
-    }
-    const current = tabs.find((t) => t.id === section)
-    return (
-      <div className="min-h-full">
-        <div className="px-4 pt-2">
-          <button
-            onClick={() => setSection(null)}
-            className="flex min-h-[44px] items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary-text)] active:scale-[0.98]"
-            style={{ boxShadow: 'var(--pf-shadow-float)' }}
-          >
-            <ChevronLeft size={18} />
-            Cài đặt{current ? ` · ${current.label}` : ''}
-          </button>
-        </div>
-        <div className="px-4 py-4 space-y-4">
-          {section === 'club'          && <ClubInfoTab clubId={clubId} />}
-          {section === 'branding'      && <BrandingTab />}
-          {section === 'account'       && <AccountTab />}
-          {section === 'notifications' && <NotificationsTab clubId={clubId} />}
-          {section === 'payment'       && <PaymentTab />}
-          {section === 'telegram'      && <TelegramTab />}
-          {section === 'billing'       && <BillingTab />}
-        </div>
+    const body = (id: Tab) => (
+      <div className="px-4 py-4 space-y-4">
+        {id === 'club'          && <ClubInfoTab clubId={clubId} />}
+        {id === 'branding'      && <BrandingTab />}
+        {id === 'account'       && <AccountTab />}
+        {id === 'notifications' && <NotificationsTab clubId={clubId} />}
+        {id === 'payment'       && <PaymentTab />}
+        {id === 'telegram'      && <TelegramTab />}
+        {id === 'billing'       && <BillingTab />}
       </div>
+    )
+    return (
+      <ModuleTabs
+        paramKey="view"
+        title="Cài đặt"
+        subtitle="Quản lý thông tin CLB và tài khoản"
+        menuBack={embedded ? 'parent' : '/ung-dung'}
+        parentParam="tab"
+        tabs={tabs.map((t) => ({
+          key: t.id, label: t.label, icon: MOBILE_ICONS[t.id], menuLabel: SETTINGS_MENU_LABEL[t.id], element: body(t.id),
+        }))}
+      />
     )
   }
 

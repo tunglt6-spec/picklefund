@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { DateInput } from '../ui/DateTimeFields'
 import toast from 'react-hot-toast'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
@@ -99,7 +100,7 @@ export function RecordPlanPaymentModal({ open, onClose, clubs, clubId: presetClu
             {clubs.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
           <div>
             <label className={label} htmlFor="rpp-plan">Gói</label>
             <select id="rpp-plan" value={planTier} onChange={(e) => setPlanTier(e.target.value as Plan)} className={input}>
@@ -125,7 +126,7 @@ export function RecordPlanPaymentModal({ open, onClose, clubs, clubId: presetClu
             <span className="text-xs [color:var(--pf-color-muted)]">tháng</span>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
           <div>
             <label className={label} htmlFor="rpp-amount">Số tiền thực thu (đ)</label>
             <input id="rpp-amount" type="number" min={0} value={amount || ''} onChange={(e) => { setAmountTouched(true); setAmount(Number(e.target.value) || 0) }} className={input} />
@@ -133,7 +134,7 @@ export function RecordPlanPaymentModal({ open, onClose, clubs, clubId: presetClu
           </div>
           <div>
             <label className={label} htmlFor="rpp-date">Ngày thu</label>
-            <input id="rpp-date" type="date" max={today()} value={paidAt} onChange={(e) => setPaidAt(e.target.value)} className={input} />
+            <DateInput id="rpp-date" max={today()} value={paidAt} onChange={(e) => setPaidAt(e.target.value)} className={input} />
           </div>
         </div>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

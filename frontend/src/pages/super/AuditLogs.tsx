@@ -2,6 +2,7 @@
  * AuditLogs (Super Admin) — nhật ký kiểm toán toàn hệ thống. Elite 2026: PageShell + PageHeader
  * + FilterBar + DataTable + StatusBadge + Loading/Empty states (design-system UDP-01).
  */
+import { DateInput } from '../../components/ui/DateTimeFields'
 import { useState, useEffect } from 'react'
 import { ScrollText, CalendarDays, Activity, Users, Building2, PencilLine, ShieldAlert } from 'lucide-react'
 import {
@@ -129,7 +130,10 @@ export function AuditLogs() {
       <div className="mb-4 flex flex-col gap-3">
         <FilterBar searchValue={search} onSearchChange={setSearch} searchPlaceholder="Tìm theo người dùng, mô tả, CLB…" />
         <div className="flex flex-wrap items-center gap-2">
-        <div className="flex max-w-full gap-1 overflow-x-auto rounded-full border p-1 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
+        <select aria-label="Lọc theo hành động" value={action} onChange={(e) => setAction(e.target.value as typeof action)} className="input-base w-full lg:hidden">
+          {ACTION_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+        </select>
+        <div className="flex max-w-full gap-1 overflow-x-auto rounded-full border p-1 [background:var(--pf-surface)] border-[color:var(--pf-border)] max-lg:hidden">
           {ACTION_OPTIONS.map((opt) => (
             <button
               key={opt}
@@ -144,10 +148,10 @@ export function AuditLogs() {
           ))}
         </div>
         <label className="flex items-center gap-1.5 text-xs [color:var(--pf-color-muted)]">Từ
-          <input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} aria-label="Từ ngày" className="input-base !w-40 py-1.5" />
+          <DateInput value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} aria-label="Từ ngày" className="input-base !w-40 py-1.5" />
         </label>
         <label className="flex items-center gap-1.5 text-xs [color:var(--pf-color-muted)]">Đến
-          <input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} aria-label="Đến ngày" className="input-base !w-40 py-1.5" />
+          <DateInput value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} aria-label="Đến ngày" className="input-base !w-40 py-1.5" />
         </label>
         {(from || to) && <button type="button" onClick={() => { setFrom(''); setTo('') }} className="text-xs font-semibold [color:var(--pf-primary-text)]">Xóa lọc ngày</button>}
         </div>

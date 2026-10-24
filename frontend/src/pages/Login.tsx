@@ -202,7 +202,7 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
               <p className="text-xs [color:var(--pf-color-muted)] mt-1">Mã định danh duy nhất, không thể thay đổi sau này</p>
             </Field>
             <Field label="Địa chỉ sân" htmlFor="reg-club-address"><input id="reg-club-address" value={club.address} onChange={e => setClub({ ...club, address: e.target.value })} placeholder="Sân Pickleball Mỹ Đình, Hà Nội" className={inputBase} /></Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
               <Field label="Điện thoại" htmlFor="reg-club-phone"><input id="reg-club-phone" value={club.contactPhone} onChange={e => setClub({ ...club, contactPhone: e.target.value })} placeholder="0912345678" className={inputBase} /></Field>
               <Field label="Email CLB" htmlFor="reg-club-email"><input id="reg-club-email" type="email" value={club.contactEmail} onChange={e => setClub({ ...club, contactEmail: e.target.value })} placeholder="clb@email.com" className={inputBase} /></Field>
             </div>

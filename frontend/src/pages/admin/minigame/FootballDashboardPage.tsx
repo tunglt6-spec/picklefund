@@ -4,6 +4,8 @@
  * Bảng xếp hạng (Thắng-Hòa-Thua + bàn thắng/hiệu số, tính client từ matches).
  * Tái dùng endpoint: roster (Pha 1a), football/schedule + matches/:id/score + /schedule (Pha 1c).
  */
+import { useMobileView } from '../../../components/mobile/useMobileView'
+import { MobileFunctionHeader, MobileModuleMenu } from '../../../components/mobile/ModuleNav'
 import { ActionMenu } from '../../../components/shared/ActionMenu'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
@@ -75,6 +77,8 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
   }, [members])
 
   const [tab, setTab] = useState<Tab>('teams')
+  const mv = useMobileView(['teams','schedule','standings'] as const)
+  useEffect(() => { if (mv.view) setTab(mv.view as Tab) }, [mv.view])
   const [teams, setTeams] = useState<RosterTeam[]>([])
   const [matches, setMatches] = useState<FbMatch[]>([])
   const [mode, setMode] = useState<string | null>(null) // 'ROUND_ROBIN' | 'KNOCKOUT' | null
@@ -545,6 +549,20 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
     { key: 'standings', label: 'Bảng xếp hạng', icon: <BarChart2 size={16} /> },
   ]
 
+  // Mobile (<1024px): các nhóm chức năng của giải hiện bằng lưới icon (cùng hệ thống trang Ứng dụng), không dùng tab.
+  if (mv.mobile && !mv.view) {
+    return (
+      <MobileModuleMenu
+        title={mg.name}
+        subtitle="Chọn chức năng của giải đấu"
+        scrollId={`/minigames/${id}`}
+        onBack={() => navigate('/minigames')}
+        items={[{ key: 'teams', label: TABS.find(t => t.key === 'teams')!.label, to: '', icon: Shield }, { key: 'schedule', label: TABS.find(t => t.key === 'schedule')!.label, to: '', icon: CalendarDays }, { key: 'standings', label: TABS.find(t => t.key === 'standings')!.label, to: '', icon: BarChart2 }]}
+        onSelect={(it) => mv.open(it.key as never)}
+      />
+    )
+  }
+
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-bg)]">
       <PageHeader variant="bar"
@@ -562,12 +580,14 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
           <ArrowLeft size={14} /> Danh Sách Giải Đấu
         </button>
 
-        <ResponsiveTabs
-          tabs={TABS.map(t => ({ key: t.key, label: t.label }))}
-          active={tab}
-          onChange={(k) => setTab(k as Tab)}
-          className="sm:max-w-xl"
-        />
+        {mv.mobile
+          ? <MobileFunctionHeader title={TABS.find(t => t.key === tab)?.label ?? ''} parent={mg.name} onBack={mv.back} />
+          : <ResponsiveTabs
+              tabs={TABS.map(t => ({ key: t.key, label: t.label }))}
+              active={tab}
+              onChange={(k) => setTab(k as Tab)}
+              className="sm:max-w-xl"
+            />}
 
         {/* KPI */}
         <div className="grid grid-cols-3 gap-3 sm:gap-4 sm:max-w-xl">
@@ -673,11 +693,11 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                               }`}>{m.fullName}</button>
                           ))}
                         </div>
-                        <div className="mt-2 flex gap-2">
+                        <div className="mt-2 flex gap-2 max-lg:flex-wrap">
                           <input ref={addGuestRef} value={addGuest} onChange={e => setAddGuest(e.target.value)} placeholder="hoặc tên khách"
-                            className="flex-1 rounded-lg border border-[color:var(--pf-border)] px-3 py-1.5 text-sm outline-none focus:border-[color:var(--pf-primary-text)]" />
-                          <button onClick={() => submitAdd(team.id)} className="rounded-lg px-3 py-1.5 text-sm font-semibold text-white [background:var(--pf-primary)]">Lưu</button>
-                          <button onClick={() => setAddingTo(null)} className="rounded-lg px-3 py-1.5 text-sm [color:var(--pf-color-muted)] [background:var(--pf-color-muted-soft)]">Hủy</button>
+                            className="flex-1 max-lg:basis-full rounded-lg border border-[color:var(--pf-border)] px-3 py-1.5 text-sm outline-none focus:border-[color:var(--pf-primary-text)]" />
+                          <button onClick={() => submitAdd(team.id)} className="max-lg:order-1 max-lg:min-h-[44px] max-lg:flex-1 rounded-lg px-3 py-1.5 text-sm font-semibold text-white [background:var(--pf-primary)]">Lưu</button>
+                          <button onClick={() => setAddingTo(null)} className="max-lg:min-h-[44px] max-lg:flex-1 rounded-lg px-3 py-1.5 text-sm [color:var(--pf-color-muted)] [background:var(--pf-color-muted-soft)]">Hủy</button>
                         </div>
                       </div>
                     ) : (

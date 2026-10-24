@@ -1,4 +1,5 @@
 import { moneyColor } from '../../lib/moneyTone'
+import { DateInput } from '../../components/ui/DateTimeFields'
 import { AmountHint } from '../../components/ui/AmountHint'
 import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, Receipt, FileSpreadsheet, FileText } from 'lucide-react'
@@ -220,10 +221,10 @@ export function TreasurerExpense() {
                               : <Badge variant="yellow" dot>Chưa có HĐ</Badge>}
                           </div>
                           <div className="flex items-center gap-1">
-                            <button onClick={() => openEdit(e)} className="h-8 w-8 flex items-center justify-center rounded-[10px] [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] active:[background:var(--pf-primary-soft)] active:[color:var(--pf-primary-text)]">
+                            <button onClick={() => openEdit(e)} aria-label="Sửa khoản chi" className="max-lg:h-11 max-lg:w-11 h-8 w-8 flex items-center justify-center rounded-[10px] [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] active:[background:var(--pf-primary-soft)] active:[color:var(--pf-primary-text)]">
                               <Edit2 size={14} />
                             </button>
-                            <button onClick={() => setDeleteId(e.id)} className="h-8 w-8 flex items-center justify-center rounded-[10px] [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] active:bg-red-50 active:text-red-500">
+                            <button onClick={() => setDeleteId(e.id)} aria-label="Xóa khoản chi" className="max-lg:h-11 max-lg:w-11 h-8 w-8 flex items-center justify-center rounded-[10px] [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] active:bg-red-50 active:text-red-500">
                               <Trash2 size={14} />
                             </button>
                           </div>
@@ -262,7 +263,7 @@ export function TreasurerExpense() {
                 {activePeriods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
               <div>
                 <label htmlFor="f-TreasurerExpense-3" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền <span className="text-red-500">*</span></label>
                 <input id="f-TreasurerExpense-3" required type="number" min={1} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
@@ -271,7 +272,7 @@ export function TreasurerExpense() {
               </div>
               <div>
                 <label htmlFor="f-TreasurerExpense-4" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày chi</label>
-                <input id="f-TreasurerExpense-4" type="date" value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })}
+                <DateInput id="f-TreasurerExpense-4" value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })}
                   className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none [background:var(--pf-surface)]" />
               </div>
             </div>
@@ -421,7 +422,7 @@ export function TreasurerExpense() {
               {activePeriods.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 max-[480px]:grid-cols-1">
             <div>
               <label htmlFor="f-TreasurerExpense-7" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
               <input id="f-TreasurerExpense-7" required type="number" min={1} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
@@ -431,7 +432,7 @@ export function TreasurerExpense() {
             </div>
             <div>
               <label htmlFor="f-TreasurerExpense-8" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày chi</label>
-              <input id="f-TreasurerExpense-8" type="date" value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })}
+              <DateInput id="f-TreasurerExpense-8" value={form.expenseDate} onChange={e => setForm({ ...form, expenseDate: e.target.value })}
                 className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]" />
             </div>
           </div>

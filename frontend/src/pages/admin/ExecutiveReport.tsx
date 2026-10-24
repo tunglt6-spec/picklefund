@@ -387,6 +387,8 @@ export function ExecutiveReport() {
           </div>
         </div>
 
+        <ReportToc />
+
         {/* ── Executive Summary KPIs ───────────────────────────────── */}
         <div>
           <SectionTitle icon={<Sparkles size={15} />} title="Tổng quan điều hành" />
@@ -619,9 +621,38 @@ export function ExecutiveReport() {
 }
 
 /* ── Sub-components ─────────────────────────────────────────────────── */
+const TOC_ITEMS: { id: string; label: string }[] = [
+  { id: 'bc-tong-quan', label: 'Tổng quan' },
+  { id: 'bc-tai-chinh', label: 'Tài chính' },
+  { id: 'bc-thanh-vien', label: 'Thành viên' },
+  { id: 'bc-aido', label: 'Văn phòng AI' },
+]
+/** Mục lục báo cáo dài (mobile): chạm để nhảy tới phần; chỉ hiện các phần đang có trên trang. Không đưa vào ảnh/PDF xuất. */
+function ReportToc() {
+  const [present, setPresent] = useState<string[]>([])
+  useEffect(() => {
+    const ids = TOC_ITEMS.filter((i) => document.getElementById(i.id)).map((i) => i.id)
+    setPresent((prev) => (prev.join() === ids.join() ? prev : ids))
+  })
+  if (present.length < 2) return null
+  return (
+    <nav aria-label="Mục lục báo cáo" data-html2canvas-ignore="true" className="flex flex-wrap gap-2 lg:hidden">
+      {TOC_ITEMS.filter((i) => present.includes(i.id)).map((i) => (
+        <button key={i.id} type="button" onClick={() => document.getElementById(i.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          className="min-h-[44px] rounded-full border px-3.5 text-sm font-semibold [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary-text)]">
+          {i.label}
+        </button>
+      ))}
+    </nav>
+  )
+}
+
+const TOC_ID: Record<string, string> = {
+  'Tổng quan điều hành': 'bc-tong-quan', 'Tài chính': 'bc-tai-chinh', 'Thành viên — Health Score': 'bc-thanh-vien', 'Văn phòng AI (AIDO)': 'bc-aido',
+}
 function SectionTitle({ icon, title, note, compact }: { icon?: React.ReactNode; title: string; note?: string; compact?: boolean }) {
   return (
-    <div className={compact ? 'mb-2 flex items-center gap-1.5' : 'mb-2.5 flex items-center gap-2'}>
+    <div id={TOC_ID[title]} className={`scroll-mt-20 ${compact ? 'mb-2 flex items-center gap-1.5' : 'mb-2.5 flex items-center gap-2'}`}>
       <span className="[color:var(--pf-primary,#6D5DFB)]">{icon}</span>
       <h3 className="text-sm font-bold [color:var(--pf-text)]">{title}</h3>
       {note && <span className="text-xs [color:var(--pf-color-muted)]">· {note}</span>}
