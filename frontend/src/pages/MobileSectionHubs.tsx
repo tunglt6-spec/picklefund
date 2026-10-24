@@ -55,7 +55,7 @@ export function MobileHome() {
 
   return (
     <div className="mx-auto w-full max-w-2xl px-4 pb-4 pt-3">
-      <header>
+      <header className="pf-hero-wash -mx-1 rounded-2xl px-4 py-3 max-lg:block">
         <h1 className="text-[22px] font-[800] leading-tight [color:var(--pf-text)]" style={{ letterSpacing: '-0.02em' }}>
           {greeting()}, {user.username}
         </h1>
@@ -68,7 +68,7 @@ export function MobileHome() {
       {hasClub && hasSchedule && (
         <>
           <HubSectionTitle>{todays.length > 0 ? 'Hôm nay' : 'Buổi sắp tới'}</HubSectionTitle>
-          <Panel className="mt-2 overflow-hidden">
+          <Panel className="mt-2 overflow-hidden border-l-4 [border-left-color:var(--mod-activity)]">
             {!clubData ? (
               <div className="space-y-2 p-4"><Skeleton className="h-4 w-1/3" /><Skeleton className="h-5 w-2/3" /><Skeleton className="h-4 w-1/2" /></div>
             ) : shown.length === 0 ? (
