@@ -183,7 +183,7 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
   return (
     <div className="@container flex flex-col gap-4">
       {/* KPI trên nền tím (giống mockup) */}
-      <div data-mod="compete" className="rounded-[18px] p-4 text-white [background:linear-gradient(135deg,var(--pf-primary),var(--pf-primary-hover))] shadow-sm max-lg:border max-lg:[border-color:var(--pf-border)] max-lg:border-l-4 max-lg:[border-left-color:var(--pf-lime)] max-lg:[background:var(--mod-tint)] max-lg:text-[color:var(--pf-text)] max-lg:shadow-none">
+      <div data-mod="compete" className="rounded-[18px] p-4 text-white [background:linear-gradient(135deg,var(--pf-primary),var(--pf-primary-hover))] shadow-sm max-lg:border max-lg:[border-color:var(--pf-border)] max-lg:[background:color-mix(in_srgb,var(--mod-tint)_55%,#fff)] max-lg:text-[color:var(--pf-text)] max-lg:shadow-none">
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide opacity-90 max-lg:opacity-100">
           <Trophy size={16} className="max-lg:[color:var(--mod-main)]" /> Tổng quan · {sportEmoji(sport)} {featured.name}
         </div>
