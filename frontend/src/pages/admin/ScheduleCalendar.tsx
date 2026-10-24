@@ -236,8 +236,8 @@ export function ScheduleCalendar() {
         />
       ) : (
         <div className="flex flex-col gap-5">
-          {/* KPI cards */}
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {/* KPI cards — mobile: đặt SAU lịch (lịch + ngày chọn lên trước) */}
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4 max-lg:order-last">
             <MetricCard accent="violet" icon={<CalendarDays size={18} />} label="Buổi chơi" value={kpi.sessionCount} sub="trong tháng" />
             <MetricCard accent="teal" icon={<ClipboardList size={18} />} label="Đăng ký" value={regLoading ? '…' : kpi.totalReg} sub="tổng lượt tháng này" />
             <MetricCard accent="blue" icon={<Users size={18} />} label="Thành viên" value={activeMembers} sub="đang hoạt động" />
@@ -245,7 +245,7 @@ export function ScheduleCalendar() {
           </div>
 
           {/* Filter chips */}
-          <div className="flex flex-wrap items-center gap-2" role="tablist" aria-label="Lọc loại sự kiện">
+          <div className="flex flex-wrap items-center gap-2 max-lg:-mx-4 max-lg:flex-nowrap max-lg:overflow-x-auto max-lg:px-4 max-lg:no-scrollbar" role="tablist" aria-label="Lọc loại sự kiện">
             {FILTERS.map((f) => {
               const active = filter === f.key
               return (
@@ -254,7 +254,7 @@ export function ScheduleCalendar() {
                   role="tab"
                   aria-selected={active}
                   onClick={() => setFilter(f.key)}
-                  className="rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors border"
+                  className="shrink-0 whitespace-nowrap rounded-full px-3.5 py-1.5 text-xs font-semibold transition-colors border"
                   style={active
                     ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)', borderColor: 'var(--pf-primary)' }
                     : { background: 'var(--pf-surface)', color: 'var(--pf-color-muted)', borderColor: 'var(--pf-border)' }}

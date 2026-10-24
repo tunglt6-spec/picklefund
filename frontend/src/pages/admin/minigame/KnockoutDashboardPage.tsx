@@ -10,6 +10,7 @@ import { ArrowLeft, Swords, Crown, ChevronRight, Save } from 'lucide-react'
 import api from '../../../lib/api'
 import { PageHeader } from '../../../components/shared/PageHeader'
 import { ExportActions } from '../../../components/shared/ExportActions'
+import { ActionMenu } from '../../../components/shared/ActionMenu'
 import { runExport } from '../../../components/shared/exportRunner'
 import { exportGenericExcel, exportGenericTablePDF } from '../../../lib/export'
 import { Button } from '../../../components/ui/Button'
@@ -173,7 +174,8 @@ export function KnockoutDashboardPage() {
       <PageHeader variant="bar" title={`${de ? 'Loại kép' : ((mg as unknown as { sport?: string }).sport === 'GOLF' ? 'Golf Match Play' : 'Loại trực tiếp')} – ${mg.name}`} subtitle={de ? 'Double-elimination · WB / LB / Chung kết' : ((mg as unknown as { sport?: string }).sport === 'GOLF' ? 'Match Play · loại trực tiếp — nhập số HỐ THẮNG mỗi trận' : 'Single-elimination · nhánh đấu tìm nhà vô địch')}
         actions={
           <div className="flex items-center gap-2">
-            {koRows.length > 0 && <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} />}
+            {koRows.length > 0 && <div className="max-lg:hidden"><ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /></div>}
+            {koRows.length > 0 && <ActionMenu items={[{ key: 'xlsx', label: 'Xuất Excel', onClick: doExportExcel }, { key: 'pdf', label: 'Xuất PDF', onClick: doExportPdf }]} />}
             {matches.length === 0
               ? <Button size="sm" onClick={generate} disabled={busy}><Swords size={14} /> Tạo nhánh đấu</Button>
               : canAdvance && <Button size="sm" onClick={advance} disabled={busy}><ChevronRight size={14} /> Vòng kế tiếp</Button>}

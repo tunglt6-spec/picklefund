@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react'
 import { Plus, CheckSquare, CalendarX, Clock, MapPin, Users, Edit2, Trash2, CalendarDays, UserCheck, TrendingUp } from 'lucide-react'
 import api from '../../lib/api'
 import { PageShell, PageHeader, MetricCard, EmptyState, StatusBadge, ActionButton, ExportActions, runExport } from '../../components/shared'
+import { ActionMenu } from '../../components/shared/ActionMenu'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { PeriodSelector } from '../../components/ui/PeriodSelector'
 import { Button } from '../../components/ui/Button'
 import { Modal } from '../../components/ui/Modal'
@@ -229,6 +231,19 @@ export function Attendance() {
     }), 'Đã xuất PDF lịch sử điểm danh')
   }
 
+  // Mobile: buổi CẦN thao tác (đang mở, đã tới/qua ngày) lên đầu, rồi buổi sắp tới, cuối cùng buổi đã xong. Desktop: mới nhất trước như cũ.
+  const mobile = useIsMobile(1024)
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const prio = (x: AttendanceSession) => (x.status === 'scheduled' ? (x.sessionDate.slice(0, 10) <= todayStr ? 0 : 1) : 2)
+  const orderedSessions = [...sessions].sort((a, b) => {
+    if (mobile) {
+      const d = prio(a) - prio(b)
+      if (d !== 0) return d
+      return prio(a) === 1 ? a.sessionDate.localeCompare(b.sessionDate) : b.sessionDate.localeCompare(a.sessionDate)
+    }
+    return b.sessionDate.localeCompare(a.sessionDate)
+  })
+
   return (
     <PageShell>
       <PageHeader
@@ -241,13 +256,21 @@ export function Attendance() {
             {allPeriods.length > 1 && sessions.length > 0 && (
               <button
                 onClick={() => setShowMovePeriod(true)}
-                className="min-h-11 rounded-lg border px-3 text-sm font-semibold [color:var(--pf-primary-text)] [border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)] transition-colors"
+                className="max-lg:hidden min-h-11 rounded-lg border px-3 text-sm font-semibold [color:var(--pf-primary-text)] [border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)] transition-colors"
               >
                 Chuyển kỳ ({sessions.length} buổi)
               </button>
             )}
-            {exportSessions.length > 0 && <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} />}
+            {exportSessions.length > 0 && <div className="max-lg:hidden"><ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /></div>}
             <ActionButton icon={<Plus size={16} />} onClick={() => setShowCreate(true)}>Tạo buổi chơi</ActionButton>
+            {/* Mobile: thao tác phụ gom vào menu "Thao tác" */}
+            <ActionMenu items={[
+              ...(allPeriods.length > 1 && sessions.length > 0 ? [{ key: 'move', label: `Chuyển kỳ (${sessions.length} buổi)`, onClick: () => setShowMovePeriod(true) }] : []),
+              ...(exportSessions.length > 0 ? [
+                { key: 'xlsx', label: 'Xuất Excel', onClick: doExportExcel },
+                { key: 'pdf', label: 'Xuất PDF', onClick: doExportPdf },
+              ] : []),
+            ]} />
           </>
         }
       />
@@ -255,7 +278,20 @@ export function Attendance() {
       <div className="flex flex-col gap-5">
         {/* KPI */}
         {sessions.length > 0 && (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+          <div className="pf-glass p-3 lg:hidden">
+            <div className="grid grid-cols-3 divide-x text-center [border-color:var(--pf-border)]">
+              {([['Buổi chơi', sessions.length], ['Lượt tham gia', totalAttendance], ['TB/buổi', completedSessions > 0 ? (totalAttendance / completedSessions).toFixed(1) : '—']] as [string, string | number][]).map(([l, v]) => (
+                <div key={l} className="min-w-0 px-1">
+                  <p className="text-[20px] font-[800] leading-none [color:var(--pf-text)]" style={{ fontVariantNumeric: 'tabular-nums' }}>{v}</p>
+                  <p className="mt-1 truncate text-xs [color:var(--pf-color-muted)]">{l}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 border-t pt-2 text-xs [color:var(--pf-color-muted)] [border-color:var(--pf-border)]">{completedSessions} buổi đã hoàn thành</p>
+          </div>
+        )}
+        {sessions.length > 0 && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 max-lg:hidden">
             <MetricCard accent="violet" icon={<CalendarDays size={18} />} label="Tổng buổi chơi" value={sessions.length} sub={`${completedSessions} đã hoàn thành`} />
             <MetricCard accent="blue" icon={<UserCheck size={18} />} label="Tổng lượt tham gia" value={totalAttendance} sub="lượt" />
             <MetricCard accent="teal" icon={<TrendingUp size={18} />} label="Trung bình/buổi" value={completedSessions > 0 ? (totalAttendance / completedSessions).toFixed(1) : '—'} sub="người/buổi" />
@@ -272,7 +308,7 @@ export function Attendance() {
           />
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {[...sessions].sort((a, b) => b.sessionDate.localeCompare(a.sessionDate)).map(session => (
+            {orderedSessions.map(session => (
               <div key={session.id} className="pf-glass rounded-2xl p-4" style={{ boxShadow: 'var(--pf-shadow)' }}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">

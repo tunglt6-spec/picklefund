@@ -15,6 +15,7 @@ import { useAuthStore } from '../../../store/authStore'
 import { useClubDataStore } from '../../../store/clubDataStore'
 import { PairBuilder } from '../../../components/minigame/PairBuilder'
 import { PageHeader } from '../../../components/shared/PageHeader'
+import { ActionMenu } from '../../../components/shared/ActionMenu'
 import { MetricCard } from '../../../components/shared/MetricCard'
 import { StatusBadge, type StatusTone } from '../../../components/shared/StatusBadge'
 import type { MiniGame, MiniGameTeamMatch, MiniGameTeamStanding } from '../../../types/minigame'
@@ -918,7 +919,17 @@ export function FixedDoublesDashboardPage() {
                     {completed}/{schedule.length} trận đã hoàn thành
                   </span>
                 </div>
-                <div className="flex items-center gap-2 shrink-0 flex-wrap" data-html2canvas-ignore="true">
+                <ActionMenu
+                  className="shrink-0"
+                  items={[
+                    { key: 'png', label: 'Xuất ảnh lịch', onClick: doExportSchedulePng },
+                    { key: 'pdf', label: 'Xuất PDF lịch', onClick: doExportSchedulePdf },
+                    ...(canEnter && teams.length >= 2 ? [{ key: 'swap', label: 'Đổi chỗ người chơi', onClick: () => { setSwapSel([]); setShowSwap(true) } }] : []),
+                    ...(canEnter && isDoubleLeg ? [{ key: 'rmleg', label: 'Xóa lượt về', onClick: handleRemoveReturnLeg, danger: true }] : []),
+                    { key: 'clear', label: 'Xóa lịch', onClick: handleClearSchedule, danger: true },
+                  ]}
+                />
+                <div className="flex items-center gap-2 shrink-0 flex-wrap max-lg:hidden" data-html2canvas-ignore="true">
                   <ExportButtons onPng={doExportSchedulePng} onPdf={doExportSchedulePdf} ariaScope="lịch thi đấu" />
                   {canEnter && teams.length >= 2 && (
                     <button

@@ -14,6 +14,7 @@ import type { LucideIcon } from 'lucide-react'
 import { TileGrid, HubSearch } from '../../components/mobile/HubParts'
 import { fold } from '../../lib/fold'
 import type { AppItem } from '../../components/mobile/hubApps'
+import { VietQrImage } from '../../components/ui/VietQrImage'
 
 type Tab = 'club' | 'branding' | 'account' | 'notifications' | 'payment' | 'telegram' | 'billing'
 
@@ -974,7 +975,7 @@ function PaymentTab() {
         <div className="pf-glass rounded-xl p-5 md:p-6">
           <h3 className="font-semibold [color:var(--pf-text)] mb-3">Xem trước mã QR</h3>
           <div className="flex items-start gap-6">
-            <img src={qrUrl} alt="VietQR preview" className="w-36 h-36 rounded-xl border border-[color:var(--pf-border)] object-contain" />
+            <VietQrImage url={qrUrl} alt="VietQR preview" className="w-36 h-36 rounded-xl border border-[color:var(--pf-border)] object-contain" bank={info} memo="Dong quy CLB" />
             <div className="text-sm [color:var(--pf-color-muted)] space-y-1">
               <p><span className="font-medium">Ngân hàng:</span> {POPULAR_BANKS.find(b => b.code === info.bank_code)?.name}</p>
               <p><span className="font-medium">Số TK:</span> <span className="font-mono">{info.bank_account_number}</span></p>

@@ -4,6 +4,7 @@
  * Bảng xếp hạng (Thắng-Hòa-Thua + bàn thắng/hiệu số, tính client từ matches).
  * Tái dùng endpoint: roster (Pha 1a), football/schedule + matches/:id/score + /schedule (Pha 1c).
  */
+import { ActionMenu } from '../../../components/shared/ActionMenu'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
@@ -770,8 +771,9 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                     {isKnockout ? 'Loại trực tiếp' : `Vòng tròn${hasDoubleLeg ? ' (lượt đi & về)' : ''}`} · {matches.length} trận · đã có kết quả {completedMatches}/{matches.length}
                   </p>
                   <div className="flex items-center gap-2">
-                    <button onClick={() => exportSchedule('png')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-border)] transition-colors"><ImageIcon size={14} /> Xuất ảnh</button>
-                    <button onClick={() => exportSchedule('pdf')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-border)] transition-colors"><FileDown size={14} /> Xuất PDF</button>
+                    <ActionMenu items={[{ key: 'png', label: 'Xuất ảnh lịch', onClick: () => exportSchedule('png') }, { key: 'pdf', label: 'Xuất PDF lịch', onClick: () => exportSchedule('pdf') }]} />
+                    <button onClick={() => exportSchedule('png')} className="max-lg:hidden inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-border)] transition-colors"><ImageIcon size={14} /> Xuất ảnh</button>
+                    <button onClick={() => exportSchedule('pdf')} className="max-lg:hidden inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-border)] transition-colors"><FileDown size={14} /> Xuất PDF</button>
                     {canAdvance && (
                       <button onClick={advanceKnockout} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-white [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] transition-colors">
                         <ChevronRight size={14} /> Tạo vòng kế tiếp
@@ -843,8 +845,9 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
           ) : (
             <>
               <div className="flex justify-end gap-2">
-                <button onClick={() => exportStandings('png')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-border)] transition-colors"><ImageIcon size={14} /> Xuất ảnh</button>
-                <button onClick={() => exportStandings('pdf')} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-border)] transition-colors"><FileDown size={14} /> Xuất PDF</button>
+                <ActionMenu items={[{ key: 'png', label: 'Xuất ảnh BXH', onClick: () => exportStandings('png') }, { key: 'pdf', label: 'Xuất PDF BXH', onClick: () => exportStandings('pdf') }]} />
+                <button onClick={() => exportStandings('png')} className="max-lg:hidden inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-border)] transition-colors"><ImageIcon size={14} /> Xuất ảnh</button>
+                <button onClick={() => exportStandings('pdf')} className="max-lg:hidden inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-border)] transition-colors"><FileDown size={14} /> Xuất PDF</button>
               </div>
               {isKnockout ? (
             <div id={`std-${id}`} className="pf-glass rounded-[16px] p-5">

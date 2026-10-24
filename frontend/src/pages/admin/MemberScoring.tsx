@@ -20,6 +20,7 @@ import {
 } from '../../components/shared'
 import { Modal } from '../../components/ui/Modal'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
+import { ActionMenu } from '../../components/shared/ActionMenu'
 
 // ── Kiểu dữ liệu theo API backend ──────────────────────────────────────────
 type Category = 'PARTICIPATION' | 'CONDUCT' | 'CONTRIBUTION' | 'DISCIPLINE' | 'FINANCE' | 'BONUS'
@@ -772,7 +773,7 @@ function RulesTab() {
                 {grouped[c].map((rule) => (
                   <li
                     key={rule.id}
-                    className="flex items-center justify-between gap-3 rounded-[16px] border p-3 border-[color:var(--pf-border)]"
+                    className="flex items-center justify-between gap-3 rounded-[16px] border p-3 border-[color:var(--pf-border)] max-lg:flex-col max-lg:items-stretch max-lg:gap-2"
                   >
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -785,7 +786,21 @@ function RulesTab() {
                         {!rule.active && <StatusBadge tone="warning">Đang tắt</StatusBadge>}
                       </div>
                     </div>
-                    <div className="flex shrink-0 items-center gap-2">
+                    {/* Mobile: tên quy tắc chiếm cả hàng; điểm ở hàng phụ; Bật/Tắt · Sửa · Xóa gom vào menu */}
+                    <div className="flex items-center justify-between gap-2 lg:hidden">
+                      <span
+                        className="text-base font-bold tabular-nums"
+                        style={{ color: rule.delta >= 0 ? 'var(--pf-color-success)' : 'var(--pf-color-danger)' }}
+                      >
+                        {rule.delta > 0 ? '+' : ''}{rule.delta} điểm
+                      </span>
+                      <ActionMenu items={[
+                        { key: 'toggle', label: rule.active ? 'Tắt quy tắc' : 'Bật quy tắc', onClick: () => toggleActive(rule) },
+                        { key: 'edit', label: 'Sửa', onClick: () => setEditRule(rule) },
+                        { key: 'del', label: 'Xóa', danger: true, onClick: () => setDeleteRuleId(rule.id) },
+                      ]} />
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2 max-lg:hidden">
                       <span
                         className="text-sm font-bold tabular-nums"
                         style={{ color: rule.delta >= 0 ? 'var(--pf-color-success)' : 'var(--pf-color-danger)' }}

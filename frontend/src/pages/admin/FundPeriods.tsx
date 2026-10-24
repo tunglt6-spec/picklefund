@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { confirmDialog } from '../../components/ui/ConfirmHost'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { VietQrImage } from '../../components/ui/VietQrImage'
 import api from '../../lib/api'
 import {
   Plus, Building2, Wallet, Search, Eye, Pencil, Trash2,
@@ -287,6 +288,11 @@ export function FundPeriods() {
     const base = `https://img.vietqr.io/image/${bankInfo.bank_code || 'MB'}-${bankInfo.bank_account_number}-compact2.jpg`
     return `${base}?amount=${Math.round(amt)}&addInfo=${encodeURIComponent(info)}&accountName=${encodeURIComponent(bankInfo.bank_account_name)}`
   }, [bankInfo, commonPeriods])
+
+  // Dữ liệu để dựng QR dự phòng tại máy (mobile) khi ảnh VietQR không tải được — cùng số tiền/nội dung với URL ảnh.
+  const qrPeriod = commonPeriods.find(p => p.id === qrPeriodId)
+  const qrAmount = Math.round(qrPeriod?.contributionAmount ?? 0)
+  const qrMemo = qrPeriod ? `Dong quy ${qrPeriod.name}` : 'Dong quy CLB'
 
   const copyAcctNumber = () => {
     if (!bankInfo?.bank_account_number) return
@@ -661,7 +667,7 @@ export function FundPeriods() {
                 <span className="text-sm font-[700] [color:var(--pf-text)]">QR Thanh Toán</span>
               </div>
               <div className="flex gap-3 items-start">
-                <img src={buildQrUrl(qrPeriodId)!} alt="QR" className="w-24 h-24 rounded-lg border border-[color:var(--pf-border)] flex-shrink-0" />
+                <VietQrImage url={buildQrUrl(qrPeriodId)!} alt="QR" className="w-24 h-24 rounded-lg border border-[color:var(--pf-border)] flex-shrink-0" bank={bankInfo} amount={qrAmount} memo={qrMemo} />
                 <div className="flex-1 min-w-0 space-y-1.5">
                   <div className="text-xs [color:var(--pf-color-muted)]">Ngân hàng</div>
                   <div className="text-sm font-[600] [color:var(--pf-text)]">{bankInfo.bank_code}</div>
@@ -812,7 +818,7 @@ export function FundPeriods() {
               </select>
             )}
             {buildQrUrl(qrPeriodId) && (
-              <img src={buildQrUrl(qrPeriodId)!} alt="QR thanh toán" className="w-64 h-64 rounded-xl border border-[color:var(--pf-border)]" />
+              <VietQrImage url={buildQrUrl(qrPeriodId)!} alt="QR thanh toán" className="w-64 h-64 rounded-xl border border-[color:var(--pf-border)]" bank={bankInfo} amount={qrAmount} memo={qrMemo} />
             )}
             {bankInfo && (
               <div className="w-full rounded-lg [background:var(--pf-surface-muted)] border border-[color:var(--pf-border)] p-4 space-y-2 text-sm">
@@ -1247,11 +1253,12 @@ export function FundPeriods() {
                   {/* QR image */}
                   {buildQrUrl(qrPeriodId) ? (
                     <div className="flex justify-center">
-                      <img
-                        src={buildQrUrl(qrPeriodId)!}
+                      <VietQrImage
+                        url={buildQrUrl(qrPeriodId)!}
                         alt="QR thanh toán"
                         className="w-40 h-40 rounded-lg border border-[color:var(--pf-border)]"
-                        onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                        bank={bankInfo} amount={qrAmount} memo={qrMemo}
+                        desktopOnError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                       />
                     </div>
                   ) : (
@@ -1400,10 +1407,11 @@ export function FundPeriods() {
             </select>
           )}
           {buildQrUrl(qrPeriodId) && (
-            <img
-              src={buildQrUrl(qrPeriodId)!}
+            <VietQrImage
+              url={buildQrUrl(qrPeriodId)!}
               alt="QR thanh toán"
               className="w-64 h-64 rounded-xl border border-[color:var(--pf-border)]"
+              bank={bankInfo} amount={qrAmount} memo={qrMemo}
             />
           )}
           {bankInfo && (

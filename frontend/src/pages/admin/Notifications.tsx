@@ -9,6 +9,7 @@ import api from '../../lib/api'
 import { useNotifStore } from '../../store/notifStore'
 import { enablePush, syncPushIfGranted, sendTestPush, pushPermission } from '../../lib/push'
 import { NotificationSettingsModal, ADMIN_PUSH_CATEGORIES, SUPER_PUSH_CATEGORIES } from '../../components/member/NotificationSettingsModal'
+import { FilterChips } from '../../components/shared/FilterChips'
 
 type HermesNotif = {
   id: string
@@ -372,7 +373,7 @@ export function Notifications() {
         <NotificationSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} categories={pushCats} />
 
         <div className="px-4 pt-3 pb-24 space-y-4">
-          <FilterKpiList tab={tab} tabs={activeTabs} counts={counts} onChange={setTab} />
+          <FilterChips tabs={activeTabs} active={tab} counts={counts} onChange={setTab} label="Lọc thông báo" />
           {loading && <p className="text-center text-sm [color:var(--pf-color-muted)] py-8">Đang tải...</p>}
 
           {!loading && unread.length > 0 && (

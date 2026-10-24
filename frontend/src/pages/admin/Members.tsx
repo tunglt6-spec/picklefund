@@ -8,6 +8,7 @@
  * + token --pf-*. KHÔNG đổi logic/API/finance/attendance/account. UI chỉ render dữ liệu
  * hiện có; thiếu dữ liệu → EmptyState / "Chưa có dữ liệu" (không bịa số).
  */
+import { ActionMenu } from '../../components/shared/ActionMenu'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getBrandClubName } from '../../store/brandingStore'
 import { useNavigate } from 'react-router-dom'
@@ -692,9 +693,13 @@ export function Members() {
   /* ── Header actions (chỉ hiển thị action có backend hỗ trợ) ── */
   const headerActions = (
     <>
-      {canExport && <ExportActions onExcel={doExportExcel} onPdf={doExportPDF} />}
-      <ActionButton variant="secondary" icon={<KeyRound size={15} />} onClick={() => navigate('/member-accounts')}>Tạo tài khoản</ActionButton>
+      {canExport && <div className="max-lg:hidden"><ExportActions onExcel={doExportExcel} onPdf={doExportPDF} /></div>}
+      <div className="max-lg:hidden"><ActionButton variant="secondary" icon={<KeyRound size={15} />} onClick={() => navigate('/member-accounts')}>Tạo tài khoản</ActionButton></div>
       <ActionButton icon={<Plus size={16} />} onClick={openCreate}>Thêm thành viên</ActionButton>
+      <ActionMenu items={[
+        ...(canExport ? [{ key: 'xlsx', label: 'Xuất Excel', onClick: doExportExcel }, { key: 'pdf', label: 'Xuất PDF', onClick: doExportPDF }] : []),
+        { key: 'acct', label: 'Tạo tài khoản', onClick: () => navigate('/member-accounts') },
+      ]} />
     </>
   )
 
