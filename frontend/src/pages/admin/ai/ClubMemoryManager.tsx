@@ -3,6 +3,7 @@
  * Maika đọc qua OrganizationContextManager (lọc PII/finance trước khi vào context) —
  * xem organization-intelligence.service.ts. Lisa/Hermes CHƯA đọc (việc sau, nếu cần).
  */
+import { mobileText } from '../../../lib/mobileText'
 import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2, BookOpen } from 'lucide-react'
 import toast from 'react-hot-toast'
@@ -167,7 +168,7 @@ export function ClubMemoryManager() {
   return (
     <PageShell maxWidth={1200}>
       <PageHeader
-        title="Club Memory"
+        title={mobileText('Club Memory', 'Bộ nhớ CLB')}
         actions={
           <Button onClick={openCreate}><Plus size={14} />Thêm tri thức</Button>
         }

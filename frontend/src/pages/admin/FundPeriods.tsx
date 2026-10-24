@@ -1,4 +1,6 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
+import { ActionMenu } from '../../components/shared/ActionMenu'
+import { useEmbedded } from '../../components/shared/ModuleTabs'
 import { HuyLabel } from '../../components/ui/HuyLabel'
 import { DateInput } from '../../components/ui/DateTimeFields'
 import { AmountHint } from '../../components/ui/AmountHint'
@@ -13,7 +15,7 @@ import {
   Trophy, Upload, AlertCircle, CheckCircle2, FileSpreadsheet, Copy, Check, Maximize2
 } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
-import { PageShell, PageHeader, DataTable, ExportActions, type Column } from '../../components/shared'
+import { PageShell, PageHeader, DataTable, type Column } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
@@ -537,6 +539,7 @@ export function FundPeriods() {
   }
 
   const isMobile = useIsMobile()
+  const embedded = useEmbedded()
 
   const handleGenerateReceipts = async (periodId: string) => {
     try {
@@ -605,49 +608,37 @@ export function FundPeriods() {
     const gamePeriods = filtered.filter(p => p.type === 'game')
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
-        {/* Sticky header */}
+        {/* Thanh thao tác gọn: 1 nút "Tạo kỳ quỹ" + menu "Thao tác" (QR, nhập, xuất). Tên màn do header chức năng hiển thị. */}
         <div className="sticky top-0 z-20 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
-          <span className="text-lg font-[800] [color:var(--pf-text)]">Kỳ Quỹ</span>
-          <div className="flex gap-1.5 items-center">
-            {bankInfo && (
-              <button
-                className="flex h-9 w-9 items-center justify-center rounded-xl [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] border [border-color:var(--pf-primary-soft)]"
-                onClick={() => setShowQrModal(true)}
-                title="QR thanh toán"
-              ><QrCode size={16} /></button>
-            )}
+          {embedded ? <span /> : <span className="text-lg font-[800] [color:var(--pf-text)]">Kỳ quỹ</span>}
+          <div className="flex gap-2 items-center">
+            <ActionMenu
+              items={[
+                ...(bankInfo ? [{ key: 'qr', label: 'QR thanh toán', onClick: () => setShowQrModal(true) }] : []),
+                ...(!isMember ? [
+                  { key: 'imp', label: 'Nhập Excel', onClick: () => { resetImport(); setShowImport(true) } },
+                  { key: 'bulk', label: 'Nhập dữ liệu CLB mới', onClick: () => setShowBulkImport(true) },
+                ] : []),
+                ...(filtered.length > 0 ? [
+                  { key: 'xlsx', label: 'Xuất Excel', onClick: () => { void doExportExcel() } },
+                  { key: 'pdf', label: 'Xuất PDF', onClick: () => { void doExportPdf() } },
+                ] : []),
+              ]}
+            />
             {!isMember && (
-              <>
-                <button
-                  className="flex h-9 w-9 items-center justify-center rounded-xl [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]"
-                  onClick={() => { resetImport(); setShowImport(true) }}
-                  title="Nhập Excel"
-                ><Upload size={16} /></button>
-                <button
-                  className="flex h-9 w-9 items-center justify-center rounded-xl [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]"
-                  onClick={() => setShowBulkImport(true)}
-                  title="Nhập dữ liệu CLB mới"
-                ><FileSpreadsheet size={16} /></button>
-                <button
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-sm font-[600] text-white active:opacity-80"
-                  style={{ background: 'var(--pf-primary)' }}
-                  onClick={() => { setFormChung({ ...emptyForm }); setShowCreateChung(true) }}
-                >
-                  <Plus size={14} />Chung
-                </button>
-                <button
-                  className="flex items-center gap-1 px-3 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary-text)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
-                  onClick={() => { setFormGame({ ...emptyForm }); setShowCreateGame(true) }}
-                >
-                  <Plus size={14} />Mini
-                </button>
-              </>
+              <ActionMenu
+                primary
+                label="Tạo kỳ quỹ"
+                items={[
+                  { key: 'chung', label: 'Kỳ quỹ chính', onClick: () => { setFormChung({ ...emptyForm }); setShowCreateChung(true) } },
+                  { key: 'game', label: 'Kỳ quỹ phụ', onClick: () => { setFormGame({ ...emptyForm }); setShowCreateGame(true) } },
+                ]}
+              />
             )}
           </div>
         </div>
 
         <div className="px-4 pt-4 pb-6 space-y-4">
-          {filtered.length > 0 && <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={exporting} />}
           {/* KPI summary */}
           <div className="grid grid-cols-2 gap-3">
             <div className="pf-stat-card rounded-xl p-4">

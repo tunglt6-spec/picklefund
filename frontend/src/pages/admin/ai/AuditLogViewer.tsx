@@ -3,6 +3,7 @@
  * Nối endpoint MỚI (read-only, tenant-safe): GET /audit-logs/club — clubId ÉP TỪ JWT
  * ở backend (client không override). Chỉ log của CLB mình. V2.2 shared-kit + trạng thái.
  */
+import { mobileText } from '../../../lib/mobileText'
 import { DateInput } from '../../../components/ui/DateTimeFields'
 import { useCallback, useEffect, useState } from 'react'
 import { ScrollText, Search, ChevronLeft, ChevronRight } from 'lucide-react'
@@ -108,7 +109,7 @@ export function AuditLogViewer() {
   return (
     <PageShell>
       <PageHeader
-        title="Audit Logs"
+        title={mobileText('Audit Logs', 'Nhật ký kiểm toán')}
         actions={logs.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} /> : undefined}
       />
 

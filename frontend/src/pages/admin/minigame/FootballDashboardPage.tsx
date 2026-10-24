@@ -590,7 +590,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
             />}
 
         {/* KPI */}
-        <div className="grid grid-cols-3 gap-3 sm:gap-4 sm:max-w-xl">
+        <div className="grid grid-cols-3 gap-3 sm:gap-4 sm:max-w-xl max-lg:hidden">
           <MetricCard icon={<Shield size={18} />} label={isPair ? 'Số cặp' : 'Số đội'} value={teams.length} accent="blue" />
           <MetricCard icon={<Users size={18} />} label={ui.player} value={totalPlayers} accent="teal" />
           <MetricCard icon={<ListChecks size={18} />} label="Trận" value={`${completedMatches}/${matches.length}`} accent="violet" />

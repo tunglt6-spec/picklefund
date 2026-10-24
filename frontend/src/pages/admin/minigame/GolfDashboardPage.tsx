@@ -269,7 +269,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
             />}
 
         {/* KPI */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:max-w-md">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:max-w-md max-lg:hidden">
           <MetricCard icon={<Users size={18} />} label="Golfer" value={golfers.length} accent="blue" />
           <MetricCard icon={<Flag size={18} />} label="Số vòng" value={rounds} accent="teal" />
         </div>

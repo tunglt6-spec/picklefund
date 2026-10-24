@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { ActionTypeText } from '../../../components/ui/ActionTypeText'
 import { useDialogA11y } from '../../../hooks/useDialogA11y'
 import toast from 'react-hot-toast'
 import {
@@ -178,7 +179,7 @@ export function AiApprovalInbox() {
                     </div>
                     <p className="text-sm font-semibold [color:var(--pf-text)] mt-1.5">{a.title}</p>
                     {a.summary && <p className="text-xs [color:var(--pf-color-muted)] line-clamp-2 mt-0.5">{a.summary}</p>}
-                    <p className="text-xs [color:var(--pf-color-muted)] mt-1">{a.actionType}{a.targetModule ? ` · ${a.targetModule}` : ''}</p>
+                    <p className="text-xs [color:var(--pf-color-muted)] mt-1"><ActionTypeText value={a.actionType} />{a.targetModule ? <span className="max-lg:hidden">{` · ${a.targetModule}`}</span> : null}</p>
                     <div className="mt-2.5 flex flex-wrap gap-2">
                       <button
                         onClick={() => void runMutation(() => approveAiAction(a.id), 'Đã duyệt')}
@@ -300,7 +301,7 @@ export function AiApprovalInbox() {
                     <span className="text-xs [color:var(--pf-color-muted)] shrink-0">{fmtTime(a.createdAt)}</span>
                   </div>
                   <p className="text-sm font-semibold [color:var(--pf-text)] mt-1.5">{a.title}</p>
-                  <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{a.actionType}{a.targetModule ? ` · ${a.targetModule}` : ''}</p>
+                  <p className="text-xs [color:var(--pf-color-muted)] mt-0.5"><ActionTypeText value={a.actionType} />{a.targetModule ? <span className="max-lg:hidden">{` · ${a.targetModule}`}</span> : null}</p>
                   <div className="mt-2.5 flex flex-wrap gap-2">
                     <button
                       onClick={() => void runMutation(() => executeAiAction(a.id), 'Đã thực thi')}
@@ -353,7 +354,7 @@ export function AiApprovalInbox() {
 
                 <div className="space-y-2 text-sm">
                   <Row label="AI yêu cầu">{detail.requestedByAi}</Row>
-                  <Row label="Loại hành động">{detail.actionType}</Row>
+                  <Row label="Loại hành động"><ActionTypeText value={detail.actionType} withCode /></Row>
                   <Row label="Module đích">{detail.targetModule ?? '—'}</Row>
                   <Row label="Thực thể đích">{detail.targetEntityType ? `${detail.targetEntityType}${detail.targetEntityId ? ` #${detail.targetEntityId}` : ''}` : '—'}</Row>
                   <Row label="Cần duyệt">{detail.approvalRequired ? 'Có' : 'Không'}</Row>

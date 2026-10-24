@@ -8,9 +8,10 @@
  *   (/minigames/:id/schedule · /minigames/:id · /minigames/:id/standings). KHÔNG bịa dữ liệu.
  * MEMBER_VIEW không tạo giải → tab Giải đấu chỉ xem tổng quan + danh sách.
  */
+import { nav } from '../../../components/mobile/navCatalog'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ListChecks, CalendarDays, ClipboardList, Trophy, RefreshCw, LayoutDashboard, Swords, FileCheck2, Medal } from 'lucide-react'
+import { ListChecks, CalendarDays, ClipboardList, Trophy, RefreshCw } from 'lucide-react'
 import { ModuleTabs, StatusBadge } from '../../../components/shared'
 import { Button } from '../../../components/ui/Button'
 import { MinigameForm } from '../minigame/MinigameForm'
@@ -130,8 +131,27 @@ const NAV_META: Record<NavKind, { title: string; sub: string; icon: typeof Calen
   standings: { title: 'Xếp hạng', sub: 'Chọn giải để xem bảng xếp hạng', icon: Trophy, to: (id) => `/minigames/${id}/standings`, empty: 'Chưa có giải nào để xem xếp hạng.' },
 }
 
+/**
+ * Đích của icon Lịch đấu / Kết quả / Xếp hạng theo THỂ THỨC giải — chỉ mobile: mở ĐÚNG khu vực chức năng của giải
+ * thay vì trang tổng quan dài. Màn lớn giữ đích cũ (`NAV_META.to`).
+ */
+function mobileTarget(kind: NavKind, mg: MiniGame): string {
+  const id = mg.id
+  const sport = String(mg.sport ?? '')
+  const fmt = String(mg.formatType ?? '')
+  const teamStyle = ['FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'AIR_VOLLEYBALL'].includes(sport)
+    || (mg.participantType === 'PAIR' && (fmt === 'GROUP_STAGE' || fmt === 'KNOCKOUT'))
+  if (teamStyle) return `/minigames/${id}?view=${kind === 'standings' ? 'standings' : 'schedule'}`
+  if (sport === 'GOLF' && fmt !== 'KNOCKOUT') return `/minigames/${id}?view=${kind === 'standings' ? 'leaderboard' : 'scores'}`
+  if (sport === 'RUNNING') return `/minigames/${id}`
+  if (fmt === 'FIXED_DOUBLES_ROUND_ROBIN') return `/minigames/${id}?view=${kind === 'standings' ? 'standings' : 'schedule'}`
+  if (fmt === 'KNOCKOUT') return `/minigames/${id}`
+  return kind === 'standings' ? `/minigames/${id}/standings` : `/minigames/${id}/schedule`
+}
+
 function TournamentNavList({ kind }: { kind: NavKind }) {
   const navigate = useNavigate()
+  const compact = useIsMobile(1024)
   const meta = NAV_META[kind]
   const [items, setItems] = useState<MiniGame[] | null>(null)
   const [error, setError] = useState(false)
@@ -149,7 +169,7 @@ function TournamentNavList({ kind }: { kind: NavKind }) {
     <div className="p-4 sm:p-6 flex flex-col gap-4">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div>
-          <h2 className="text-base font-bold [color:var(--pf-text)]">{meta.title}</h2>
+          <h2 className="text-base font-bold [color:var(--pf-text)] max-lg:hidden">{meta.title}</h2>
           <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{meta.sub}</p>
         </div>
         <Button variant="outline" size="sm" onClick={load}>
@@ -176,7 +196,7 @@ function TournamentNavList({ kind }: { kind: NavKind }) {
           {items.map(mg => {
             const st = normalizeMinigameStatus(mg.status)
             return (
-              <button key={mg.id} onClick={() => navigate(meta.to(mg.id))}
+              <button key={mg.id} onClick={() => navigate(compact ? mobileTarget(kind, mg) : meta.to(mg.id))}
                 className="pf-glass text-left rounded-2xl p-4 hover:-translate-y-0.5 hover:[border-color:var(--pf-primary-soft)] transition-all">
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-2xl leading-none">{sportEmoji(mg.sport) || '🏓'}</span>
@@ -200,11 +220,11 @@ export function CompeteHub() {
     <ModuleTabs
       title="Thi đấu"
       tabs={[
-        { key: 'overview', icon: LayoutDashboard, label: 'Tổng quan', element: <OverviewTab /> },
-        { key: 'tournaments', icon: Trophy, label: 'Giải đấu', element: <TournamentsTab /> },
-        { key: 'schedule', icon: Swords, label: 'Lịch đấu', element: <TournamentNavList kind="schedule" /> },
-        { key: 'results', icon: FileCheck2, label: 'Kết quả', element: <TournamentNavList kind="results" /> },
-        { key: 'standings', icon: Medal, label: 'Xếp hạng', element: <TournamentNavList kind="standings" /> },
+        { key: 'overview', ...nav('cmp.overview'), label: 'Tổng quan', element: <OverviewTab /> },
+        { key: 'tournaments', ...nav('cmp.tournaments'), label: 'Giải đấu', element: <TournamentsTab /> },
+        { key: 'schedule', ...nav('cmp.schedule'), label: 'Lịch đấu', element: <TournamentNavList kind="schedule" /> },
+        { key: 'results', ...nav('cmp.results'), label: 'Kết quả', element: <TournamentNavList kind="results" /> },
+        { key: 'standings', ...nav('cmp.standings'), label: 'Xếp hạng', element: <TournamentNavList kind="standings" /> },
       ]}
     />
   )

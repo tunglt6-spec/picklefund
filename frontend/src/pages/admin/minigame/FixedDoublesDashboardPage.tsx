@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useMobileView } from '../../../components/mobile/useMobileView'
+import { MobileFunctionHeader, MobileModuleMenu } from '../../../components/mobile/ModuleNav'
 import { useDialogA11y } from '../../../hooks/useDialogA11y'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
@@ -561,6 +563,8 @@ export function FixedDoublesDashboardPage() {
   const [showScheduleChoice, setShowScheduleChoice] = useState(false)
   // Đổi chỗ người chơi: chọn tối đa 2 slot (teamId+slot) rồi hoán đổi.
   const [showSwap, setShowSwap] = useState(false)
+  // Mobile: khi đã có lịch, chọn "Lịch & Kết quả" / "Bảng xếp hạng" bằng lưới icon (không dồn một trang dài).
+  const mv = useMobileView(['schedule', 'standings'] as const)
   const choiceRef = useRef<HTMLDivElement>(null)
   const swapRef = useRef<HTMLDivElement>(null)
   const deleteRef = useRef<HTMLDivElement>(null)
@@ -829,6 +833,23 @@ export function FixedDoublesDashboardPage() {
     }
   }
 
+  if (mv.mobile && hasSchedule && !mv.view) {
+    return (
+      <MobileModuleMenu
+        title={mg.name}
+        subtitle="Chọn chức năng của giải đấu"
+        scrollId={`/minigames/${id}`}
+        onBack={() => navigate('/minigames')}
+        items={[
+          { key: 'schedule', label: 'Lịch & Kết quả', to: '', icon: Calendar },
+          { key: 'standings', label: 'Bảng xếp hạng', to: '', icon: Trophy },
+        ]}
+        onSelect={(it) => mv.open(it.key as 'schedule' | 'standings')}
+      />
+    )
+  }
+  const fdView = mv.mobile && hasSchedule ? mv.view : null
+
   return (
     <div className="flex-1 overflow-y-auto" style={{ background: T.bg }}>
       <PageHeader variant="bar"
@@ -877,8 +898,10 @@ export function FixedDoublesDashboardPage() {
         )}
 
         {/* KPI — 4 columns */}
+        {fdView && <MobileFunctionHeader title={fdView === 'schedule' ? 'Lịch & Kết quả' : 'Bảng xếp hạng'} parent={mg.name} onBack={mv.back} />}
+
         {showSched && kpi && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 max-lg:hidden">
             <MetricCard icon={<Users size={18} />} label="Số đội" value={kpi.totalTeams} sub="cặp đôi tham gia" accent="blue" />
             <MetricCard icon={<Calendar size={18} />} label="Tổng trận" value={kpi.totalMatches} sub="trận đấu" accent="teal" />
             <MetricCard icon={<Check size={18} />} label="Đã xong" value={`${kpi.completedMatches}/${kpi.totalMatches}`} sub="trận hoàn thành" accent="green" />
@@ -907,7 +930,7 @@ export function FixedDoublesDashboardPage() {
           <div className="grid grid-cols-12 gap-5">
 
             {/* ── left: schedule ── */}
-            <div className="col-span-12 lg:col-span-7 xl:col-span-8 space-y-3">
+            <div className={`col-span-12 lg:col-span-7 xl:col-span-8 space-y-3 ${fdView === 'standings' ? 'max-lg:hidden' : ''}`}>
              <div id={FD_SCHEDULE_ID} className="space-y-3">
               {/* card header */}
               <div style={CARD} className="px-4 py-3 flex items-center justify-between gap-2 flex-wrap">
@@ -1008,7 +1031,7 @@ export function FixedDoublesDashboardPage() {
             </div>
 
             {/* ── right panel ── */}
-            <div className="col-span-12 lg:col-span-5 xl:col-span-4 space-y-4">
+            <div className={`col-span-12 lg:col-span-5 xl:col-span-4 space-y-4 ${fdView === 'schedule' ? 'max-lg:hidden' : ''}`}>
               <CompactRankingCard standings={standings} exportId={FD_EXPORT_ID} onExportPng={doExportPng} onExportPdf={doExportPdf} />
               {completed > 0 && (
                 <QuickStatsCard

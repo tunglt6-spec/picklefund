@@ -3,6 +3,7 @@
  * Đọc GET /ai/actions?status=EXECUTED|FAILED|RETRY_PENDING (endpoint có sẵn, không backend mới).
  * V2.2 Clean Modern SaaS. Có loading/error/empty state.
  */
+import { ActionTypeText } from '../../../components/ui/ActionTypeText'
 import { useCallback, useEffect, useState } from 'react'
 import { CheckCircle2, XCircle, RotateCcw, Cog } from 'lucide-react'
 import api from '../../../lib/api'
@@ -96,7 +97,7 @@ export function MitDacExecutionLog() {
                       )}
                     </div>
                     <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">
-                      {a.actionType} · {fmt(a.createdAt)}
+                      <ActionTypeText value={a.actionType} /> · {fmt(a.createdAt)}
                     </p>
                   </div>
                   <StatusBadge tone={meta.tone} dot>{meta.label}</StatusBadge>

@@ -82,7 +82,7 @@ export function MobileModuleMenu({ title, subtitle, items, onSelect, onBack, scr
 }
 
 /** Header gọn của màn nghiệp vụ: nút quay lại nhóm chức năng + tên chức năng cụ thể. Không mang theo tab/lưới cấp cha. */
-export function MobileFunctionHeader({ title, parent, onBack }: { title: string; parent?: string; onBack: () => void }) {
+export function MobileFunctionHeader({ title, parent, onBack, right }: { title: string; parent?: string; onBack: () => void; right?: ReactNode }) {
   return (
     <div className="sticky top-0 z-20 border-b px-4 py-2 [background:var(--pf-surface)] [border-color:var(--pf-border)] lg:hidden">
       <div className="mx-auto flex w-full max-w-2xl items-center gap-2">
@@ -90,7 +90,8 @@ export function MobileFunctionHeader({ title, parent, onBack }: { title: string;
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary-text)] active:scale-95">
           <ChevronLeft size={22} aria-hidden />
         </button>
-        <h1 className="min-w-0 truncate text-lg font-[800] [color:var(--pf-text)]">{title}</h1>
+        <h1 className="min-w-0 flex-1 truncate text-lg font-[800] [color:var(--pf-text)]">{title}</h1>
+        {right}
       </div>
     </div>
   )

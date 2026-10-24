@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { mobileText } from '../../../lib/mobileText'
 import { useNavigate } from 'react-router-dom'
 import {
   Bot, ShieldCheck, Activity, AlertTriangle, Inbox, ClipboardList,
@@ -27,6 +28,12 @@ interface OpsSection {
   to: string | null
   status: 'here' | 'active' | 'soon'
   group: string
+}
+
+/** Tên tiếng Việt cho lưới khu vực vận hành (mobile). */
+const SECTION_VI: Record<string, string> = {
+  workflow: 'Luật tự động hóa', approval: 'Hộp duyệt AI', dispatch: 'Nhật ký AI', notif: 'Trung tâm thông báo', scheduler: 'Lịch tác vụ',
+  alert: 'Trung tâm cảnh báo', monitor: 'Giám sát dữ liệu', kpi: 'Chỉ số vận hành', memory: 'Bộ nhớ CLB', audit: 'Nhật ký kiểm toán',
 }
 
 const SECTION_ICON: Record<string, typeof Bot> = {
@@ -285,7 +292,7 @@ const KPI9: Kpi9Def[] = [
   { key: 'cooldownBlockedToday', label: 'Bị chặn cooldown', icon: <Timer size={15} />, color: 'amber', pick: (o) => o.cooldownBlockedToday },
 ]
 
-export function AiManagerDashboard() {
+export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } = {}) {
   const navigate = useNavigate()
   // Mở màn con kèm cờ ?from=aido → màn đích hiện thanh "Quay lại AI Operations Center" (AppLayout).
   const goHub = (to: string) => navigate(to.includes('?') ? `${to}&from=aido` : `${to}?from=aido`)
@@ -515,7 +522,7 @@ export function AiManagerDashboard() {
     <div className="[background:var(--pf-bg)]">
       {/* Header — KHÔNG bọc scroll riêng (tránh scroll lồng cắt chân khi nhúng tab AIDO) và
           KHÔNG sticky (thanh tab AIDO đã sticky top-0; 2 sticky sẽ chồng nhau). */}
-      <div className="[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] py-4">
+      <div className={`[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] py-4 ${embedded ? 'max-lg:hidden' : ''}`}>
         <div className="pf-center-x w-full max-w-[1600px] px-4 sm:px-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3 min-w-0">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">
@@ -523,7 +530,7 @@ export function AiManagerDashboard() {
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-bold [color:var(--pf-text)]">AI Operations Center</h1>
+                <h1 className="text-xl font-bold [color:var(--pf-text)]">{mobileText('AI Operations Center', 'Trung tâm điều hành AI')}</h1>
                 <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">
                   <span className="h-1.5 w-1.5 rounded-full [background:var(--pf-primary)] animate-pulse" />
                   Hermes · AI COO
@@ -601,7 +608,7 @@ export function AiManagerDashboard() {
           <PanelTitle icon={<LayoutGrid size={16} />}>Khu Vực Vận Hành</PanelTitle>
           <TileGrid
             items={sections.filter(s => s.to).map((s): AppItem => ({
-              key: s.key, label: s.label, to: '', icon: SECTION_ICON[s.key] ?? LayoutGrid,
+              key: s.key, label: SECTION_VI[s.key] ?? s.label, to: '', icon: SECTION_ICON[s.key] ?? LayoutGrid,
               badgeCount: s.key === 'approval' ? rt.summary?.modules?.hermes?.waitingApproval : undefined,
             }))}
             onSelect={(it) => { const t = sections.find(x => x.key === it.key)?.to; if (t) goHub(t) }}

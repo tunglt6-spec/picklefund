@@ -440,6 +440,7 @@ export function AiDigitalOffice() {
 
   return (
     <PageShell>
+      <div className="contents max-lg:hidden">
       <PageHeader
         title={compactTitle ? "AIDO" : "AIDO — AI Digital Office"}
         actions={
@@ -472,9 +473,22 @@ export function AiDigitalOffice() {
           </div>
         }
       />
+      </div>
 
       {/* Mobile: header gọn dùng chung (quay lại lưới chức năng AIDO + tên chức năng). */}
-      {compactTitle && <MobileFunctionHeader title={currentLabel ?? 'AIDO'} parent="AIDO" onBack={() => setTab('menu')} />}
+      {compactTitle && (
+        <MobileFunctionHeader
+          title={currentLabel ?? 'AIDO'}
+          parent="AIDO"
+          onBack={() => setTab('menu')}
+          right={tab !== 'ops-center' ? (
+            <button type="button" onClick={() => void load()} disabled={loading} aria-label="Làm mới"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary-text)] disabled:opacity-50">
+              <RefreshCw size={18} className={loading ? 'animate-spin' : ''} aria-hidden />
+            </button>
+          ) : undefined}
+        />
+      )}
 
       {/* Thanh tab — bar trắng sticky full-bleed + kẻ dưới, nội dung căn max-w-1600
           (đúng chuẩn ModuleTabs màn Thành viên: căn lề thẳng tiêu đề + nội dung). Chỉ desktop. */}
@@ -770,7 +784,7 @@ export function AiDigitalOffice() {
           KPI, Data, Audit... đều là card trong hub). Full-bleed để hết đúp lề. */}
       {tab === 'ops-center' && (
         <div className="-mx-4 -my-4 sm:-mx-6 sm:-my-6">
-          <AiManagerDashboard />
+          <AiManagerDashboard embedded />
         </div>
       )}
     </PageShell>

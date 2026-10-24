@@ -4,6 +4,7 @@
  * THẬT (trùng SĐT/tên, thiếu liên hệ, nhất quán kỳ quỹ), scope theo clubId từ JWT.
  * V2.2 Clean Modern SaaS + loading/error state.
  */
+import { mobileText } from '../../../lib/mobileText'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -68,7 +69,7 @@ export function DataMonitorPage() {
   return (
     <PageShell>
       <PageHeader
-        title="Data Monitor"
+        title={mobileText('Data Monitor', 'Giám sát dữ liệu')}
       />
 
       {loading ? (

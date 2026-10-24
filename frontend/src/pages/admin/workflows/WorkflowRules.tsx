@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { mobileText } from '../../../lib/mobileText'
 import toast from 'react-hot-toast'
 import { Workflow, Info, Play, Trash2, RefreshCw, Plus, AlertTriangle, Zap, Database, History } from 'lucide-react'
 import {
@@ -153,7 +154,7 @@ export function WorkflowRules() {
               <Workflow size={20} className="[color:var(--pf-primary-text)]" />
             </span>
             <div>
-              <h1 className="text-xl font-bold [color:var(--pf-text)]">Hermes Workflows</h1>
+              <h1 className="text-xl font-bold [color:var(--pf-text)]">{mobileText('Hermes Workflows', 'Luật tự động hóa')}</h1>
             </div>
           </div>
           <button

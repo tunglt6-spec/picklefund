@@ -8,6 +8,7 @@
  * Cron hệ thống (Maika/Lisa @Cron) hiển thị tĩnh (không có endpoint — lịch cố định).
  * V2.2 Clean Modern SaaS + loading/error/empty state.
  */
+import { mobileText } from '../../../lib/mobileText'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CalendarClock, Power, Repeat, Clock, Play, Bot, Sparkles } from 'lucide-react'
@@ -167,7 +168,7 @@ export function SchedulerPage() {
   return (
     <PageShell>
       <PageHeader
-        title="Scheduler"
+        title={mobileText('Scheduler', 'Lịch tác vụ')}
         actions={
           <div className="flex items-center gap-2">
             {/* Công tắc hệ thống (ảnh hưởng MỌI CLB) — mở cho CLUB_ADMIN theo yêu cầu. */}

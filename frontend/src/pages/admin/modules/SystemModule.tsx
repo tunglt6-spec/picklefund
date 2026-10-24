@@ -2,7 +2,7 @@
  * SystemModule — module "Hệ thống" (gom Thông báo/Gói dịch vụ/Cài đặt thành tab con). Chỉ
  * tái dùng page ĐÃ CÓ, không đổi nghiệp vụ.
  */
-import { Bell, CreditCard, Settings as SettingsIcon } from 'lucide-react'
+import { nav } from '../../../components/mobile/navCatalog'
 import { ModuleTabs } from '../../../components/shared'
 import { Notifications } from '../Notifications'
 import { Billing } from '../Billing'
@@ -13,9 +13,9 @@ export function SystemModule() {
     <ModuleTabs
       title="Hệ thống"
       tabs={[
-        { key: 'notifications', icon: Bell, label: 'Thông báo', element: <Notifications /> },
-        { key: 'billing', icon: CreditCard, label: 'Gói dịch vụ', element: <Billing /> },
-        { key: 'settings', icon: SettingsIcon, nested: true, label: 'Cài đặt', element: <Settings /> },
+        { key: 'notifications', ...nav('sys.notifications'), label: 'Thông báo', element: <Notifications /> },
+        { key: 'billing', ...nav('sys.billing'), label: 'Gói dịch vụ', element: <Billing /> },
+        { key: 'settings', ...nav('sys.settings'), nested: true, label: 'Cài đặt', element: <Settings /> },
       ]}
     />
   )

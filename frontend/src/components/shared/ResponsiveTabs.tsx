@@ -22,8 +22,8 @@ export function ResponsiveTabs({
   onChange,
   className,
 }: ResponsiveTabsProps) {
-  // Mobile (<1024px): quá 3 mục thì dùng ô chọn gọn (không có hàng phải vuốt ngang); ≤3 mục chia đều bề ngang.
-  const many = tabs.length > 3
+  // Mobile (<1024px): từ 3 mục trở lên dùng ô chọn gọn (không có hàng phải vuốt ngang); ≤3 mục chia đều bề ngang.
+  const many = tabs.length >= 3
   return (
     <>
     {many && (
@@ -58,7 +58,7 @@ export function ResponsiveTabs({
             className={cn(
               'shrink-0 whitespace-nowrap rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97]',
               // Mobile: ≤3 mục chia đều bề ngang (không bị cắt mép phải).
-              tabs.length <= 3 && 'max-lg:flex-1 max-lg:shrink max-lg:min-w-0 max-lg:px-1.5 max-lg:text-[13px]',
+              tabs.length < 3 && 'max-lg:flex-1 max-lg:shrink max-lg:min-w-0 max-lg:px-1.5 max-lg:text-[13px]',
               isActive
                 ? 'border-transparent text-white [box-shadow:0_8px_18px_-8px_rgba(109,93,251,0.6)]'
                 : '[border-color:var(--pf-border)] [background:var(--pf-glass-bg-strong)] [color:var(--pf-color-muted)] hover:-translate-y-px hover:[color:var(--pf-primary-text)] hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)]',

@@ -7,6 +7,7 @@
  *   GET /workflows/runs           — KPI workflow (đếm theo trạng thái)
  * KHÔNG bịa: chỉ render field có thật; nguồn lỗi → hiển thị "—".
  */
+import { mobileText } from '../../../lib/mobileText'
 import { useCallback, useEffect, useState } from 'react'
 import {
   Gauge, Users, Wallet, Workflow, Bot, HeartPulse, TrendingUp, Activity,
@@ -107,7 +108,7 @@ export function KpiMonitorPage() {
   return (
     <PageShell>
       <PageHeader
-        title="KPI Monitor"
+        title={mobileText('KPI Monitor', 'Chỉ số vận hành')}
       />
 
       {loading ? (

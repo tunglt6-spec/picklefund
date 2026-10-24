@@ -7,6 +7,7 @@
  *   GET /ai/actions?status=FAILED            — lỗi AI / thực thi (Mít Đặc)
  * V2.2 Clean Modern SaaS + loading/error/empty state.
  */
+import { mobileText } from '../../../lib/mobileText'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -119,7 +120,7 @@ export function AlertCenterPage() {
   return (
     <PageShell>
       <PageHeader
-        title="Alert Center"
+        title={mobileText('Alert Center', 'Trung tâm cảnh báo')}
       />
 
       {loading ? (
