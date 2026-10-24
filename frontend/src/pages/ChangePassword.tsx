@@ -69,7 +69,7 @@ export function ChangePassword() {
                   className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-[color:var(--pf-border)] text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary-text)]"
                   required
                 />
-                <button type="button" onClick={() => setShow(s => ({ ...s, old: !s.old }))}
+                <button type="button" aria-label={show.old ? "Ẩn mật khẩu" : "Hiện mật khẩu"} onClick={() => setShow(s => ({ ...s, old: !s.old }))}
                   className="absolute right-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] hover:[color:var(--pf-color-muted)]">
                   {show.old ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -90,7 +90,7 @@ export function ChangePassword() {
                   className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-[color:var(--pf-border)] text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary-text)]"
                   required
                 />
-                <button type="button" onClick={() => setShow(s => ({ ...s, new: !s.new }))}
+                <button type="button" aria-label={show.new ? "Ẩn mật khẩu" : "Hiện mật khẩu"} onClick={() => setShow(s => ({ ...s, new: !s.new }))}
                   className="absolute right-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] hover:[color:var(--pf-color-muted)]">
                   {show.new ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -111,7 +111,7 @@ export function ChangePassword() {
                   className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-[color:var(--pf-border)] text-sm focus:outline-none focus:[border-color:var(--pf-primary)] focus:ring-2 focus:ring-[color:var(--pf-primary-text)]"
                   required
                 />
-                <button type="button" onClick={() => setShow(s => ({ ...s, confirm: !s.confirm }))}
+                <button type="button" aria-label={show.confirm ? "Ẩn mật khẩu" : "Hiện mật khẩu"} onClick={() => setShow(s => ({ ...s, confirm: !s.confirm }))}
                   className="absolute right-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] hover:[color:var(--pf-color-muted)]">
                   {show.confirm ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>

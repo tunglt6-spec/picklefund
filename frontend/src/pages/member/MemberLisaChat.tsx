@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { LightMarkdown } from '../../components/ui/LightMarkdown'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -151,7 +152,7 @@ export function MemberLisaChat() {
               {m.role === 'lisa' ? <Bot size={14} className="[color:var(--pf-primary-text)]" /> : <User size={14} className="[color:var(--pf-color-muted)]" />}
             </div>
             <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 shadow-sm ${m.role === 'lisa' ? '[background:var(--pf-surface)] border border-[color:var(--pf-border)] [color:var(--pf-text)] rounded-tl-sm' : '[background:var(--pf-primary)] text-white rounded-tr-sm'}`}>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]">{m.text}</p>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]"><LightMarkdown text={m.text} /></p>
               <p className={`text-xs mt-1 ${m.role === 'lisa' ? '[color:var(--pf-color-muted)]' : 'text-white/70'}`}>{m.time}</p>
             </div>
           </div>

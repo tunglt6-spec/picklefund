@@ -638,6 +638,18 @@ const POPULAR_BANKS = [
 ]
 
 // ─── Tab: Telegram ───────────────────────────────────────────
+/** Mobile (<1024px): thu gọn khối hướng dẫn dài thành mục mở/đóng; màn lớn hiện đầy đủ như cũ. */
+function MobileCollapse({ title, children, open = false }: { title: string; children: React.ReactNode; open?: boolean }) {
+  const compact = useIsMobile(1024)
+  if (!compact) return <>{children}</>
+  return (
+    <details open={open} className="mb-3">
+      <summary className="flex min-h-[44px] cursor-pointer items-center text-sm font-semibold [color:var(--pf-primary-text)]">{title}</summary>
+      {children}
+    </details>
+  )
+}
+
 function TelegramTab() {
   const { user } = useAuthStore()
   const [chatId, setChatId] = useState('')
@@ -760,6 +772,7 @@ function TelegramTab() {
               </span>
             )}
           </div>
+          <MobileCollapse title="Cách tạo bot Telegram" open={!hasOwnBot}>
           <p className="text-sm [color:var(--pf-color-muted)] mb-3">
             Mỗi CLB dùng <b>bot Telegram của riêng mình</b> để nhận thông báo — không phụ thuộc bot của CLB khác hay của quản trị hệ thống.
           </p>
@@ -768,6 +781,7 @@ function TelegramTab() {
             <li>BotFather trả về một <b>token</b> (dạng <code className="[background:var(--pf-primary-soft)] px-1 rounded">123456:ABC-DEF…</code>) — dán vào ô dưới rồi bấm Lưu</li>
             <li>Mở chính bot vừa tạo, bấm <code className="[background:var(--pf-primary-soft)] px-1 rounded">/start</code>, rồi lấy Chat ID và kết nối ở phần bên dưới</li>
           </ol>
+          </MobileCollapse>
           <div className="flex flex-wrap gap-2 items-center">
             <input
               type="password"
@@ -816,6 +830,7 @@ function TelegramTab() {
           </div>
         )}
 
+        <MobileCollapse title="Hướng dẫn lấy Chat ID">
         <div className="[background:var(--pf-primary-soft)] border [border-color:var(--pf-primary-soft)] rounded-lg p-4 mb-5 space-y-1.5">
           <p className="text-sm font-medium [color:var(--pf-primary-text)]">Hướng dẫn lấy Chat ID:</p>
           <ol className="text-sm [color:var(--pf-primary-text)] space-y-1 list-decimal list-inside">
@@ -830,6 +845,7 @@ function TelegramTab() {
             ℹ️ Một Chat ID <b>có thể dùng chung cho nhiều CLB</b> (vd bạn quản lý nhiều CLB) — liên kết cho CLB này không làm mất liên kết ở CLB khác.
           </p>
         </div>
+        </MobileCollapse>
 
         <div className="space-y-3">
           <label htmlFor="f-Settings-16" className="block text-sm font-medium [color:var(--pf-text)]">Chat ID</label>

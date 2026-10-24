@@ -120,7 +120,12 @@ export function PaymentApprovals() {
         actions={rows.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined}
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="pf-glass grid grid-cols-3 divide-x p-3 text-center [--tw-divide-opacity:1] lg:hidden" aria-label="Tóm tắt xác nhận nộp quỹ">
+        <div><p className="text-xs [color:var(--pf-color-muted)]">Chờ</p><p className="text-lg font-bold tabular-nums">{stats?.pendingCount ?? 0}</p></div>
+        <div><p className="text-xs [color:var(--pf-color-muted)]">Đã xác nhận</p><p className="text-lg font-bold tabular-nums">{stats?.confirmedCount ?? 0}</p></div>
+        <div><p className="text-xs [color:var(--pf-color-muted)]">Đã thu</p><p className="text-sm font-bold tabular-nums leading-7">{formatVND(Number(stats?.confirmedAmount ?? 0))}</p></div>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 max-lg:hidden">
         <MetricCard label="Chờ xác nhận" value={`${stats?.pendingCount ?? 0}`} accent="amber" icon={<Clock size={18} />} />
         <MetricCard label="Đã xác nhận" value={`${stats?.confirmedCount ?? 0}`} accent="green" icon={<CheckCircle2 size={18} />} />
         <MetricCard label="Tổng đã thu (xác nhận)" value={formatVND(Number(stats?.confirmedAmount ?? 0))} money={{ value: Number(stats?.confirmedAmount ?? 0), kind: 'income' }} accent="blue" icon={<Wallet size={18} />} />

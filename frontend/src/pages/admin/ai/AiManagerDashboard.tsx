@@ -286,6 +286,7 @@ export function AiManagerDashboard() {
   const { policies, intel, summary, opsSignals, loading, availability } = useAiManager()
   const rt = useOperationsRuntime()
   const [teamFilter, setTeamFilter] = useState<'all' | 'active' | 'planned'>('all')
+  const [moreKpi, setMoreKpi] = useState(false)
 
   const sections = useMemo(() => buildSections(role === 'SUPER_ADMIN'), [role])
 
@@ -526,9 +527,9 @@ export function AiManagerDashboard() {
         </div>
       </div>
 
-      <div className="pf-center-x w-full max-w-[1600px] px-4 sm:px-6 py-5 space-y-6">
+      <div className="pf-center-x w-full max-w-[1600px] px-4 sm:px-6 py-5 space-y-6 max-lg:flex max-lg:flex-col max-lg:gap-5 max-lg:space-y-0">
         {/* ── HÀNG KPI RUNTIME TỔNG QUAN (9 chỉ số) — dữ liệu THẬT ── */}
-        <div>
+        <div className="max-lg:-order-2">
           <div className="mb-2.5 flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wide [color:var(--pf-color-muted)]">Tổng quan runtime hôm nay</p>
             <div className="flex items-center gap-2">
@@ -560,12 +561,12 @@ export function AiManagerDashboard() {
             </div>
           ) : (
             <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9">
-              {KPI9.map((k) => {
+              {KPI9.map((k, ki) => {
                 const c = KPI_COLORS[k.color]
                 return (
                   <div
                     key={k.key}
-                    className="pf-stat-card rounded-xl p-3"
+                    className={`pf-stat-card rounded-xl p-3 ${ki >= 3 && !moreKpi ? 'max-lg:hidden' : ''}`}
                     title={k.label}
                   >
                     <span className="inline-flex" style={{ color: c.fg }}>{k.icon}</span>
@@ -578,11 +579,17 @@ export function AiManagerDashboard() {
               })}
             </div>
           )}
+          {rt.summary && (
+            <button type="button" aria-expanded={moreKpi} onClick={() => setMoreKpi(v => !v)}
+              className="mt-2 min-h-[44px] w-full rounded-xl border text-sm font-semibold [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary-text)] lg:hidden">
+              {moreKpi ? 'Thu gọn chỉ số' : 'Xem thêm chỉ số'}
+            </button>
+          )}
         </div>
 
         {/* Hub điều hướng — TẤT CẢ card trong 1 lưới gọn, 4 card/hàng từ ~1024px (laptop 1280 luôn
             thấy 4 cột), sát nhau, hết trống chỗ. Mọi card dùng CHUNG 1 tông tím Hermes cho đồng nhất. */}
-        <Card>
+        <Card className="max-lg:-order-1">
           <PanelTitle icon={<LayoutGrid size={16} />}>Khu Vực Vận Hành</PanelTitle>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {sections.map(s => {
@@ -593,7 +600,13 @@ export function AiManagerDashboard() {
         </Card>
 
         {/* Backend status banner — trung thực */}
-        <div className="flex items-start gap-2.5 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
+        <details className="lg:hidden order-last rounded-2xl border [border-color:var(--pf-border)] [background:var(--pf-surface)] px-4 py-3">
+          <summary className="flex min-h-[44px] cursor-pointer items-center text-sm font-semibold [color:var(--pf-text)]">Chi tiết kỹ thuật</summary>
+          <p className="mt-1 text-xs leading-relaxed [color:var(--pf-color-muted)]">
+            Hàng đợi, phê duyệt và cầu thực thi (Mít Đặc) đã hoạt động. Duyệt không tự thực thi: hành động đã duyệt được thực thi thủ công qua Mít Đặc (Hộp Duyệt). Cầu thực thi hiện chưa chạy nghiệp vụ thật. Chỉ số lấy từ dữ liệu thật.
+          </p>
+        </details>
+        <div className="max-lg:hidden flex items-start gap-2.5 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
           <Info size={16} className="text-sky-600 shrink-0 mt-0.5" />
           <p className="text-xs text-sky-800 leading-relaxed">
             Hàng đợi + phê duyệt + <b>Execution Bridge (Mít Đặc)</b> đã hoạt động. Duyệt KHÔNG tự thực thi —
@@ -669,7 +682,7 @@ export function AiManagerDashboard() {
         </Card>
 
         {/* Panels */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 max-lg:contents">
           {/* Approval policy matrix — REAL */}
           <Card>
             <PanelTitle icon={<ShieldCheck size={16} />}>Chính Sách Duyệt Theo Rủi Ro</PanelTitle>
@@ -706,7 +719,7 @@ export function AiManagerDashboard() {
           </Card>
 
           {/* Risk / Warning — REAL from org-intelligence */}
-          <Card>
+          <Card className="max-lg:-order-3">
             <PanelTitle icon={<AlertTriangle size={16} />}>Rủi Ro & Cảnh Báo</PanelTitle>
             {loading ? (
               <p className="text-sm [color:var(--pf-color-muted)]">Đang tải…</p>
@@ -724,7 +737,7 @@ export function AiManagerDashboard() {
                     <div key={`${s.code}-${i}`} className={`rounded-xl px-3 py-2.5 ${st.bg}`}>
                       <div className="flex items-center justify-between">
                         <span className={`text-xs font-semibold uppercase ${st.text}`}>{st.label}</span>
-                        <span className="text-xs [color:var(--pf-color-muted)]">{s.code}</span>
+                        <span className="text-xs [color:var(--pf-color-muted)] max-lg:hidden">{s.code}</span>
                       </div>
                       <p className="text-xs [color:var(--pf-color-muted)] mt-1">{s.message}</p>
                       {s.code === 'DQ_NO_CLUB_MEMORY' && (

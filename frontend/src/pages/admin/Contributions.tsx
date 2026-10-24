@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
+import { AmountHint } from '../../components/ui/AmountHint'
 import { getBrandClubName } from '../../store/brandingStore'
 import { Plus, CheckCircle, XCircle, DollarSign, Edit2, Trash2, FileText, FileSpreadsheet, Wallet } from 'lucide-react'
 import api from '../../lib/api'
@@ -612,6 +613,7 @@ export function Contributions() {
                 <label htmlFor="f-Contributions-2" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
                 <input id="f-Contributions-2" required type="number" min={1} value={form.amount}
                   onChange={e => setForm({ ...form, amount: e.target.value === '' ? '' : Number(e.target.value) })} className="input-base" />
+<AmountHint value={form.amount} />
               </div>
               <div>
                 <label htmlFor="f-Contributions-3" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày thu</label>
@@ -935,6 +937,7 @@ export function Contributions() {
               <label htmlFor="f-Contributions-6" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền (VNĐ) <span className="text-red-500">*</span></label>
               <input id="f-Contributions-6" required type="number" min={1} value={form.amount}
                 onChange={e => setForm({ ...form, amount: e.target.value === '' ? '' : Number(e.target.value) })} className="input-base" />
+<AmountHint value={form.amount} />
             </div>
             <div>
               <label htmlFor="ctb-d-date" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày thu</label>

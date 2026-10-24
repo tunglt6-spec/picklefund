@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { AmountHint } from '../../components/ui/AmountHint'
 import { Plus, CheckSquare, CalendarX, Clock, MapPin, Users, Edit2, Trash2, CalendarDays, UserCheck, TrendingUp } from 'lucide-react'
 import api from '../../lib/api'
 import { PageShell, PageHeader, MetricCard, EmptyState, StatusBadge, ActionButton, ExportActions, runExport } from '../../components/shared'
@@ -423,6 +424,7 @@ export function Attendance() {
           <div>
             <label htmlFor="f-Attendance-5" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Tiền sân (VNĐ) <span className="text-red-500">*</span></label>
             <input id="f-Attendance-5" type="number" required min="1" value={editForm.courtFee} onChange={e => setEditForm({ ...editForm, courtFee: Number(e.target.value) })} className="input-base" />
+<AmountHint value={editForm.courtFee} />
           </div>
         </form>
       </Modal>
@@ -506,6 +508,7 @@ export function Attendance() {
             <label htmlFor="f-Attendance-10" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Tiền sân (VNĐ) <span className="text-red-500">*</span></label>
             <input id="f-Attendance-10" type="number" required min="1" value={form.courtFee} placeholder="Nhập tiền sân"
               onChange={e => setForm({ ...form, courtFee: e.target.value === '' ? '' : Number(e.target.value) })} className="input-base" />
+<AmountHint value={form.courtFee} />
           </div>
         </form>
       </Modal>

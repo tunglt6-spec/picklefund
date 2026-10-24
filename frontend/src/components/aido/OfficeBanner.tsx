@@ -26,13 +26,13 @@ export function OfficeBanner({ badge }: { badge?: ReactNode }) {
         @media (prefers-reduced-motion: reduce) { .aido-run, .aido-radar { animation: none; } }
       `}</style>
       <div
-        className="relative mx-auto w-full overflow-hidden rounded-[20px] border [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)]"
+        className="relative mx-auto w-full overflow-hidden rounded-[20px] border [border-color:var(--pf-border)] [box-shadow:var(--pf-shadow)] max-lg:flex max-lg:min-h-[52px] max-lg:items-center max-lg:px-4 max-lg:[background:var(--pf-surface)]"
         style={{ maxWidth: 1832 }}
       >
         <svg
           role="img"
           aria-label="AIDO — Văn phòng AI"
-          className="block w-full"
+          className="block w-full max-lg:hidden"
           viewBox="0 0 1832 602"
           preserveAspectRatio="xMidYMid meet"
           fill="none"
@@ -56,6 +56,8 @@ export function OfficeBanner({ badge }: { badge?: ReactNode }) {
             </g>
           ))}
         </svg>
+        {/* Mobile: ảnh banner chữ quá nhỏ → thay bằng tiêu đề gọn; trạng thái trực tiếp vẫn hiện ở góc phải. */}
+        <p className="text-sm font-semibold [color:var(--pf-text)] lg:hidden">Văn phòng AI</p>
         {badge}
       </div>
     </div>

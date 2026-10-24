@@ -97,6 +97,8 @@ export function Reports() {
   const { user, accessToken } = useAuthStore()
   const { getClubData, setMemberAttendanceSummary } = useClubDataStore()
   const isMobile = useIsMobile()
+  const isCompact = useIsMobile(1024)
+  const [moreKpi, setMoreKpi] = useState(false)
   const clubData = getClubData(user?.clubId ?? '')
   const defaultPeriod = getActiveChungPeriod(clubData.fundPeriods)
     ?? clubData.fundPeriods.find(p => (p.type ?? 'chung') === 'chung')
@@ -454,14 +456,20 @@ export function Reports() {
         <>
           {/* ── Official KPI Summary (backend fundSummary = Source of Truth) ── */}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 xl:grid-cols-4">
-            {kpi('Tổng thu kỳ', kIncome, 'Quỹ Chính (backend)', 'green', <TrendingUp size={18} />, formatVND, 'income')}
-            {kpi('Tổng chi kỳ', kExpense, 'Quỹ Chính (backend)', 'amber', <TrendingDown size={18} />, formatVND, 'expense')}
+            {kpi('Tổng thu kỳ', kIncome, (isCompact ? 'Quỹ Chính' : 'Quỹ Chính (backend)'), 'green', <TrendingUp size={18} />, formatVND, 'income')}
+            {kpi('Tổng chi kỳ', kExpense, (isCompact ? 'Quỹ Chính' : 'Quỹ Chính (backend)'), 'amber', <TrendingDown size={18} />, formatVND, 'expense')}
             {kpi('Số dư Quỹ Chính', kMainFund, '= Thu − Chi + chuyển kỳ', 'green', <Wallet size={18} />, formatVND, 'balance')}
+            <div className={moreKpi ? 'contents' : 'contents max-lg:hidden'}>
             {kpi('Quỹ Phụ', kMiniBalance, 'Độc lập Quỹ Chính', 'violet', <Gamepad2 size={18} />, formatVND, 'balance')}
             {kpi('Số dư chuyển kỳ', kCarry, 'Từ kỳ trước', 'blue', <ArrowLeftRight size={18} />, formatVND, 'signed')}
-            {kpi('Tổng lượt điểm danh', kAttendance, 'Backend summary', 'teal', <Activity size={18} />, (v) => v.toLocaleString('vi-VN'))}
+            {kpi('Tổng lượt điểm danh', kAttendance, (isCompact ? 'Theo điểm danh kỳ này' : 'Backend summary'), 'teal', <Activity size={18} />, (v) => v.toLocaleString('vi-VN'))}
             {kpi('Chưa đóng quỹ', kUnpaid, periodName || 'Kỳ hiện tại', 'rose', <AlertCircle size={18} />, (v) => v.toLocaleString('vi-VN'))}
             <MetricCard label="Thành viên hoạt động" value={activeMemberCount.toLocaleString('vi-VN')} sub="Đang sinh hoạt" accent="blue" icon={<Users size={18} />} />
+            </div>
+            <button type="button" aria-expanded={moreKpi} onClick={() => setMoreKpi(v => !v)}
+              className="col-span-2 min-h-[44px] rounded-xl border text-sm font-semibold [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary-text)] lg:hidden">
+              {moreKpi ? 'Thu gọn chỉ số' : 'Xem thêm chỉ số'}
+            </button>
           </div>
 
           {/* ── Charts (visualization từ store — không phải KPI chính thức) ── */}

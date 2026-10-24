@@ -131,12 +131,12 @@ export function CommunityModeration({ embedded }: { embedded?: boolean } = {}) {
           accent="amber"
           icon={<Flag size={18} />}
         />
-        <MetricCard
+        <div className="max-lg:hidden"><MetricCard
           label="Đang xem"
           value={TABS.find((t) => t.key === tab)?.label ?? ''}
           accent="blue"
           icon={<ShieldAlert size={18} />}
-        />
+        /></div>
       </div>
 
       <div className="mt-4">

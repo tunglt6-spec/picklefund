@@ -1,4 +1,5 @@
 ﻿import { moneyColor } from '../../lib/moneyTone'
+import { AmountHint } from '../../components/ui/AmountHint'
 import { useState, useEffect } from 'react'
 import { Plus, CheckCircle, XCircle, Edit2, Trash2, DollarSign, Wallet, Download, FileText } from 'lucide-react'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
@@ -430,6 +431,7 @@ export function TreasurerIncome() {
                 <label htmlFor="ti-m-amount" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền <span className="text-red-500">*</span></label>
                 <input id="ti-m-amount" required type="number" min={1} value={form.amount} onChange={e => setForm({ ...form, amount: Number(e.target.value) })}
                   className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none [background:var(--pf-surface)]" />
+<AmountHint value={form.amount} />
               </div>
               <div>
                 <label htmlFor="ti-m-date" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày đóng</label>
@@ -728,6 +730,7 @@ export function TreasurerIncome() {
               <input id="ti-d-amount" required type="number" min={1} value={form.amount}
                 onChange={e => setForm({ ...form, amount: Number(e.target.value) })}
                 className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]" />
+<AmountHint value={form.amount} />
             </div>
             <div>
               <label htmlFor="ti-d-date" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày đóng</label>

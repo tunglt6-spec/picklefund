@@ -2,6 +2,7 @@
  * LisaMessagesLog — Lịch sử hỏi–đáp của Lisa (đọc TOÀN VĂN). Read-only.
  * Đọc GET /aido/lisa-messages (bảng lisa_messages, Phase 2). V2.2 Clean Modern SaaS.
  */
+import { LightMarkdown } from '../../../components/ui/LightMarkdown'
 import { useCallback, useEffect, useState } from 'react'
 import { MessageSquare, User, Sparkles } from 'lucide-react'
 import api from '../../../lib/api'
@@ -85,7 +86,7 @@ export function LisaMessagesLog() {
                   <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]">
                     <Sparkles size={13} />
                   </span>
-                  <p className="whitespace-pre-line text-sm leading-relaxed [color:var(--pf-text)]">{m.answer}</p>
+                  <p className="whitespace-pre-line text-sm leading-relaxed [color:var(--pf-text)]"><LightMarkdown text={m.answer} /></p>
                 </div>
               </div>
             ))}

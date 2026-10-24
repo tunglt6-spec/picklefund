@@ -17,11 +17,12 @@ export const HUB_PATHS = [APPS_ROUTE, MOBILE_HOME]
 /** Đường dẫn (bỏ ?query) của một đích điều hướng — dùng để so khớp tab đang chọn. */
 export const pathOf = (to: string) => to.split('?')[0]
 
-const HOME_MATCH = ['/aido', '/dashboard', '/member/dashboard', '/member/aido', '/treasurer/dashboard', '/super/dashboard']
+const HOME_MATCH = ['/dashboard', '/member/dashboard', '/treasurer/dashboard', '/super/dashboard']
 const CAL_MATCH = ['/hoat-dong', '/member/hoat-dong', '/attendance', '/schedule', '/session-registration', '/check-in', '/activity']
 const COMPETE_MATCH = ['/thi-dau', '/member/thi-dau', '/minigames']
 // Các module không nằm trên thanh đáy → tô sáng tab "Ứng dụng" để người dùng luôn biết mình ở đâu.
-const APPS_MATCH = ['/thanh-vien', '/tai-chinh', '/he-thong', '/scoring', '/payments', '/notifications', '/billing', '/settings',
+// AIDO mở từ "Ứng dụng" nên cũng tô sáng tab Ứng dụng (không phải Tổng quan).
+const APPS_MATCH = ['/aido', '/member/aido', '/admin/ai-alerts', '/admin/ai-approvals', '/admin/ai-audit-logs', '/admin/ai-data-monitor', '/admin/ai-kpi', '/admin/ai-log', '/admin/ai-manager', '/admin/ai-scheduler', '/admin/workflows', '/thanh-vien', '/tai-chinh', '/he-thong', '/scoring', '/payments', '/notifications', '/billing', '/settings',
   '/member/ca-nhan', '/member/tai-chinh', '/member/notifications', '/member/lisa', '/lisa', '/debts', '/expenses', '/contributions', '/reports', '/fund-periods', '/members', '/member-accounts']
 
 export const bottomTabsByRole: Record<Role, BottomTab[]> = {

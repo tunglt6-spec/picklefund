@@ -166,9 +166,9 @@ export function WorkflowRules() {
         </div>
       </div>
 
-      <div className="pf-center-x w-full max-w-[1280px] px-4 sm:px-6 py-5 space-y-6">
+      <div className="pf-center-x w-full max-w-[1280px] px-4 sm:px-6 py-5 space-y-6 max-lg:flex max-lg:flex-col max-lg:gap-5 max-lg:space-y-0">
         {/* Banner */}
-        <div className="flex items-start gap-2.5 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
+        <div className="max-lg:order-2 flex items-start gap-2.5 rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3">
           <Info size={16} className="text-sky-600 shrink-0 mt-0.5" />
           <p className="text-xs text-sky-800 leading-relaxed">
             Hermes đánh giá rule và tạo <b>AI Action</b> (chờ duyệt) khi khớp — <b>không thực thi trực tiếp</b>.
@@ -184,7 +184,7 @@ export function WorkflowRules() {
         )}
 
         {/* KPI runtime (Mục XII) — chỉ số thật từ rules + runs; tô màu value-based (nguyên tắc chung) */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 max-lg:-order-3">
           {([
             { label: 'Rule đang bật', value: kpi.enabled, tone: kpi.enabled > 0 ? 'success' : 'neutral' },
             { label: 'Rule đang tắt', value: kpi.disabled, tone: 'neutral' },
@@ -264,7 +264,7 @@ export function WorkflowRules() {
         </div>
 
         {/* Dispatch theo Trigger (Epic 6 + Live data) */}
-        <div className="pf-glass rounded-2xl shadow-sm p-5">
+        <div className="pf-glass rounded-2xl shadow-sm p-5 max-lg:order-1">
           <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide mb-1">Chạy Dispatch theo Trigger</h3>
           <p className="text-xs [color:var(--pf-color-muted)] mb-3">
             <b>Dữ liệu thật</b>: lấy số liệu CLB hiện tại (nợ quỹ, buổi sắp tới, kỳ đã chốt) để rule khớp thực tế →
@@ -337,7 +337,7 @@ export function WorkflowRules() {
         </div>
 
         {/* Rules list */}
-        <div className="pf-glass rounded-2xl shadow-sm p-5">
+        <div className="pf-glass rounded-2xl shadow-sm p-5 max-lg:-order-2">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">Workflow Rules</h3>
             <span className="rounded-full [background:var(--pf-color-muted-soft)] px-2 py-0.5 text-xs font-semibold [color:var(--pf-color-muted)]">{rules.length}</span>
@@ -410,7 +410,7 @@ export function WorkflowRules() {
         </div>
 
         {/* Runs */}
-        <div className="pf-glass rounded-2xl shadow-sm p-5">
+        <div className="pf-glass rounded-2xl shadow-sm p-5 max-lg:-order-1">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">Lịch Sử Chạy (Runs)</h3>
             <span className="rounded-full [background:var(--pf-color-muted-soft)] px-2 py-0.5 text-xs font-semibold [color:var(--pf-color-muted)]">{runs.length}</span>

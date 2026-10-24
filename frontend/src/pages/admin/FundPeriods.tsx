@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
+import { AmountHint } from '../../components/ui/AmountHint'
 import { confirmDialog } from '../../components/ui/ConfirmHost'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { VietQrImage } from '../../components/ui/VietQrImage'
@@ -1725,6 +1726,7 @@ function FundModal({ open, onClose, title, subtitle, formId, form, setForm, onSu
             <label htmlFor="f-FundPeriods-6" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Mức đóng/người (VNĐ)</label>
             <input id="f-FundPeriods-6" type="number" min={0} value={form.contributionAmount}
               onChange={e => setForm({ ...form, contributionAmount: e.target.value === '' ? 0 : Number(e.target.value) })} className="input-base" />
+<AmountHint value={form.contributionAmount} />
             <p className="text-xs [color:var(--pf-color-muted)] mt-1">Tùy chọn — để trống hoặc 0 nếu là khoản thu mở.</p>
           </div>
           <div>

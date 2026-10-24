@@ -1,4 +1,5 @@
 import { moneyColor } from '../../lib/moneyTone'
+import { AmountHint } from '../../components/ui/AmountHint'
 import { useState, useEffect } from 'react'
 import { Plus, Edit2, Trash2, Receipt, FileSpreadsheet, FileText } from 'lucide-react'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -266,6 +267,7 @@ export function TreasurerExpense() {
                 <label htmlFor="f-TreasurerExpense-3" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Số tiền <span className="text-red-500">*</span></label>
                 <input id="f-TreasurerExpense-3" required type="number" min={1} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
                   className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none [background:var(--pf-surface)]" />
+<AmountHint value={form.amount} />
               </div>
               <div>
                 <label htmlFor="f-TreasurerExpense-4" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày chi</label>
@@ -425,6 +427,7 @@ export function TreasurerExpense() {
               <input id="f-TreasurerExpense-7" required type="number" min={1} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
                 placeholder="VD: 450000"
                 className="w-full rounded-lg border border-[color:var(--pf-border)] px-3 py-2 text-sm focus:[border-color:var(--pf-primary)] focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] [background:var(--pf-surface)]" />
+<AmountHint value={form.amount} />
             </div>
             <div>
               <label htmlFor="f-TreasurerExpense-8" className="block text-xs font-medium [color:var(--pf-text)] mb-1.5">Ngày chi</label>

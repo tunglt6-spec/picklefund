@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
+import { AmountHint } from '../../components/ui/AmountHint'
 import { useDialogA11y } from '../../hooks/useDialogA11y'
 import { confirmDialog } from '../../components/ui/ConfirmHost'
 import { getBrandClubName } from '../../store/brandingStore'
@@ -150,7 +151,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
               {isMini ? 'Quỹ Phụ · không phân bổ cho thành viên' : 'Quỹ Chính · phân bổ cho thành viên'}
             </p>
           </div>
-          <button onClick={onClose} className="h-8 w-8 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] transition-colors">
+          <button onClick={onClose} aria-label="Đóng" className="h-8 w-8 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)] transition-colors">
             <X size={16} />
           </button>
         </div>
@@ -201,6 +202,7 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
                 <div className="relative">
                   <input id="f-Expenses-3" required type="number" min={1} value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })}
                     placeholder="0" className="input-base pr-8 text-right font-semibold tabular-nums" />
+<AmountHint value={form.amount} />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold [color:var(--pf-color-muted)] pointer-events-none">đ</span>
                 </div>
               </div>
@@ -351,7 +353,7 @@ function FilterPanel({ open, onClose, values, onApply }: {
       <div ref={panelRef} role="dialog" aria-modal="true" aria-label="Bộ lọc" tabIndex={-1} className="w-80 [background:var(--pf-surface)] flex flex-col shadow-2xl outline-none">
         <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--pf-border)]">
           <h2 className="text-sm font-semibold [color:var(--pf-text)]">Bộ lọc</h2>
-          <button onClick={onClose} className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]"><X size={14} /></button>
+          <button onClick={onClose} aria-label="Đóng" className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]"><X size={14} /></button>
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
           <div>
@@ -1187,7 +1189,7 @@ export function Expenses() {
           <div ref={catRef} role="dialog" aria-modal="true" aria-label="Danh mục chi phí" tabIndex={-1} className="[background:var(--pf-surface)] rounded-2xl shadow-2xl w-full max-w-sm p-5 space-y-4 outline-none">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-bold [color:var(--pf-text)]">Danh mục chi phí</h3>
-              <button onClick={() => setShowCatMgr(false)} className="h-8 w-8 flex items-center justify-center rounded-lg hover:[background:var(--pf-color-muted-soft)]"><X size={16} /></button>
+              <button onClick={() => setShowCatMgr(false)} aria-label="Đóng" className="h-8 w-8 flex items-center justify-center rounded-lg hover:[background:var(--pf-color-muted-soft)]"><X size={16} /></button>
             </div>
             <div className="space-y-2 max-h-52 overflow-y-auto">
               {categories.length === 0 && <p className="text-xs [color:var(--pf-color-muted)] text-center py-4">Chưa có danh mục nào</p>}

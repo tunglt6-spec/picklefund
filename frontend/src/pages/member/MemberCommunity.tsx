@@ -37,6 +37,8 @@ import {
   ResponsiveTabs,
 } from '../../components/shared'
 import { Modal } from '../../components/ui/Modal'
+import { ActionMenu } from '../../components/shared/ActionMenu'
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
@@ -364,6 +366,10 @@ function Composer({
   const [mentionQuery, setMentionQuery] = useState('')
   const [mentions, setMentions] = useState<MentionMember[]>([])
   const [submitting, setSubmitting] = useState(false)
+  // Mobile: ô soạn bài thu gọn 1 dòng cho tới khi chạm vào hoặc có nội dung.
+  const compact = useIsMobile(1024)
+  const [composerFocused, setComposerFocused] = useState(false)
+  const collapsed = compact && !composerFocused && !body && !imageUrl && mentions.length === 0
   const taRef = useRef<HTMLTextAreaElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
@@ -478,8 +484,9 @@ function Composer({
             onChange={onBodyChange}
             aria-label="Nội dung bài đăng cộng đồng"
             placeholder="Chia sẻ với cộng đồng CLB…  (gõ @ để gắn thẻ thành viên)"
-            rows={4}
-            className="min-h-[112px] w-full resize-none overflow-y-auto rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-bg)] px-4 py-3 text-base leading-relaxed outline-none [color:var(--pf-text)] placeholder:[color:var(--pf-color-muted)] focus:[border-color:var(--pf-primary-soft)]"
+            rows={collapsed ? 1 : 4}
+            onFocus={() => setComposerFocused(true)}
+            className={`${collapsed ? 'min-h-[48px]' : 'min-h-[112px]'} w-full resize-none overflow-y-auto rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-bg)] px-4 py-3 text-base leading-relaxed outline-none [color:var(--pf-text)] placeholder:[color:var(--pf-color-muted)] focus:[border-color:var(--pf-primary-soft)]`}
           />
 
           {/* Thẻ thành viên đã gắn — xác nhận trực quan "đã tag" */}
@@ -521,7 +528,7 @@ function Composer({
             />
           )}
 
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+          <div className={`mt-3 flex-wrap items-center justify-between gap-2 ${collapsed ? 'hidden' : 'flex'}`}>
             <div className="flex items-center gap-1">
               <button
                 type="button"
@@ -714,6 +721,9 @@ function PostCard({
   const cmtInputRef = useRef<HTMLInputElement>(null)
 
   const [editingPost, setEditingPost] = useState(false)
+  const compactPost = useIsMobile(1024)
+  const [expanded, setExpanded] = useState(false)
+  const longBody = compactPost && post.body.length > 280
   const [editBody, setEditBody] = useState(post.body)
   const [savingEdit, setSavingEdit] = useState(false)
   const [confirmDel, setConfirmDel] = useState(false)
@@ -942,7 +952,13 @@ function PostCard({
           </p>
         </div>
         {!editingPost && (
-          <div className="flex shrink-0 items-center gap-1">
+          <ActionMenu iconOnly label="Tùy chọn bài viết" items={[
+            ...(post.canEdit ? [{ key: 'edit', label: 'Sửa bài viết', onClick: () => { setEditBody(post.body); setEditingPost(true) } }] : []),
+            ...(post.canDelete ? [{ key: 'del', label: 'Xóa bài viết', onClick: () => setConfirmDel(true), danger: true }] : [{ key: 'rep', label: 'Báo cáo bài viết', onClick: () => setConfirmReport(true) }]),
+          ]} />
+        )}
+        {!editingPost && (
+          <div className="flex shrink-0 items-center gap-1 max-lg:hidden">
             {post.canEdit && (
               <button
                 type="button"
@@ -1013,9 +1029,17 @@ function PostCard({
           </div>
         </div>
       ) : (
-        <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed [color:var(--pf-text)]">
-          {renderWithMentions(post.body, members)}
-        </p>
+        <>
+          <p className={`mt-3 whitespace-pre-wrap break-words text-sm leading-relaxed [color:var(--pf-text)] ${longBody && !expanded ? 'line-clamp-5' : ''}`}>
+            {renderWithMentions(post.body, members)}
+          </p>
+          {longBody && (
+            <button type="button" aria-expanded={expanded} onClick={() => setExpanded((v) => !v)}
+              className="mt-1 min-h-[44px] text-sm font-semibold [color:var(--pf-primary-text)]">
+              {expanded ? 'Thu gọn' : 'Xem thêm'}
+            </button>
+          )}
+        </>
       )}
 
       {post.imageUrl && !editingPost && (

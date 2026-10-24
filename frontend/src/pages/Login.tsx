@@ -240,7 +240,7 @@ function RegisterFlow({ onBack }: { onBack: () => void }) {
                   <input id={`reg-admin-${f.key}`} required type={f.show ? 'text' : 'password'} value={admin[f.key as keyof AdminForm]}
                     onChange={e => setAdmin({ ...admin, [f.key]: e.target.value })} placeholder={f.placeholder}
                     className={`${inputBase} pr-11 ${f.key === 'confirmPassword' && admin.confirmPassword && admin.password !== admin.confirmPassword ? '!border-red-400 !ring-red-100' : ''}`} />
-                  <button type="button" onClick={f.toggle} className="absolute right-3.5 top-3.5 [color:var(--pf-color-muted)] hover:text-slate-600 transition-colors">{f.show ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                  <button type="button" onClick={f.toggle} aria-label={f.show ? "Ẩn mật khẩu" : "Hiện mật khẩu"} aria-pressed={f.show} className="absolute right-3.5 top-3.5 [color:var(--pf-color-muted)] hover:text-slate-600 transition-colors">{f.show ? <EyeOff size={18} /> : <Eye size={18} />}</button>
                 </div>
                 {f.key === 'confirmPassword' && admin.confirmPassword && admin.password !== admin.confirmPassword && (
                   <p className="text-xs text-red-500 mt-1">Mật khẩu không khớp</p>
@@ -525,7 +525,7 @@ export function Login() {
                       <div className="relative">
                         <input id="login-password" type={showPwd ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
                           placeholder="Nhập mật khẩu" className={`${inputBase} pr-11`} required autoComplete="current-password" />
-                        <button type="button" onClick={() => setShowPwd(!showPwd)}
+                        <button type="button" onClick={() => setShowPwd(!showPwd)} aria-label={showPwd ? "Ẩn mật khẩu" : "Hiện mật khẩu"} aria-pressed={showPwd}
                           className="absolute right-3.5 top-3.5 [color:var(--pf-color-muted)] hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
                           {showPwd ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>

@@ -3,14 +3,16 @@
  * GỘP từ dữ liệu ĐÃ CÓ trong client store (điểm danh · đóng quỹ · chuyên cần). KHÔNG gọi API
  * mới, không đổi nghiệp vụ — chỉ tổng hợp & hiển thị.
  */
-import { useMemo, useState } from 'react'
-import { Search, DollarSign, CalendarCheck, TrendingUp, Activity } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
+import { X, Search, DollarSign, CalendarCheck, TrendingUp, Activity } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useClubContributions } from '../../hooks/useFinanceData'
 import { formatVND, cn, getActiveChungPeriod } from '../../lib/utils'
 import { useExportRunner } from '../../hooks/useExportRunner'
-import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
+import { exportGenericExcel, exportGenericTablePDF, methodLabel } from '../../lib/export'
+import { useIsMobile } from '../../hooks/useIsMobile'
+import { useDialogA11y } from '../../hooks/useDialogA11y'
 import { PageShell, PageHeader, MetricCard, EmptyState, ExportActions } from '../../components/shared'
 
 const fmtDate = (s?: string) => (s ? s.slice(0, 10).split('-').reverse().join('/') : '')
@@ -25,6 +27,12 @@ export function MemberActivity() {
 
   const [q, setQ] = useState('')
   const [selId, setSelId] = useState<string | null>(members[0]?.id ?? null)
+  // Mobile: chạm một thành viên mở bảng chi tiết (sheet) thay vì dồn hồ sơ xuống dưới danh sách dài.
+  const isCompact = useIsMobile(1024)
+  const [sheetOpen, setSheetOpen] = useState(false)
+  const sheetRef = useRef<HTMLDivElement>(null)
+  const sheetShown = isCompact && sheetOpen
+  useDialogA11y(sheetShown, sheetRef, () => setSheetOpen(false))
 
   // Phạm vi đóng quỹ: khoản ĐÃ xác nhận, Quỹ Chính, kỳ chung đang mở (khớp canonical Thu của backend).
   const activePeriod = getActiveChungPeriod(data.fundPeriods)
@@ -98,7 +106,7 @@ export function MemberActivity() {
             {filtered.map((r) => (
               <button
                 key={r.m.id}
-                onClick={() => setSelId(r.m.id)}
+                onClick={() => { setSelId(r.m.id); setSheetOpen(true) }}
                 className={cn(
                   'flex w-full items-center justify-between gap-2 border-b border-[color:var(--pf-border)] px-3 py-2.5 text-left transition-colors',
                   sel?.m.id === r.m.id ? '[background:var(--pf-primary-soft)]' : 'hover:[background:var(--pf-surface-muted)]',
@@ -117,7 +125,24 @@ export function MemberActivity() {
 
         {/* Chi tiết thành viên */}
         {sel && (
-          <div className="space-y-4">
+          <>
+          {sheetShown && <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setSheetOpen(false)} aria-hidden />}
+          <div
+            ref={sheetRef}
+            tabIndex={-1}
+            role={sheetShown ? 'dialog' : undefined}
+            aria-modal={sheetShown ? true : undefined}
+            aria-label={sheetShown ? `Hoạt động của ${sel.m.fullName}` : undefined}
+            className={cn('space-y-4', isCompact && (sheetShown
+              ? 'fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-2xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))] [background:var(--pf-surface-muted)]'
+              : 'hidden'))}
+          >
+            {sheetShown && (
+              <button type="button" onClick={() => setSheetOpen(false)} aria-label="Đóng chi tiết"
+                className="ml-auto flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border [background:var(--pf-surface)] [border-color:var(--pf-border)]">
+                <X size={18} aria-hidden />
+              </button>
+            )}
             <div className="pf-glass rounded-[16px] p-4">
               <h3 className="text-lg font-bold [color:var(--pf-text)]">{sel.m.fullName}</h3>
               <div className="mt-3 grid grid-cols-2 gap-3 max-sm:[&>:last-child:nth-child(odd)]:col-span-2 sm:grid-cols-3">
@@ -135,7 +160,7 @@ export function MemberActivity() {
                 <div className="space-y-2">
                   {[...sel.contribs].sort((a, b) => (a.paymentDate < b.paymentDate ? 1 : -1)).slice(0, 20).map((c) => (
                     <div key={c.id} className="pf-rowcard flex items-center justify-between px-3 py-2 text-sm">
-                      <span className="[color:var(--pf-color-muted)]">{fmtDate(c.paymentDate)}{c.paymentMethod ? ` · ${c.paymentMethod}` : ''}</span>
+                      <span className="[color:var(--pf-color-muted)]">{fmtDate(c.paymentDate)}{c.paymentMethod ? ` · ${isCompact ? methodLabel(c.paymentMethod) : c.paymentMethod}` : ''}</span>
                       <span className="font-semibold [color:var(--pf-green)]">+{formatVND(c.amount)}</span>
                     </div>
                   ))}
@@ -143,6 +168,7 @@ export function MemberActivity() {
               )}
             </div>
           </div>
+          </>
         )}
       </div>
     </PageShell>

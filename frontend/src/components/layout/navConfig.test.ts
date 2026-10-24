@@ -103,3 +103,14 @@ test('mọi ô trong Ứng dụng có ?tab= hợp lệ với module của nó (k
     }
   }
 })
+
+test('màn AIDO mở từ Ứng dụng tô sáng tab Ứng dụng, không phải Tổng quan', () => {
+  for (const r of ['CLUB_ADMIN', 'MEMBER_VIEW'] as Role[]) {
+    const tabs = bottomTabsByRole[r]
+    const home = tabs.find((t) => t.to === MOBILE_HOME)!
+    const apps = tabs.find((t) => t.to === APPS_ROUTE)!
+    const p = r === 'CLUB_ADMIN' ? '/aido' : '/member/aido'
+    assert.ok(!(home.match ?? []).includes(p), `${r}: ${p} không được thuộc Tổng quan`)
+    assert.ok((apps.match ?? []).includes(p), `${r}: ${p} phải thuộc Ứng dụng`)
+  }
+})
