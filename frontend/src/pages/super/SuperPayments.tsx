@@ -3,7 +3,7 @@
  * tổng hợp doanh thu, ghi nhận gia hạn thủ công, hủy bản ghi nhập nhầm.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { Plus, Wallet, CalendarDays, Receipt, Landmark, Ban, Check, X, Clock } from 'lucide-react'
+import { Plus, Wallet, CalendarDays, Receipt, Landmark, Ban, Check, X, Clock } from '../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
 import { PageShell, PageHeader, FilterBar, DataTable, StatusBadge, MetricCard, LoadingState, EmptyState, ErrorState, type Column } from '../../components/shared'

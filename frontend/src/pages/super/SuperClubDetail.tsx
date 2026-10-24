@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft, Building2, Mail, Phone, MapPin, Users,
   Star, Zap, CheckCircle2, CreditCard,
-} from 'lucide-react'
+} from '../../components/icons/mobileLucide'
 import api from '../../lib/api'
 import { PageShell, PageHeader, StatusBadge } from '../../components/shared'
 import { Button } from '../../components/ui/Button'

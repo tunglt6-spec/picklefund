@@ -13,7 +13,7 @@
 import { DateInput, DateTimeInput } from '../../../components/ui/DateTimeFields'
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ChevronRight, ChevronLeft, Check, UserPlus, X, Info } from 'lucide-react'
+import { ChevronRight, ChevronLeft, Check, UserPlus, X, Info } from '../../../components/icons/mobileLucide'
 import api from '../../../lib/api'
 import { PageHeader } from '../../../components/shared/PageHeader'
 import { Button } from '../../../components/ui/Button'

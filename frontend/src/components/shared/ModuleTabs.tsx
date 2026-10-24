@@ -9,7 +9,7 @@
  */
 import { createContext, useContext, useRef, type ReactNode } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
-import { LayoutGrid, type LucideIcon } from 'lucide-react'
+import { LayoutGrid, type LucideIcon } from '../icons/mobileLucide'
 import { cn } from '../../lib/utils'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { MobileFunctionHeader, MobileModuleMenu, saveMenuScroll, type MenuItem } from '../mobile/ModuleNav'

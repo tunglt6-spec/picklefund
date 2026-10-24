@@ -11,7 +11,7 @@
  * tự gọi API. Parent chỉ truyền minigameId + cấu hình + onChanged (refresh KPI/lịch của parent).
  */
 import { useCallback, useEffect, useState } from 'react'
-import { Users, Search, UserPlus, X, Plus, Trash2, UserCheck } from 'lucide-react'
+import { Users, Search, UserPlus, X, Plus, Trash2, UserCheck } from '../icons/mobileLucide'
 import { buildAutoPayload, buildManualPayload, collectPicks, describeAutoResult, nextPairName, resolveGuestName, takenPlayerKeys, unpairedSavedGuests } from './pairBuilder.logic'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'

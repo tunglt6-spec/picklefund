@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { mobileText } from '../../../lib/mobileText'
 import toast from 'react-hot-toast'
-import { Workflow, Info, Play, Trash2, RefreshCw, Plus, AlertTriangle, Zap, Database, History } from 'lucide-react'
+import { Workflow, Info, Play, Trash2, RefreshCw, Plus, AlertTriangle, Zap, Database, History } from '../../../components/icons/mobileLucide'
 import {
   useWorkflows,
   createRuleFromTemplate,

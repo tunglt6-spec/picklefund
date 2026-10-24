@@ -21,7 +21,7 @@ import {
 import {
   TrendingUp, TrendingDown, Wallet, Gamepad2, ArrowLeftRight, Users, Calendar,
   Activity, AlertCircle, RefreshCw, FileText, Sparkles,
-} from 'lucide-react'
+} from '../../components/icons/mobileLucide'
 import { formatVND, getActiveChungPeriod } from '../../lib/utils'
 import { exportReportsPDF, exportReportsExcel, type ReportExpenseRow } from '../../lib/export'
 import api from '../../lib/api'

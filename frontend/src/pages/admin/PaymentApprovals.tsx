@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { CheckCircle2, Clock, RotateCcw, Wallet, ExternalLink, User } from 'lucide-react'
+import { CheckCircle2, Clock, RotateCcw, Wallet, ExternalLink, User } from '../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
 import { PageShell, PageHeader, MetricCard, EmptyState, LoadingState, ErrorState, StatusBadge, ActionButton, ExportActions, runExport } from '../../components/shared'
 import { Modal } from '../../components/ui/Modal'

@@ -12,7 +12,7 @@ import {
   Building2, Activity, Lock, Users, LogIn, UserCheck, Wallet, TrendingUp, CreditCard,
   Cpu, Bot, Server, RefreshCw, AlertTriangle, Trophy, Bell, Database, Gauge, Sparkles,
   ShieldCheck, ClipboardList, Clock, HeartPulse, CircleAlert, MessageSquare, Workflow, Zap, FileDown,
-} from 'lucide-react'
+} from '../../components/icons/mobileLucide'
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'

@@ -1,5 +1,5 @@
 import { useState, type ReactEventHandler } from 'react'
-import { QrCode, RefreshCw } from 'lucide-react'
+import { QrCode, RefreshCw } from '../icons/mobileLucide'
 import { QRCodeSVG } from 'qrcode.react'
 import { buildVietQrPayload } from '../../lib/vietqr'
 import { useIsMobile } from '../../hooks/useIsMobile'

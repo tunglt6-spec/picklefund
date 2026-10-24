@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Lock, Eye, EyeOff, ShieldCheck } from 'lucide-react'
+import { Lock, Eye, EyeOff, ShieldCheck } from '../components/icons/mobileLucide'
 import api from '../lib/api'
 import { useAuthStore } from '../store/authStore'
 import toast from 'react-hot-toast'

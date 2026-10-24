@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type * as XLSXNS from 'xlsx'
-import { Upload, FileSpreadsheet, Download, CheckCircle2, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react'
+import { Upload, FileSpreadsheet, Download, CheckCircle2, AlertCircle, ChevronDown, ChevronUp } from '../icons/mobileLucide'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import api from '../../lib/api'

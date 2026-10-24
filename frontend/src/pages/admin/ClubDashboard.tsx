@@ -8,7 +8,7 @@ import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Users, UserCheck, UserX, TrendingUp, CalendarDays, Activity, Plus, Clock, DollarSign,
-} from 'lucide-react'
+} from '../../components/icons/mobileLucide'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useClubContributions } from '../../hooks/useFinanceData'
 import { useAuthStore } from '../../store/authStore'

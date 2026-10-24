@@ -1,4 +1,4 @@
-import { BarChart2, Pencil, Trash2 } from 'lucide-react';
+import { BarChart2, Pencil, Trash2 } from '../../icons/mobileLucide';
 
 interface DashboardRanking {
   rank: number;

@@ -12,7 +12,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Users, Trophy, UserPlus, X, Plus, Trash2, Search,
   BarChart2, ClipboardList, Save, Crown, Flag, Image as ImageIcon, FileDown,
-} from 'lucide-react'
+} from '../../../components/icons/mobileLucide'
 import { exportStandingsPDF, captureElementAsReportPng } from '../../../lib/export'
 import toast from 'react-hot-toast'
 import { PageHeader } from '../../../components/shared/PageHeader'

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Image as ImageIcon, FileText, Share2 } from 'lucide-react'
+import { ArrowLeft, Image as ImageIcon, FileText, Share2 } from '../../../components/icons/mobileLucide'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import toast from 'react-hot-toast'
 import { PageHeader } from '../../../components/shared/PageHeader'

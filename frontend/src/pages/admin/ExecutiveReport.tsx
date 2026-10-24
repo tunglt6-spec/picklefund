@@ -7,7 +7,7 @@ import {
   Trophy, Bot, Sparkles, AlertTriangle, Info, ListChecks, RefreshCw,
   FileText, Sheet, Image as ImageIcon, Printer, Crown, ArrowUpRight, ArrowDownLeft,
   Fingerprint, LineChart, Mail, Send, Star, Flame, Moon, CheckCircle2,
-} from 'lucide-react'
+} from '../../components/icons/mobileLucide'
 import { ChartCard, MetricCard, ActionButton } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
 import { useBrandingStore } from '../../store/brandingStore'

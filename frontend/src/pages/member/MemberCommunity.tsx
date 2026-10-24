@@ -27,7 +27,7 @@ import {
   Newspaper,
   Swords,
   ShieldCheck,
-} from 'lucide-react'
+} from '../../components/icons/mobileLucide'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import {

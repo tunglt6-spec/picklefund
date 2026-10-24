@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { Settings, Shuffle, CheckCircle, Users, Calendar, BarChart2 } from 'lucide-react'
+import { Settings, Shuffle, CheckCircle, Users, Calendar, BarChart2 } from '../../icons/mobileLucide'
 
 interface QuickActionsPanelProps {
   onDrawRound?: () => void

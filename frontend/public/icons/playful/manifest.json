@@ -1,0 +1,1025 @@
+[
+  {
+    "group": "navigation",
+    "id": "home",
+    "label": "Tổng quan",
+    "color": "#2563EB",
+    "files": {
+      "duotone": "duotone/home.svg",
+      "tile": "tile/home.svg",
+      "mono": "mono/home.svg"
+    }
+  },
+  {
+    "group": "navigation",
+    "id": "nav-calendar",
+    "label": "Lịch",
+    "color": "#2563EB",
+    "files": {
+      "duotone": "duotone/nav-calendar.svg",
+      "tile": "tile/nav-calendar.svg",
+      "mono": "mono/nav-calendar.svg"
+    }
+  },
+  {
+    "group": "navigation",
+    "id": "nav-competition",
+    "label": "Thi đấu",
+    "color": "#2563EB",
+    "files": {
+      "duotone": "duotone/nav-competition.svg",
+      "tile": "tile/nav-competition.svg",
+      "mono": "mono/nav-competition.svg"
+    }
+  },
+  {
+    "group": "navigation",
+    "id": "nav-community",
+    "label": "Cộng đồng",
+    "color": "#2563EB",
+    "files": {
+      "duotone": "duotone/nav-community.svg",
+      "tile": "tile/nav-community.svg",
+      "mono": "mono/nav-community.svg"
+    }
+  },
+  {
+    "group": "navigation",
+    "id": "apps",
+    "label": "Ứng dụng",
+    "color": "#2563EB",
+    "files": {
+      "duotone": "duotone/apps.svg",
+      "tile": "tile/apps.svg",
+      "mono": "mono/apps.svg"
+    }
+  },
+  {
+    "group": "members",
+    "id": "members",
+    "label": "Danh sách thành viên",
+    "color": "#2863D7",
+    "files": {
+      "duotone": "duotone/members.svg",
+      "tile": "tile/members.svg",
+      "mono": "mono/members.svg"
+    }
+  },
+  {
+    "group": "members",
+    "id": "member-rating",
+    "label": "Chấm điểm",
+    "color": "#2863D7",
+    "files": {
+      "duotone": "duotone/member-rating.svg",
+      "tile": "tile/member-rating.svg",
+      "mono": "mono/member-rating.svg"
+    }
+  },
+  {
+    "group": "members",
+    "id": "rating-rules",
+    "label": "Quy tắc chấm điểm",
+    "color": "#2863D7",
+    "files": {
+      "duotone": "duotone/rating-rules.svg",
+      "tile": "tile/rating-rules.svg",
+      "mono": "mono/rating-rules.svg"
+    }
+  },
+  {
+    "group": "members",
+    "id": "member-accounts",
+    "label": "Tài khoản thành viên",
+    "color": "#2863D7",
+    "files": {
+      "duotone": "duotone/member-accounts.svg",
+      "tile": "tile/member-accounts.svg",
+      "mono": "mono/member-accounts.svg"
+    }
+  },
+  {
+    "group": "members",
+    "id": "roles",
+    "label": "Vai trò & phân quyền",
+    "color": "#2863D7",
+    "files": {
+      "duotone": "duotone/roles.svg",
+      "tile": "tile/roles.svg",
+      "mono": "mono/roles.svg"
+    }
+  },
+  {
+    "group": "members",
+    "id": "member-history",
+    "label": "Lịch sử hoạt động",
+    "color": "#2863D7",
+    "files": {
+      "duotone": "duotone/member-history.svg",
+      "tile": "tile/member-history.svg",
+      "mono": "mono/member-history.svg"
+    }
+  },
+  {
+    "group": "members",
+    "id": "profile",
+    "label": "Tài khoản cá nhân",
+    "color": "#2863D7",
+    "files": {
+      "duotone": "duotone/profile.svg",
+      "tile": "tile/profile.svg",
+      "mono": "mono/profile.svg"
+    }
+  },
+  {
+    "group": "members",
+    "id": "add-member",
+    "label": "Thêm thành viên",
+    "color": "#2863D7",
+    "files": {
+      "duotone": "duotone/add-member.svg",
+      "tile": "tile/add-member.svg",
+      "mono": "mono/add-member.svg"
+    }
+  },
+  {
+    "group": "members",
+    "id": "invite",
+    "label": "Mời thành viên",
+    "color": "#2863D7",
+    "files": {
+      "duotone": "duotone/invite.svg",
+      "tile": "tile/invite.svg",
+      "mono": "mono/invite.svg"
+    }
+  },
+  {
+    "group": "finance",
+    "id": "fund-period",
+    "label": "Kỳ quỹ",
+    "color": "#078666",
+    "files": {
+      "duotone": "duotone/fund-period.svg",
+      "tile": "tile/fund-period.svg",
+      "mono": "mono/fund-period.svg"
+    }
+  },
+  {
+    "group": "finance",
+    "id": "income",
+    "label": "Thu quỹ",
+    "color": "#078666",
+    "files": {
+      "duotone": "duotone/income.svg",
+      "tile": "tile/income.svg",
+      "mono": "mono/income.svg"
+    }
+  },
+  {
+    "group": "finance",
+    "id": "expense",
+    "label": "Chi phí",
+    "color": "#078666",
+    "files": {
+      "duotone": "duotone/expense.svg",
+      "tile": "tile/expense.svg",
+      "mono": "mono/expense.svg"
+    }
+  },
+  {
+    "group": "finance",
+    "id": "debt",
+    "label": "Công nợ",
+    "color": "#078666",
+    "files": {
+      "duotone": "duotone/debt.svg",
+      "tile": "tile/debt.svg",
+      "mono": "mono/debt.svg"
+    }
+  },
+  {
+    "group": "finance",
+    "id": "finance-report",
+    "label": "Báo cáo tài chính",
+    "color": "#078666",
+    "files": {
+      "duotone": "duotone/finance-report.svg",
+      "tile": "tile/finance-report.svg",
+      "mono": "mono/finance-report.svg"
+    }
+  },
+  {
+    "group": "finance",
+    "id": "payment-approval",
+    "label": "Xác nhận nộp quỹ",
+    "color": "#078666",
+    "files": {
+      "duotone": "duotone/payment-approval.svg",
+      "tile": "tile/payment-approval.svg",
+      "mono": "mono/payment-approval.svg"
+    }
+  },
+  {
+    "group": "finance",
+    "id": "wallet",
+    "label": "Ví quỹ",
+    "color": "#078666",
+    "files": {
+      "duotone": "duotone/wallet.svg",
+      "tile": "tile/wallet.svg",
+      "mono": "mono/wallet.svg"
+    }
+  },
+  {
+    "group": "finance",
+    "id": "receipt",
+    "label": "Phiếu thu",
+    "color": "#078666",
+    "files": {
+      "duotone": "duotone/receipt.svg",
+      "tile": "tile/receipt.svg",
+      "mono": "mono/receipt.svg"
+    }
+  },
+  {
+    "group": "finance",
+    "id": "bank",
+    "label": "Ngân hàng",
+    "color": "#078666",
+    "files": {
+      "duotone": "duotone/bank.svg",
+      "tile": "tile/bank.svg",
+      "mono": "mono/bank.svg"
+    }
+  },
+  {
+    "group": "finance",
+    "id": "qr",
+    "label": "QR thanh toán",
+    "color": "#078666",
+    "files": {
+      "duotone": "duotone/qr.svg",
+      "tile": "tile/qr.svg",
+      "mono": "mono/qr.svg"
+    }
+  },
+  {
+    "group": "finance",
+    "id": "transfer",
+    "label": "Chuyển khoản",
+    "color": "#078666",
+    "files": {
+      "duotone": "duotone/transfer.svg",
+      "tile": "tile/transfer.svg",
+      "mono": "mono/transfer.svg"
+    }
+  },
+  {
+    "group": "finance",
+    "id": "mini-fund",
+    "label": "Quỹ phụ",
+    "color": "#078666",
+    "files": {
+      "duotone": "duotone/mini-fund.svg",
+      "tile": "tile/mini-fund.svg",
+      "mono": "mono/mini-fund.svg"
+    }
+  },
+  {
+    "group": "activity",
+    "id": "calendar",
+    "label": "Lịch hoạt động",
+    "color": "#0783A6",
+    "files": {
+      "duotone": "duotone/calendar.svg",
+      "tile": "tile/calendar.svg",
+      "mono": "mono/calendar.svg"
+    }
+  },
+  {
+    "group": "activity",
+    "id": "registration",
+    "label": "Đăng ký",
+    "color": "#0783A6",
+    "files": {
+      "duotone": "duotone/registration.svg",
+      "tile": "tile/registration.svg",
+      "mono": "mono/registration.svg"
+    }
+  },
+  {
+    "group": "activity",
+    "id": "check-in",
+    "label": "Check-in",
+    "color": "#0783A6",
+    "files": {
+      "duotone": "duotone/check-in.svg",
+      "tile": "tile/check-in.svg",
+      "mono": "mono/check-in.svg"
+    }
+  },
+  {
+    "group": "activity",
+    "id": "attendance",
+    "label": "Điểm danh",
+    "color": "#0783A6",
+    "files": {
+      "duotone": "duotone/attendance.svg",
+      "tile": "tile/attendance.svg",
+      "mono": "mono/attendance.svg"
+    }
+  },
+  {
+    "group": "activity",
+    "id": "weekly-activity",
+    "label": "Hoạt động tuần",
+    "color": "#0783A6",
+    "files": {
+      "duotone": "duotone/weekly-activity.svg",
+      "tile": "tile/weekly-activity.svg",
+      "mono": "mono/weekly-activity.svg"
+    }
+  },
+  {
+    "group": "activity",
+    "id": "venue",
+    "label": "Sân chơi",
+    "color": "#0783A6",
+    "files": {
+      "duotone": "duotone/venue.svg",
+      "tile": "tile/venue.svg",
+      "mono": "mono/venue.svg"
+    }
+  },
+  {
+    "group": "activity",
+    "id": "session",
+    "label": "Buổi chơi",
+    "color": "#0783A6",
+    "files": {
+      "duotone": "duotone/session.svg",
+      "tile": "tile/session.svg",
+      "mono": "mono/session.svg"
+    }
+  },
+  {
+    "group": "activity",
+    "id": "participants",
+    "label": "Người tham gia",
+    "color": "#0783A6",
+    "files": {
+      "duotone": "duotone/participants.svg",
+      "tile": "tile/participants.svg",
+      "mono": "mono/participants.svg"
+    }
+  },
+  {
+    "group": "competition",
+    "id": "competition-overview",
+    "label": "Tổng quan thi đấu",
+    "color": "#CE661F",
+    "files": {
+      "duotone": "duotone/competition-overview.svg",
+      "tile": "tile/competition-overview.svg",
+      "mono": "mono/competition-overview.svg"
+    }
+  },
+  {
+    "group": "competition",
+    "id": "tournament",
+    "label": "Giải đấu",
+    "color": "#CE661F",
+    "files": {
+      "duotone": "duotone/tournament.svg",
+      "tile": "tile/tournament.svg",
+      "mono": "mono/tournament.svg"
+    }
+  },
+  {
+    "group": "competition",
+    "id": "fixtures",
+    "label": "Lịch đấu",
+    "color": "#CE661F",
+    "files": {
+      "duotone": "duotone/fixtures.svg",
+      "tile": "tile/fixtures.svg",
+      "mono": "mono/fixtures.svg"
+    }
+  },
+  {
+    "group": "competition",
+    "id": "results",
+    "label": "Kết quả",
+    "color": "#CE661F",
+    "files": {
+      "duotone": "duotone/results.svg",
+      "tile": "tile/results.svg",
+      "mono": "mono/results.svg"
+    }
+  },
+  {
+    "group": "competition",
+    "id": "ranking",
+    "label": "Xếp hạng",
+    "color": "#CE661F",
+    "files": {
+      "duotone": "duotone/ranking.svg",
+      "tile": "tile/ranking.svg",
+      "mono": "mono/ranking.svg"
+    }
+  },
+  {
+    "group": "competition",
+    "id": "team",
+    "label": "Đội thi đấu",
+    "color": "#CE661F",
+    "files": {
+      "duotone": "duotone/team.svg",
+      "tile": "tile/team.svg",
+      "mono": "mono/team.svg"
+    }
+  },
+  {
+    "group": "competition",
+    "id": "pickleball",
+    "label": "Pickleball",
+    "color": "#CE661F",
+    "files": {
+      "duotone": "duotone/pickleball.svg",
+      "tile": "tile/pickleball.svg",
+      "mono": "mono/pickleball.svg"
+    }
+  },
+  {
+    "group": "competition",
+    "id": "score",
+    "label": "Nhập điểm",
+    "color": "#CE661F",
+    "files": {
+      "duotone": "duotone/score.svg",
+      "tile": "tile/score.svg",
+      "mono": "mono/score.svg"
+    }
+  },
+  {
+    "group": "competition",
+    "id": "medal",
+    "label": "Huy chương",
+    "color": "#CE661F",
+    "files": {
+      "duotone": "duotone/medal.svg",
+      "tile": "tile/medal.svg",
+      "mono": "mono/medal.svg"
+    }
+  },
+  {
+    "group": "community",
+    "id": "feed",
+    "label": "Bảng tin",
+    "color": "#CE4378",
+    "files": {
+      "duotone": "duotone/feed.svg",
+      "tile": "tile/feed.svg",
+      "mono": "mono/feed.svg"
+    }
+  },
+  {
+    "group": "community",
+    "id": "matchmaking",
+    "label": "Tìm kèo",
+    "color": "#CE4378",
+    "files": {
+      "duotone": "duotone/matchmaking.svg",
+      "tile": "tile/matchmaking.svg",
+      "mono": "mono/matchmaking.svg"
+    }
+  },
+  {
+    "group": "community",
+    "id": "moderation",
+    "label": "Kiểm duyệt",
+    "color": "#CE4378",
+    "files": {
+      "duotone": "duotone/moderation.svg",
+      "tile": "tile/moderation.svg",
+      "mono": "mono/moderation.svg"
+    }
+  },
+  {
+    "group": "community",
+    "id": "post",
+    "label": "Tạo bài viết",
+    "color": "#CE4378",
+    "files": {
+      "duotone": "duotone/post.svg",
+      "tile": "tile/post.svg",
+      "mono": "mono/post.svg"
+    }
+  },
+  {
+    "group": "community",
+    "id": "comment",
+    "label": "Bình luận",
+    "color": "#CE4378",
+    "files": {
+      "duotone": "duotone/comment.svg",
+      "tile": "tile/comment.svg",
+      "mono": "mono/comment.svg"
+    }
+  },
+  {
+    "group": "community",
+    "id": "like",
+    "label": "Yêu thích",
+    "color": "#CE4378",
+    "files": {
+      "duotone": "duotone/like.svg",
+      "tile": "tile/like.svg",
+      "mono": "mono/like.svg"
+    }
+  },
+  {
+    "group": "ai",
+    "id": "aido",
+    "label": "AIDO",
+    "color": "#7950CE",
+    "files": {
+      "duotone": "duotone/aido.svg",
+      "tile": "tile/aido.svg",
+      "mono": "mono/aido.svg"
+    }
+  },
+  {
+    "group": "ai",
+    "id": "lisa",
+    "label": "Lisa AI",
+    "color": "#7950CE",
+    "files": {
+      "duotone": "duotone/lisa.svg",
+      "tile": "tile/lisa.svg",
+      "mono": "mono/lisa.svg"
+    }
+  },
+  {
+    "group": "ai",
+    "id": "executive-report",
+    "label": "Báo cáo điều hành",
+    "color": "#7950CE",
+    "files": {
+      "duotone": "duotone/executive-report.svg",
+      "tile": "tile/executive-report.svg",
+      "mono": "mono/executive-report.svg"
+    }
+  },
+  {
+    "group": "ai",
+    "id": "operations",
+    "label": "Vận hành",
+    "color": "#7950CE",
+    "files": {
+      "duotone": "duotone/operations.svg",
+      "tile": "tile/operations.svg",
+      "mono": "mono/operations.svg"
+    }
+  },
+  {
+    "group": "ai",
+    "id": "analytics",
+    "label": "Phân tích",
+    "color": "#7950CE",
+    "files": {
+      "duotone": "duotone/analytics.svg",
+      "tile": "tile/analytics.svg",
+      "mono": "mono/analytics.svg"
+    }
+  },
+  {
+    "group": "ai",
+    "id": "ai-center",
+    "label": "Trung tâm điều hành AI",
+    "color": "#7950CE",
+    "files": {
+      "duotone": "duotone/ai-center.svg",
+      "tile": "tile/ai-center.svg",
+      "mono": "mono/ai-center.svg"
+    }
+  },
+  {
+    "group": "ai",
+    "id": "workflow",
+    "label": "Workflow Studio",
+    "color": "#7950CE",
+    "files": {
+      "duotone": "duotone/workflow.svg",
+      "tile": "tile/workflow.svg",
+      "mono": "mono/workflow.svg"
+    }
+  },
+  {
+    "group": "ai",
+    "id": "approval",
+    "label": "Hộp duyệt AI",
+    "color": "#7950CE",
+    "files": {
+      "duotone": "duotone/approval.svg",
+      "tile": "tile/approval.svg",
+      "mono": "mono/approval.svg"
+    }
+  },
+  {
+    "group": "ai",
+    "id": "ai-logs",
+    "label": "Nhật ký AI",
+    "color": "#7950CE",
+    "files": {
+      "duotone": "duotone/ai-logs.svg",
+      "tile": "tile/ai-logs.svg",
+      "mono": "mono/ai-logs.svg"
+    }
+  },
+  {
+    "group": "ai",
+    "id": "scheduler",
+    "label": "Lịch tự động",
+    "color": "#7950CE",
+    "files": {
+      "duotone": "duotone/scheduler.svg",
+      "tile": "tile/scheduler.svg",
+      "mono": "mono/scheduler.svg"
+    }
+  },
+  {
+    "group": "ai",
+    "id": "alerts",
+    "label": "Cảnh báo",
+    "color": "#7950CE",
+    "files": {
+      "duotone": "duotone/alerts.svg",
+      "tile": "tile/alerts.svg",
+      "mono": "mono/alerts.svg"
+    }
+  },
+  {
+    "group": "ai",
+    "id": "data-monitor",
+    "label": "Chất lượng dữ liệu",
+    "color": "#7950CE",
+    "files": {
+      "duotone": "duotone/data-monitor.svg",
+      "tile": "tile/data-monitor.svg",
+      "mono": "mono/data-monitor.svg"
+    }
+  },
+  {
+    "group": "ai",
+    "id": "kpi",
+    "label": "Chỉ số CLB",
+    "color": "#7950CE",
+    "files": {
+      "duotone": "duotone/kpi.svg",
+      "tile": "tile/kpi.svg",
+      "mono": "mono/kpi.svg"
+    }
+  },
+  {
+    "group": "ai",
+    "id": "memory",
+    "label": "Tri thức CLB",
+    "color": "#7950CE",
+    "files": {
+      "duotone": "duotone/memory.svg",
+      "tile": "tile/memory.svg",
+      "mono": "mono/memory.svg"
+    }
+  },
+  {
+    "group": "ai",
+    "id": "audit",
+    "label": "Nhật ký kiểm toán",
+    "color": "#7950CE",
+    "files": {
+      "duotone": "duotone/audit.svg",
+      "tile": "tile/audit.svg",
+      "mono": "mono/audit.svg"
+    }
+  },
+  {
+    "group": "system",
+    "id": "notifications",
+    "label": "Thông báo",
+    "color": "#526581",
+    "files": {
+      "duotone": "duotone/notifications.svg",
+      "tile": "tile/notifications.svg",
+      "mono": "mono/notifications.svg"
+    }
+  },
+  {
+    "group": "system",
+    "id": "subscription",
+    "label": "Gói dịch vụ",
+    "color": "#526581",
+    "files": {
+      "duotone": "duotone/subscription.svg",
+      "tile": "tile/subscription.svg",
+      "mono": "mono/subscription.svg"
+    }
+  },
+  {
+    "group": "system",
+    "id": "settings",
+    "label": "Cài đặt",
+    "color": "#526581",
+    "files": {
+      "duotone": "duotone/settings.svg",
+      "tile": "tile/settings.svg",
+      "mono": "mono/settings.svg"
+    }
+  },
+  {
+    "group": "system",
+    "id": "club",
+    "label": "Thông tin CLB",
+    "color": "#526581",
+    "files": {
+      "duotone": "duotone/club.svg",
+      "tile": "tile/club.svg",
+      "mono": "mono/club.svg"
+    }
+  },
+  {
+    "group": "system",
+    "id": "brand",
+    "label": "Thương hiệu",
+    "color": "#526581",
+    "files": {
+      "duotone": "duotone/brand.svg",
+      "tile": "tile/brand.svg",
+      "mono": "mono/brand.svg"
+    }
+  },
+  {
+    "group": "system",
+    "id": "payment-settings",
+    "label": "Thanh toán",
+    "color": "#526581",
+    "files": {
+      "duotone": "duotone/payment-settings.svg",
+      "tile": "tile/payment-settings.svg",
+      "mono": "mono/payment-settings.svg"
+    }
+  },
+  {
+    "group": "system",
+    "id": "telegram",
+    "label": "Telegram",
+    "color": "#526581",
+    "files": {
+      "duotone": "duotone/telegram.svg",
+      "tile": "tile/telegram.svg",
+      "mono": "mono/telegram.svg"
+    }
+  },
+  {
+    "group": "system",
+    "id": "security",
+    "label": "Bảo mật",
+    "color": "#526581",
+    "files": {
+      "duotone": "duotone/security.svg",
+      "tile": "tile/security.svg",
+      "mono": "mono/security.svg"
+    }
+  },
+  {
+    "group": "system",
+    "id": "logout",
+    "label": "Đăng xuất",
+    "color": "#526581",
+    "files": {
+      "duotone": "duotone/logout.svg",
+      "tile": "tile/logout.svg",
+      "mono": "mono/logout.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "search",
+    "label": "Tìm kiếm",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/search.svg",
+      "tile": "tile/search.svg",
+      "mono": "mono/search.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "filter",
+    "label": "Bộ lọc",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/filter.svg",
+      "tile": "tile/filter.svg",
+      "mono": "mono/filter.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "add",
+    "label": "Thêm mới",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/add.svg",
+      "tile": "tile/add.svg",
+      "mono": "mono/add.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "edit",
+    "label": "Chỉnh sửa",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/edit.svg",
+      "tile": "tile/edit.svg",
+      "mono": "mono/edit.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "delete",
+    "label": "Xóa",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/delete.svg",
+      "tile": "tile/delete.svg",
+      "mono": "mono/delete.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "close",
+    "label": "Đóng",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/close.svg",
+      "tile": "tile/close.svg",
+      "mono": "mono/close.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "back",
+    "label": "Quay lại",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/back.svg",
+      "tile": "tile/back.svg",
+      "mono": "mono/back.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "next",
+    "label": "Tiếp theo",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/next.svg",
+      "tile": "tile/next.svg",
+      "mono": "mono/next.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "refresh",
+    "label": "Làm mới",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/refresh.svg",
+      "tile": "tile/refresh.svg",
+      "mono": "mono/refresh.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "more",
+    "label": "Thao tác",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/more.svg",
+      "tile": "tile/more.svg",
+      "mono": "mono/more.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "sort",
+    "label": "Sắp xếp",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/sort.svg",
+      "tile": "tile/sort.svg",
+      "mono": "mono/sort.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "export",
+    "label": "Xuất dữ liệu",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/export.svg",
+      "tile": "tile/export.svg",
+      "mono": "mono/export.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "import",
+    "label": "Nhập dữ liệu",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/import.svg",
+      "tile": "tile/import.svg",
+      "mono": "mono/import.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "excel",
+    "label": "Xuất Excel",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/excel.svg",
+      "tile": "tile/excel.svg",
+      "mono": "mono/excel.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "pdf",
+    "label": "Xuất PDF",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/pdf.svg",
+      "tile": "tile/pdf.svg",
+      "mono": "mono/pdf.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "copy",
+    "label": "Sao chép",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/copy.svg",
+      "tile": "tile/copy.svg",
+      "mono": "mono/copy.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "share",
+    "label": "Chia sẻ",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/share.svg",
+      "tile": "tile/share.svg",
+      "mono": "mono/share.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "download",
+    "label": "Tải xuống",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/download.svg",
+      "tile": "tile/download.svg",
+      "mono": "mono/download.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "check",
+    "label": "Hoàn tất",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/check.svg",
+      "tile": "tile/check.svg",
+      "mono": "mono/check.svg"
+    }
+  },
+  {
+    "group": "utility",
+    "id": "clock",
+    "label": "Thời gian",
+    "color": "#405875",
+    "files": {
+      "duotone": "duotone/clock.svg",
+      "tile": "tile/clock.svg",
+      "mono": "mono/clock.svg"
+    }
+  }
+]

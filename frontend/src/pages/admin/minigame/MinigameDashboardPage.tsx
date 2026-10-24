@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useDialogA11y } from '../../../hooks/useDialogA11y'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Shuffle, Trophy, UserMinus, UserPen } from 'lucide-react'
+import { ArrowLeft, Shuffle, Trophy, UserMinus, UserPen } from '../../../components/icons/mobileLucide'
 
 import { PageHeader } from '../../../components/shared/PageHeader'
 import { MinigameKpiCards } from '../../../components/minigame/v2/MinigameKpiCards'

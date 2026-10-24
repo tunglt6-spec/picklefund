@@ -19,7 +19,7 @@ import {
   AlertTriangle, PlayCircle, ArrowRight, Gauge, RefreshCw, ShieldCheck,
   ListChecks, BarChart3, Inbox, GitBranch, ShieldAlert, PieChart, CalendarDays,
   LayoutDashboard, FileText, Cpu,
-} from 'lucide-react'
+} from '../../components/icons/mobileLucide'
 import api from '../../lib/api'
 import type { AiActionSummary, AiActionListItem } from '../../hooks/useAiManager'
 import {

@@ -1,4 +1,4 @@
-import { ChevronDown } from 'lucide-react'
+import { ChevronDown } from '../icons/mobileLucide'
 import type { FundPeriod } from '../../types'
 
 const STATUS_LABEL: Record<string, string> = {

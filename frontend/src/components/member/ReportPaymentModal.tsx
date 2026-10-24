@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Copy, Landmark, QrCode, Clock, CheckCircle2 } from 'lucide-react'
+import { Copy, Landmark, QrCode, Clock, CheckCircle2 } from '../icons/mobileLucide'
 import toast from 'react-hot-toast'
 import { Modal } from '../ui/Modal'
 import { PaymentQrImage } from './PaymentQrImage'

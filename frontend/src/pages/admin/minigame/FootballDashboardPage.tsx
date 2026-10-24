@@ -13,7 +13,7 @@ import {
   ArrowLeft, Users, Trophy, UserPlus, X, Plus, Trash2, Shield, Search,
   CalendarDays, BarChart2, ListChecks, Save, Crown, Swords, ChevronRight,
   Image as ImageIcon, FileDown,
-} from 'lucide-react'
+} from '../../../components/icons/mobileLucide'
 import { exportStandingsPDF, exportKnockoutPDF, exportSchedulePDF, captureElementAsReportPng } from '../../../lib/export'
 import toast from 'react-hot-toast'
 import { PageHeader } from '../../../components/shared/PageHeader'

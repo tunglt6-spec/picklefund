@@ -4,7 +4,7 @@
  */
 import { LightMarkdown } from '../../../components/ui/LightMarkdown'
 import { useCallback, useEffect, useState } from 'react'
-import { MessageSquare, User, Sparkles } from 'lucide-react'
+import { MessageSquare, User, Sparkles } from '../../../components/icons/mobileLucide'
 import api from '../../../lib/api'
 import {
   PageShell, PageHeader, MetricCard, EmptyState, LoadingState, ErrorState,

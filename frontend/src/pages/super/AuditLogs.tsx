@@ -4,7 +4,7 @@
  */
 import { DateInput } from '../../components/ui/DateTimeFields'
 import { useState, useEffect } from 'react'
-import { ScrollText, CalendarDays, Activity, Users, Building2, PencilLine, ShieldAlert } from 'lucide-react'
+import { ScrollText, CalendarDays, Activity, Users, Building2, PencilLine, ShieldAlert } from '../../components/icons/mobileLucide'
 import {
   PageShell, PageHeader, FilterBar, DataTable, StatusBadge, LoadingState, EmptyState, ErrorState,
   ExportActions, ChartCard, MetricCard, type Column, type StatusTone,

@@ -5,7 +5,7 @@
  * Bọc data-html2canvas-ignore để không lọt vào ảnh xuất. Đặt trong PageHeader `actions` hoặc toolbar.
  */
 import { useRef, useState } from 'react'
-import { FileSpreadsheet, FileText, Image as ImageIcon } from 'lucide-react'
+import { FileSpreadsheet, FileText, Image as ImageIcon } from '../icons/mobileLucide'
 import { ActionButton } from './ActionButton'
 
 /** Nhãn co giãn: mobile chỉ `short`, ≥sm thêm tiền tố "Xuất ". */

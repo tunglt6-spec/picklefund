@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react'
+import { Trash2 } from '../icons/mobileLucide'
 
 /**
  * BulkActionBar — thanh thao tác hàng loạt (hiện khi có dòng được chọn). Dùng chung cho các

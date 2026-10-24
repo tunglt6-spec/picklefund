@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Gift, Copy, Check, Loader2 } from 'lucide-react'
+import { Gift, Copy, Check, Loader2 } from '../../../components/icons/mobileLucide'
 import api from '../../../lib/api'
 import toast from 'react-hot-toast'
 

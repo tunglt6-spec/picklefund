@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { QrCode, RefreshCw } from 'lucide-react'
+import { QrCode, RefreshCw } from '../icons/mobileLucide'
 import { QRCodeSVG } from 'qrcode.react'
 import api from '../../lib/api'
 import { buildVietQrPayload } from '../../lib/vietqr'

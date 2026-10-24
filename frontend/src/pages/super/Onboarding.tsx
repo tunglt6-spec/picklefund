@@ -5,7 +5,7 @@
  */
 import { useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Check, ChevronLeft, ChevronRight, Building2, UserCog, PartyPopper } from 'lucide-react'
+import { Check, ChevronLeft, ChevronRight, Building2, UserCog, PartyPopper } from '../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
 import { PageShell, PageHeader } from '../../components/shared'

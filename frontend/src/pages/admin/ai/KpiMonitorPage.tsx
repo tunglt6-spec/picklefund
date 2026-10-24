@@ -11,7 +11,7 @@ import { mobileText } from '../../../lib/mobileText'
 import { useCallback, useEffect, useState } from 'react'
 import {
   Gauge, Users, Wallet, Workflow, Bot, HeartPulse, TrendingUp, Activity,
-} from 'lucide-react'
+} from '../../../components/icons/mobileLucide'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import api from '../../../lib/api'
 import type { AiActionSummary } from '../../../hooks/useAiManager'

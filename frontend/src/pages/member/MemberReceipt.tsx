@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Receipt, DollarSign, Calendar, TrendingUp, ChevronDown, ChevronUp, Download, AlertCircle, QrCode, Share2, CheckCircle } from 'lucide-react'
+import { Receipt, DollarSign, Calendar, TrendingUp, ChevronDown, ChevronUp, Download, AlertCircle, QrCode, Share2, CheckCircle } from '../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
 import { PageShell, PageHeader, MetricCard, ChartCard, ActionButton } from '../../components/shared'
 import { Badge } from '../../components/ui/Badge'

@@ -1,4 +1,4 @@
-import { MapPin, ClipboardEdit } from 'lucide-react'
+import { MapPin, ClipboardEdit } from '../../icons/mobileLucide'
 
 
 interface DashboardMatch {

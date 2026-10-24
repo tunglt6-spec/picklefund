@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft, Users, Trophy, ClipboardList,
   LayoutGrid, CalendarDays, BarChart2, Crown,
-} from 'lucide-react'
+} from '../../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
 import { PageHeader } from '../../../components/shared/PageHeader'
 import { MetricCard } from '../../../components/shared/MetricCard'

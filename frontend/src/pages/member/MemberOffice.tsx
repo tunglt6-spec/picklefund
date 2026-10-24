@@ -6,7 +6,7 @@
  * quay lại tab; lỗi mạng → giữ banner + báo gọn (không xóa trắng màn).
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { RefreshCw, Sparkles, Bell, MessageSquare } from 'lucide-react'
+import { RefreshCw, Sparkles, Bell, MessageSquare } from '../../components/icons/mobileLucide'
 import { HubSectionTitle, TileGrid } from '../../components/mobile/HubParts'
 import { useNotifStore } from '../../store/notifStore'
 import type { AppItem } from '../../components/mobile/hubApps'

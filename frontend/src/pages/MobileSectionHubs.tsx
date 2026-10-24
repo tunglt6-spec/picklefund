@@ -1,5 +1,5 @@
 import { Navigate, useNavigate } from 'react-router-dom'
-import { ChevronRight } from 'lucide-react'
+import { ChevronRight } from '../components/icons/mobileLucide'
 import { useNotifStore } from '../store/notifStore'
 import { homeByRole, notifRouteByRole } from '../components/layout/navConfig'
 import { homeApps } from '../components/mobile/hubApps'

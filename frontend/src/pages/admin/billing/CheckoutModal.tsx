@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { useDialogA11y } from '../../../hooks/useDialogA11y'
-import { X, ShieldCheck, Loader2, CheckCircle2, Sparkles, Tag, ChevronDown } from 'lucide-react'
+import { X, ShieldCheck, Loader2, CheckCircle2, Sparkles, Tag, ChevronDown } from '../../../components/icons/mobileLucide'
 import api from '../../../lib/api'
 import toast from 'react-hot-toast'
 import { Portal } from '../../../components/ui/Portal'

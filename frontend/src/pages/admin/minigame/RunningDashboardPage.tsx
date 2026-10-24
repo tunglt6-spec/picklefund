@@ -7,7 +7,7 @@
 import { ActionMenu } from '../../../components/shared/ActionMenu'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, UserPlus, Trash2, Save, Crown, Timer } from 'lucide-react'
+import { ArrowLeft, UserPlus, Trash2, Save, Crown, Timer } from '../../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useClubDataStore } from '../../../store/clubDataStore'

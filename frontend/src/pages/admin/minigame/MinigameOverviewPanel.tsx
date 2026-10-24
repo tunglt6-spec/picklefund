@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Users, Trophy, Swords, Target, CalendarDays, BarChart2, ClipboardList,
   Activity, ChevronRight, Flag, Plus,
-} from 'lucide-react'
+} from '../../../components/icons/mobileLucide'
 import { useAuthStore } from '../../../store/authStore'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { sportEmoji } from '../../../types/minigame'

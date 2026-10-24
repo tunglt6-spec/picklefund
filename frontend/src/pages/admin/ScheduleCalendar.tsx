@@ -11,7 +11,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   ChevronLeft, ChevronRight, CalendarDays, Plus, UserCheck, CalendarPlus,
   Users, ClipboardList, Gauge, Pencil, Copy, Trash2, Clock, MapPin, ArrowRight,
-} from 'lucide-react'
+} from '../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'

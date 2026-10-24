@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { MoreHorizontal, Plus } from 'lucide-react'
+import { MoreHorizontal, Plus } from '../icons/mobileLucide'
 import { cn } from '../../lib/utils'
 
 export interface ActionMenuItem {

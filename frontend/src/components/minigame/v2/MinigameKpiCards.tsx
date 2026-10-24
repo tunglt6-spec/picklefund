@@ -1,4 +1,4 @@
-import { Users, Trophy, ClipboardList, RefreshCw } from 'lucide-react';
+import { Users, Trophy, ClipboardList, RefreshCw } from '../../icons/mobileLucide';
 
 export interface TournamentKpi {
   totalMembers: number;

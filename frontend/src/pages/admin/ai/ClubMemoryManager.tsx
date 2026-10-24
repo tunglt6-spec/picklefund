@@ -5,7 +5,7 @@
  */
 import { mobileText } from '../../../lib/mobileText'
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2, BookOpen } from 'lucide-react'
+import { Plus, Pencil, Trash2, BookOpen } from '../../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
 import api from '../../../lib/api'
 import { useIsMobile } from '../../../hooks/useIsMobile'

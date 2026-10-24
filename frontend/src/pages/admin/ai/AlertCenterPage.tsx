@@ -12,7 +12,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   AlertTriangle, ShieldAlert, Database, Workflow, Bot, CheckCircle2,
-} from 'lucide-react'
+} from '../../../components/icons/mobileLucide'
 import api from '../../../lib/api'
 import type { IntelSignal, SignalLevel } from '../../../hooks/useAiManager'
 import {

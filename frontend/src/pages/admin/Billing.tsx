@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Star, Zap, Check, X, CheckCircle2, XCircle, TrendingUp, AlertCircle, Receipt } from 'lucide-react'
+import { Star, Zap, Check, X, CheckCircle2, XCircle, TrendingUp, AlertCircle, Receipt } from '../../components/icons/mobileLucide'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { useAuthStore } from '../../store/authStore'
 import { useBrandingStore } from '../../store/brandingStore'

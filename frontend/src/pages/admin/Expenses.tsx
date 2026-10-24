@@ -10,7 +10,7 @@ import {
   CheckCircle, Clock, Pencil,
   FileText, X, ArrowLeft, Users, Wallet, DollarSign, Download, Tag, Paperclip,
   Landmark, Coffee, Check, FileDown,
-} from 'lucide-react'
+} from '../../components/icons/mobileLucide'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'

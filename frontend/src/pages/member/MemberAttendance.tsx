@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { CheckCircle, Clock, MapPin, Search, UserPlus, UserCheck, TrendingUp } from 'lucide-react'
+import { CheckCircle, Clock, MapPin, Search, UserPlus, UserCheck, TrendingUp } from '../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
 import { Badge } from '../../components/ui/Badge'
 import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, ExportActions, runExport, type Column } from '../../components/shared'

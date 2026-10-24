@@ -1,4 +1,4 @@
-import { Users, Shuffle } from 'lucide-react'
+import { Users, Shuffle } from '../../icons/mobileLucide'
 import { GroupCard } from './GroupCard'
 
 interface DashboardMember {

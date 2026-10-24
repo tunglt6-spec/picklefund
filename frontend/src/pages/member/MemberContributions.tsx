@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { DollarSign, CheckCircle, Clock, Search, Receipt, ChevronDown, ChevronUp, FileSpreadsheet, FileText, Send } from 'lucide-react'
+import { DollarSign, CheckCircle, Clock, Search, Receipt, ChevronDown, ChevronUp, FileSpreadsheet, FileText, Send } from '../../components/icons/mobileLucide'
 import { Badge } from '../../components/ui/Badge'
 import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, ExportActions, ErrorState, runExport, ActionButton, type Column } from '../../components/shared'
 import { ReportPaymentModal } from '../../components/member/ReportPaymentModal'

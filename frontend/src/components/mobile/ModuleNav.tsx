@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft } from '../icons/mobileLucide'
 import { HubSectionTitle, TileGrid } from './HubParts'
 import type { AppItem } from './hubApps'
 

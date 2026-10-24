@@ -1,6 +1,6 @@
 import { useEffect, Suspense } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from '../icons/mobileLucide'
 import { Sidebar } from './Sidebar'
 import { MobileHeader } from './MobileHeader'
 import { DesktopHeader } from './DesktopHeader'
@@ -13,6 +13,8 @@ import { useMinigameSync } from '../../hooks/useMinigameSync'
 import { useApplyBranding } from '../../hooks/useApplyBranding'
 import { useAuthStore } from '../../store/authStore'
 import { useGuideStore } from '../../store/guideStore'
+import { useIsMobile } from '../../hooks/useIsMobile'
+import { MobileIconContext } from '../icons/MobileIconContext'
 
 export function AppLayout() {
   useApiSync()
@@ -21,6 +23,7 @@ export function AppLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user } = useAuthStore()
+  const mobileIcons = useIsMobile(1024)
   const { open: guideOpen, openGuide, closeGuide } = useGuideStore()
 
   // Tự bật tài liệu Hướng dẫn LẦN ĐẦU cho mỗi tài khoản trên trình duyệt này (đánh dấu đã xem
@@ -42,6 +45,7 @@ export function AppLayout() {
   const fromAido = new URLSearchParams(location.search).get('from') === 'aido'
 
   return (
+    <MobileIconContext.Provider value={mobileIcons}>
     <div data-app-shell className="pf-wash flex h-[100dvh] overflow-hidden [background-color:var(--pf-bg)]">
       {/* Desktop sidebar */}
       <div className="hidden lg:flex lg:flex-shrink-0">
@@ -93,5 +97,6 @@ export function AppLayout() {
       {/* Tài liệu Hướng dẫn — render 1 lần, điều khiển qua guideStore (nút header + auto-open) */}
       <UserGuideModal open={guideOpen} onClose={closeGuide} />
     </div>
+    </MobileIconContext.Provider>
   )
 }

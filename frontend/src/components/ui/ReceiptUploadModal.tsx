@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { X, Upload, FileText, Image, Camera } from 'lucide-react'
+import { X, Upload, FileText, Image, Camera } from '../icons/mobileLucide'
 import api from '../../lib/api'
 import toast from 'react-hot-toast'
 import { Portal } from './Portal'

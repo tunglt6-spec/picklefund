@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Search, Lock, Unlock, Eye, Pencil, Trash2, ShieldCheck, Building2, Activity, Users, Wallet, CreditCard, CalendarClock } from 'lucide-react'
+import { Plus, Search, Lock, Unlock, Eye, Pencil, Trash2, ShieldCheck, Building2, Activity, Users, Wallet, CreditCard, CalendarClock } from '../../components/icons/mobileLucide'
 import { useNavigate } from 'react-router-dom'
 import api from '../../lib/api'
 import { PageShell, PageHeader, StatusBadge, ExportActions, ErrorState, runExport, MetricCard } from '../../components/shared'

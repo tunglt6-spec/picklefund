@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { QrCode, RefreshCw } from 'lucide-react'
+import { QrCode, RefreshCw } from '../../../components/icons/mobileLucide'
 import api from '../../../lib/api'
 import { blobToDataUrl } from '../../../lib/blobUrl'
 

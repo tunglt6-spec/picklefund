@@ -1,4 +1,4 @@
-import { Crown, Eye } from 'lucide-react'
+import { Crown, Eye } from '../../icons/mobileLucide'
 
 interface DashboardMember {
   id: string

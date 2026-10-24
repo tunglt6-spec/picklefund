@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { HuyLabel } from './HuyLabel'
-import { AlertTriangle, X } from 'lucide-react'
+import { AlertTriangle, X } from '../icons/mobileLucide'
 import { Button } from './Button'
 import { Portal } from './Portal'
 import { useDialogA11y } from '../../hooks/useDialogA11y'

@@ -5,7 +5,7 @@
  */
 import { useRef, useState } from 'react'
 import { useDialogA11y } from '../../hooks/useDialogA11y'
-import { X, BookOpen, Hand, Wallet, Users, Calendar, Trophy, Star, Settings, Bot, HandHelping, Lightbulb } from 'lucide-react'
+import { X, BookOpen, Hand, Wallet, Users, Calendar, Trophy, Star, Settings, Bot, HandHelping, Lightbulb } from '../icons/mobileLucide'
 
 interface Section {
   id: string

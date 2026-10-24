@@ -1,12 +1,15 @@
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, ChevronRight, X } from 'lucide-react'
+import { Search, ChevronRight, X } from '../icons/mobileLucide'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore, DEMO_CLUB_ID } from '../../store/clubDataStore'
 import { getActiveChungPeriod, cn } from '../../lib/utils'
 import api from '../../lib/api'
 import type { AppItem } from './hubApps'
 import type { Role } from '../../types'
+import { PlayfulIcon } from '../icons/PlayfulIcon'
+import { tileIconName } from '../icons/tileIconMap'
+import { MobileIconContext } from '../icons/MobileIconContext'
 
 export { fold } from '../../lib/fold'
 
@@ -155,11 +158,13 @@ export function TileGrid({
   empty?: string
 }) {
   const navigate = useNavigate()
+  const mobileIcons = useContext(MobileIconContext)
   if (items.length === 0) return <p className="py-10 text-center text-sm [color:var(--pf-color-muted)]">{empty ?? 'Không có chức năng phù hợp.'}</p>
   return (
     <ul className="mt-3 grid grid-cols-3 gap-x-3 gap-y-5 min-[640px]:grid-cols-6">
       {items.map((a, i) => {
         const Icon = a.icon
+        const playfulName = tileIconName(a)
         const count = a.badge ? unread : (a.badgeCount ?? 0)
         return (
           <li key={a.key} className="relative min-w-0">
@@ -172,7 +177,9 @@ export function TileGrid({
                 data-mod={a.module}
                 className="pf-tile-ico relative flex aspect-square w-full max-w-[72px] items-center justify-center rounded-[var(--pf-radius-tile)]"
               >
-                <Icon size={28} strokeWidth={1.9} aria-hidden />
+                {mobileIcons && playfulName
+                  ? <PlayfulIcon name={playfulName} size={40} variant="on-color" strokeWidth={1.8} aria-hidden />
+                  : <Icon size={28} strokeWidth={1.9} aria-hidden />}
                 {count > 0 && (
                   <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--pf-color-danger)] px-1 text-xs font-bold text-white">
                     {count > 9 ? '9+' : count}

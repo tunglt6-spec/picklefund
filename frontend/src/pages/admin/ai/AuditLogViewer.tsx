@@ -6,7 +6,7 @@
 import { mobileText } from '../../../lib/mobileText'
 import { DateInput } from '../../../components/ui/DateTimeFields'
 import { useCallback, useEffect, useState } from 'react'
-import { ScrollText, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ScrollText, Search, ChevronLeft, ChevronRight } from '../../../components/icons/mobileLucide'
 import api from '../../../lib/api'
 import { exportGenericExcel, exportGenericTablePDF } from '../../../lib/export'
 import { useExportRunner } from '../../../hooks/useExportRunner'

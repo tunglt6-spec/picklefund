@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Database, ArrowRight, Users, CalendarDays, CalendarClock, ShieldAlert,
   CheckCircle2, AlertTriangle, AlertCircle,
-} from 'lucide-react'
+} from '../../../components/icons/mobileLucide'
 import api from '../../../lib/api'
 import {
   PageShell, PageHeader, MetricCard, StatusBadge, LoadingState, ErrorState,

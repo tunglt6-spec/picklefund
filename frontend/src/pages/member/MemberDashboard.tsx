@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { DollarSign, Calendar, TrendingUp, AlertCircle, Download, CheckCircle2, XCircle, ChevronRight, Activity, Share2, Send } from 'lucide-react'
+import { DollarSign, Calendar, TrendingUp, AlertCircle, Download, CheckCircle2, XCircle, ChevronRight, Activity, Share2, Send } from '../../components/icons/mobileLucide'
 import { useNavigate } from 'react-router-dom'
 import { PageShell, PageHeader, MetricCard, ChartCard, EmptyState, ActionButton, StatusBadge } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'

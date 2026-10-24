@@ -13,7 +13,7 @@ import {
   ChevronLeft, ChevronRight, Download, Lock, LockOpen, Play,
   FolderOpen, ChevronDown, QrCode, FileText,
   Trophy, Upload, AlertCircle, CheckCircle2, FileSpreadsheet, Copy, Check, Maximize2
-} from 'lucide-react'
+} from '../../components/icons/mobileLucide'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { PageShell, PageHeader, DataTable, type Column } from '../../components/shared'
 import { Button } from '../../components/ui/Button'

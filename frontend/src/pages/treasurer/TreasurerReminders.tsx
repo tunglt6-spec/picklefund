@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Bell, Send, CheckCircle, Clock } from 'lucide-react'
+import { Bell, Send, CheckCircle, Clock } from '../../components/icons/mobileLucide'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { ExportActions } from '../../components/shared/ExportActions'
 import { useExportRunner } from '../../hooks/useExportRunner'

@@ -4,7 +4,7 @@
  * tài khoản + ConfirmDialog.
  */
 import { useState, useEffect } from 'react'
-import { UserCheck, UserX, Shield, Users } from 'lucide-react'
+import { UserCheck, UserX, Shield, Users } from '../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
 import {

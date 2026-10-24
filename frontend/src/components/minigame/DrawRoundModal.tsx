@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useDialogA11y } from '../../hooks/useDialogA11y'
-import { X, ChevronRight, RefreshCw, Check, AlertCircle, Users, Zap, Pencil } from 'lucide-react'
+import { X, ChevronRight, RefreshCw, Check, AlertCircle, Users, Zap, Pencil } from '../icons/mobileLucide'
 import { cn } from '../../lib/utils'
 import { useMinigameStore } from '../../store/minigameStore'
 import type { DrawMode, DrawRoundPreview, GenderBalanceMode, DoublesPlayer } from '../../types/minigame'

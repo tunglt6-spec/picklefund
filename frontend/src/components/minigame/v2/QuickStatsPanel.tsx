@@ -1,4 +1,4 @@
-import { Zap } from 'lucide-react';
+import { Zap } from '../../icons/mobileLucide';
 
 interface QuickStats {
   topScorer: { name: string; points: number };

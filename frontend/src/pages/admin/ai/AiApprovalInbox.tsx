@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import {
   Inbox, Info, Check, X, RotateCcw, ShieldCheck,
   Play, AlertTriangle, ChevronRight, Bot, RefreshCw, Zap,
-} from 'lucide-react'
+} from '../../../components/icons/mobileLucide'
 import {
   useAiManager, evaluateApproval, fetchAiAction,
   approveAiAction, rejectAiAction, retryAiAction, executeAiAction,

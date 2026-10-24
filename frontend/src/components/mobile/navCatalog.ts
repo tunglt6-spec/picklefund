@@ -2,7 +2,7 @@ import {
   Users, Award, UserCog, ShieldCheck, History, CalendarRange, ArrowDownCircle, ArrowUpCircle, HandCoins, BarChart3, BadgeCheck,
   CalendarDays, CalendarPlus, LogIn, ClipboardCheck, Activity, LayoutDashboard, Trophy, Swords, FileCheck2, Medal,
   Newspaper, Handshake, Bell, CreditCard, Settings, Receipt, Wallet, CalendarCheck, BookOpen, type LucideIcon,
-} from 'lucide-react'
+} from '../icons/mobileLucide'
 
 import type { ModuleKey } from './hubApps'
 

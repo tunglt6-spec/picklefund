@@ -3,7 +3,7 @@
  * Là màn đứng riêng (route /admin/ai-log) để AI Operations Center trỏ tới qua card "AI Dispatch".
  */
 import { useState } from 'react'
-import { Bot, BarChart3, MessageSquare } from 'lucide-react'
+import { Bot, BarChart3, MessageSquare } from '../../../components/icons/mobileLucide'
 import { ModuleTabs } from '../../../components/shared'
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import { MitDacExecutionLog } from './MitDacExecutionLog'

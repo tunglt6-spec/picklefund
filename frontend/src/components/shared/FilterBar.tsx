@@ -3,7 +3,7 @@
  * Desktop: hàng ngang. Mobile: search full width + nút "Bộ lọc" mở drawer (slot filtersMobile).
  */
 import type { ReactNode } from 'react'
-import { Search, SlidersHorizontal } from 'lucide-react'
+import { Search, SlidersHorizontal } from '../icons/mobileLucide'
 import { cn } from '../../lib/utils'
 
 interface FilterBarProps {

@@ -6,7 +6,7 @@
  */
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Swords, Crown, ChevronRight, Save } from 'lucide-react'
+import { ArrowLeft, Swords, Crown, ChevronRight, Save } from '../../../components/icons/mobileLucide'
 import api from '../../../lib/api'
 import { PageHeader } from '../../../components/shared/PageHeader'
 import { ExportActions } from '../../../components/shared/ExportActions'

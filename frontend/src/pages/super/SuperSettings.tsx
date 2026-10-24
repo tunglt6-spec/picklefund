@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { confirmDialog, promptDialog } from '../../components/ui/ConfirmHost'
-import { Save, Shield, Globe, Bell, Database, KeyRound, Eye, EyeOff, CheckCircle, CalendarClock } from 'lucide-react'
+import { Save, Shield, Globe, Bell, Database, KeyRound, Eye, EyeOff, CheckCircle, CalendarClock } from '../../components/icons/mobileLucide'
 import { PageShell, PageHeader } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
 import { useAuthStore } from '../../store/authStore'

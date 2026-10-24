@@ -1,5 +1,5 @@
 import { useState, useRef, useLayoutEffect } from 'react'
-import { X, Download, FileText, Share2, Loader2, BarChart3, Users } from 'lucide-react'
+import { X, Download, FileText, Share2, Loader2, BarChart3, Users } from '../../icons/mobileLucide'
 import { InfographicOverlayA } from './InfographicOverlayA'
 import { InfographicOverlayB } from './InfographicOverlayB'
 import type { InfographicReportData } from './infographic.types'

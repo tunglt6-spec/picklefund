@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { BellRing, X } from 'lucide-react'
+import { BellRing, X } from '../icons/mobileLucide'
 import toast from 'react-hot-toast'
 import { useAuthStore } from '../../store/authStore'
 import { enablePush, pushSupported, pushPermission } from '../../lib/push'

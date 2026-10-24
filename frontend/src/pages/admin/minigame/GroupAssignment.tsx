@@ -8,7 +8,7 @@
  */
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Shuffle, Lock, Calendar, ChevronDown, Plus, Trash2, Pencil, Check } from 'lucide-react'
+import { ArrowLeft, Shuffle, Lock, Calendar, ChevronDown, Plus, Trash2, Pencil, Check } from '../../../components/icons/mobileLucide'
 import api from '../../../lib/api'
 import { PageHeader } from '../../../components/shared/PageHeader'
 import { Button } from '../../../components/ui/Button'

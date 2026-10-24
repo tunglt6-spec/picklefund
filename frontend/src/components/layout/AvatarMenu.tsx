@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { LogOut, User, LayoutGrid, BookOpen, Moon, Sun } from 'lucide-react'
+import { LogOut, User, LayoutGrid, BookOpen, Moon, Sun } from '../icons/mobileLucide'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useGuideStore } from '../../store/guideStore'

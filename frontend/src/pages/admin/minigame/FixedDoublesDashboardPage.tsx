@@ -8,7 +8,7 @@ import {
   ChevronDown, ChevronUp, Plus, Trash2,
   Check, X, MoreVertical, AlertCircle, TrendingUp,
   Users, Target, Activity, Image as ImageIcon, FileText,
-} from 'lucide-react'
+} from '../../../components/icons/mobileLucide'
 import { cn } from '../../../lib/utils'
 import { Button } from '../../../components/ui/Button'
 import { Portal } from '../../../components/ui/Portal'

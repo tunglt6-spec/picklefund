@@ -11,7 +11,7 @@
 import { nav } from '../../../components/mobile/navCatalog'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ListChecks, CalendarDays, ClipboardList, Trophy, RefreshCw } from 'lucide-react'
+import { ListChecks, CalendarDays, ClipboardList, Trophy, RefreshCw } from '../../../components/icons/mobileLucide'
 import { ModuleTabs, StatusBadge } from '../../../components/shared'
 import { Button } from '../../../components/ui/Button'
 import { MinigameForm } from '../minigame/MinigameForm'

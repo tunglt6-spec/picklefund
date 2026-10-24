@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
 } from 'recharts'
-import { CalendarDays, UserCheck, TrendingUp, CalendarPlus, CalendarRange } from 'lucide-react'
+import { CalendarDays, UserCheck, TrendingUp, CalendarPlus, CalendarRange } from '../../components/icons/mobileLucide'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useAuthStore } from '../../store/authStore'
 import api from '../../lib/api'

@@ -6,7 +6,7 @@
  * theo clubId từ JWT. KHÔNG sửa admin Debts (dùng chung với trang quản trị).
  */
 import { useEffect, useMemo, useState } from 'react'
-import { Users, AlertCircle, Wallet, CheckCircle } from 'lucide-react'
+import { Users, AlertCircle, Wallet, CheckCircle } from '../../components/icons/mobileLucide'
 import api from '../../lib/api'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useClubContributions } from '../../hooks/useFinanceData'

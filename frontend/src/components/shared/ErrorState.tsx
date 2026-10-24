@@ -2,7 +2,7 @@
  * ErrorState (UDP-01) — trạng thái lỗi: icon cảnh báo (đỏ), tiêu đề, mô tả, nút Thử lại.
  * Dùng cho màn/khu vực tải dữ liệu thất bại. Token-based (V2.2 Clean Modern SaaS).
  */
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle } from '../icons/mobileLucide'
 import type { ReactNode } from 'react'
 import { cn } from '../../lib/utils'
 

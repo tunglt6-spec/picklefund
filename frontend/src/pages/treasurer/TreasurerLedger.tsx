@@ -1,6 +1,6 @@
 import { moneyColor } from '../../lib/moneyTone'
 import { useState, useMemo, useEffect } from 'react'
-import { ArrowUpCircle, ArrowDownCircle, Wallet, Search, FileText, FileSpreadsheet } from 'lucide-react'
+import { ArrowUpCircle, ArrowDownCircle, Wallet, Search, FileText, FileSpreadsheet } from '../../components/icons/mobileLucide'
 import { PageShell, PageHeader } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'

@@ -8,7 +8,7 @@ import {
   MessageSquare,
   FileText,
   User,
-} from 'lucide-react'
+} from '../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import {

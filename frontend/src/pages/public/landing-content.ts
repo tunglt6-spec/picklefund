@@ -5,13 +5,13 @@
  *
  * Định vị: PickleFund — AI Sports Community Platform (đa bộ môn, không chỉ Pickleball).
  */
-import type { LucideIcon } from 'lucide-react'
+import type { LucideIcon } from '../../components/icons/mobileLucide'
 import {
   LayoutGrid, Cpu, Wallet, Users, CalendarCheck, Trophy, BarChart3, Smartphone,
   Building2, GraduationCap, Briefcase, ShieldCheck, LineChart, Sparkles, RefreshCw,
   BookOpen, PlayCircle, HelpCircle, Newspaper, Rss, Download, FileText, Tag, Info,
   Target, Route, HeartHandshake, Phone, Bot,
-} from 'lucide-react'
+} from '../../components/icons/mobileLucide'
 
 /* ── Kiểu dữ liệu menu ── */
 export interface MenuItem {

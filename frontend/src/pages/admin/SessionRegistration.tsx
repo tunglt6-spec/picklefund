@@ -5,7 +5,7 @@
  */
 import { useSearchParams } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { CalendarPlus, Check, Users, Save, ChevronDown } from 'lucide-react'
+import { CalendarPlus, Check, Users, Save, ChevronDown } from '../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
 import { useClubDataStore } from '../../store/clubDataStore'

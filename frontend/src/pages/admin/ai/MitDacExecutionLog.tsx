@@ -5,7 +5,7 @@
  */
 import { ActionTypeText } from '../../../components/ui/ActionTypeText'
 import { useCallback, useEffect, useState } from 'react'
-import { CheckCircle2, XCircle, RotateCcw, Cog } from 'lucide-react'
+import { CheckCircle2, XCircle, RotateCcw, Cog } from '../../../components/icons/mobileLucide'
 import api from '../../../lib/api'
 import type { AiActionListItem, AiActionStatus } from '../../../hooks/useAiManager'
 import {

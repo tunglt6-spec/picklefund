@@ -1,4 +1,4 @@
-import { ArrowUpRight, ArrowDownLeft, AlertTriangle } from 'lucide-react'
+import { ArrowUpRight, ArrowDownLeft, AlertTriangle } from '../icons/mobileLucide'
 import { formatVND } from '../../lib/utils'
 
 export interface FundSummaryCardProps {

@@ -1,4 +1,4 @@
-import { AlertTriangle, AlertOctagon, Info, ChevronRight } from 'lucide-react';
+import { AlertTriangle, AlertOctagon, Info, ChevronRight } from '../../icons/mobileLucide';
 
 interface DashboardAlert {
   id: string;

@@ -3,7 +3,7 @@ import {
   Settings, Building2,
   Bell, ScrollText, Receipt, ListOrdered, CreditCard,
   Trophy, CalendarDays, Wallet, Award, Cpu, MessageSquare, BadgeCheck,
-} from 'lucide-react'
+} from '../icons/mobileLucide'
 import type { Role } from '../../types'
 
 export interface NavItem {

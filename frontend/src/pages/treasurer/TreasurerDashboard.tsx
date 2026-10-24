@@ -1,6 +1,6 @@
 import { moneyColor } from '../../lib/moneyTone'
 import { useMemo, useCallback, useState, useEffect } from 'react'
-import { DollarSign, CreditCard, Building2, FileText, AlertTriangle, Clock, TrendingUp, TrendingDown, Wallet } from 'lucide-react'
+import { DollarSign, CreditCard, Building2, FileText, AlertTriangle, Clock, TrendingUp, TrendingDown, Wallet } from '../../components/icons/mobileLucide'
 import { Button } from '../../components/ui/Button'
 import { ReceiptUploadModal } from '../../components/ui/ReceiptUploadModal'
 import { PageShell, PageHeader, DataTable, MobileCardList, StatusBadge, ActionButton, MetricCard, type Column } from '../../components/shared'

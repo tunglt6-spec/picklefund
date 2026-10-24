@@ -18,7 +18,7 @@ import {
   Plus, Users, UserCheck, UserMinus, Sparkles, X, Edit2, Trash2, Power,
   Phone, Mail, Calendar, Wallet, KeyRound,
   ClipboardList, Eye, CircleUserRound, AlertTriangle, RefreshCw,
-} from 'lucide-react'
+} from '../../components/icons/mobileLucide'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useClubContributions } from '../../hooks/useFinanceData'
 import { useAuthStore } from '../../store/authStore'

@@ -13,7 +13,7 @@
  *  - Tự reset khi người dùng ĐỔI route (đổi `resetKey`) → không kẹt màn lỗi khi chuyển trang.
  */
 import { Component, useEffect, useState, type ReactNode } from 'react'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle } from './icons/mobileLucide'
 
 /** Nhận diện lỗi tải chunk lazy (import động thất bại/treo) — phân biệt với lỗi logic thường. */
 function laLoiTaiChunk(err: unknown): boolean {

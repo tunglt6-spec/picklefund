@@ -11,7 +11,7 @@
 import { mobileText } from '../../../lib/mobileText'
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CalendarClock, Power, Repeat, Clock, Play, Bot, Sparkles } from 'lucide-react'
+import { CalendarClock, Power, Repeat, Clock, Play, Bot, Sparkles } from '../../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
 import api from '../../../lib/api'
 import {

@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Sparkles } from 'lucide-react'
+import { Sparkles } from '../icons/mobileLucide'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore, DEMO_CLUB_ID } from '../../store/clubDataStore'
 import { useBrandingStore } from '../../store/brandingStore'

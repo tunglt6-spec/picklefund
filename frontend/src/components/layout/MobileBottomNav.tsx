@@ -2,14 +2,21 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   Home, CalendarDays, Trophy, Users, ListOrdered, BadgeCheck, Bell, Building2, CreditCard, LayoutGrid,
-} from 'lucide-react'
+} from '../icons/mobileLucide'
 import { useAuthStore } from '../../store/authStore'
 import { cn } from '../../lib/utils'
 import { bottomTabsByRole, pathOf, type BottomTab } from './navConfig'
+import { PlayfulIcon } from '../icons/PlayfulIcon'
+import type { PlayfulIconName } from '../icons/playfulGlyphs'
 
 const ICONS: Record<BottomTab['icon'], typeof Home> = {
   home: Home, calendar: CalendarDays, trophy: Trophy, community: Users, ledger: ListOrdered,
   approve: BadgeCheck, bell: Bell, club: Building2, users: Users, pay: CreditCard, apps: LayoutGrid,
+}
+const PLAYFUL_NAV: Record<BottomTab['icon'], PlayfulIconName> = {
+  home: 'home', calendar: 'nav-calendar', trophy: 'nav-competition', community: 'nav-community',
+  ledger: 'finance-report', approve: 'payment-approval', bell: 'notifications', club: 'club',
+  users: 'members', pay: 'payment-settings', apps: 'apps',
 }
 
 /** Chiều cao thanh đáy (+ safe-area) — trang chừa chỗ để nội dung/nút cuối danh sách không bị che. */
@@ -55,7 +62,9 @@ export function MobileBottomNav() {
                 )}
                 style={active ? { background: 'var(--pf-primary-soft)' } : undefined}
               >
-                <Icon size={22} strokeWidth={active ? 2.3 : 1.9} aria-hidden />
+                {PLAYFUL_NAV[t.icon]
+                  ? <PlayfulIcon name={PLAYFUL_NAV[t.icon]} size={24} strokeWidth={active ? 2.2 : 1.8} aria-hidden />
+                  : <Icon size={22} strokeWidth={active ? 2.3 : 1.9} aria-hidden />}
                 <span className="max-w-full truncate">{t.label}</span>
               </Link>
             </li>

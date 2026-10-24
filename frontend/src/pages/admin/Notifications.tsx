@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, BellRing, DollarSign, Calendar, Users, AlertTriangle, Check, Receipt, Brain, Zap, Inbox, Settings, Megaphone, UserPlus, ScrollText } from 'lucide-react'
+import { Bell, BellRing, DollarSign, Calendar, Users, AlertTriangle, Check, Receipt, Brain, Zap, Inbox, Settings, Megaphone, UserPlus, ScrollText } from '../../components/icons/mobileLucide'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { useAuthStore } from '../../store/authStore'
 import toast from 'react-hot-toast'

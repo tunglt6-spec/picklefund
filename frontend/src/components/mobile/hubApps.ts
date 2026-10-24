@@ -1,7 +1,7 @@
 import {
   Users, MessageSquare, Cpu, Settings, Sparkles, LayoutDashboard, Building2, CreditCard,
   ScrollText, ListOrdered, BadgeCheck, Award, BellRing, Bell,
-  ArrowDownCircle, ArrowUpCircle, } from 'lucide-react'
+  ArrowDownCircle, ArrowUpCircle, } from '../icons/mobileLucide'
 import { NAV_CATALOG } from './navCatalog'
 import type { Role } from '../../types'
 

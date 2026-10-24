@@ -1,4 +1,4 @@
-import { PlayCircle, CheckCircle2 } from 'lucide-react'
+import { PlayCircle, CheckCircle2 } from '../../icons/mobileLucide'
 import { DoubleMatchCard } from './DoubleMatchCard'
 
 interface DashboardMember { id: string; name: string; skill: 'Cao'|'TB'|'Thấp'; isSeed?: boolean }

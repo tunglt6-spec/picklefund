@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { DateInput } from '../ui/DateTimeFields'
-import { Minus, Plus } from 'lucide-react'
+import { Minus, Plus } from '../icons/mobileLucide'
 import { Modal } from '../ui/Modal'
 import { Button } from '../ui/Button'
 import { useMinigameStore } from '../../store/minigameStore'

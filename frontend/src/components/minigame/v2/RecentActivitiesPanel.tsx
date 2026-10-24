@@ -1,4 +1,4 @@
-import { Clock, Trophy, RefreshCw, Users, Settings } from 'lucide-react'
+import { Clock, Trophy, RefreshCw, Users, Settings } from '../../icons/mobileLucide'
 
 interface DashboardActivity {
   id: string

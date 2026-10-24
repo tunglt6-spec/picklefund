@@ -3,7 +3,7 @@ import { useDialogA11y } from '../../hooks/useDialogA11y'
 import {
   Users, UserPlus, RefreshCw, Lock, Unlock, CheckCircle2,
   AlertCircle, Clock, XCircle, Search, ChevronDown
-} from 'lucide-react'
+} from '../../components/icons/mobileLucide'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import { useEmbedded } from '../../components/shared'

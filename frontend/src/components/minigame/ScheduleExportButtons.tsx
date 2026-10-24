@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Image as ImageIcon, FileText } from 'lucide-react'
+import { Image as ImageIcon, FileText } from '../icons/mobileLucide'
 
 /**
  * Nút xuất Ảnh/PDF dạng pill có nhãn — chuẩn SaaS dùng chung cho các màn minigame

@@ -3,7 +3,7 @@
  * Đọc GET /aido/maika-insights (bảng maika_insights, Phase 2). V2.2 Clean Modern SaaS.
  */
 import { useCallback, useEffect, useState } from 'react'
-import { Brain, FileText, TrendingUp, AlertTriangle, Activity } from 'lucide-react'
+import { Brain, FileText, TrendingUp, AlertTriangle, Activity } from '../../../components/icons/mobileLucide'
 import api from '../../../lib/api'
 import {
   PageShell, PageHeader, MetricCard, StatusBadge, EmptyState, LoadingState, ErrorState,

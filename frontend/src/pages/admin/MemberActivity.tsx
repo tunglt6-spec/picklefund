@@ -4,7 +4,7 @@
  * mới, không đổi nghiệp vụ — chỉ tổng hợp & hiển thị.
  */
 import { useMemo, useRef, useState } from 'react'
-import { X, Search, DollarSign, CalendarCheck, TrendingUp, Activity } from 'lucide-react'
+import { X, Search, DollarSign, CalendarCheck, TrendingUp, Activity } from '../../components/icons/mobileLucide'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useClubContributions } from '../../hooks/useFinanceData'

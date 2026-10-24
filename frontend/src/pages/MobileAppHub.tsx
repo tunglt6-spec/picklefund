@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useModerationPending } from '../hooks/useModerationPending'
 import { Navigate } from 'react-router-dom'
-import { ArrowUpDown, Check } from 'lucide-react'
+import { ArrowUpDown, Check } from '../components/icons/mobileLucide'
 import { useNotifStore } from '../store/notifStore'
 import { homeByRole } from '../components/layout/navConfig'
 import { APP_GROUPS, type AppItem } from '../components/mobile/hubApps'

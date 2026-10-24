@@ -4,7 +4,7 @@
  * AppLayout để MỌI màn đều có, đồng nhất. Ẩn trên mobile (đã có MobileHeader).
  */
 import { useState, useRef, useEffect } from 'react'
-import { Search, Bell, Maximize2, Minimize2, LogOut, User, ChevronDown, Zap, BookOpen } from 'lucide-react'
+import { Search, Bell, Maximize2, Minimize2, LogOut, User, ChevronDown, Zap, BookOpen } from '../icons/mobileLucide'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'

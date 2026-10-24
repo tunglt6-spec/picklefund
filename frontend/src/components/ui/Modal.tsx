@@ -1,5 +1,5 @@
 import { useEffect, useRef, type ReactNode } from 'react'
-import { X } from 'lucide-react'
+import { X } from '../icons/mobileLucide'
 import { cn } from '../../lib/utils'
 import { Portal } from './Portal'
 import { useDialogA11y } from '../../hooks/useDialogA11y'

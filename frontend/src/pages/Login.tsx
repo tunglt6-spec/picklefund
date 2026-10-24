@@ -5,7 +5,7 @@ import {
   Eye, EyeOff, Building2, ArrowLeft, ArrowRight,
   CheckCircle2, ChevronRight, UserPlus, Users, DollarSign,
   BarChart3, Smartphone, ChevronDown, Lock, Gift, Star,
-} from 'lucide-react'
+} from '../components/icons/mobileLucide'
 import { useAuthStore } from '../store/authStore'
 import api from '../lib/api'
 import toast from 'react-hot-toast'

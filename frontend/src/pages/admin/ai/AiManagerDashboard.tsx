@@ -6,7 +6,7 @@ import {
   CheckCircle2, Zap, Info, ChevronRight, BookOpen,
   Workflow, ClipboardCheck, Send, Bell, CalendarClock, Database, Gauge,
   ScrollText, LayoutGrid, ToggleRight, ToggleLeft, Copy, Timer, RefreshCw,
-} from 'lucide-react'
+} from '../../../components/icons/mobileLucide'
 import {
   useAiManager, AI_TEAM, type IntelSignal, type SignalLevel,
 } from '../../../hooks/useAiManager'

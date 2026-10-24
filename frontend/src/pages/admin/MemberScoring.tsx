@@ -10,7 +10,7 @@
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Award, Lock, Plus, Trash2, TrendingUp, TrendingDown, Users, Star, Trophy, ListChecks } from 'lucide-react'
+import { Award, Lock, Plus, Trash2, TrendingUp, TrendingDown, Users, Star, Trophy, ListChecks } from '../../components/icons/mobileLucide'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'

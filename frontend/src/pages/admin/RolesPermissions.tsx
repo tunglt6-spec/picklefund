@@ -4,7 +4,7 @@
  * chặn: CLUB_ADMIN không cấp được SUPER_ADMIN). KHÔNG thêm nghiệp vụ mới ngoài quản trị tài khoản.
  */
 import { useEffect, useState } from 'react'
-import { UserX, UserCheck } from 'lucide-react'
+import { UserX, UserCheck } from '../../components/icons/mobileLucide'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import { PageShell, PageHeader } from '../../components/shared'

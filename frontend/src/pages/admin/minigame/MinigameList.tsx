@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom'
 import {
   Plus, Eye, Edit2, Trash2, Trophy, Users, Activity, CheckCircle2,
   PlayCircle, AlertCircle, RefreshCw, UserCheck, Check,
-} from 'lucide-react'
+} from '../../../components/icons/mobileLucide'
 import api from '../../../lib/api'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useAuthStore } from '../../../store/authStore'
