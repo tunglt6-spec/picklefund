@@ -52,8 +52,7 @@ export function ActionMenu({ items, label = 'Thao tác', className, iconOnly, pr
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-[calc(100%+6px)] z-50 min-w-[220px] overflow-hidden rounded-2xl border [background:var(--pf-surface)] [border-color:var(--pf-border)]"
-          style={{ boxShadow: '0 8px 24px rgba(16,24,40,0.14)' }}
+          className="lg-glass-strong absolute right-0 top-[calc(100%+6px)] z-50 min-w-[220px] overflow-hidden rounded-2xl"
         >
           {items.map((it) => (
             <button

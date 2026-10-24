@@ -37,7 +37,7 @@ export function MobileBottomNav() {
   return (
     <nav
       aria-label="Điều hướng chính"
-      className="fixed inset-x-0 bottom-0 z-30 border-t [background:var(--pf-surface)] [border-color:var(--pf-border)] lg:hidden"
+      className="lg-glass lg-glass-nav fixed inset-x-0 bottom-0 z-30 lg:hidden"
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
       <ul className="mx-auto flex h-[60px] max-w-2xl items-stretch gap-1 px-1 py-1">

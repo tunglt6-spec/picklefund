@@ -29,7 +29,7 @@ export function MobileTransactionCard({ name, description, amount, type, fundSou
         <div className="text-xs [color:var(--pf-color-muted)] break-words">{description}{fundSource ? ` · ${FUND_LABEL[fundSource] ?? fundSource}` : ''}</div>
       </div>
       <div className="flex flex-col items-end flex-shrink-0 max-w-[140px] min-[600px]:max-w-none">
-        <span className={`text-sm font-[700] tabular-nums ${isIncome ? '[color:var(--pf-green)]' : '[color:var(--pf-color-danger)]'}`}>
+        <span className={`text-sm font-[700] tabular-nums ${isIncome ? '[color:var(--pf-green)]' : '[color:var(--pf-text)]'}`}>
           {isIncome ? '+' : '−'}{formatted}
         </span>
         {status && (

@@ -139,6 +139,7 @@ export function MemberScoring() {
       <ModuleTabs
         paramKey="view"
         title="Chấm điểm"
+        module="members"
         menuBack={embedded ? 'parent' : '/ung-dung'}
         parentParam="tab"
         tabs={[

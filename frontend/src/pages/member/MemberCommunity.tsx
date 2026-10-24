@@ -1840,7 +1840,7 @@ export default function MemberCommunity() {
   }
   if (mobileView && !mobileTab) {
     const items: MenuItem[] = (['feed', 'matchmaking', ...(isAdmin ? ['moderation'] : [])] as TabKey[]).map((k) => ({
-      key: k, label: MOBILE_FN[k].label, to: '', icon: MOBILE_FN[k].icon, badgeCount: k === 'moderation' ? modPending : undefined,
+      key: k, label: MOBILE_FN[k].label, to: '', icon: MOBILE_FN[k].icon, module: 'community', badgeCount: k === 'moderation' ? modPending : undefined,
     }))
     return <MobileModuleMenu title="Cộng đồng" items={items} scrollId="/community" onSelect={(it) => selectMobile(it.key as TabKey)} />
   }

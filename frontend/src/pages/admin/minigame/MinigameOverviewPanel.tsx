@@ -183,9 +183,9 @@ export function MinigameOverviewPanel({ sport }: { sport: string }) {
   return (
     <div className="@container flex flex-col gap-4">
       {/* KPI trên nền tím (giống mockup) */}
-      <div className="rounded-[18px] p-4 text-white [background:linear-gradient(135deg,var(--pf-primary),var(--pf-primary-hover))] shadow-sm">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide opacity-90">
-          <Trophy size={16} /> Tổng quan · {sportEmoji(sport)} {featured.name}
+      <div data-mod="compete" className="rounded-[18px] p-4 text-white [background:linear-gradient(135deg,var(--pf-primary),var(--pf-primary-hover))] shadow-sm max-lg:border max-lg:[border-color:var(--pf-border)] max-lg:[background:var(--mod-tint)] max-lg:text-[color:var(--pf-text)] max-lg:shadow-none">
+        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide opacity-90 max-lg:opacity-100">
+          <Trophy size={16} className="max-lg:[color:var(--mod-fg)]" /> Tổng quan · {sportEmoji(sport)} {featured.name}
         </div>
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
           {kpis.map(k => (

@@ -105,13 +105,17 @@ const GROUP_TONE: Record<string, GroupTone> = {
 const HUB_TONE: GroupTone = GROUP_TONE['Điều phối & Duyệt']
 
 // Màu nhận diện 5 agent — ĐỒNG BỘ với Office View ("Kết quả hôm nay của từng Agent").
-const AGENT_COLOR: Record<string, string> = {
-  maika: '#6D5DFB',
-  lisa: '#2563EB',
-  hermes: '#059669',
-  'mit-dac': '#EA580C',
-  notification: '#C026D3',
-}
+const MOBILE_UI = typeof window !== 'undefined' && window.innerWidth < 1024
+const AGENT_COLOR: Record<string, string> = MOBILE_UI
+  // Mobile (Luxury SaaS): màu agent trầm, đủ tương phản (≥4.5:1) khi dùng làm chữ nhỏ.
+  ? { maika: '#37307A', lisa: '#315E8A', hermes: '#176149', 'mit-dac': '#8A5D16', notification: '#6D4DA0' }
+  : {
+    maika: '#6D5DFB',
+    lisa: '#2563EB',
+    hermes: '#059669',
+    'mit-dac': '#EA580C',
+    notification: '#C026D3',
+  }
 
 // Nhãn tiếng Việt cho loại Club Memory (map đúng category schema thật, không bịa "Daily Brief").
 const MEMORY_LABEL: Record<string, string> = {
@@ -608,7 +612,7 @@ export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } 
           <PanelTitle icon={<LayoutGrid size={16} />}>Khu Vực Vận Hành</PanelTitle>
           <TileGrid
             items={sections.filter(s => s.to).map((s): AppItem => ({
-              key: s.key, label: SECTION_VI[s.key] ?? s.label, to: '', icon: SECTION_ICON[s.key] ?? LayoutGrid,
+              key: s.key, label: SECTION_VI[s.key] ?? s.label, to: '', icon: SECTION_ICON[s.key] ?? LayoutGrid, module: 'ai',
               badgeCount: s.key === 'approval' ? rt.summary?.modules?.hermes?.waitingApproval : undefined,
             }))}
             onSelect={(it) => { const t = sections.find(x => x.key === it.key)?.to; if (t) goHub(t) }}

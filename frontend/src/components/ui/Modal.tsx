@@ -56,7 +56,7 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
     <div
       // Portal ra body + h-[100dvh]: overlay bám viewport thật (thoát .pf-page/scroll ancestor),
       // dvh = vùng nhìn thấy thực trên mobile → modal luôn căn đúng, không tụt lên/xuống.
-      className="fixed inset-x-0 top-0 h-[100dvh] z-50 flex items-end justify-center p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
+      className="pf-modal-wrap fixed inset-x-0 top-0 h-[100dvh] z-50 flex items-end justify-center p-0 backdrop-blur-[2px] sm:items-center sm:p-4"
       onClick={e => { if (e.target === e.currentTarget) onClose() }}
     >
       <div className="pf-modal-backdrop absolute inset-0 bg-black/40 pointer-events-none" />
@@ -72,7 +72,7 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
         sizeClasses[size]
       )}>
         {/* Header */}
-        <div className="flex items-start justify-between px-6 py-4 border-b border-[color:var(--pf-border)] shrink-0">
+        <div className="pf-sheet-head flex items-start justify-between px-6 py-4 border-b border-[color:var(--pf-border)] shrink-0">
           <div>
             <h2 className="text-base font-semibold [color:var(--pf-text)]">{title}</h2>
             {subtitle && <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{subtitle}</p>}
@@ -93,7 +93,7 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-[color:var(--pf-border)] shrink-0 [background:var(--pf-surface-muted)]">
+          <div className="pf-sheet-foot flex items-center justify-end gap-3 px-6 py-4 border-t border-[color:var(--pf-border)] shrink-0 [background:var(--pf-surface-muted)]">
             {footer}
           </div>
         )}

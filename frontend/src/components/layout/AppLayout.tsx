@@ -42,7 +42,7 @@ export function AppLayout() {
   const fromAido = new URLSearchParams(location.search).get('from') === 'aido'
 
   return (
-    <div className="pf-wash flex h-[100dvh] overflow-hidden [background-color:var(--pf-bg)]">
+    <div data-app-shell className="pf-wash flex h-[100dvh] overflow-hidden [background-color:var(--pf-bg)]">
       {/* Desktop sidebar */}
       <div className="hidden lg:flex lg:flex-shrink-0">
         <Sidebar />

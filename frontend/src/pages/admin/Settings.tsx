@@ -1181,6 +1181,7 @@ export function Settings() {
       <ModuleTabs
         paramKey="view"
         title="Cài đặt"
+        module="system"
         subtitle="Quản lý thông tin CLB và tài khoản"
         menuBack={embedded ? 'parent' : '/ung-dung'}
         parentParam="tab"

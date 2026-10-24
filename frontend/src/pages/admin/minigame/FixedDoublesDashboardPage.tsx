@@ -841,8 +841,8 @@ export function FixedDoublesDashboardPage() {
         scrollId={`/minigames/${id}`}
         onBack={() => navigate('/minigames')}
         items={[
-          { key: 'schedule', label: 'Lịch & Kết quả', to: '', icon: Calendar },
-          { key: 'standings', label: 'Bảng xếp hạng', to: '', icon: Trophy },
+          { key: 'schedule', label: 'Lịch & Kết quả', to: '', icon: Calendar, module: 'compete' },
+          { key: 'standings', label: 'Bảng xếp hạng', to: '', icon: Trophy, module: 'compete' },
         ]}
         onSelect={(it) => mv.open(it.key as 'schedule' | 'standings')}
       />

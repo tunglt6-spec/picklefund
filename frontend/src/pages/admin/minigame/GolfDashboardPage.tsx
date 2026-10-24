@@ -236,7 +236,7 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
         subtitle="Chọn chức năng của giải đấu"
         scrollId={`/minigames/${id}`}
         onBack={() => navigate('/minigames')}
-        items={[{ key: 'golfers', label: TABS.find(t => t.key === 'golfers')!.label, to: '', icon: Users }, { key: 'scores', label: TABS.find(t => t.key === 'scores')!.label, to: '', icon: ClipboardList }, { key: 'leaderboard', label: TABS.find(t => t.key === 'leaderboard')!.label, to: '', icon: BarChart2 }]}
+        items={[{ key: 'golfers', label: TABS.find(t => t.key === 'golfers')!.label, to: '', icon: Users, module: 'compete' }, { key: 'scores', label: TABS.find(t => t.key === 'scores')!.label, to: '', icon: ClipboardList, module: 'compete' }, { key: 'leaderboard', label: TABS.find(t => t.key === 'leaderboard')!.label, to: '', icon: BarChart2, module: 'compete' }]}
         onSelect={(it) => mv.open(it.key as never)}
       />
     )

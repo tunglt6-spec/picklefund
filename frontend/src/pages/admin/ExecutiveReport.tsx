@@ -20,8 +20,10 @@ import {
 import { buildExecutiveSheets, EXEC_DOC_TITLE } from '../../lib/executive-report-sheets'
 import toast from 'react-hot-toast'
 
-const CHART_INCOME = '#059669'
-const CHART_EXPENSE = '#E11D48'
+// Mobile: bảng màu biểu đồ trầm, cố định (Thu xanh lục · Chi đỏ trầm); màn lớn giữ như cũ.
+const _MOBILE_CHART = typeof window !== 'undefined' && window.innerWidth < 1024
+const CHART_INCOME = _MOBILE_CHART ? '#176149' : '#059669'
+const CHART_EXPENSE = _MOBILE_CHART ? '#B23A48' : '#E11D48'
 const CAPTURE_ID = 'exec-report-capture'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */

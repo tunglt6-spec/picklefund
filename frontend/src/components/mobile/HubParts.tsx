@@ -165,16 +165,16 @@ export function TileGrid({
           <li key={a.key} className="relative min-w-0">
             <button
               onClick={() => { if (editing) return; if (onSelect) onSelect(a); else navigate(a.to) }}
-              className="flex w-full flex-col items-center gap-1.5 active:opacity-80"
+              className="pf-tile-btn flex w-full flex-col items-center gap-1.5"
               aria-label={count > 0 ? `${a.label} (${count} mới)` : a.label}
             >
               <span
-                className="relative flex aspect-square w-full max-w-[72px] items-center justify-center rounded-[var(--pf-radius-tile)]"
-                style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary-text)' }}
+                data-mod={a.module}
+                className="pf-tile-ico relative flex aspect-square w-full max-w-[72px] items-center justify-center rounded-[var(--pf-radius-tile)]"
               >
                 <Icon size={28} strokeWidth={1.9} aria-hidden />
                 {count > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#DC2626] px-1 text-xs font-bold text-white">
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--pf-color-danger)] px-1 text-xs font-bold text-white">
                     {count > 9 ? '9+' : count}
                   </span>
                 )}

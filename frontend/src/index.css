@@ -1127,3 +1127,160 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   input.pf-dt-mask { color: transparent; }
   input.pf-dt-mask::-webkit-datetime-edit, input.pf-dt-mask::-webkit-datetime-edit-fields-wrapper { color: transparent; }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════════
+   LUXURY SaaS — Pearl × Midnight Indigo × Champagne  +  LIQUID GLASS.  CHỈ MOBILE (<1024px) và CHỈ trong khung ứng dụng
+   (`:root:has([data-app-shell])` → landing/đăng nhập không đổi). Tablet ≥1024 & desktop KHÔNG đổi.
+   Cách làm: đổi TOKEN trung tâm + bảng màu Tailwind (--color-*) theo vai trò → mọi thành phần dùng chung tự đồng bộ,
+   không sửa từng component. Dark mode giữ bảng riêng.
+   ══════════════════════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1023px) {
+  :root:has([data-app-shell]):not([data-theme="dark"]) {
+    /* nền & chữ */
+    --pf-bg: #F7F6F2; --pf-surface: #FFFFFF; --pf-surface-muted: #F0EFEB;
+    --pf-border: #E3E1DB; --pf-border-soft: #ECEAE4; --pf-border-strong: #8C8F99;
+    --pf-text: #1D2636; --pf-text-muted: #626876; --pf-color-muted: #626876; --pf-color-muted-soft: #F0EFEB;
+    /* thương hiệu: Midnight Indigo */
+    --pf-primary: #37307A; --pf-primary-hover: #2B255F; --pf-primary-soft: #EEECF7; --pf-primary-on: #FFFFFF;
+    --pf-primary-text: #37307A; --pf-color-primary: #37307A; --pf-color-primary-soft: #EEECF7; --pf-text-on-primary: #FFFFFF;
+    --pf-grad-brand: #37307A; --pf-focus-ring: rgb(55 48 122 / 0.28);
+    --pf-champagne: #9A7538;
+    /* trạng thái (độc lập màu phân hệ) */
+    --pf-color-success: #176149; --pf-color-success-soft: #E9F2EC; --pf-green: #176149; --pf-green-hover: #124C3A; --pf-green-soft: #E9F2EC;
+    --pf-color-warning: #8A5D16; --pf-color-warning-soft: #FCF2D9;
+    --pf-color-danger: #B23A48; --pf-color-danger-soft: #FBECEF;
+    --pf-color-info: #315E8A; --pf-color-info-soft: #EAF0F7;
+    --pf-color-ai: #6D4DA0; --pf-color-ai-soft: #F0EBF7;
+    --pf-secondary: #176149; --pf-secondary-soft: #E9F2EC;
+    --pf-tone-success: #176149; --pf-tone-warning: #8A5D16; --pf-tone-danger: #B23A48; --pf-tone-info: #315E8A; --pf-tone-brand: #37307A;
+    --pf-money-pos: #176149; --pf-money-neg: #B23A48; --pf-money-warn: #8A5D16;
+    /* accent dùng bởi MetricCard/biểu đồ → màu trầm */
+    --pf-accent-blue: #315E8A;   --pf-accent-blue-soft: #EAF0F7;
+    --pf-accent-teal: #176D73;   --pf-accent-teal-soft: #E8F3F2;
+    --pf-accent-amber: #90622D;  --pf-accent-amber-soft: #F7EFDF;
+    --pf-accent-rose: #B23A48;   --pf-accent-rose-soft: #FBECEF;
+    --pf-accent-violet: #6D4DA0; --pf-accent-violet-soft: #F0EBF7;
+    --pf-chart-manual: #176D73;
+    /* bảng màu Tailwind theo vai trò (badge/pill/chữ viết tay) */
+    --color-slate-50:#F7F6F2; --color-slate-100:#F0EFEB; --color-slate-200:#E3E1DB; --color-slate-300:#CFCCC4; --color-slate-400:#7C8190;
+    --color-slate-500:#626876; --color-slate-600:#4F5565; --color-slate-700:#3A4152; --color-slate-800:#272F40; --color-slate-900:#1D2636;
+    --color-gray-50:#F7F6F2; --color-gray-100:#F0EFEB; --color-gray-200:#E3E1DB; --color-gray-300:#CFCCC4; --color-gray-400:#7C8190;
+    --color-gray-500:#626876; --color-gray-600:#4F5565; --color-gray-700:#3A4152; --color-gray-800:#272F40; --color-gray-900:#1D2636;
+    --color-red-50:#FBECEF; --color-red-100:#F8DDE2; --color-red-200:#F0C4CB; --color-red-300:#E39AA5; --color-red-400:#CF6574; --color-red-500:#B23A48; --color-red-600:#B23A48; --color-red-700:#962F3C; --color-red-800:#7A2630;
+    --color-rose-50:#FBECEF; --color-rose-100:#F8DDE2; --color-rose-200:#F0C4CB; --color-rose-300:#E39AA5; --color-rose-400:#CF6574; --color-rose-500:#B23A48; --color-rose-600:#B23A48; --color-rose-700:#962F3C; --color-rose-800:#7A2630;
+    --color-amber-50:#FCF2D9; --color-amber-100:#F8E8BF; --color-amber-200:#EDD69A; --color-amber-300:#DDBC66; --color-amber-400:#B88A2E; --color-amber-500:#8A5D16; --color-amber-600:#8A5D16; --color-amber-700:#724B10; --color-amber-800:#5C3C0C;
+    --color-orange-50:#FCF2D9; --color-orange-100:#F8E8BF; --color-orange-200:#EDD69A; --color-orange-300:#DDBC66; --color-orange-400:#B88A2E; --color-orange-500:#8A5D16; --color-orange-600:#8A5D16; --color-orange-700:#724B10; --color-orange-800:#5C3C0C;
+    --color-yellow-50:#FCF2D9; --color-yellow-100:#F8E8BF; --color-yellow-200:#EDD69A; --color-yellow-300:#DDBC66; --color-yellow-400:#B88A2E; --color-yellow-500:#8A5D16; --color-yellow-600:#8A5D16; --color-yellow-700:#724B10; --color-yellow-800:#5C3C0C;
+    --color-emerald-50:#E9F2EC; --color-emerald-100:#D7E8DE; --color-emerald-200:#B5D4C2; --color-emerald-300:#86B79B; --color-emerald-400:#4F9275; --color-emerald-500:#176149; --color-emerald-600:#176149; --color-emerald-700:#124C3A; --color-emerald-800:#0E3B2D;
+    --color-green-50:#E9F2EC; --color-green-100:#D7E8DE; --color-green-200:#B5D4C2; --color-green-300:#86B79B; --color-green-400:#4F9275; --color-green-500:#176149; --color-green-600:#176149; --color-green-700:#124C3A; --color-green-800:#0E3B2D;
+    --color-teal-50:#E8F3F2; --color-teal-100:#D3E9E7; --color-teal-200:#AED5D2; --color-teal-300:#7DB8B5; --color-teal-400:#4A9A9B; --color-teal-500:#176D73; --color-teal-600:#176D73; --color-teal-700:#125A5F; --color-teal-800:#0E464A;
+    --color-cyan-50:#E8F3F2; --color-cyan-100:#D3E9E7; --color-cyan-200:#AED5D2; --color-cyan-300:#7DB8B5; --color-cyan-400:#4A9A9B; --color-cyan-500:#176D73; --color-cyan-600:#176D73; --color-cyan-700:#125A5F; --color-cyan-800:#0E464A;
+    --color-blue-50:#EAF0F7; --color-blue-100:#D8E3F0; --color-blue-200:#B7CAE1; --color-blue-300:#8AA9CC; --color-blue-400:#5C86B2; --color-blue-500:#315E8A; --color-blue-600:#315E8A; --color-blue-700:#284E73; --color-blue-800:#203F5C;
+    --color-sky-50:#EAF0F7; --color-sky-100:#D8E3F0; --color-sky-200:#B7CAE1; --color-sky-300:#8AA9CC; --color-sky-400:#5C86B2; --color-sky-500:#315E8A; --color-sky-600:#315E8A; --color-sky-700:#284E73; --color-sky-800:#203F5C;
+    --color-indigo-50:#EEECF7; --color-indigo-100:#E0DCF1; --color-indigo-200:#C6C0E3; --color-indigo-300:#9F97CC; --color-indigo-400:#6F66AD; --color-indigo-500:#37307A; --color-indigo-600:#37307A; --color-indigo-700:#2B255F; --color-indigo-800:#221D4C;
+    --color-violet-50:#F0EBF7; --color-violet-100:#E4DAF1; --color-violet-200:#CDBBE3; --color-violet-300:#AD94CE; --color-violet-400:#8A6BB5; --color-violet-500:#6D4DA0; --color-violet-600:#6D4DA0; --color-violet-700:#593E85; --color-violet-800:#46316A;
+    --color-purple-50:#F0EBF7; --color-purple-100:#E4DAF1; --color-purple-200:#CDBBE3; --color-purple-300:#AD94CE; --color-purple-400:#8A6BB5; --color-purple-500:#6D4DA0; --color-purple-600:#6D4DA0; --color-purple-700:#593E85; --color-purple-800:#46316A;
+    --color-fuchsia-50:#F0EBF7; --color-fuchsia-100:#E4DAF1; --color-fuchsia-200:#CDBBE3; --color-fuchsia-500:#6D4DA0; --color-fuchsia-600:#6D4DA0; --color-fuchsia-700:#593E85;
+    --color-pink-50:#F6EAF0; --color-pink-100:#EFD7E2; --color-pink-200:#E2B7C9; --color-pink-300:#CF8DA8; --color-pink-400:#B96A88; --color-pink-500:#9A4F68; --color-pink-600:#9A4F68; --color-pink-700:#7E3F55; --color-pink-800:#643246;
+  }
+
+  /* Liquid Glass tokens (điểm xuất phát, hiệu chỉnh theo ảnh kiểm thử) */
+  :root {
+    --lg-surface: rgba(255,255,255,0.86); --lg-strong: rgba(255,255,255,0.95);
+    --lg-border-hi: rgba(255,255,255,0.80); --lg-border-out: rgba(55,48,122,0.10);
+    --lg-shadow: 0 8px 24px rgba(29,38,54,0.08); --lg-inner: inset 0 1px 0 rgba(255,255,255,0.90);
+    --lg-blur: 14px; --lg-sat: 115%;
+  }
+  /* Màu nhận diện PHÂN HỆ (icon + nền icon) */
+  :root:has([data-app-shell]):not([data-theme="dark"]) {
+    --mod-members: #315E8A;  --mod-members-bg: #EAF0F7;
+    --mod-finance: #176149;  --mod-finance-bg: #E9F2EC;
+    --mod-activity: #176D73; --mod-activity-bg: #E8F3F2;
+    --mod-compete: #90622D;  --mod-compete-bg: #F7EFDF;
+    --mod-community: #9A4F68; --mod-community-bg: #F6EAF0;
+    --mod-ai: #6D4DA0;       --mod-ai-bg: #F0EBF7;
+    --mod-system: #506079;   --mod-system-bg: #EDF0F5;
+  }
+  [data-theme="dark"] {
+    --lg-surface: rgba(19,27,46,0.84); --lg-strong: rgba(19,27,46,0.95);
+    --lg-border-hi: rgba(255,255,255,0.10); --lg-border-out: rgba(255,255,255,0.10);
+    --lg-shadow: 0 8px 24px rgba(0,0,0,0.45); --lg-inner: inset 0 1px 0 rgba(255,255,255,0.08);
+    --mod-members: #8FB4DD;  --mod-members-bg: #172233;
+    --mod-finance: #6FC3A3;  --mod-finance-bg: #11261E;
+    --mod-activity: #6CC4CA; --mod-activity-bg: #10262A;
+    --mod-compete: #D9A768;  --mod-compete-bg: #2A2013;
+    --mod-community: #D88FA9; --mod-community-bg: #2A1620;
+    --mod-ai: #B79CE0;       --mod-ai-bg: #21183A;
+    --mod-system: #9DB0CC;   --mod-system-bg: #182131;
+  }
+  [data-mod="members"]   { --mod-fg: var(--mod-members);   --mod-tint: var(--mod-members-bg); }
+  [data-mod="finance"]   { --mod-fg: var(--mod-finance);   --mod-tint: var(--mod-finance-bg); }
+  [data-mod="activity"]  { --mod-fg: var(--mod-activity);  --mod-tint: var(--mod-activity-bg); }
+  [data-mod="compete"]   { --mod-fg: var(--mod-compete);   --mod-tint: var(--mod-compete-bg); }
+  [data-mod="community"] { --mod-fg: var(--mod-community); --mod-tint: var(--mod-community-bg); }
+  [data-mod="ai"]        { --mod-fg: var(--mod-ai);        --mod-tint: var(--mod-ai-bg); }
+  [data-mod="system"]    { --mod-fg: var(--mod-system);    --mod-tint: var(--mod-system-bg); }
+
+  /* Ô icon chức năng: nền tint phân hệ + viền sáng + highlight tĩnh (KHÔNG blur từng ô, không bóng phát sáng). */
+  .pf-tile-ico {
+    background: var(--mod-tint, var(--pf-primary-soft)); color: var(--mod-fg, var(--pf-primary-text));
+    border: 1px solid color-mix(in srgb, var(--mod-fg, var(--pf-primary)) 14%, #fff);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.85), 0 1px 2px rgba(29,38,54,0.06);
+    transition: transform 160ms var(--pf-ease);
+  }
+  .pf-tile-btn:active .pf-tile-ico { transform: scale(0.97); }
+  [data-theme="dark"] .pf-tile-ico { border-color: rgba(255,255,255,0.08); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06); }
+
+  /* Liquid Glass (chỉ bề mặt nhỏ/cố định): thanh đáy, header, popover, đầu/cuối bảng trượt. */
+  .lg-glass, .lg-glass-strong {
+    background: var(--lg-surface);
+    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)); backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat));
+    border: 1px solid var(--lg-border-out);
+    box-shadow: var(--lg-shadow), var(--lg-inner);
+  }
+  .lg-glass-strong { background: var(--lg-strong); }
+  .lg-glass-nav { border-width: 1px 0 0 0; border-top-color: var(--lg-border-hi); box-shadow: 0 -8px 24px rgba(29,38,54,0.07), var(--lg-inner); }
+  .lg-glass-head { background: var(--pf-surface); border-bottom: 1px solid var(--pf-border); }
+  .lg-glass-head[data-scrolled="true"] {
+    background: var(--lg-surface);
+    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat)); backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-sat));
+    border-bottom-color: var(--lg-border-out); box-shadow: 0 4px 16px rgba(29,38,54,0.06), var(--lg-inner);
+  }
+  .pf-sheet-head, .pf-sheet-foot {
+    background: var(--lg-strong);
+    -webkit-backdrop-filter: blur(12px) saturate(var(--lg-sat)); backdrop-filter: blur(12px) saturate(var(--lg-sat));
+  }
+  .pf-sheet-head { box-shadow: var(--lg-inner); }
+  /* Lớp che phía sau bảng trượt chỉ tối nền (không blur chồng). */
+  .pf-modal-wrap { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+
+  /* Fallback đặc khi không hỗ trợ backdrop-filter hoặc người dùng chọn giảm độ trong suốt. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .lg-glass, .lg-glass-strong, .lg-glass-head[data-scrolled="true"], .pf-sheet-head, .pf-sheet-foot { background: var(--pf-surface); }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .lg-glass, .lg-glass-strong, .lg-glass-head[data-scrolled="true"], .pf-sheet-head, .pf-sheet-foot {
+      background: var(--pf-surface); -webkit-backdrop-filter: none; backdrop-filter: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) { .pf-tile-ico { transition: none; } .pf-tile-btn:active .pf-tile-ico { transform: none; } }
+
+  /* Nút xuất Excel/PDF/Ảnh: một kiểu phụ trung tính (bỏ nền xanh/hồng riêng). */
+  main button:is([aria-label="Xuất Excel"], [aria-label="Xuất PDF"], [aria-label="Xuất ảnh"], [title="Xuất Excel"], [title="Xuất PDF"], [title="Xuất ảnh"], [title="Excel"], [title="PDF"]) {
+    background: var(--pf-surface) !important; color: var(--pf-text) !important; border: 1px solid var(--pf-border) !important;
+  }
+  /* Trạng thái vô hiệu: vẫn đọc được (nền xám nhạt + chữ xám rõ), không chỉ giảm opacity. */
+  main button:disabled, main button[aria-disabled="true"] { opacity: 1; background: var(--pf-surface-muted); color: #7C8190; border-color: var(--pf-border); cursor: not-allowed; }
+}
+
+/* Thẻ agent AIDO (mobile): nền trắng chung; chỉ giữ đường nhấn màu nhỏ ở mép trên. */
+@media (max-width: 1023px) {
+  :root:has([data-app-shell]):not([data-theme="dark"]) .pf-agent-card { background: var(--pf-surface) !important; border-color: var(--pf-border) !important; }
+  :root:has([data-app-shell]):not([data-theme="dark"]) .pf-agent-card :is(span, p) { color: var(--pf-text) !important; }
+  :root:has([data-app-shell]):not([data-theme="dark"]) .pf-agent-card :is(span, p)[class*="color-muted"] { color: var(--pf-color-muted) !important; }
+}
+
+/* Biểu đồ (mobile): nhãn chú giải/trục dùng màu chữ trung tính (màu đi kèm ô chú giải, không phụ thuộc chữ màu). */
+@media (max-width: 1023px) {
+  :root:has([data-app-shell]):not([data-theme="dark"]) .recharts-legend-item-text { color: var(--pf-text) !important; }
+}

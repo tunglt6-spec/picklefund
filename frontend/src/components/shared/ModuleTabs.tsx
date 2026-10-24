@@ -13,6 +13,7 @@ import { LayoutGrid, type LucideIcon } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { MobileFunctionHeader, MobileModuleMenu, saveMenuScroll, type MenuItem } from '../mobile/ModuleNav'
+import type { ModuleKey } from '../mobile/hubApps'
 
 export interface ModuleTab {
   key: string
@@ -22,6 +23,8 @@ export interface ModuleTab {
   group?: string
   /** Mobile (<1024px): biểu tượng của ô chức năng trong lưới. */
   icon?: LucideIcon
+  /** Mobile: phân hệ → màu icon ô chức năng. */
+  module?: ModuleKey
   /** Mobile: nhãn ô/tiêu đề màn khi khác nhãn tab desktop (vd "Tài khoản thành viên"). */
   menuLabel?: string
   /** Mobile: màn này tự có lưới/tiêu đề riêng (lồng ModuleTabs) nên không vẽ header chức năng bên ngoài. */
@@ -51,9 +54,11 @@ interface ModuleTabsProps {
   parentParam?: string
   /** Mô tả ngắn dưới tiêu đề lưới (mobile). */
   subtitle?: string
+  /** Phân hệ mặc định cho mọi ô (khi tab không tự khai báo). */
+  module?: ModuleKey
 }
 
-export function ModuleTabs({ tabs, title, defaultKey, paramKey = 'tab', menuBack, parentParam, subtitle }: ModuleTabsProps) {
+export function ModuleTabs({ tabs, title, defaultKey, paramKey = 'tab', menuBack, parentParam, subtitle, module }: ModuleTabsProps) {
   const embedded = !!title
   const compact = useIsMobile(1024)
   const [params, setParams] = useSearchParams()
@@ -85,7 +90,7 @@ export function ModuleTabs({ tabs, title, defaultKey, paramKey = 'tab', menuBack
     }
     if (!hasRequested) {
       const items: MenuItem[] = tabs.map((t) => ({
-        key: t.key, label: t.menuLabel ?? t.label, to: '', icon: t.icon ?? LayoutGrid, badgeCount: t.badge, group: t.group,
+        key: t.key, label: t.menuLabel ?? t.label, to: '', icon: t.icon ?? LayoutGrid, badgeCount: t.badge, group: t.group, module: t.module ?? module,
       }))
       const menuBackFn = menuBack === undefined ? undefined : () => {
         if (menuBack !== 'parent') { navigate(menuBack); return }

@@ -915,7 +915,7 @@ export function Expenses() {
                   <div className="text-xs [color:var(--pf-color-muted)] mt-0.5"><span className="lg:hidden">{formatDate(e.expenseDate)}</span><span className="max-lg:hidden">{e.expenseDate}</span> · {e.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính'}</div>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <div className="text-sm font-[700] text-red-500 tabular-nums">-{formatVND(e.amount)}</div>
+                  <div className="text-sm font-[700] [color:var(--pf-text)] tabular-nums">-{formatVND(e.amount)}</div>
                   <span className={`text-xs font-[600] px-1.5 py-0.5 rounded-full ${
                     e.status === 'approved' || e.status === 'paid' ? 'bg-emerald-50 text-emerald-600' :
                     e.status === 'pending' ? 'bg-amber-50 text-amber-600' :

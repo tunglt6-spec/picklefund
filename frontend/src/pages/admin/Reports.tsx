@@ -42,8 +42,10 @@ import {
 } from '../../components/shared'
 
 /* Màu chart mirror token --pf-* (recharts cần string — data-viz). */
-const CHART_INCOME = '#059669'
-const CHART_EXPENSE = '#E11D48'
+// Mobile: bảng màu biểu đồ trầm, cố định (Thu xanh lục · Chi đỏ trầm); màn lớn giữ như cũ.
+const _MOBILE_CHART = typeof window !== 'undefined' && window.innerWidth < 1024
+const CHART_INCOME = _MOBILE_CHART ? '#176149' : '#059669'
+const CHART_EXPENSE = _MOBILE_CHART ? '#B23A48' : '#E11D48'
 const DONUT_COLORS = ['#059669', '#2563EB', '#7C3AED', '#D97706', '#0D9488', '#E11D48']
 
 function isLocalToken(token?: string | null) {

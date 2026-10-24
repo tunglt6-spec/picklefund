@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Bell, ChevronLeft } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
@@ -23,6 +24,13 @@ export function MobileHeader() {
   const { pathname } = useLocation()
   // Chuông dùng CHUNG nguồn backend (notifStore) với trang Thông báo → đọc hết là về 0.
   const unreadCount = useNotifStore((s) => s.unreadCount)
+  // Header: nền rõ ở đầu trang → kính mờ khi nội dung đã cuộn (nghe sự kiện cuộn của vùng nội dung).
+  const [scrolled, setScrolled] = useState(false)
+  useEffect(() => {
+    const on = (e: Event) => { const t = e.target as HTMLElement | null; if (t && 'scrollTop' in t) setScrolled(t.scrollTop > 4) }
+    document.addEventListener('scroll', on, true)
+    return () => document.removeEventListener('scroll', on, true)
+  }, [])
 
   if (!user) return null
 
@@ -33,7 +41,8 @@ export function MobileHeader() {
 
   return (
     <header
-      className="pf-glass-bar sticky top-0 z-40 border-b px-4"
+      data-scrolled={scrolled}
+      className="lg-glass-head sticky top-0 z-40 px-4"
       style={{ minHeight: 60, paddingTop: 'env(safe-area-inset-top)' }}
     >
       <div className="mx-auto flex w-full max-w-2xl items-center gap-2">

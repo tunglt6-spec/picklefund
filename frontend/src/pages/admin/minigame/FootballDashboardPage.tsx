@@ -557,7 +557,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
         subtitle="Chọn chức năng của giải đấu"
         scrollId={`/minigames/${id}`}
         onBack={() => navigate('/minigames')}
-        items={[{ key: 'teams', label: TABS.find(t => t.key === 'teams')!.label, to: '', icon: Shield }, { key: 'schedule', label: TABS.find(t => t.key === 'schedule')!.label, to: '', icon: CalendarDays }, { key: 'standings', label: TABS.find(t => t.key === 'standings')!.label, to: '', icon: BarChart2 }]}
+        items={[{ key: 'teams', label: TABS.find(t => t.key === 'teams')!.label, to: '', icon: Shield, module: 'compete' }, { key: 'schedule', label: TABS.find(t => t.key === 'schedule')!.label, to: '', icon: CalendarDays, module: 'compete' }, { key: 'standings', label: TABS.find(t => t.key === 'standings')!.label, to: '', icon: BarChart2, module: 'compete' }]}
         onSelect={(it) => mv.open(it.key as never)}
       />
     )

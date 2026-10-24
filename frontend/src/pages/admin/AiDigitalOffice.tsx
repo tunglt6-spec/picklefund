@@ -377,11 +377,11 @@ export function AiDigitalOffice() {
   ]
 
   const menuTiles: AppItem[] = [
-    { key: 'office', label: 'Tổng quan', to: '', icon: LayoutDashboard },
-    { key: 'report', label: 'Báo cáo điều hành', to: '', icon: FileText },
-    { key: 'operations', label: 'Vận hành', to: '', icon: Activity, badgeCount: pending },
-    { key: 'analytics', label: 'Phân tích', to: '', icon: BarChart3 },
-    { key: 'ops-center', label: 'Trung tâm điều hành AI', to: '', icon: Cpu },
+    { key: 'office', label: 'Tổng quan', to: '', icon: LayoutDashboard, module: 'ai' },
+    { key: 'report', label: 'Báo cáo điều hành', to: '', icon: FileText, module: 'ai' },
+    { key: 'operations', label: 'Vận hành', to: '', icon: Activity, badgeCount: pending, module: 'ai' },
+    { key: 'analytics', label: 'Phân tích', to: '', icon: BarChart3, module: 'ai' },
+    { key: 'ops-center', label: 'Trung tâm điều hành AI', to: '', icon: Cpu, module: 'ai' },
   ]
   const currentLabel = tabs.find((t) => t.key === tab)?.label
 
@@ -522,7 +522,7 @@ export function AiDigitalOffice() {
               {resultCards.map((c) => (
                 <div
                   key={c.key}
-                  className="rounded-2xl border p-3.5"
+                  className="pf-agent-card rounded-2xl border p-3.5"
                   style={{
                     background: `color-mix(in srgb, ${c.color} 7%, var(--pf-surface))`,
                     borderColor: `color-mix(in srgb, ${c.color} 22%, var(--pf-border))`,

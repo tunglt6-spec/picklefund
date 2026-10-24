@@ -24,6 +24,7 @@ export function AiLogPage() {
     return (
       <ModuleTabs
         title="Nhật ký AI"
+        module="ai"
         menuBack="/admin/ai-manager"
         tabs={[
           { key: 'mitdac', icon: Bot, label: 'Mít Đặc · thực thi', menuLabel: 'Nhật ký thực thi (Mít Đặc)', element: <MitDacExecutionLog /> },
