@@ -513,9 +513,9 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
                     {t.sub && <p className="text-xs [color:var(--pf-color-muted)]">{t.sub}</p>}
                   </div>
                   {t.onClick ? (
-                    <button type="button" onClick={t.onClick} className="shrink-0 py-3 text-xs font-semibold [color:var(--pf-primary-text)] -my-3">{t.cta} →</button>
+                    <button type="button" onClick={t.onClick} className="shrink-0 py-3 text-xs font-semibold max-lg:inline-flex max-lg:min-h-[44px] max-lg:items-center [color:var(--pf-primary-text)] -my-3">{t.cta} →</button>
                   ) : t.to ? (
-                    <Link to={t.to} className="shrink-0 py-3 text-xs font-semibold [color:var(--pf-primary-text)] -my-3">{t.cta} →</Link>
+                    <Link to={t.to} className="shrink-0 py-3 text-xs font-semibold max-lg:inline-flex max-lg:min-h-[44px] max-lg:items-center [color:var(--pf-primary-text)] -my-3">{t.cta} →</Link>
                   ) : null}
                 </li>
               ))}

@@ -23,9 +23,8 @@ import {
   Loader2,
   Check,
   Search,
-  ChevronLeft,
 } from 'lucide-react'
-import { useSearchParams, useNavigate } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import {
   PageShell,
@@ -1617,7 +1616,6 @@ function CreateMatchModal({
 export default function MemberCommunity() {
   const user = useAuthStore((s) => s.user)
   const isAdmin = user?.role === 'CLUB_ADMIN' || user?.role === 'SUPER_ADMIN'
-  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const tabParam = searchParams.get('tab')
@@ -1805,16 +1803,7 @@ export default function MemberCommunity() {
         }
       />
 
-      {/* Mobile: điều hướng giữa Bảng tin/Tìm kèo/Kiểm duyệt nằm ở hub Cộng đồng (ô icon) → ở đây chỉ còn chip quay lại. */}
-      <button
-        onClick={() => navigate('/m/cong-dong')}
-        className="mb-5 flex min-h-[44px] items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary-text)] active:scale-[0.98] lg:hidden"
-        style={{ boxShadow: 'var(--pf-shadow-float)' }}
-      >
-        <ChevronLeft size={18} />
-        Cộng đồng · {tabs.find((t) => t.key === tab)?.label}
-      </button>
-      <ResponsiveTabs tabs={tabs} active={tab} onChange={changeTab} className="mb-5 max-lg:hidden" />
+      <ResponsiveTabs tabs={tabs} active={tab} onChange={changeTab} className="mb-5" />
 
       {tab === 'feed' ? (
         <div className="flex flex-col gap-4">

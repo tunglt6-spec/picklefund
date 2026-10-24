@@ -9,13 +9,11 @@ import { MemberAccounts } from '../MemberAccounts'
 import { RolesPermissions } from '../RolesPermissions'
 import { MemberActivity } from '../MemberActivity'
 import { MemberScoring } from '../MemberScoring'
-import { ModuleSummary } from '../../../components/mobile/ModuleSummary'
 
 export function MembersModule() {
   return (
     <ModuleTabs
       title="Thành viên"
-      summary={<ModuleSummary kind="members" />}
       tabs={[
         { key: 'list', label: 'Danh sách thành viên', element: <Members /> },
         { key: 'scoring', label: 'Chấm điểm', element: <MemberScoring /> },

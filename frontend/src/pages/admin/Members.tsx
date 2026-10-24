@@ -742,8 +742,27 @@ export function Members() {
         </div>
       ) : (
       <>
-      {/* ── KPI Row ── */}
-      <div className="grid grid-cols-2 gap-3 max-[599px]:[&>:last-child:nth-child(odd)]:col-span-2 lg:grid-cols-5">
+      {/* ── Mobile: dải thống kê gọn (1 khối) — số liệu giữ nguyên, danh sách lên sớm hơn ── */}
+      {isMobile && (
+        <div className="pf-glass p-3">
+          <div className="grid grid-cols-4 divide-x text-center [border-color:var(--pf-border)]">
+            {[
+              ['Tổng', totalMembers], ['Hoạt động', activeCount], ['Tạm ngưng', inactiveCount], ['Đã rời', leftCount],
+            ].map(([label, n]) => (
+              <div key={label as string} className="min-w-0 px-1">
+                <p className="text-[20px] font-[800] leading-none [color:var(--pf-text)]" style={{ fontVariantNumeric: 'tabular-nums' }}>{(n as number).toLocaleString('vi-VN')}</p>
+                <p className="mt-1 truncate text-xs [color:var(--pf-color-muted)]">{label}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-2.5 border-t pt-2 text-xs [color:var(--pf-color-muted)] [border-color:var(--pf-border)]">
+            Điểm hoạt động TB (AI): {aiRating?.average != null ? <strong className="[color:var(--pf-text)]">{aiRating.average}/100 · {aiRating.rated} thành viên</strong> : 'chưa có dữ liệu'}
+          </p>
+        </div>
+      )}
+
+      {/* ── KPI Row (tablet/desktop) ── */}
+      <div className={isMobile ? 'hidden' : 'grid grid-cols-2 gap-3 max-[599px]:[&>:last-child:nth-child(odd)]:col-span-2 lg:grid-cols-5'}>
         <MetricCard label="Tổng thành viên" value={totalMembers.toLocaleString('vi-VN')} sub="Toàn CLB" accent="blue" icon={<Users size={18} />} />
         <MetricCard label="Đang hoạt động" value={activeCount.toLocaleString('vi-VN')} sub="Thành viên active" accent="green" icon={<UserCheck size={18} />} />
         <MetricCard label="Tạm ngưng" value={inactiveCount.toLocaleString('vi-VN')} sub="Tạm nghỉ sinh hoạt" accent="amber" icon={<Power size={18} />} />
@@ -801,10 +820,14 @@ export function Members() {
                       <span className="flex items-center gap-1"><Wallet size={12} />{r.periodName ? (r.paid ? 'Đã đóng' : 'Chưa đóng') : '—'}</span>
                     </div>
                   </div>
-                  <div className="flex w-full items-center justify-end gap-1 border-t pt-1 [border-color:var(--pf-border-soft)]" onClick={(e) => e.stopPropagation()}>
-                    <IconBtn label="Chỉnh sửa" onClick={() => openEdit(r.member)}><Edit2 size={15} /></IconBtn>
+                  <div className="flex w-full items-center justify-end gap-2 border-t pt-2 [border-color:var(--pf-border-soft)]" onClick={(e) => e.stopPropagation()}>
+                    <button onClick={() => openEdit(r.member)} className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border px-3.5 text-sm font-semibold [color:var(--pf-text)] [border-color:var(--pf-border)] [background:var(--pf-surface)] active:[background:var(--pf-color-muted-soft)]">
+                      <Edit2 size={15} aria-hidden /> Sửa
+                    </button>
                     {r.member.status !== 'left' && (
-                      <IconBtn label={r.member.status === 'active' ? 'Tạm ngưng' : 'Kích hoạt'} onClick={() => handleToggleStatus(r.member)}><Power size={15} /></IconBtn>
+                      <button onClick={() => handleToggleStatus(r.member)} className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border px-3.5 text-sm font-semibold [color:var(--pf-text)] [border-color:var(--pf-border)] [background:var(--pf-surface)] active:[background:var(--pf-color-muted-soft)]">
+                        {r.member.status === 'active' ? 'Tạm ngưng' : 'Kích hoạt lại'}
+                      </button>
                     )}
                   </div>
                 </div>

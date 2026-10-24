@@ -133,9 +133,6 @@ const MemberReceipt = lz(() => import('./pages/member/MemberReceipt'), 'MemberRe
 const MemberLisaChat = lz(() => import('./pages/member/MemberLisaChat'), 'MemberLisaChat')
 const MobileAppHub = lz(() => import('./pages/MobileAppHub'), 'MobileAppHub')
 const MobileHome = lz(() => import('./pages/MobileSectionHubs'), 'MobileHome')
-const MobileCalendarHub = lz(() => import('./pages/MobileSectionHubs'), 'MobileCalendarHub')
-const MobileCompeteHub = lz(() => import('./pages/MobileSectionHubs'), 'MobileCompeteHub')
-const MobileCommunityHub = lz(() => import('./pages/MobileSectionHubs'), 'MobileCommunityHub')
 const MemberOffice = lz(() => import('./pages/member/MemberOffice'), 'MemberOffice')
 const MemberCommunity = lz(() => import('./pages/member/MemberCommunity'), 'default')
 const PaymentApprovals = lz(() => import('./pages/admin/PaymentApprovals'), 'PaymentApprovals')
@@ -210,6 +207,16 @@ function FinanceDashboardRedirect() {
   return <Navigate to={role === 'MEMBER_VIEW' ? '/member/tai-chinh?tab=reports' : '/tai-chinh?tab=reports'} replace />
 }
 
+// Các đường /m/lich, /m/thi-dau, /m/cong-dong (bản trước dùng trang menu trung gian) → vào thẳng nội dung theo vai trò.
+function MobileSectionRedirect({ to }: { to: 'calendar' | 'compete' | 'community' }) {
+  const role = useAuthStore((s) => s.user?.role)
+  const member = role === 'MEMBER_VIEW'
+  const dest = to === 'calendar'
+    ? (member ? '/member/hoat-dong?tab=schedule' : '/hoat-dong?tab=schedule')
+    : to === 'compete' ? (member ? '/member/thi-dau' : '/thi-dau') : '/community'
+  return <Navigate to={role === 'CLUB_TREASURER' || role === 'SUPER_ADMIN' ? '/m/tong-quan' : dest} replace />
+}
+
 function RootRedirect() {
   const { user, isAuthenticated } = useAuthStore()
   // Khách chưa đăng nhập → trang giới thiệu công khai (V2.2 commercial).
@@ -275,9 +282,9 @@ export default function App() {
             {/* Trang "Ứng dụng" của bản mobile (mọi vai trò; ≥1024px tự quay về trang chủ) */}
             <Route path="/ung-dung" element={<MobileAppHub />} />
             <Route path="/m/tong-quan" element={<MobileHome />} />
-            <Route path="/m/lich" element={<MobileCalendarHub />} />
-            <Route path="/m/thi-dau" element={<MobileCompeteHub />} />
-            <Route path="/m/cong-dong" element={<MobileCommunityHub />} />
+            <Route path="/m/lich" element={<MobileSectionRedirect to="calendar" />} />
+            <Route path="/m/thi-dau" element={<MobileSectionRedirect to="compete" />} />
+            <Route path="/m/cong-dong" element={<MobileSectionRedirect to="community" />} />
             {/* Staff (super/admin/treasurer) — member bị chặn khỏi các route này */}
             <Route element={<RoleRoute allow={STAFF_ROLES} />}>
             {/* Super Admin */}

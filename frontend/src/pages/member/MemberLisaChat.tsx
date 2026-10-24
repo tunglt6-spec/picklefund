@@ -225,7 +225,7 @@ export function MemberLisaChat() {
             <input value={input} onChange={e => setInput(e.target.value)}
               placeholder="Nhắn tin cho Lisa..."
               className="min-w-0 flex-1 min-h-[48px] text-base [background:var(--pf-color-muted-soft)] rounded-full px-4 py-2.5 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]" />
-            <button type="submit" disabled={!input.trim() || loading}
+            <button type="submit" aria-label="Gửi tin nhắn" disabled={!input.trim() || loading}
               className="shrink-0 w-11 h-11 rounded-full bg-gradient-to-br from-[var(--pf-primary)] to-[var(--pf-primary-hover)] flex items-center justify-center disabled:opacity-40 active:opacity-70 shadow-sm">
               <Send size={15} className="text-white" />
             </button>
@@ -261,7 +261,7 @@ export function MemberLisaChat() {
           <input value={input} onChange={e => setInput(e.target.value)}
             placeholder="Hỏi Lisa về tình trạng đóng quỹ, buổi tập, chi phí..."
             className="min-w-0 flex-1 text-sm [background:var(--pf-color-muted-soft)] rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)] transition-all" />
-          <button type="submit" disabled={!input.trim() || loading}
+          <button type="submit" aria-label="Gửi tin nhắn" disabled={!input.trim() || loading}
             className="px-5 py-3 rounded-xl [background:var(--pf-primary)] text-white text-sm font-semibold flex items-center gap-2 disabled:opacity-40 hover:[background:var(--pf-primary-hover)] transition-colors">
             <Send size={14} />Gửi
           </button>

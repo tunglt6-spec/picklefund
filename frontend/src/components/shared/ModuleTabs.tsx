@@ -7,34 +7,15 @@
  * query `?tab=` nên deep-link + nút Back hoạt động; RBAC do từng page tự đọc `useAuthStore`
  * nên giữ nguyên. Không đổi bất kỳ nghiệp vụ nào — chỉ tinh gọn điều hướng.
  */
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import {
-  CalendarDays, UserPlus, LogIn, ClipboardCheck, BarChart3, LayoutList, Trophy, FileCheck2, Medal, Wallet,
-  ArrowDownCircle, ArrowUpCircle, HandCoins, FileText, BadgeCheck, Users, Award, UserCog, ShieldCheck, History,
-  Bell, CreditCard, Settings, Receipt, ListOrdered, LayoutGrid, ChevronLeft, type LucideIcon,
-} from 'lucide-react'
 import { cn } from '../../lib/utils'
-import { useIsMobile } from '../../hooks/useIsMobile'
-import { TileGrid, HubSearch, fold } from '../mobile/HubParts'
-import type { AppItem } from '../mobile/hubApps'
-
-/** Icon cho ô menu (mobile) theo key tab; thiếu key → LayoutGrid. */
-const TAB_ICONS: Record<string, LucideIcon> = {
-  schedule: CalendarDays, registration: UserPlus, checkin: LogIn, attendance: ClipboardCheck, attend: ClipboardCheck,
-  weekly: BarChart3, overview: LayoutList, tournaments: Trophy, results: FileCheck2, standings: Medal,
-  periods: Wallet, income: ArrowDownCircle, expense: ArrowUpCircle, debts: HandCoins, reports: FileText,
-  payments: BadgeCheck, list: Users, scoring: Award, accounts: UserCog, roles: ShieldCheck, activity: History,
-  notifications: Bell, billing: CreditCard, settings: Settings, receipt: Receipt, contrib: History, ledger: ListOrdered,
-}
 
 export interface ModuleTab {
   key: string
   label: string
   badge?: number
   element: ReactNode
-  /** Icon ô menu trên mobile (mặc định tra theo key). */
-  icon?: LucideIcon
 }
 
 /**
@@ -51,11 +32,9 @@ interface ModuleTabsProps {
   title?: string
   /** Tab mặc định khi URL chưa có ?tab= (mặc định: tab đầu tiên). */
   defaultKey?: string
-  /** Thẻ tóm tắt hiện ở đầu MENU mobile (dưới ô tìm kiếm). */
-  summary?: ReactNode
 }
 
-export function ModuleTabs({ tabs, title, defaultKey, summary }: ModuleTabsProps) {
+export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
   const embedded = !!title
   const [params, setParams] = useSearchParams()
   const fallback = defaultKey ?? tabs[0]?.key
@@ -69,50 +48,10 @@ export function ModuleTabs({ tabs, title, defaultKey, summary }: ModuleTabsProps
     setParams(next)
   }
 
-  // Mobile (<1024px) — module có tiêu đề: mở module (chưa chọn tab) → MENU ô icon thay cho thanh tab ngang;
-  // chọn 1 ô → vào chức năng, có nút quay lại menu. Deep-link ?tab=… vẫn vào thẳng chức năng.
-  const [menuQuery, setMenuQuery] = useState('')
-  const mobile = useIsMobile(1024)
-  const mobileMenu = mobile && !!title && tabs.length > 1
-  const hasChosen = tabs.some((t) => t.key === requested)
-  if (mobileMenu && !hasChosen) {
-    const q = fold(menuQuery.trim())
-    const items: AppItem[] = tabs
-      .filter((t) => !q || fold(t.label).includes(q))
-      .map((t) => ({ key: t.key, label: t.label, to: '', icon: TAB_ICONS[t.key] ?? t.icon ?? LayoutGrid, badgeCount: t.badge }))
-    return (
-      <div className="mx-auto w-full max-w-2xl px-4 pb-4 pt-4">
-        <h1 className="text-[22px] font-[800] [color:var(--pf-text)]" style={{ letterSpacing: '-0.02em' }}>{title}</h1>
-        <HubSearch value={menuQuery} onChange={setMenuQuery} placeholder={`Tìm trong ${title}…`} />
-        {!q && summary}
-        <div className="mt-5">
-          <TileGrid items={items} onSelect={(it) => select(it.key)} empty={`Không tìm thấy chức năng “${menuQuery}”.`} />
-        </div>
-      </div>
-    )
-  }
-  const backToMenu = () => {
-    const next = new URLSearchParams(params)
-    next.delete('tab')
-    setParams(next, { replace: true })
-  }
-
   return (
     <div className="flex min-h-full w-full flex-col" style={{ background: 'transparent' }}>
       {/* Tiêu đề module (như mockup) — cuộn theo trang, tab bar dính bên dưới */}
-      {mobileMenu && (
-        <div className="px-4 pt-4">
-          <button
-            onClick={backToMenu}
-            className="flex min-h-[44px] items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary-text)] active:scale-[0.98]"
-            style={{ boxShadow: 'var(--pf-shadow-float)' }}
-          >
-            <ChevronLeft size={18} />
-            {title}{current ? ` · ${current.label}` : ''}
-          </button>
-        </div>
-      )}
-      {title && !mobileMenu && (
+      {title && (
         <div className="pf-center-x w-full px-4 pt-4 sm:px-6 sm:pt-6" style={{ maxWidth: 1600 }}>
           <h1 className="text-xl font-bold sm:text-2xl [color:var(--pf-text)] max-lg:text-[22px] max-lg:font-[800]" style={{ letterSpacing: '-0.02em' }}>
             {title}
@@ -121,7 +60,7 @@ export function ModuleTabs({ tabs, title, defaultKey, summary }: ModuleTabsProps
       )}
       {/* Thanh tab module — sticky trắng, full-bleed; nội dung tab căn cùng max-width page */}
       <div
-        className={cn('pf-glass-bar sticky top-0 z-20 shrink-0 border-b', mobileMenu && 'hidden')}
+        className="pf-glass-bar sticky top-0 z-20 shrink-0 border-b"
       >
         <div className="pf-center-x w-full px-4 sm:px-6" style={{ maxWidth: 1600 }}>
           {/* Chuẩn v2.1 — tab dạng NÚT TO như sidebar: active nền tím gradient + chữ trắng. */}
@@ -144,9 +83,9 @@ export function ModuleTabs({ tabs, title, defaultKey, summary }: ModuleTabsProps
                   tabIndex={isActive ? 0 : -1}
                   onClick={() => select(t.key)}
                   className={cn(
-                    'shrink-0 whitespace-nowrap rounded-xl max-lg:rounded-full max-lg:min-h-[44px] border px-4 py-2.5 [@media(pointer:coarse)]:py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97]',
+                    'shrink-0 whitespace-nowrap rounded-xl max-lg:rounded-xl max-lg:min-h-[44px] border px-4 py-2.5 [@media(pointer:coarse)]:py-3 text-sm font-semibold transition-all duration-200 active:scale-[0.97]',
                     isActive
-                      ? 'border-transparent text-white [box-shadow:0_8px_18px_-8px_rgba(109,93,251,0.6)]'
+                      ? 'border-transparent text-white [box-shadow:0_8px_18px_-8px_rgba(109,93,251,0.6)] max-lg:[box-shadow:var(--pf-shadow-pill)]'
                       : '[border-color:var(--pf-border)] [background:var(--pf-surface)] [color:var(--pf-color-muted)] hover:-translate-y-px hover:[color:var(--pf-primary-text)] hover:[border-color:var(--pf-primary-soft)] hover:[background:var(--pf-primary-soft)]',
                   )}
                   style={isActive ? { background: 'var(--pf-grad-brand)' } : undefined}

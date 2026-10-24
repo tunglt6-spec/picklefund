@@ -1,275 +1,168 @@
-import { useMemo, useState, type ReactNode } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { CalendarDays, Trophy, Newspaper, Swords, ChevronRight } from 'lucide-react'
+import { ChevronRight } from 'lucide-react'
 import { useNotifStore } from '../store/notifStore'
-import { useMinigameStore } from '../store/minigameStore'
 import { homeByRole, notifRouteByRole } from '../components/layout/navConfig'
+import { homeApps } from '../components/mobile/hubApps'
 import {
-  homeApps, calendarApps, competeApps, communityApps, type AppItem,
-} from '../components/mobile/hubApps'
-import {
-  HubHeader, HubSearch, HubSectionTitle, TileGrid, SummaryCard, StatTile, FundAndCalendarCards,
-  fold, todayKey, useHubData, useIsWide,
+  HubSectionTitle, TileGrid, Panel, Skeleton, ListRow, greeting, todayKey, useHubData, useIsWide,
 } from '../components/mobile/HubParts'
-import { normalizeMinigameStatus } from '../types/minigame'
 import { SuperSummary } from '../components/mobile/SuperSummary'
+import { formatVND, cn } from '../lib/utils'
+import { moneyColor } from '../lib/moneyTone'
 
-/** Khung chung của các màn hub mobile: header lớn + tìm kiếm + (thẻ tóm tắt) + lưới tile + (nội dung thêm). */
-function SectionHub({
-  tilesTitle, tiles, cards, extra, searchPlaceholder, showCards = true,
-}: {
-  tilesTitle: string
-  tiles: AppItem[]
-  /** Thẻ tóm tắt riêng của mục; mặc định dùng cặp Quỹ CLB + Lịch. */
-  cards?: ReactNode
-  extra?: ReactNode
-  searchPlaceholder?: string
-  showCards?: boolean
-}) {
-  const { user, role, clubData, hasClub } = useHubData()
-  const unread = useNotifStore((s) => s.unreadCount)
+const WEEKDAYS = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy']
+const weekdayOf = (d: string) => WEEKDAYS[new Date(`${d.slice(0, 10)}T00:00:00`).getDay()]
+
+/** Nhãn trạng thái buổi hoạt động: có chữ (không chỉ màu). */
+function SessionBadge({ date, status }: { date: string; status: string }) {
+  const isToday = date.slice(0, 10) === todayKey()
+  const done = status === 'completed'
+  const label = done ? 'Đã kết thúc' : isToday ? 'Hôm nay' : 'Sắp tới'
+  const tone = done
+    ? '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'
+    : isToday ? '[background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]' : '[background:var(--pf-surface-muted)] [color:var(--pf-text)]'
+  return <span className={cn('shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold', tone)}>{label}</span>
+}
+
+/**
+ * Tổng quan (mobile) — trả lời 4 câu hỏi: hôm nay có lịch gì · có việc gì cần xử lý · tài chính CLB ra sao · thao tác thường dùng ở đâu.
+ * Dữ liệu thật (store/API sẵn có), không tạo chỉ số. Tìm chức năng toàn app nằm ở trang "Ứng dụng".
+ */
+export function MobileHome() {
+  const navigate = useNavigate()
   const wide = useIsWide()
-  const [query, setQuery] = useState('')
-  const q = fold(query.trim())
-  const shown = useMemo(() => (q ? tiles.filter((a) => fold(a.label).includes(q)) : tiles), [tiles, q])
-
+  const { user, role, clubData, hasClub, activePeriod, fin, finState, upcoming } = useHubData()
+  const unread = useNotifStore((s) => s.unreadCount)
   if (!user || !role) return null
   if (wide) return <Navigate to={homeByRole[role]} replace />
 
-  return (
-    <div className="mx-auto w-full max-w-2xl px-4 pb-4 pt-[max(12px,env(safe-area-inset-top))]">
-      <HubHeader hasClub={hasClub} clubName={clubData?.settings?.name} />
-      <HubSearch value={query} onChange={setQuery} placeholder={searchPlaceholder} />
-      {!q && showCards && (cards ?? <FundAndCalendarCards />)}
-      <HubSectionTitle>{q ? `Kết quả (${shown.length})` : tilesTitle}</HubSectionTitle>
-      <TileGrid items={shown} unread={unread} empty={`Không tìm thấy chức năng “${query}”.`} />
-      {!q && extra}
-    </div>
-  )
-}
-
-/** Hàng danh sách nhỏ (tiêu đề + mô tả + mũi tên) dùng cho khối "sắp tới". */
-function ListRow({ title, sub, onClick }: { title: string; sub?: string; onClick: () => void }) {
-  return (
-    <li>
-      <button
-        onClick={onClick}
-        className="flex min-h-[56px] w-full items-center gap-3 rounded-[var(--pf-radius-row)] border px-4 py-2.5 text-left [background:var(--pf-surface)] [border-color:var(--pf-border)] active:scale-[0.99]"
-        style={{ boxShadow: 'var(--pf-shadow-card)' }}
-      >
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-sm font-bold [color:var(--pf-text)]">{title}</span>
-          {sub && <span className="block truncate text-xs [color:var(--pf-color-muted)]">{sub}</span>}
-        </span>
-        <ChevronRight size={18} className="shrink-0 [color:var(--pf-color-muted)]" />
-      </button>
-    </li>
-  )
-}
-
-const fmtDay = (d: string) => `${d.slice(8, 10)}/${d.slice(5, 7)}`
-
-/* ───────────────────────── Tổng quan (trang chủ sau đăng nhập) ───────────────────────── */
-export function MobileHome() {
-  const { role, clubData, hasClub, activePeriod, unpaidCount, nextSession } = useHubData()
-  const unread = useNotifStore((st) => st.unreadCount)
-  const navigate = useNavigate()
-  if (!role) return null
+  const isMember = role === 'MEMBER_VIEW'
+  const hasSchedule = role === 'CLUB_ADMIN' || isMember
+  const base = isMember ? '/member/hoat-dong' : '/hoat-dong'
+  const fundRoute = isMember ? '/member/tai-chinh?tab=periods' : role === 'CLUB_TREASURER' ? '/treasurer/dashboard' : '/tai-chinh?tab=periods'
   const tk = todayKey()
-  const monthKey = tk.slice(0, 7)
-  const members = (clubData?.members ?? []).filter((m) => m.status === 'active').length
-  const monthSessions = (clubData?.sessions ?? []).filter((s) => (s.sessionDate ?? '').startsWith(monthKey) && s.status !== 'cancelled').length
-  const attended = clubData?.myAttendedSessionIds?.length ?? 0
-  const base = role === 'MEMBER_VIEW' ? '/member/hoat-dong' : '/hoat-dong'
+  const todays = upcoming.filter((s) => s.sessionDate.slice(0, 10) === tk)
+  const shown = (todays.length > 0 ? todays : upcoming.slice(0, 1)).slice(0, 3)
+  const dateLine = new Date().toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })
 
-  const stats = hasClub ? (
-    <>
-      <HubSectionTitle>Tổng quan hôm nay</HubSectionTitle>
-      <div className="mt-2 grid grid-cols-2 gap-3">
-        {role === 'MEMBER_VIEW' ? (
-          <>
-            <StatTile label="Buổi đã tham gia" value={String(attended)} sub="trong kỳ hiện tại" onClick={() => navigate('/member/ca-nhan?tab=attend')} />
-            <StatTile label="Buổi trong tháng" value={String(monthSessions)} sub="đã lên lịch" onClick={() => navigate(`${base}?tab=schedule`)} />
-          </>
-        ) : (
-          <>
-            <StatTile label="Thành viên" value={String(members)} sub="đang hoạt động" onClick={role === 'CLUB_ADMIN' ? () => navigate('/thanh-vien') : undefined} />
-            <StatTile label="Buổi trong tháng" value={String(monthSessions)} sub="đã lên lịch" onClick={role === 'CLUB_ADMIN' ? () => navigate(`${base}?tab=schedule`) : undefined} />
-          </>
-        )}
-      </div>
-      {activePeriod && <p className="mt-3 truncate text-center text-xs [color:var(--pf-color-muted)]">Kỳ quỹ đang mở: {activePeriod.name}</p>}
-    </>
-  ) : null
+  // Việc cần xử lý — chỉ liệt kê mục có việc thật theo quyền.
+  const todo: { key: string; title: string; sub: string; to: string }[] = []
+  if (hasClub && (role === 'CLUB_ADMIN' || role === 'CLUB_TREASURER') && (fin?.unpaidCount ?? 0) > 0) {
+    todo.push({ key: 'unpaid', title: `${fin!.unpaidCount} thành viên chưa đóng quỹ`, sub: 'Xem công nợ và gửi nhắc đóng quỹ', to: role === 'CLUB_ADMIN' ? '/tai-chinh?tab=debts' : '/treasurer/reminders' })
+  }
+  if (unread > 0) todo.push({ key: 'unread', title: `${unread} thông báo chưa đọc`, sub: 'Mở để xem và đánh dấu đã đọc', to: notifRouteByRole[role] })
+  const todoLoading = hasClub && finState === 'loading' && (role === 'CLUB_ADMIN' || role === 'CLUB_TREASURER')
 
-  // "Việc cần làm": chỉ liệt kê mục có việc thật (số liệu đã có sẵn); không có → thông báo gọn.
-  const todoItems: { key: string; title: string; sub: string; to: string }[] = []
-  if (hasClub && (role === 'CLUB_ADMIN' || role === 'CLUB_TREASURER') && (unpaidCount ?? 0) > 0) {
-    todoItems.push({ key: 'unpaid', title: `${unpaidCount} thành viên chưa đóng quỹ`, sub: 'Xem công nợ và nhắc đóng quỹ', to: role === 'CLUB_ADMIN' ? '/tai-chinh?tab=debts' : '/treasurer/reminders' })
-  }
-  if (unread > 0) {
-    todoItems.push({ key: 'unread', title: `${unread} thông báo chưa đọc`, sub: 'Mở để xem và đánh dấu đã đọc', to: notifRouteByRole[role] })
-  }
-  if (hasClub && role !== 'CLUB_TREASURER' && nextSession) {
-    todoItems.push({
-      key: 'next',
-      title: `Buổi sắp tới: ${nextSession.sessionDate.slice(8, 10)}/${nextSession.sessionDate.slice(5, 7)}${nextSession.startTime ? ` · ${nextSession.startTime}` : ''}`,
-      sub: nextSession.courtName ?? 'Buổi sinh hoạt',
-      to: `${base}?tab=schedule`,
-    })
-  }
-  const todo = (
-    <>
-      <HubSectionTitle>Việc cần làm</HubSectionTitle>
-      {todoItems.length === 0 ? (
-        <p className="mt-2 rounded-[var(--pf-radius-row)] border px-4 py-4 text-center text-sm [color:var(--pf-color-muted)] [background:var(--pf-surface)] [border-color:var(--pf-border)]">Không có việc cần xử lý. Mọi thứ đang ổn.</p>
-      ) : (
-        <ul className="mt-2 space-y-2.5">
-          {todoItems.map((t) => <ListRow key={t.key} title={t.title} sub={t.sub} onClick={() => navigate(t.to)} />)}
-        </ul>
+  return (
+    <div className="mx-auto w-full max-w-2xl px-4 pb-4 pt-3">
+      <header>
+        <h1 className="text-[22px] font-[800] leading-tight [color:var(--pf-text)]" style={{ letterSpacing: '-0.02em' }}>
+          {greeting()}, {user.username}
+        </h1>
+        <p className="mt-0.5 text-sm capitalize [color:var(--pf-color-muted)]">{dateLine}</p>
+      </header>
+
+      {role === 'SUPER_ADMIN' && <SuperSummary />}
+
+      {/* Hôm nay / buổi sắp tới */}
+      {hasClub && hasSchedule && (
+        <>
+          <HubSectionTitle>{todays.length > 0 ? 'Hôm nay' : 'Buổi sắp tới'}</HubSectionTitle>
+          <Panel className="mt-2 overflow-hidden">
+            {!clubData ? (
+              <div className="space-y-2 p-4"><Skeleton className="h-4 w-1/3" /><Skeleton className="h-5 w-2/3" /><Skeleton className="h-4 w-1/2" /></div>
+            ) : shown.length === 0 ? (
+              <p className="px-4 py-5 text-sm [color:var(--pf-color-muted)]">Chưa có buổi sinh hoạt nào được lên lịch.</p>
+            ) : (
+              <ul className="divide-y [border-color:var(--pf-border)]">
+                {shown.map((s) => (
+                  <li key={s.id}>
+                    <button onClick={() => navigate(`${base}?tab=schedule`)} className="flex min-h-[64px] w-full items-center gap-3 px-4 py-3 text-left active:[background:var(--pf-color-muted-soft)]">
+                      <span className="w-14 shrink-0 text-center">
+                        <span className="block text-[22px] font-[800] leading-none [color:var(--pf-text)]">{s.sessionDate.slice(8, 10)}</span>
+                        <span className="mt-1 block text-xs [color:var(--pf-color-muted)]">Th {s.sessionDate.slice(5, 7)}</span>
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-semibold [color:var(--pf-text)]">
+                          {[s.startTime, s.endTime].filter(Boolean).join(' – ') || 'Buổi sinh hoạt'}
+                        </span>
+                        <span className="block truncate text-xs [color:var(--pf-color-muted)]">
+                          {weekdayOf(s.sessionDate)} · {s.courtName || 'Chưa rõ sân'}
+                        </span>
+                      </span>
+                      <SessionBadge date={s.sessionDate} status={s.status} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <button onClick={() => navigate(`${base}?tab=schedule`)} className="flex min-h-[48px] w-full items-center justify-between border-t px-4 text-sm font-semibold [color:var(--pf-primary-text)] [border-color:var(--pf-border)] active:[background:var(--pf-color-muted-soft)]">
+              Xem lịch đầy đủ <ChevronRight size={16} aria-hidden />
+            </button>
+          </Panel>
+        </>
       )}
-    </>
-  )
 
-  return <SectionHub tilesTitle="Truy cập nhanh" tiles={homeApps(role)} extra={<>{todo}{stats}</>} cards={role === 'SUPER_ADMIN' ? <SuperSummary /> : undefined} />
-}
+      {/* Việc cần xử lý */}
+      {role !== 'SUPER_ADMIN' && (
+        <>
+          <HubSectionTitle>Việc cần xử lý</HubSectionTitle>
+          <Panel className="mt-2 overflow-hidden">
+            {todoLoading ? (
+              <div className="space-y-2 p-4"><Skeleton className="h-4 w-1/2" /><Skeleton className="h-4 w-2/3" /></div>
+            ) : todo.length === 0 ? (
+              <p className="px-4 py-5 text-sm [color:var(--pf-color-muted)]">Không có việc cần xử lý lúc này.</p>
+            ) : (
+              <ul className="divide-y [border-color:var(--pf-border)]">
+                {todo.map((t) => <ListRow key={t.key} title={t.title} sub={t.sub} onClick={() => navigate(t.to)} />)}
+              </ul>
+            )}
+          </Panel>
+        </>
+      )}
 
-/* ───────────────────────── Lịch ───────────────────────── */
-export function MobileCalendarHub() {
-  const navigate = useNavigate()
-  const { role, upcoming, nextSession, clubData } = useHubData()
-  if (!role) return null
-  if (role === 'CLUB_TREASURER' || role === 'SUPER_ADMIN') return <Navigate to={homeByRole[role]} replace />
-  const base = role === 'MEMBER_VIEW' ? '/member/hoat-dong' : '/hoat-dong'
-  const tk = todayKey()
-  const isToday = nextSession?.sessionDate.slice(0, 10) === tk
-  const monthKey = tk.slice(0, 7)
-  const monthCount = (clubData?.sessions ?? []).filter((s) => (s.sessionDate ?? '').startsWith(monthKey) && s.status !== 'cancelled').length
+      {/* Tài chính — nêu rõ phạm vi (toàn CLB · kỳ quỹ đang mở) */}
+      {hasClub && (
+        <>
+          <HubSectionTitle>Tài chính</HubSectionTitle>
+          <Panel className="mt-2 overflow-hidden">
+            <p className="px-4 pt-3 text-xs [color:var(--pf-color-muted)]">
+              {activePeriod ? `Kỳ quỹ đang mở: ${activePeriod.name}` : clubData ? 'Chưa có kỳ quỹ đang mở' : 'Đang tải kỳ quỹ…'}
+            </p>
+            <div className="grid grid-cols-2 divide-x pb-3 pt-2 [border-color:var(--pf-border)]">
+              <div className="min-w-0 px-4">
+                <p className="text-xs font-semibold [color:var(--pf-color-muted)]">Tổng tài sản CLB</p>
+                {finState === 'loading' ? <Skeleton className="mt-1.5 h-6 w-24" /> : finState === 'error' || !fin ? (
+                  <p className="mt-1 text-sm [color:var(--pf-color-muted)]">{finState === 'error' ? 'Không tải được' : 'Chưa có dữ liệu'}</p>
+                ) : (
+                  <p className="mt-0.5 truncate text-[20px] font-[800] leading-tight" style={{ color: moneyColor(fin.assets, 'balance') }}>{formatVND(fin.assets)}</p>
+                )}
+                <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">Quỹ chính + số dư chuyển kỳ</p>
+              </div>
+              <div className="min-w-0 px-4">
+                <p className="text-xs font-semibold [color:var(--pf-color-muted)]">Chi trong kỳ</p>
+                {finState === 'loading' ? <Skeleton className="mt-1.5 h-6 w-24" /> : finState === 'error' || !fin ? (
+                  <p className="mt-1 text-sm [color:var(--pf-color-muted)]">{finState === 'error' ? 'Không tải được' : 'Chưa có dữ liệu'}</p>
+                ) : (
+                  <p className="mt-0.5 truncate text-[20px] font-[800] leading-tight" style={{ color: moneyColor(fin.totalExpense, 'expense') }}>{formatVND(fin.totalExpense)}</p>
+                )}
+                <p className="mt-0.5 text-xs [color:var(--pf-color-muted)]">Quỹ chính, đã duyệt/đã chi</p>
+              </div>
+            </div>
+            <button onClick={() => navigate(fundRoute)} className="flex min-h-[48px] w-full items-center justify-between border-t px-4 text-sm font-semibold [color:var(--pf-primary-text)] [border-color:var(--pf-border)] active:[background:var(--pf-color-muted-soft)]">
+              Xem chi tiết tài chính <ChevronRight size={16} aria-hidden />
+            </button>
+          </Panel>
+        </>
+      )}
 
-  const cards = (
-    <div className="mt-4 grid grid-cols-2 gap-3">
-      <SummaryCard
-        icon={<CalendarDays size={18} />}
-        title={isToday ? 'Lịch hôm nay' : 'Sắp tới'}
-        onOpen={() => navigate(`${base}?tab=schedule`)}
-        value={nextSession ? (nextSession.startTime ?? '--:--') : '—'}
-        sub={nextSession
-          ? [!isToday ? fmtDay(nextSession.sessionDate) : null, nextSession.courtName].filter(Boolean).join(' · ') || 'Buổi sinh hoạt'
-          : 'Chưa có lịch'}
-        cta="Xem lịch"
-      />
-      <SummaryCard
-        icon={<CalendarDays size={18} />}
-        title="Tháng này"
-        onOpen={() => navigate(`${base}?tab=registration`)}
-        value={String(monthCount)}
-        sub="buổi sinh hoạt"
-        cta="Đăng ký"
-        outline
-      />
+      {/* Lối tắt quan trọng — phần còn lại ở "Ứng dụng" */}
+      <HubSectionTitle right={
+        <button onClick={() => navigate('/ung-dung')} className="flex min-h-[44px] items-center gap-0.5 px-1 text-sm font-semibold [color:var(--pf-primary-text)]">
+          Tất cả ứng dụng <ChevronRight size={16} aria-hidden />
+        </button>
+      }>Lối tắt</HubSectionTitle>
+      <TileGrid items={homeApps(role)} unread={unread} />
     </div>
   )
-
-  const list = upcoming.slice(0, 3)
-  const extra = list.length > 0 ? (
-    <>
-      <HubSectionTitle>Buổi sắp tới</HubSectionTitle>
-      <ul className="mt-2 space-y-2.5">
-        {list.map((s) => (
-          <ListRow
-            key={s.id}
-            title={`${fmtDay(s.sessionDate)} · ${s.startTime ?? '--:--'}`}
-            sub={s.courtName ?? 'Buổi sinh hoạt'}
-            onClick={() => navigate(`${base}?tab=schedule`)}
-          />
-        ))}
-      </ul>
-    </>
-  ) : null
-
-  return <SectionHub tilesTitle="Lịch & hoạt động" tiles={calendarApps(role)} cards={cards} extra={extra} />
-}
-
-/* ───────────────────────── Thi đấu ───────────────────────── */
-export function MobileCompeteHub() {
-  const navigate = useNavigate()
-  const { role, user } = useHubData()
-  const allMinigames = useMinigameStore((s) => s.minigames)
-  const clubId = user?.clubId
-  const stats = useMemo(() => {
-    // Chỉ giải của CLB hiện tại (store còn giải mock/CLB khác lưu trên máy).
-    const minigames = allMinigames.filter((m) => m.clubId === clubId)
-    const live = minigames.filter((m) => normalizeMinigameStatus(m.status) === 'IN_PROGRESS')
-    return { total: minigames.length, live }
-  }, [allMinigames, clubId])
-  if (!role) return null
-  if (role === 'CLUB_TREASURER' || role === 'SUPER_ADMIN') return <Navigate to={homeByRole[role]} replace />
-  const base = role === 'MEMBER_VIEW' ? '/member/thi-dau' : '/thi-dau'
-
-  const cards = (
-    <div className="mt-4 grid grid-cols-2 gap-3">
-      <SummaryCard
-        icon={<Trophy size={18} />}
-        title="Đang đấu"
-        onOpen={() => navigate(`${base}?tab=tournaments`)}
-        value={String(stats.live.length)}
-        sub="giải đấu"
-        cta="Xem giải đấu"
-      />
-      <SummaryCard
-        icon={<Swords size={18} />}
-        title="Tất cả giải"
-        onOpen={() => navigate(`${base}?tab=standings`)}
-        value={String(stats.total)}
-        sub="đã tạo"
-        cta="Xếp hạng"
-        outline
-      />
-    </div>
-  )
-
-  const extra = stats.live.length > 0 ? (
-    <>
-      <HubSectionTitle>Giải đang diễn ra</HubSectionTitle>
-      <ul className="mt-2 space-y-2.5">
-        {stats.live.slice(0, 3).map((m) => (
-          <ListRow key={m.id} title={m.name} sub="Đang diễn ra" onClick={() => navigate(`/minigames/${m.id}`)} />
-        ))}
-      </ul>
-    </>
-  ) : null
-
-  return <SectionHub tilesTitle="Thi đấu" tiles={competeApps(role)} cards={cards} extra={extra} />
-}
-
-/* ───────────────────────── Cộng đồng ───────────────────────── */
-export function MobileCommunityHub() {
-  const navigate = useNavigate()
-  const { role } = useHubData()
-  if (!role) return null
-  if (role === 'SUPER_ADMIN') return <Navigate to={homeByRole[role]} replace />
-
-  const cards = (
-    <div className="mt-4 grid grid-cols-2 gap-3">
-      <SummaryCard
-        icon={<Newspaper size={18} />}
-        title="Bảng tin"
-        onOpen={() => navigate('/community')}
-        value="Mới"
-        sub="Tin của CLB"
-        cta="Mở bảng tin"
-      />
-      <SummaryCard
-        icon={<Swords size={18} />}
-        title="Tìm kèo"
-        onOpen={() => navigate('/community?tab=matchmaking')}
-        value="Giao lưu"
-        sub="Tìm đối thủ"
-        cta="Tìm kèo"
-        outline
-      />
-    </div>
-  )
-
-  return <SectionHub tilesTitle="Cộng đồng CLB" tiles={communityApps(role)} cards={cards} />
 }

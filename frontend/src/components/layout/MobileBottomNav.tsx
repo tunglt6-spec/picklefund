@@ -1,48 +1,61 @@
+import { useEffect, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   Home, CalendarDays, Trophy, Users, ListOrdered, BadgeCheck, Bell, Building2, CreditCard, LayoutGrid,
 } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
 import { cn } from '../../lib/utils'
-import { bottomTabsByRole, type BottomTab } from './navConfig'
+import { bottomTabsByRole, pathOf, type BottomTab } from './navConfig'
 
 const ICONS: Record<BottomTab['icon'], typeof Home> = {
   home: Home, calendar: CalendarDays, trophy: Trophy, community: Users, ledger: ListOrdered,
   approve: BadgeCheck, bell: Bell, club: Building2, users: Users, pay: CreditCard, apps: LayoutGrid,
 }
 
-/** Thanh điều hướng đáy của bản mobile (<1024px). Cao cố định BOTTOM_NAV_HEIGHT (+ safe-area) để trang chừa chỗ. */
-export const BOTTOM_NAV_HEIGHT = 76
+/** Chiều cao thanh đáy (+ safe-area) — trang chừa chỗ để nội dung/nút cuối danh sách không bị che. */
+export const BOTTOM_NAV_HEIGHT = 68
 
+/** Điều hướng chính của bản mobile (<1024px): 5 mục. ≥1024px dùng Sidebar nên ẩn (lg:hidden). */
 export function MobileBottomNav() {
   const user = useAuthStore((s) => s.user)
   const { pathname } = useLocation()
-  if (!user) return null
+  // Bàn phím ảo: khi đang nhập liệu thì ẩn thanh đáy (iOS/Android không đẩy phần tử fixed lên đúng chỗ → che ô nhập/nút gửi).
+  const [typing, setTyping] = useState(false)
+  useEffect(() => {
+    const isField = (el: EventTarget | null) =>
+      el instanceof HTMLElement && (el.isContentEditable || (el.matches?.('input, textarea, select') && !(el as HTMLInputElement).matches?.('[type=checkbox], [type=radio], [type=range], [type=button], [type=submit], [type=file]')))
+    const on = (e: FocusEvent) => { if (isField(e.target)) setTyping(true) }
+    const off = () => setTyping(false)
+    document.addEventListener('focusin', on)
+    document.addEventListener('focusout', off)
+    return () => { document.removeEventListener('focusin', on); document.removeEventListener('focusout', off) }
+  }, [])
+  if (!user || typing) return null
   const tabs = bottomTabsByRole[user.role]
   if (!tabs) return null
 
   return (
     <nav
       aria-label="Điều hướng chính"
-      className="pf-glass-bar fixed inset-x-0 bottom-0 z-30 border-t px-2 lg:hidden"
-      style={{ paddingBottom: 'env(safe-area-inset-bottom)', borderRadius: '24px 24px 0 0' }}
+      className="fixed inset-x-0 bottom-0 z-30 border-t [background:var(--pf-surface)] [border-color:var(--pf-border)] lg:hidden"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
-      <ul className="mx-auto flex h-[64px] max-w-2xl items-stretch gap-1 py-1.5">
+      <ul className="mx-auto flex h-[60px] max-w-2xl items-stretch gap-1 px-1 py-1">
         {tabs.map((t) => {
           const Icon = ICONS[t.icon]
-          const active = [t.to, ...(t.match ?? [])].some((p) => pathname === p || pathname.startsWith(`${p}/`))
+          const active = [pathOf(t.to), ...(t.match ?? [])].some((p) => pathname === p || pathname.startsWith(`${p}/`))
           return (
-            <li key={t.to} className="min-w-0 flex-1">
+            <li key={t.label} className="min-w-0 flex-1">
               <Link
                 to={t.to}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'flex h-full min-h-[44px] flex-col items-center justify-center gap-0.5 rounded-2xl px-1 text-xs font-semibold leading-none transition-colors active:scale-[0.97]',
+                  'flex h-full min-h-[48px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-xs font-semibold leading-none transition-colors active:opacity-80',
                   active ? '[color:var(--pf-primary-text)]' : '[color:var(--pf-color-muted)]',
                 )}
-                style={active ? { background: 'var(--pf-primary-soft)', boxShadow: 'inset 0 0 0 1px color-mix(in srgb, var(--pf-primary) 18%, transparent)' } : undefined}
+                style={active ? { background: 'var(--pf-primary-soft)' } : undefined}
               >
-                <Icon size={22} strokeWidth={active ? 2.4 : 1.9} />
+                <Icon size={22} strokeWidth={active ? 2.3 : 1.9} aria-hidden />
                 <span className="max-w-full truncate">{t.label}</span>
               </Link>
             </li>

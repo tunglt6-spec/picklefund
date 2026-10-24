@@ -9,13 +9,11 @@ import { SessionRegistration } from '../SessionRegistration'
 import { CheckIn } from '../CheckIn'
 import { Attendance } from '../Attendance'
 import { WeeklyActivity } from '../WeeklyActivity'
-import { ModuleSummary } from '../../../components/mobile/ModuleSummary'
 
 export function ActivityModule() {
   return (
     <ModuleTabs
       title="Hoạt động CLB"
-      summary={<ModuleSummary kind="activity" />}
       tabs={[
         { key: 'schedule', label: 'Lịch', element: <ScheduleCalendar /> },
         { key: 'registration', label: 'Đăng ký', element: <SessionRegistration /> },

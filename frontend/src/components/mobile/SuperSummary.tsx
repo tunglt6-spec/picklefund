@@ -1,53 +1,50 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Building2, Users } from 'lucide-react'
 import api from '../../lib/api'
-import { SummaryCard } from './HubParts'
+import { Panel, Skeleton, ListRow, HubSectionTitle, type LoadState } from './HubParts'
 
-/** Thẻ tóm tắt cho Super Admin (mobile): số CLB + số người dùng toàn hệ thống — dùng đúng endpoint các màn Quản lý CLB / Người dùng đã gọi. */
+/** Tóm tắt hệ thống cho Super Admin (mobile): số CLB + số người dùng — dùng đúng endpoint các màn Quản lý CLB / Người dùng đã gọi. */
 export function SuperSummary() {
   const navigate = useNavigate()
   const [clubs, setClubs] = useState<number | null>(null)
   const [users, setUsers] = useState<{ total: number; active: number } | null>(null)
+  const [state, setState] = useState<LoadState>('loading')
 
   useEffect(() => {
     let off = false
-    api.get('/clubs', { params: { limit: 500 } })
-      .then((r) => {
-        if (off) return
-        const d = r.data?.data
+    Promise.allSettled([
+      api.get('/clubs', { params: { limit: 500 } }),
+      api.get('/users/summary'),
+    ]).then(([c, u]) => {
+      if (off) return
+      if (c.status === 'fulfilled') {
+        const d = c.value.data?.data
         setClubs(Array.isArray(d) ? d.length : Array.isArray(d?.items) ? d.items.length : null)
-      })
-      .catch(() => { if (!off) setClubs(null) })
-    api.get('/users/summary')
-      .then((r) => {
-        if (off) return
-        const d = r.data?.data
+      }
+      if (u.status === 'fulfilled') {
+        const d = u.value.data?.data
         setUsers(d && typeof d.total === 'number' ? { total: d.total, active: Number(d.active ?? 0) } : null)
-      })
-      .catch(() => { if (!off) setUsers(null) })
+      }
+      setState(c.status === 'rejected' && u.status === 'rejected' ? 'error' : 'ok')
+    })
     return () => { off = true }
   }, [])
 
   return (
-    <div className="mt-4 grid grid-cols-2 gap-3">
-      <SummaryCard
-        icon={<Building2 size={18} />}
-        title="Câu lạc bộ"
-        onOpen={() => navigate('/super/clubs')}
-        value={clubs === null ? '—' : String(clubs)}
-        sub="trên hệ thống"
-        cta="Quản lý CLB"
-      />
-      <SummaryCard
-        icon={<Users size={18} />}
-        title="Người dùng"
-        onOpen={() => navigate('/super/users')}
-        value={users ? String(users.total) : '—'}
-        sub={users ? `${users.active} đang hoạt động` : 'toàn hệ thống'}
-        cta="Xem danh sách"
-        outline
-      />
-    </div>
+    <>
+      <HubSectionTitle>Hệ thống</HubSectionTitle>
+      <Panel className="mt-2 overflow-hidden">
+        {state === 'loading' ? (
+          <div className="space-y-2 p-4"><Skeleton className="h-4 w-1/2" /><Skeleton className="h-4 w-2/3" /></div>
+        ) : state === 'error' ? (
+          <p className="px-4 py-5 text-sm [color:var(--pf-color-muted)]">Không tải được số liệu hệ thống.</p>
+        ) : (
+          <ul className="divide-y [border-color:var(--pf-border)]">
+            <ListRow title={`${clubs ?? '—'} câu lạc bộ`} sub="Xem và quản lý CLB trên hệ thống" onClick={() => navigate('/super/clubs')} />
+            <ListRow title={`${users ? users.total : '—'} người dùng`} sub={users ? `${users.active} đang hoạt động` : 'Toàn hệ thống'} onClick={() => navigate('/super/users')} />
+          </ul>
+        )}
+      </Panel>
+    </>
   )
 }

@@ -940,11 +940,11 @@ export function Expenses() {
                 </button>
                 {!isMember && (
                   <>
-                    <button onClick={() => setEditTarget(e)}
+                    <button onClick={() => setEditTarget(e)} aria-label="Sửa khoản chi"
                       className="p-1.5 [color:var(--pf-color-muted)] active:[color:var(--pf-primary-text)]">
                       <Pencil size={13} />
                     </button>
-                    <button onClick={() => setConfirmId(e.id)}
+                    <button onClick={() => setConfirmId(e.id)} aria-label="Xóa khoản chi"
                       className="p-1.5 [color:var(--pf-color-muted)] active:text-red-500">
                       <Trash2 size={13} />
                     </button>

@@ -485,11 +485,11 @@ export function Contributions() {
                   status={c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
                   actions={isMember ? undefined : (
                     <>
-                      <button onClick={() => toggleConfirm(c.id)} className={`p-2 ${c.isConfirmed ? 'text-emerald-500 active:[color:var(--pf-color-muted)]' : '[color:var(--pf-color-muted)] active:text-emerald-500'}`}>
+                      <button onClick={() => toggleConfirm(c.id)} aria-label={c.isConfirmed ? 'Bỏ xác nhận khoản thu' : 'Xác nhận khoản thu'} className={`p-2 ${c.isConfirmed ? 'text-emerald-500 active:[color:var(--pf-color-muted)]' : '[color:var(--pf-color-muted)] active:text-emerald-500'}`}>
                         {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
                       </button>
-                      <button onClick={() => openEdit(c)} className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary-text)] p-2"><Edit2 size={14} /></button>
-                      <button onClick={() => setDeleteId(c.id)} className="[color:var(--pf-color-muted)] active:text-red-500 p-2"><Trash2 size={14} /></button>
+                      <button onClick={() => openEdit(c)} aria-label="Sửa khoản thu" className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary-text)] p-2"><Edit2 size={14} /></button>
+                      <button onClick={() => setDeleteId(c.id)} aria-label="Xóa khoản thu" className="[color:var(--pf-color-muted)] active:text-red-500 p-2"><Trash2 size={14} /></button>
                     </>
                   )}
                 />
@@ -514,12 +514,12 @@ export function Contributions() {
                   status={c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
                   actions={isMember ? undefined : (
                     <>
-                      <button onClick={() => toggleConfirm(c.id)} className={`p-2 ${c.isConfirmed ? 'text-emerald-500 active:[color:var(--pf-color-muted)]' : '[color:var(--pf-color-muted)] active:text-emerald-500'}`}>
+                      <button onClick={() => toggleConfirm(c.id)} aria-label={c.isConfirmed ? 'Bỏ xác nhận khoản thu' : 'Xác nhận khoản thu'} className={`p-2 ${c.isConfirmed ? 'text-emerald-500 active:[color:var(--pf-color-muted)]' : '[color:var(--pf-color-muted)] active:text-emerald-500'}`}>
                         {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
                       </button>
                       <button onClick={() => exportMiniReceipt(c)} className="[color:var(--pf-color-muted)] active:text-violet-600 p-2" aria-label="Xuất phiếu thu"><FileText size={14} /></button>
-                      <button onClick={() => openEdit(c)} className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary-text)] p-2"><Edit2 size={14} /></button>
-                      <button onClick={() => setDeleteId(c.id)} className="[color:var(--pf-color-muted)] active:text-red-500 p-2"><Trash2 size={14} /></button>
+                      <button onClick={() => openEdit(c)} aria-label="Sửa khoản thu" className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary-text)] p-2"><Edit2 size={14} /></button>
+                      <button onClick={() => setDeleteId(c.id)} aria-label="Xóa khoản thu" className="[color:var(--pf-color-muted)] active:text-red-500 p-2"><Trash2 size={14} /></button>
                     </>
                   )}
                 />

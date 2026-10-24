@@ -5,7 +5,7 @@ import { Sidebar } from './Sidebar'
 import { MobileHeader } from './MobileHeader'
 import { DesktopHeader } from './DesktopHeader'
 import { MobileBottomNav, BOTTOM_NAV_HEIGHT } from './MobileBottomNav'
-import { HUB_PATHS, LISA_ROUTES } from './navConfig'
+import { LISA_ROUTES } from './navConfig'
 import { UserGuideModal } from '../help/UserGuideModal'
 import { PushEnableBanner } from '../member/PushEnableBanner'
 import { useApiSync } from '../../hooks/useApiSync'
@@ -38,8 +38,7 @@ export function AppLayout() {
   const isOnLisa = lisaRoute ? location.pathname === lisaRoute : false
   // Mở màn con từ hub AI Operations Center (card đính ?from=aido) → hiện thanh quay lại cố định,
   // vị trí GIỐNG NHAU cho MỌI màn card (đặt 1 nơi ở AppLayout).
-  // Trang "Ứng dụng" có header riêng (lời chào + tìm kiếm); màn chat Lisa toàn màn không có thanh đáy.
-  const isHub = HUB_PATHS.includes(location.pathname)
+  // Màn chat Lisa toàn màn không có thanh đáy.
   const fromAido = new URLSearchParams(location.search).get('from') === 'aido'
 
   return (
@@ -52,11 +51,9 @@ export function AppLayout() {
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Mobile header — 64px */}
-        {!isHub && (
-          <div className="lg:hidden">
-            <MobileHeader />
-          </div>
-        )}
+        <div className="lg:hidden">
+          <MobileHeader />
+        </div>
 
         {/* Desktop header — tìm kiếm / chuông / toàn màn hình / avatar (mẫu v2.1) */}
         <DesktopHeader />

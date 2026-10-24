@@ -1033,13 +1033,13 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
    checkbox/radio/range/file, và phần tử đã bo tròn hoàn toàn. ── */
 @media (max-width: 1023px) {
   button:is([class*="rounded-md"], [class*="rounded-lg"], [class*="rounded-xl"], [class*="rounded-2xl"], [class*="rounded-[8px]"], [class*="rounded-[10px]"], [class*="rounded-[12px]"], [class*="rounded-[14px]"], [class*="rounded-[16px]"]):not([class*="rounded-full"]):not([role="tab"]):not(.pf-nominh):not([data-glass="off"] *):not(:has(> :is(div, p, ul, ol, table, img, h1, h2, h3, h4, section))) {
-    border-radius: 9999px;
+    border-radius: var(--pf-radius-control, 12px);
   }
   input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="hidden"], [type="color"]):not([class*="rounded-full"]):not([data-glass="off"] *),
   select:not([class*="rounded-full"]):not([data-glass="off"] *) {
-    border-radius: 16px; min-height: 48px;
+    border-radius: var(--pf-radius-control, 12px); min-height: 48px;
   }
-  textarea:not([class*="rounded-full"]) { border-radius: 16px; }
+  textarea:not([class*="rounded-full"]) { border-radius: var(--pf-radius-control, 12px); }
   /* Ô nhập/chọn dạng pill (đã bo tròn) vẫn đạt vùng bấm 44px. */
   input[class*="rounded-full"]:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="hidden"]), select[class*="rounded-full"] { min-height: 44px; }
 }
@@ -1076,5 +1076,52 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
       radial-gradient(farthest-side at 0 50%, rgba(109,93,251,0.22), transparent) left center / 10px 100% no-repeat scroll,
       radial-gradient(farthest-side at 100% 50%, rgba(109,93,251,0.22), transparent) right center / 10px 100% no-repeat scroll;
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════════════════════
+   MODERN ENTERPRISE — CHỈ MOBILE (<1024px). Tablet ≥1024 & desktop KHÔNG đổi (mọi quy tắc nằm trong media này).
+   Nền trung tính sáng · bề mặt trắng đặc · viền xám mảnh · bóng trung tính · thương hiệu tím PHẲNG (không gradient)
+   · bo góc theo cấp: thẻ 16 · hàng 12 · nút/ô nhập 12 · tile 16 · badge/chip tròn.
+   ══════════════════════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 1023px) {
+  :root {
+    --pf-grad-brand: var(--pf-primary);
+    --pf-glass-bg: var(--pf-surface); --pf-glass-bg-strong: var(--pf-surface);
+    --pf-glass-border: var(--pf-border); --pf-glass-edge: var(--pf-border);
+    --pf-glass-hi: transparent; --pf-glass-lo: transparent; --pf-sheen: none;
+    --pf-glass-blur: 0px; --pf-glass-sat: 100%;
+    --pf-glass-shadow: 0 1px 2px rgb(16 24 40 / 0.05), 0 1px 3px rgb(16 24 40 / 0.04);
+    --pf-wash: none;
+    --pf-radius-card: 16px; --pf-radius-row: 12px; --pf-radius-control: 12px; --pf-radius-tile: 16px; --pf-radius-chip: 9999px;
+    --pf-shadow-card: 0 1px 2px rgba(16,24,40,0.06), 0 1px 3px rgba(16,24,40,0.04);
+    --pf-shadow-float: 0 1px 2px rgba(16,24,40,0.08);
+    --pf-shadow-pill: 0 1px 2px rgba(16,24,40,0.14);
+    --pf-shadow-field: 0 1px 2px rgba(16,24,40,0.05);
+  }
+  [data-theme="dark"] {
+    --pf-glass-bg: var(--pf-surface); --pf-glass-bg-strong: var(--pf-surface);
+    --pf-glass-border: var(--pf-border); --pf-glass-edge: var(--pf-border);
+    --pf-glass-hi: transparent; --pf-glass-lo: transparent; --pf-sheen: none;
+    --pf-glass-shadow: 0 1px 2px rgb(0 0 0 / 0.35); --pf-wash: none;
+    --pf-shadow-card: 0 1px 2px rgba(0,0,0,0.4); --pf-shadow-float: 0 1px 2px rgba(0,0,0,0.4);
+    --pf-shadow-pill: 0 1px 2px rgba(0,0,0,0.5); --pf-shadow-field: 0 1px 2px rgba(0,0,0,0.3);
+  }
+  .pf-stat-card, .pf-stat-cell {
+    background-color: var(--pf-surface); background-image: none;
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+    border-color: var(--pf-border); box-shadow: var(--pf-shadow-card);
+  }
+  .pf-stat-cell { box-shadow: none; background-color: var(--pf-surface-muted); }
+  .pf-stat-card[data-hi], .pf-stat-cell[data-hi], .pf-stat-card[data-brand] {
+    background-color: color-mix(in srgb, var(--pf-primary) 8%, var(--pf-surface));
+    border-color: color-mix(in srgb, var(--pf-primary) 28%, var(--pf-border));
+  }
+  .pf-rows tbody td { background-color: var(--pf-surface); background-image: none; border-top-color: var(--pf-border); border-bottom-color: var(--pf-border); }
+  .pf-rows tbody td:first-child { border-left-color: var(--pf-border); }
+  .pf-rows tbody td:last-child { border-right-color: var(--pf-border); }
+  .pf-rows tbody tr { filter: none; }
+  .pf-rowcard { border-color: var(--pf-border); }
+  .pf-toolbar, .pf-seg { background-image: none; border-color: var(--pf-border); box-shadow: none; }
+  .pf-stat-card, .pf-rowcard, .pf-cardlist, table, .pf-num { font-variant-numeric: tabular-nums; }
 }
 

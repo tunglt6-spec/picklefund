@@ -7,13 +7,11 @@ import { ScheduleCalendar } from '../../admin/ScheduleCalendar'
 import { SessionRegistration } from '../../admin/SessionRegistration'
 import { CheckIn } from '../../admin/CheckIn'
 import { WeeklyActivity } from '../../admin/WeeklyActivity'
-import { ModuleSummary } from '../../../components/mobile/ModuleSummary'
 
 export function MemberActivityModule() {
   return (
     <ModuleTabs
       title="Hoạt động"
-      summary={<ModuleSummary kind="activity" />}
       tabs={[
         { key: 'schedule', label: 'Lịch sinh hoạt', element: <ScheduleCalendar /> },
         { key: 'registration', label: 'Đăng ký buổi', element: <SessionRegistration /> },

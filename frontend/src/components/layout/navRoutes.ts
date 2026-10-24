@@ -10,12 +10,12 @@ export interface BottomTab {
 }
 
 export const APPS_ROUTE = '/ung-dung'
-/** Các màn hub mobile: header lớn + tìm kiếm + thẻ tóm tắt + lưới tile (cùng ngôn ngữ trang Ứng dụng). */
+/** Màn Tổng quan của bản mobile/tablet (theo công việc: lịch hôm nay, việc cần xử lý, tài chính, lối tắt). */
 export const MOBILE_HOME = '/m/tong-quan'
-export const MOBILE_CALENDAR = '/m/lich'
-export const MOBILE_COMPETE = '/m/thi-dau'
-export const MOBILE_COMMUNITY = '/m/cong-dong'
-export const HUB_PATHS = [APPS_ROUTE, MOBILE_HOME, MOBILE_CALENDAR, MOBILE_COMPETE, MOBILE_COMMUNITY]
+export const HUB_PATHS = [APPS_ROUTE, MOBILE_HOME]
+
+/** Đường dẫn (bỏ ?query) của một đích điều hướng — dùng để so khớp tab đang chọn. */
+export const pathOf = (to: string) => to.split('?')[0]
 
 const HOME_MATCH = ['/aido', '/dashboard', '/member/dashboard', '/member/aido', '/treasurer/dashboard', '/super/dashboard']
 const CAL_MATCH = ['/hoat-dong', '/member/hoat-dong', '/attendance', '/schedule', '/session-registration', '/check-in', '/activity']
@@ -27,16 +27,16 @@ const APPS_MATCH = ['/thanh-vien', '/tai-chinh', '/he-thong', '/scoring', '/paym
 export const bottomTabsByRole: Record<Role, BottomTab[]> = {
   CLUB_ADMIN: [
     { label: 'Tổng quan', to: MOBILE_HOME, icon: 'home', match: HOME_MATCH },
-    { label: 'Lịch', to: MOBILE_CALENDAR, icon: 'calendar', match: CAL_MATCH },
-    { label: 'Thi đấu', to: MOBILE_COMPETE, icon: 'trophy', match: COMPETE_MATCH },
-    { label: 'Cộng đồng', to: MOBILE_COMMUNITY, icon: 'community', match: ['/community'] },
+    { label: 'Lịch', to: '/hoat-dong?tab=schedule', icon: 'calendar', match: CAL_MATCH },
+    { label: 'Thi đấu', to: '/thi-dau', icon: 'trophy', match: COMPETE_MATCH },
+    { label: 'Cộng đồng', to: '/community', icon: 'community', match: ['/community'] },
     { label: 'Ứng dụng', to: APPS_ROUTE, icon: 'apps', match: APPS_MATCH },
   ],
   MEMBER_VIEW: [
     { label: 'Tổng quan', to: MOBILE_HOME, icon: 'home', match: HOME_MATCH },
-    { label: 'Lịch', to: MOBILE_CALENDAR, icon: 'calendar', match: CAL_MATCH },
-    { label: 'Thi đấu', to: MOBILE_COMPETE, icon: 'trophy', match: COMPETE_MATCH },
-    { label: 'Cộng đồng', to: MOBILE_COMMUNITY, icon: 'community', match: ['/community'] },
+    { label: 'Lịch', to: '/member/hoat-dong?tab=schedule', icon: 'calendar', match: CAL_MATCH },
+    { label: 'Thi đấu', to: '/member/thi-dau', icon: 'trophy', match: COMPETE_MATCH },
+    { label: 'Cộng đồng', to: '/community', icon: 'community', match: ['/community'] },
     { label: 'Ứng dụng', to: APPS_ROUTE, icon: 'apps', match: APPS_MATCH },
   ],
   CLUB_TREASURER: [

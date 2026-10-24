@@ -480,6 +480,7 @@ export function SuperClubs() {
           {exportButtons}
           <button
             onClick={() => setShowCreate(true)}
+            aria-label="Tạo CLB mới"
             className="w-9 h-9 rounded-full flex items-center justify-center text-white"
             style={{ background: 'var(--pf-primary)' }}
           >
@@ -529,10 +530,10 @@ export function SuperClubs() {
                   <button onClick={e => { e.stopPropagation(); setPayClub(club) }} aria-label="Gia hạn gói" className="p-2 rounded-lg [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)]">
                     <CreditCard size={14} />
                   </button>
-                  <button onClick={e => { e.stopPropagation(); openEdit(club) }} className="p-2 rounded-lg [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)]">
+                  <button onClick={e => { e.stopPropagation(); openEdit(club) }} aria-label="Sửa CLB" className="p-2 rounded-lg [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)]">
                     <Pencil size={14} />
                   </button>
-                  <button onClick={e => { e.stopPropagation(); openRoles(club) }} className="p-2 rounded-lg [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)]">
+                  <button onClick={e => { e.stopPropagation(); openRoles(club) }} aria-label="Phân quyền CLB" className="p-2 rounded-lg [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)]">
                     <ShieldCheck size={14} />
                   </button>
                   <button
