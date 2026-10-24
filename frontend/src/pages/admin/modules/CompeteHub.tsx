@@ -43,7 +43,13 @@ function OverviewTab() {
     <div className="p-4 sm:p-6 flex flex-col gap-5">
       <div className="pf-glass rounded-[16px] p-4">
         <h2 className="text-base font-bold [color:var(--pf-text)]">Tổng quan theo bộ môn</h2>
-        <div className="mt-3 flex flex-wrap gap-2">
+        <label className="mt-3 block lg:hidden">
+          <span className="mb-1 block text-xs font-semibold [color:var(--pf-color-muted)]">Bộ môn</span>
+          <select value={sport} onChange={e => setSport(e.target.value)} className="input-base w-full">
+            {SPORTS.map(s => <option key={s.v} value={s.v}>{s.label}</option>)}
+          </select>
+        </label>
+        <div className="mt-3 flex flex-wrap gap-2 max-lg:hidden">
           {SPORTS.map(s => (
             <button key={s.v} onClick={() => setSport(s.v)}
               className={cn('inline-flex items-center gap-1.5 shrink-0 whitespace-nowrap rounded-xl border px-4 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.97]',
@@ -184,16 +190,17 @@ function TournamentNavList({ kind }: { kind: NavKind }) {
 }
 
 export function CompeteHub() {
-  return (
-    <ModuleTabs
-      title="Thi đấu"
-      tabs={[
-        { key: 'overview', label: 'Tổng quan', element: <OverviewTab /> },
-        { key: 'tournaments', label: 'Giải đấu', element: <TournamentsTab /> },
-        { key: 'schedule', label: 'Lịch đấu', element: <TournamentNavList kind="schedule" /> },
-        { key: 'results', label: 'Kết quả', element: <TournamentNavList kind="results" /> },
-        { key: 'standings', label: 'Xếp hạng', element: <TournamentNavList kind="standings" /> },
-      ]}
-    />
-  )
+  // Mobile (<1024px): mở danh sách giải trước; Lịch đấu/Kết quả/Xếp hạng chỉ là bộ chọn giải nên bỏ khỏi hàng tab —
+  // vào một giải mới xem lịch, kết quả, xếp hạng. Màn lớn giữ nguyên 5 tab.
+  const mobile = useIsMobile(1024)
+  const tabs = [
+    { key: 'overview', label: 'Tổng quan', element: <OverviewTab /> },
+    { key: 'tournaments', label: 'Giải đấu', element: <TournamentsTab /> },
+    { key: 'schedule', label: 'Lịch đấu', element: <TournamentNavList kind="schedule" /> },
+    { key: 'results', label: 'Kết quả', element: <TournamentNavList kind="results" /> },
+    { key: 'standings', label: 'Xếp hạng', element: <TournamentNavList kind="standings" /> },
+  ]
+  return mobile
+    ? <ModuleTabs title="Thi đấu" mobileMode="tabs" defaultKey="tournaments" tabs={[tabs[1], tabs[0]]} />
+    : <ModuleTabs title="Thi đấu" tabs={tabs} />
 }

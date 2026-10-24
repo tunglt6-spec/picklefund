@@ -1802,16 +1802,19 @@ export default function MemberCommunity() {
   const handleMatchChange = (m: Match) =>
     setMatches((prev) => prev.map((x) => (x.id === m.id ? m : x)))
 
+  // Mobile (<1024px): Cộng đồng chỉ giữ Bảng tin / Tìm kèo; Kiểm duyệt là màn quản trị riêng (mở từ Ứng dụng).
+  const mobileView = useIsMobile(1024)
+  const modOnly = mobileView && tab === 'moderation'
   const tabs = [
     { key: 'feed', label: 'Bảng tin' },
     { key: 'matchmaking', label: 'Tìm kèo' },
-    ...(isAdmin ? [{ key: 'moderation', label: 'Kiểm duyệt' }] : []),
+    ...(isAdmin && !mobileView ? [{ key: 'moderation', label: 'Kiểm duyệt' }] : []),
   ]
 
   return (
     <PageShell maxWidth={1760}>
       <PageHeader
-        title="Cộng đồng CLB"
+        title={modOnly ? 'Kiểm duyệt nội dung' : 'Cộng đồng CLB'}
         actions={
           tab === 'matchmaking' ? (
             <ActionButton
@@ -1827,7 +1830,14 @@ export default function MemberCommunity() {
         }
       />
 
-      <ResponsiveTabs tabs={tabs} active={tab} onChange={changeTab} className="mb-5" />
+      {modOnly ? (
+        <button type="button" onClick={() => changeTab('feed')}
+          className="mb-4 inline-flex min-h-[44px] items-center gap-1.5 text-sm font-semibold [color:var(--pf-primary-text)]">
+          ‹ Về Bảng tin
+        </button>
+      ) : (
+        <ResponsiveTabs tabs={tabs} active={tab} onChange={changeTab} className="mb-5" />
+      )}
 
       {tab === 'feed' ? (
         <div className="flex flex-col gap-4">

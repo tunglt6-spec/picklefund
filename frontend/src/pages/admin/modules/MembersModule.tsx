@@ -17,9 +17,9 @@ export function MembersModule() {
       tabs={[
         { key: 'list', label: 'Danh sách thành viên', element: <Members /> },
         { key: 'scoring', label: 'Chấm điểm', element: <MemberScoring /> },
-        { key: 'accounts', label: 'Tài khoản', element: <MemberAccounts /> },
-        { key: 'roles', label: 'Vai trò & phân quyền', element: <RolesPermissions /> },
         { key: 'activity', label: 'Lịch sử hoạt động', element: <MemberActivity /> },
+        { key: 'accounts', label: 'Tài khoản', group: 'Quản trị', element: <MemberAccounts /> },
+        { key: 'roles', label: 'Vai trò & phân quyền', group: 'Quản trị', element: <RolesPermissions /> },
       ]}
     />
   )

@@ -1,5 +1,8 @@
 import type { ReactNode } from 'react'
 
+/** Nhãn nghiệp vụ cho mã nguồn quỹ (không hiện mã kỹ thuật COMMON/MINI). */
+const FUND_LABEL: Record<string, string> = { COMMON: 'Quỹ Chính', MINI: 'Quỹ Phụ' }
+
 interface MobileTransactionCardProps {
   name: string
   description: string
@@ -23,7 +26,7 @@ export function MobileTransactionCard({ name, description, amount, type, fundSou
       </div>
       <div className="flex-1 basis-28 min-w-0">
         <div className="text-sm font-[600] [color:var(--pf-text)] break-words">{name}</div>
-        <div className="text-xs [color:var(--pf-color-muted)] break-words">{description}{fundSource ? ` · ${fundSource}` : ''}</div>
+        <div className="text-xs [color:var(--pf-color-muted)] break-words">{description}{fundSource ? ` · ${FUND_LABEL[fundSource] ?? fundSource}` : ''}</div>
       </div>
       <div className="flex flex-col items-end flex-shrink-0 max-w-[140px] min-[600px]:max-w-none">
         <span className={`text-sm font-[700] tabular-nums ${isIncome ? '[color:var(--pf-green)]' : '[color:var(--pf-color-danger)]'}`}>

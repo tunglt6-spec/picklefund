@@ -10,11 +10,15 @@
 import { createContext, useContext, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { cn } from '../../lib/utils'
+import { useIsMobile } from '../../hooks/useIsMobile'
+import { ModuleSwitcher } from './ModuleSwitcher'
 
 export interface ModuleTab {
   key: string
   label: string
   badge?: number
+  /** Nhóm trong bảng chọn chức năng trên mobile (vd "Quản trị"). */
+  group?: string
   element: ReactNode
 }
 
@@ -32,10 +36,14 @@ interface ModuleTabsProps {
   title?: string
   /** Tab mặc định khi URL chưa có ?tab= (mặc định: tab đầu tiên). */
   defaultKey?: string
+  /** Mobile (<1024px): 'switcher' = tiêu đề bấm được + bảng chọn từ dưới (mặc định khi >3 tab); 'tabs' = giữ tab ngắn (đổi cách xem cùng dữ liệu). */
+  mobileMode?: 'switcher' | 'tabs'
 }
 
-export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
+export function ModuleTabs({ tabs, title, defaultKey, mobileMode }: ModuleTabsProps) {
   const embedded = !!title
+  const compact = useIsMobile(1024)
+  const switcher = compact && (mobileMode ?? (tabs.length > 3 ? 'switcher' : 'tabs')) === 'switcher'
   const [params, setParams] = useSearchParams()
   const fallback = defaultKey ?? tabs[0]?.key
   const requested = params.get('tab')
@@ -51,7 +59,7 @@ export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
   return (
     <div className="flex min-h-full w-full flex-col" style={{ background: 'transparent' }}>
       {/* Tiêu đề module (như mockup) — cuộn theo trang, tab bar dính bên dưới */}
-      {title && (
+      {title && !switcher && (
         <div className="pf-center-x w-full px-4 pt-4 sm:px-6 sm:pt-6" style={{ maxWidth: 1600 }}>
           <h1 className="text-xl font-bold sm:text-2xl [color:var(--pf-text)] max-lg:text-[22px] max-lg:font-[800]" style={{ letterSpacing: '-0.02em' }}>
             {title}
@@ -59,8 +67,9 @@ export function ModuleTabs({ tabs, title, defaultKey }: ModuleTabsProps) {
         </div>
       )}
       {/* Thanh tab module — sticky trắng, full-bleed; nội dung tab căn cùng max-width page */}
+      {switcher && <ModuleSwitcher title={title} items={tabs} active={active} onSelect={select} />}
       <div
-        className="pf-glass-bar sticky top-0 z-20 shrink-0 border-b"
+        className={cn('pf-glass-bar sticky top-0 z-20 shrink-0 border-b', switcher && 'hidden')}
       >
         <div className="pf-center-x w-full px-4 sm:px-6" style={{ maxWidth: 1600 }}>
           {/* Chuẩn v2.1 — tab dạng NÚT TO như sidebar: active nền tím gradient + chữ trắng. */}

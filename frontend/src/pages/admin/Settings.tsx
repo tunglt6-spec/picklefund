@@ -11,7 +11,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import { useBranding, saveBranding, type ClubBranding } from '../../hooks/useBranding'
 import toast from 'react-hot-toast'
 import type { LucideIcon } from 'lucide-react'
-import { TileGrid, HubSearch } from '../../components/mobile/HubParts'
+import { ListRow, HubSearch } from '../../components/mobile/HubParts'
 import { fold } from '../../lib/fold'
 import type { AppItem } from '../../components/mobile/hubApps'
 import { VietQrImage } from '../../components/ui/VietQrImage'
@@ -20,6 +20,17 @@ type Tab = 'club' | 'branding' | 'account' | 'notifications' | 'payment' | 'tele
 
 const MOBILE_ICONS: Record<Tab, LucideIcon> = {
   club: Building2, branding: Palette, account: User, notifications: Bell, payment: CreditCard, telegram: Send, billing: Zap,
+}
+
+/** Mô tả ngắn của từng mục trong menu Cài đặt (mobile). */
+const SETTINGS_SUB: Record<Tab, string> = {
+  club: 'Tên, liên hệ, địa chỉ CLB',
+  branding: 'Logo, màu sắc, nhận diện',
+  account: 'Hồ sơ và mật khẩu của bạn',
+  notifications: 'Kênh và tần suất nhận thông báo',
+  payment: 'Tài khoản ngân hàng, mã QR thu quỹ',
+  telegram: 'Kết nối bot Telegram nhận tin',
+  billing: 'Gói dịch vụ và thanh toán',
 }
 
 const ALL_TABS: { id: Tab; label: string; icon: React.ReactNode; superAdminOnly?: boolean }[] = [
@@ -1176,7 +1187,16 @@ export function Settings() {
           <p className="text-sm [color:var(--pf-color-muted)]">Quản lý thông tin CLB và tài khoản</p>
           <HubSearch value={sectionQuery} onChange={setSectionQuery} placeholder="Tìm trong Cài đặt…" />
           <div className="mt-5">
-            <TileGrid items={items} onSelect={(it) => setSection(it.key as Tab)} empty={`Không tìm thấy mục “${sectionQuery}”.`} />
+            {items.length === 0 ? (
+              <p className="py-10 text-center text-sm [color:var(--pf-color-muted)]">{`Không tìm thấy mục “${sectionQuery}”.`}</p>
+            ) : (
+              <ul className="overflow-hidden rounded-2xl border divide-y [background:var(--pf-surface)] [border-color:var(--pf-border)] [&>li]:border-[color:var(--pf-border)]">
+                {items.map((it) => {
+                  const Ico = it.icon
+                  return <ListRow key={it.key} title={it.label} sub={SETTINGS_SUB[it.key as Tab]} icon={<Ico size={20} />} onClick={() => setSection(it.key as Tab)} />
+                })}
+              </ul>
+            )}
           </div>
         </div>
       )

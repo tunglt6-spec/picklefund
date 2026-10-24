@@ -7,6 +7,7 @@
  * cộng thêm điều chỉnh thủ công (events MANUAL). KHÔNG còn "chạy tự động".
  * Chuẩn UI V2.2 shared-kit, token --pf-*, responsive DataTable + MobileCardList.
  */
+import { useIsMobile } from '../../hooks/useIsMobile'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import { Award, Lock, Plus, Trash2, TrendingUp, TrendingDown, Users, Star } from 'lucide-react'
@@ -123,6 +124,7 @@ export function MemberScoring() {
   const months = useMemo(() => recentMonths(), [])
   const [month, setMonth] = useState<string>(currentMonth())
   const [tab, setTab] = useState<'scoreboard' | 'rules'>('scoreboard')
+  const isCompactView = useIsMobile(1024)
 
   const tabs: TabItem[] = useMemo(() => {
     const list: TabItem[] = [{ key: 'scoreboard', label: 'Bảng điểm' }]
@@ -133,9 +135,17 @@ export function MemberScoring() {
   return (
     <PageShell>
       <PageHeader
-        title="Chấm điểm thành viên"
+        title={tab === 'rules' && isCompactView ? 'Quy tắc chấm điểm' : 'Chấm điểm thành viên'}
+        actions={tabs.length > 1 && tab === 'scoreboard' ? (
+          <ActionMenu items={[{ key: 'rules', label: 'Quy tắc chấm điểm', onClick: () => setTab('rules') }]} />
+        ) : undefined}
       />
-      <div className="mb-4">
+      {tab === 'rules' && (
+        <button type="button" onClick={() => setTab('scoreboard')}
+          className="mb-3 inline-flex min-h-[44px] items-center text-sm font-semibold [color:var(--pf-primary-text)] lg:hidden">‹ Bảng điểm</button>
+      )}
+      {/* Mobile: mở thẳng Bảng điểm; "Thang điểm" thành "Quy tắc chấm điểm" trong menu Thao tác. */}
+      <div className="mb-4 max-lg:hidden">
         <ResponsiveTabs
           tabs={tabs}
           active={tab}

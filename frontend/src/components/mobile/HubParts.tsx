@@ -126,13 +126,14 @@ export function Skeleton({ className }: { className?: string }) {
 }
 
 /** Hàng danh sách bấm được (tiêu đề + mô tả + mũi tên). */
-export function ListRow({ title, sub, onClick, trailing }: { title: string; sub?: string; onClick: () => void; trailing?: ReactNode }) {
+export function ListRow({ title, sub, onClick, trailing, icon }: { title: string; sub?: string; onClick: () => void; trailing?: ReactNode; icon?: ReactNode }) {
   return (
     <li>
       <button
         onClick={onClick}
         className="flex min-h-[56px] w-full items-center gap-3 px-4 py-2.5 text-left active:[background:var(--pf-color-muted-soft)]"
       >
+        {icon && <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)]" aria-hidden>{icon}</span>}
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-semibold [color:var(--pf-text)]">{title}</span>
           {sub && <span className="block truncate text-xs [color:var(--pf-color-muted)]">{sub}</span>}

@@ -11,6 +11,7 @@ export function SystemModule() {
   return (
     <ModuleTabs
       title="Hệ thống"
+      mobileMode="switcher"
       tabs={[
         { key: 'notifications', label: 'Thông báo', element: <Notifications /> },
         { key: 'billing', label: 'Gói dịch vụ', element: <Billing /> },

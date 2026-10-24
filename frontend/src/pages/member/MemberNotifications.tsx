@@ -323,7 +323,7 @@ export function MemberNotifications() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
           {/* CỘT TRÁI — KPI-lọc xếp DỌC, sát lề trái; desktop đứng yên khi cuộn */}
           <div className="lg:w-[260px] lg:shrink-0 lg:sticky lg:top-4 lg:self-start">
-            <div className="lg:hidden"><FilterChips tabs={TABS as [TabKey, string][]} active={tab} counts={counts} onChange={setTab} label="Lọc thông báo" /></div>
+            <div className="lg:hidden"><FilterChips tabs={TABS as [TabKey, string][]} active={tab} counts={counts} onChange={setTab} label="Lọc thông báo" primary={["all", "unread"]} moreLabel="Loại thông báo" /></div>
             <div className="max-lg:hidden"><FilterKpiList tab={tab} counts={counts} onChange={setTab} /></div>
           </div>
 

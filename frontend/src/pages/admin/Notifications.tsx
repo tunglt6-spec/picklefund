@@ -373,7 +373,7 @@ export function Notifications() {
         <NotificationSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} categories={pushCats} />
 
         <div className="px-4 pt-3 pb-24 space-y-4">
-          <FilterChips tabs={activeTabs} active={tab} counts={counts} onChange={setTab} label="Lọc thông báo" />
+          <FilterChips tabs={activeTabs} active={tab} counts={counts} onChange={setTab} label="Lọc thông báo" primary={["all", "unread"]} moreLabel="Loại thông báo" />
           {loading && <p className="text-center text-sm [color:var(--pf-color-muted)] py-8">Đang tải...</p>}
 
           {!loading && unread.length > 0 && (

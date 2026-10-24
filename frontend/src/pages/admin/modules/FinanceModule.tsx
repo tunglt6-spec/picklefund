@@ -15,12 +15,12 @@ export function FinanceModule() {
     <ModuleTabs
       title="Tài chính"
       tabs={[
-        { key: 'periods', label: 'Kỳ Quỹ', element: <FundPeriods /> },
-        { key: 'income', label: 'Thu', element: <Contributions /> },
-        { key: 'expense', label: 'Chi', element: <Expenses /> },
-        { key: 'debts', label: 'Công nợ', element: <Debts /> },
-        { key: 'reports', label: 'Báo cáo', element: <Reports /> },
-        { key: 'payments', label: 'Xác nhận nộp quỹ', element: <PaymentApprovals /> },
+        { key: 'periods', label: 'Kỳ Quỹ', group: 'Thu – chi', element: <FundPeriods /> },
+        { key: 'income', label: 'Thu', group: 'Thu – chi', element: <Contributions /> },
+        { key: 'expense', label: 'Chi', group: 'Thu – chi', element: <Expenses /> },
+        { key: 'debts', label: 'Công nợ', group: 'Theo dõi', element: <Debts /> },
+        { key: 'reports', label: 'Báo cáo', group: 'Theo dõi', element: <Reports /> },
+        { key: 'payments', label: 'Xác nhận nộp quỹ', group: 'Theo dõi', element: <PaymentApprovals /> },
       ]}
     />
   )

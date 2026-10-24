@@ -14,7 +14,7 @@ import { canExportOrgWideData } from '../../lib/exportAccess'
 import type { FundContribution, FundSource, MiniIncomeType } from '../../types'
 import { MINI_INCOME_TYPE_LABELS } from '../../types'
 import { formatDate, formatVND } from '../../lib/utils'
-import { exportContribExcel, exportContribPDF, exportMiniIncomeReceiptPDF } from '../../lib/export'
+import { methodLabel, exportContribExcel, exportContribPDF, exportMiniIncomeReceiptPDF } from '../../lib/export'
 import { useExportRunner } from '../../hooks/useExportRunner'
 import toast from 'react-hot-toast'
 import { useIsMobile } from '../../hooks/useIsMobile'
@@ -479,7 +479,7 @@ export function Contributions() {
                 <MobileTransactionCard
                   key={c.id}
                   name={memberName}
-                  description={c.notes ?? c.paymentMethod}
+                  description={c.notes ?? methodLabel(c.paymentMethod)}
                   amount={c.amount}
                   type="income"
                   fundSource={c.fundSource ?? 'COMMON'}

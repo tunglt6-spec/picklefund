@@ -411,7 +411,7 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
       : <Badge variant="gray"><DollarSign size={11} className="inline mr-1" />Quỹ Chính</Badge> },
     { label: 'Nội dung',   value: <span className="font-medium">{exp.description}</span>, span: true },
     { label: 'Số tiền',    value: <span className="text-lg font-bold [color:var(--pf-text)]">{formatVND(exp.amount)}</span> },
-    { label: 'Ngày chi',   value: exp.expenseDate },
+    { label: 'Ngày chi',   value: <><span className="lg:hidden">{formatDate(exp.expenseDate)}</span><span className="max-lg:hidden">{exp.expenseDate}</span></> },
     ...(isMini
       ? [
           { label: 'Loại chi',    value: miniType ? MINI_EXPENSE_TYPE_LABELS[miniType] : '—' },
@@ -910,7 +910,7 @@ export function Expenses() {
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-[600] [color:var(--pf-text)] truncate">{e.description}</div>
-                  <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{e.expenseDate} · {e.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính'}</div>
+                  <div className="text-xs [color:var(--pf-color-muted)] mt-0.5"><span className="lg:hidden">{formatDate(e.expenseDate)}</span><span className="max-lg:hidden">{e.expenseDate}</span> · {e.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính'}</div>
                 </div>
                 <div className="text-right flex-shrink-0">
                   <div className="text-sm font-[700] text-red-500 tabular-nums">-{formatVND(e.amount)}</div>
@@ -1047,7 +1047,7 @@ export function Expenses() {
         {fundBadge(exp)}
       </div>
       <div className="flex items-center justify-between gap-2 text-xs [color:var(--pf-color-muted)]">
-        <span>{exp.expenseDate}</span>
+        <span><span className="lg:hidden">{formatDate(exp.expenseDate)}</span><span className="max-lg:hidden">{exp.expenseDate}</span></span>
         <span className="truncate max-w-[55%] text-right">{allocLabel(exp)}</span>
       </div>
       <div className="flex items-center justify-end gap-1 pt-1.5 border-t border-[color:var(--pf-border-soft)]">

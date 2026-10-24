@@ -16,9 +16,9 @@ export function ActivityModule() {
       title="Hoạt động CLB"
       tabs={[
         { key: 'schedule', label: 'Lịch', element: <ScheduleCalendar /> },
-        { key: 'registration', label: 'Đăng ký', element: <SessionRegistration /> },
-        { key: 'checkin', label: 'Check-in', element: <CheckIn /> },
-        { key: 'attendance', label: 'Điểm danh', element: <Attendance /> },
+        { key: 'registration', label: 'Đăng ký', group: 'Theo buổi chơi', element: <SessionRegistration /> },
+        { key: 'checkin', label: 'Check-in', group: 'Theo buổi chơi', element: <CheckIn /> },
+        { key: 'attendance', label: 'Điểm danh', group: 'Theo buổi chơi', element: <Attendance /> },
         { key: 'weekly', label: 'Hoạt động tuần', element: <WeeklyActivity /> },
       ]}
     />
