@@ -231,7 +231,7 @@ export function ScheduleCalendar() {
         <EmptyState
           icon={<CalendarDays size={24} />}
           title="Chưa có buổi chơi"
-          description="Tạo buổi chơi ở mục Điểm Danh để hiển thị trên lịch."
+          description="Tạo buổi chơi ở mục Điểm danh để hiển thị trên lịch."
           action={isMember ? undefined : <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/hoat-dong?tab=attendance')}>Tạo buổi chơi</ActionButton>}
         />
       ) : (

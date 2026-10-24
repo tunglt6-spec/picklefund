@@ -61,7 +61,7 @@ export function QuickActionsPanel({
       },
     },
     {
-      label: 'Lịch Thi Đấu',
+      label: 'Lịch thi đấu',
       icon: <Calendar size={18} className="text-white" />,
       bgClass: '[background:var(--pf-color-info)]',
       hoverClass: 'hover:[background:var(--pf-color-info)]',
@@ -71,7 +71,7 @@ export function QuickActionsPanel({
       },
     },
     {
-      label: 'Bảng Xếp Hạng',
+      label: 'Bảng xếp hạng',
       icon: <BarChart2 size={18} className="text-white" />,
       bgClass: '[background:var(--pf-color-warning)]',
       hoverClass: 'hover:[background:var(--pf-color-warning)]',

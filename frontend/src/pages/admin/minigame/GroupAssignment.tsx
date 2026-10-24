@@ -159,7 +159,7 @@ export function GroupAssignment() {
       {myGroups.length > 0 && (
         <>
           <Button size="sm" variant="outline" onClick={handleLock} disabled={busy}><Lock size={14} /> Khóa Bảng</Button>
-          <Button size="sm" onClick={handleCreateSchedule} disabled={busy}><Calendar size={14} /> Xem Lịch Thi Đấu</Button>
+          <Button size="sm" onClick={handleCreateSchedule} disabled={busy}><Calendar size={14} /> Xem Lịch thi đấu</Button>
         </>
       )}
     </div>

@@ -100,12 +100,12 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
       to: `/minigames/${id}/groups`,
     },
     {
-      label: 'Lịch Thi Đấu', desc: 'Xem lịch & nhập kết quả',
+      label: 'Lịch thi đấu', desc: 'Xem lịch & nhập kết quả',
       icon: <CalendarDays size={18} className="text-white" />, bg: '[background:var(--pf-color-info)]',
       to: `/minigames/${id}/schedule`,
     },
     {
-      label: 'Bảng Xếp Hạng', desc: 'BXH từng bảng + xuất ảnh/PDF',
+      label: 'Bảng xếp hạng', desc: 'BXH từng bảng + xuất ảnh/PDF',
       icon: <BarChart2 size={18} className="text-white" />, bg: '[background:var(--pf-color-warning)]',
       to: `/minigames/${id}/standings`,
     },
@@ -158,7 +158,7 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
       <div className="p-4 sm:p-6 space-y-6">
         <button
           onClick={() => navigate('/minigames')}
-          className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors w-fit"
+          className="max-lg:hidden flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors w-fit"
         >
           <ArrowLeft size={14} /> Danh Sách Giải Đấu
         </button>
@@ -199,11 +199,11 @@ export function GroupStageDashboardPage({ resync }: { resync?: () => void }) {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {navCards.map(c => (
             <button key={c.label} onClick={() => navigate(c.to)}
-              className={cn('rounded-2xl p-4 flex items-center gap-3 text-left transition-transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[color:var(--pf-primary-text)]', c.bg)}>
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 shrink-0">{c.icon}</span>
+              className={cn('rounded-2xl p-4 flex items-center gap-3 text-left transition-transform hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[color:var(--pf-primary-text)]', c.bg, 'max-lg:border max-lg:[background:var(--pf-surface)] max-lg:[border-color:var(--pf-border)] max-lg:[box-shadow:var(--pf-shadow-card)] max-lg:rounded-3xl')}>
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 shrink-0 max-lg:[background:var(--pf-primary-soft)] max-lg:[color:var(--pf-primary-text)] max-lg:[&_svg]:!text-[color:var(--pf-primary-text)]">{c.icon}</span>
               <span className="min-w-0">
-                <span className="block text-sm font-semibold text-white">{c.label}</span>
-                <span className="block text-xs text-white/80 leading-tight">{c.desc}</span>
+                <span className="block text-sm font-semibold text-white max-lg:[color:var(--pf-text)]">{c.label}</span>
+                <span className="block text-xs text-white/80 leading-tight max-lg:[color:var(--pf-color-muted)]">{c.desc}</span>
               </span>
             </button>
           ))}

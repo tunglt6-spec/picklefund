@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard, Send, Zap, Palette, Smartphone, Mail, Check, X, AlertTriangle } from 'lucide-react'
+import { ChevronLeft, Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard, Send, Zap, Palette, Smartphone, Mail, Check, X, AlertTriangle } from 'lucide-react'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -10,8 +10,16 @@ import { useClubDataStore, type ClubSettings } from '../../store/clubDataStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useBranding, saveBranding, type ClubBranding } from '../../hooks/useBranding'
 import toast from 'react-hot-toast'
+import type { LucideIcon } from 'lucide-react'
+import { TileGrid, HubSearch } from '../../components/mobile/HubParts'
+import { fold } from '../../lib/fold'
+import type { AppItem } from '../../components/mobile/hubApps'
 
 type Tab = 'club' | 'branding' | 'account' | 'notifications' | 'payment' | 'telegram' | 'billing'
+
+const MOBILE_ICONS: Record<Tab, LucideIcon> = {
+  club: Building2, branding: Palette, account: User, notifications: Bell, payment: CreditCard, telegram: Send, billing: Zap,
+}
 
 const ALL_TABS: { id: Tab; label: string; icon: React.ReactNode; superAdminOnly?: boolean }[] = [
   { id: 'club',          label: 'Thông tin CLB', icon: <Building2 size={16} /> },
@@ -1135,42 +1143,48 @@ export function Settings() {
   const isSuperAdmin = user?.role === 'SUPER_ADMIN'
   const tabs = ALL_TABS.filter(t => !t.superAdminOnly || isSuperAdmin)
   const [activeTab, setActiveTab] = useState<Tab>('club')
-  const isMobile = useIsMobile()
+  // Mobile/Fold gập (<1024px): MENU ô icon thay cho dải tab → chọn mục → nội dung + nút quay lại menu.
+  const isMobile = useIsMobile(1024)
+  const [section, setSection] = useState<Tab | null>(null)
+  const [sectionQuery, setSectionQuery] = useState('')
 
   if (isMobile) {
+    const q = fold(sectionQuery.trim())
+    const items: AppItem[] = tabs
+      .filter((t) => !q || fold(t.label).includes(q))
+      .map((t) => ({ key: t.id, label: t.label, to: '', icon: MOBILE_ICONS[t.id] }))
+    if (section === null) {
+      return (
+        <div className="mx-auto w-full max-w-2xl px-4 pb-4 pt-2">
+          <p className="text-sm [color:var(--pf-color-muted)]">Quản lý thông tin CLB và tài khoản</p>
+          <HubSearch value={sectionQuery} onChange={setSectionQuery} placeholder="Tìm trong Cài đặt…" />
+          <div className="mt-5">
+            <TileGrid items={items} onSelect={(it) => setSection(it.key as Tab)} empty={`Không tìm thấy mục “${sectionQuery}”.`} />
+          </div>
+        </div>
+      )
+    }
+    const current = tabs.find((t) => t.id === section)
     return (
-      <div className="min-h-full [background:var(--pf-bg)]">
-        {/* Sticky header */}
-        <div className="sticky top-0 z-20 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3">
-          <p className="text-base font-bold [color:var(--pf-text)]">Cài đặt</p>
-          <p className="text-xs [color:var(--pf-color-muted)]">Quản lý thông tin CLB và tài khoản</p>
+      <div className="min-h-full">
+        <div className="px-4 pt-2">
+          <button
+            onClick={() => setSection(null)}
+            className="flex min-h-[44px] items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary-text)] active:scale-[0.98]"
+            style={{ boxShadow: 'var(--pf-shadow-float)' }}
+          >
+            <ChevronLeft size={18} />
+            Cài đặt{current ? ` · ${current.label}` : ''}
+          </button>
         </div>
-
-        {/* Tab bar */}
-        <div className="flex gap-1 overflow-x-auto no-scrollbar [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-3 py-2">
-          {tabs.map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={cn(
-                'flex shrink-0 flex-1 items-center whitespace-nowrap justify-center gap-1.5 rounded-[10px] px-2 py-2 text-xs font-medium transition-colors',
-                activeTab === tab.id
-                  ? 'text-white shadow-sm'
-                  : '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]'
-              )}
-              style={activeTab === tab.id ? { background: 'var(--pf-primary)' } : {}}>
-              {tab.icon}
-              <span>{tab.label}</span>
-            </button>
-          ))}
-        </div>
-
         <div className="px-4 py-4 space-y-4">
-          {activeTab === 'club'          && <ClubInfoTab clubId={clubId} />}
-          {activeTab === 'branding'      && <BrandingTab />}
-          {activeTab === 'account'       && <AccountTab />}
-          {activeTab === 'notifications' && <NotificationsTab clubId={clubId} />}
-          {activeTab === 'payment'       && <PaymentTab />}
-          {activeTab === 'telegram'      && <TelegramTab />}
-          {activeTab === 'billing'       && <BillingTab />}
+          {section === 'club'          && <ClubInfoTab clubId={clubId} />}
+          {section === 'branding'      && <BrandingTab />}
+          {section === 'account'       && <AccountTab />}
+          {section === 'notifications' && <NotificationsTab clubId={clubId} />}
+          {section === 'payment'       && <PaymentTab />}
+          {section === 'telegram'      && <TelegramTab />}
+          {section === 'billing'       && <BillingTab />}
         </div>
       </div>
     )

@@ -385,11 +385,11 @@ export function Reports() {
   )
 
   const periodSelect = (
-    <div className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
+    <div className="flex min-w-0 max-w-full items-center gap-1.5 rounded-full border px-3 py-1.5 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
       <Calendar size={14} className="shrink-0 [color:var(--pf-color-muted)]" />
       <label htmlFor="rp-period" className="sr-only">Kỳ quỹ</label>
       <select id="rp-period" value={selectedPeriodId} onChange={e => setSelectedPeriodId(e.target.value)}
-        className="bg-transparent text-xs font-medium outline-none [color:var(--pf-text)]">
+        className="min-w-0 flex-1 truncate bg-transparent text-xs font-medium outline-none [color:var(--pf-text)]">
         {[...clubData.fundPeriods].sort((a, b) => (b.startDate ?? '').localeCompare(a.startDate ?? '')).map(p => (
           <option key={p.id} value={p.id}>{p.name}{p.status === 'active' ? ' — Đang mở' : p.status === 'closed' ? ' — Đóng' : ''}</option>
         ))}

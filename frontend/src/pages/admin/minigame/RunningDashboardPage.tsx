@@ -105,7 +105,7 @@ export function RunningDashboardPage() {
     if (leaderboard.length === 0) return
     return runExport(() => exportGenericTablePDF({
       fileBase: fileSlug,
-      title: 'Bảng Xếp Hạng Chạy Bộ',
+      title: 'Bảng xếp hạng Chạy Bộ',
       subtitle: mg.name,
       metaLeft: `${leaderboard.length} vận động viên · tổng thời gian nhỏ nhất đứng đầu`,
       columns: [
@@ -122,7 +122,7 @@ export function RunningDashboardPage() {
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader variant="bar" title={`🏃 Chạy bộ – ${mg.name}`}        actions={leaderboard.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined} />
       <div className="p-4 sm:p-6 space-y-5">
-        <button onClick={() => navigate('/minigames')} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors"><ArrowLeft size={14} /> Danh Sách Giải Đấu</button>
+        <button onClick={() => navigate('/minigames')} className="max-lg:hidden flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors"><ArrowLeft size={14} /> Danh Sách Giải Đấu</button>
 
         {/* Đang tải lần đầu: hiện skeleton trước khi có dữ liệu VĐV */}
         {loading && runners.length === 0 && <LoadingState variant="list" rows={4} />}

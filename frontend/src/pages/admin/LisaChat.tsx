@@ -198,7 +198,7 @@ export function LisaChat() {
         <div className="mt-4 flex flex-wrap gap-2">
           {SUGGESTIONS.map(s => (
             <button key={s} onClick={() => sendMessage(s)}
-              className="text-xs [background:var(--pf-surface)] border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] px-3 py-1.5 rounded-full hover:[border-color:var(--pf-primary)] hover:[color:var(--pf-primary-text)] transition-colors shadow-sm">
+              className="text-xs min-h-[44px] [background:var(--pf-surface)] border border-[color:var(--pf-border)] [color:var(--pf-color-muted)] px-3.5 py-1.5 rounded-full hover:[border-color:var(--pf-primary)] hover:[color:var(--pf-primary-text)] transition-colors shadow-sm">
               {s}
             </button>
           ))}
@@ -223,7 +223,7 @@ export function LisaChat() {
         {/* Header */}
         <div className="shrink-0 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-3 py-3 flex items-center justify-between" style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}>
           <div className="flex items-center gap-1.5 min-w-0">
-            <button onClick={() => navigate('/aido')} aria-label="Quay lại AI Digital Office" className="p-2 -ml-1 [color:var(--pf-color-muted)] active:opacity-60">
+            <button onClick={() => navigate('/aido')} aria-label="Quay lại AI Digital Office" className="flex h-11 w-11 items-center justify-center -ml-1 [color:var(--pf-color-muted)] active:opacity-60">
               <ArrowLeft size={20} />
             </button>
             <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm border-2 [border-color:var(--pf-surface)]">
@@ -234,7 +234,7 @@ export function LisaChat() {
               <p className="text-xs text-emerald-500 font-medium">● Trực tuyến</p>
             </div>
           </div>
-          <button onClick={() => fetchBrief()} disabled={briefLoading} aria-label="Làm mới thông tin" className="shrink-0 p-2 [color:var(--pf-color-muted)] active:opacity-60 disabled:opacity-60 disabled:pointer-events-none">
+          <button onClick={() => fetchBrief()} disabled={briefLoading} aria-label="Làm mới thông tin" className="flex h-11 w-11 shrink-0 items-center justify-center [color:var(--pf-color-muted)] active:opacity-60 disabled:opacity-60 disabled:pointer-events-none">
             <RefreshCw size={16} className={briefLoading ? 'animate-spin' : ''} />
           </button>
         </div>
@@ -248,10 +248,10 @@ export function LisaChat() {
             <input
               value={input} onChange={e => setInput(e.target.value)}
               placeholder="Nhắn tin cho Lisa..."
-              className="min-w-0 flex-1 text-sm [background:var(--pf-color-muted-soft)] rounded-full px-4 py-2.5 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]"
+              className="min-w-0 flex-1 min-h-[48px] text-base [background:var(--pf-color-muted-soft)] rounded-full px-4 py-2.5 outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]"
             />
             <button type="submit" disabled={!input.trim() || loading}
-              className="shrink-0 w-10 h-10 rounded-full [background:var(--pf-primary)] flex items-center justify-center disabled:opacity-40 active:opacity-70 shadow-sm">
+              className="shrink-0 w-11 h-11 rounded-full [background:var(--pf-primary)] flex items-center justify-center disabled:opacity-40 active:opacity-70 shadow-sm">
               <Send size={15} className="text-white" />
             </button>
           </form>

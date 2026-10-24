@@ -33,7 +33,7 @@ const MS_DOUBLES_ID = 'ms-doubles-schedule-export'
 const MS_GROUP_ID = 'ms-group-schedule-export'
 const slugName = (s: string) => `Lich_${s}`.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_')
 
-/** Lịch Thi Đấu for RANDOM_DOUBLES minigames — sourced from rounds/doublesMatches
+/** Lịch thi đấu for RANDOM_DOUBLES minigames — sourced from rounds/doublesMatches
  *  (kept in sync with "Rút Thăm Vòng Mới" and the round/group panel on the dashboard),
  *  never from the legacy GROUP_STAGE groups/matches state. */
 function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; minigameName: string }) {
@@ -142,7 +142,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
             <ArrowLeft size={18} />
           </button>
           <div className="flex-1 min-w-0">
-            <p className="text-base font-bold [color:var(--pf-text)] truncate">Lịch Thi Đấu</p>
+            <p className="text-base font-bold [color:var(--pf-text)] truncate">Lịch thi đấu</p>
             <p className="text-xs [color:var(--pf-color-muted)] line-clamp-2 break-words">{minigameName} · {myMatches.length} trận · {myRounds.length} vòng</p>
           </div>
           {myRounds.length > 0 && (
@@ -271,7 +271,7 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader variant="bar"
-        title={`Lịch Thi Đấu – ${minigameName}`}
+        title={`Lịch thi đấu – ${minigameName}`}
         subtitle={`${myMatches.length} trận · ${myRounds.length} vòng`}
         actions={
           <div className="flex items-center gap-2">
@@ -560,7 +560,7 @@ export function MatchSchedule() {
             <ArrowLeft size={18} />
           </button>
           <div className="flex-1 min-w-0">
-            <p className="text-base font-bold [color:var(--pf-text)] truncate">Lịch Thi Đấu</p>
+            <p className="text-base font-bold [color:var(--pf-text)] truncate">Lịch thi đấu</p>
             <p className="text-xs [color:var(--pf-color-muted)] line-clamp-2 break-words">{mg.name} · {myMatches.length} trận</p>
           </div>
           {myMatches.length > 0 && (
@@ -646,7 +646,7 @@ export function MatchSchedule() {
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader variant="bar"
-        title={`Lịch Thi Đấu – ${mg.name}`}
+        title={`Lịch thi đấu – ${mg.name}`}
         subtitle={`${myMatches.length} trận`}
         actions={
           <div className="flex items-center gap-2">

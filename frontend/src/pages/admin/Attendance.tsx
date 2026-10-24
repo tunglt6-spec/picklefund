@@ -218,7 +218,7 @@ export function Attendance() {
     if (exportSessions.length === 0) return
     return runExport(() => exportGenericTablePDF({
       fileBase: `Diem_danh_${exportSlug}`,
-      title: 'Lịch Sử Điểm Danh',
+      title: 'Lịch Sử Điểm danh',
       subtitle: exportPeriodName ? `Kỳ ${exportPeriodName}` : undefined,
       metaLeft: `${exportSessions.length} buổi · ${completedSessions} hoàn thành · ${totalAttendance} lượt tham gia`,
       columns: [
@@ -232,7 +232,7 @@ export function Attendance() {
   return (
     <PageShell>
       <PageHeader
-        title="Điểm Danh"
+        title="Điểm danh"
         actions={
           <>
             {allPeriods.length > 1 && (

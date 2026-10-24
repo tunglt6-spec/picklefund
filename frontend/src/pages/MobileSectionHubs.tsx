@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom'
 import { CalendarDays, Trophy, Newspaper, Swords, ChevronRight } from 'lucide-react'
 import { useNotifStore } from '../store/notifStore'
 import { useMinigameStore } from '../store/minigameStore'
-import { homeByRole } from '../components/layout/navConfig'
+import { homeByRole, notifRouteByRole } from '../components/layout/navConfig'
 import {
   homeApps, calendarApps, competeApps, communityApps, type AppItem,
 } from '../components/mobile/hubApps'
@@ -12,6 +12,7 @@ import {
   fold, todayKey, useHubData, useIsWide,
 } from '../components/mobile/HubParts'
 import { normalizeMinigameStatus } from '../types/minigame'
+import { SuperSummary } from '../components/mobile/SuperSummary'
 
 /** Khung chung của các màn hub mobile: header lớn + tìm kiếm + (thẻ tóm tắt) + lưới tile + (nội dung thêm). */
 function SectionHub({
@@ -70,7 +71,8 @@ const fmtDay = (d: string) => `${d.slice(8, 10)}/${d.slice(5, 7)}`
 
 /* ───────────────────────── Tổng quan (trang chủ sau đăng nhập) ───────────────────────── */
 export function MobileHome() {
-  const { role, clubData, hasClub, activePeriod } = useHubData()
+  const { role, clubData, hasClub, activePeriod, unpaidCount, nextSession } = useHubData()
+  const unread = useNotifStore((st) => st.unreadCount)
   const navigate = useNavigate()
   if (!role) return null
   const tk = todayKey()
@@ -100,7 +102,36 @@ export function MobileHome() {
     </>
   ) : null
 
-  return <SectionHub tilesTitle="Truy cập nhanh" tiles={homeApps(role)} extra={stats} />
+  // "Việc cần làm": chỉ liệt kê mục có việc thật (số liệu đã có sẵn); không có → thông báo gọn.
+  const todoItems: { key: string; title: string; sub: string; to: string }[] = []
+  if (hasClub && (role === 'CLUB_ADMIN' || role === 'CLUB_TREASURER') && (unpaidCount ?? 0) > 0) {
+    todoItems.push({ key: 'unpaid', title: `${unpaidCount} thành viên chưa đóng quỹ`, sub: 'Xem công nợ và nhắc đóng quỹ', to: role === 'CLUB_ADMIN' ? '/tai-chinh?tab=debts' : '/treasurer/reminders' })
+  }
+  if (unread > 0) {
+    todoItems.push({ key: 'unread', title: `${unread} thông báo chưa đọc`, sub: 'Mở để xem và đánh dấu đã đọc', to: notifRouteByRole[role] })
+  }
+  if (hasClub && role !== 'CLUB_TREASURER' && nextSession) {
+    todoItems.push({
+      key: 'next',
+      title: `Buổi sắp tới: ${nextSession.sessionDate.slice(8, 10)}/${nextSession.sessionDate.slice(5, 7)}${nextSession.startTime ? ` · ${nextSession.startTime}` : ''}`,
+      sub: nextSession.courtName ?? 'Buổi sinh hoạt',
+      to: `${base}?tab=schedule`,
+    })
+  }
+  const todo = (
+    <>
+      <HubSectionTitle>Việc cần làm</HubSectionTitle>
+      {todoItems.length === 0 ? (
+        <p className="mt-2 rounded-[var(--pf-radius-row)] border px-4 py-4 text-center text-sm [color:var(--pf-color-muted)] [background:var(--pf-surface)] [border-color:var(--pf-border)]">Không có việc cần xử lý. Mọi thứ đang ổn.</p>
+      ) : (
+        <ul className="mt-2 space-y-2.5">
+          {todoItems.map((t) => <ListRow key={t.key} title={t.title} sub={t.sub} onClick={() => navigate(t.to)} />)}
+        </ul>
+      )}
+    </>
+  )
+
+  return <SectionHub tilesTitle="Truy cập nhanh" tiles={homeApps(role)} extra={<>{todo}{stats}</>} cards={role === 'SUPER_ADMIN' ? <SuperSummary /> : undefined} />
 }
 
 /* ───────────────────────── Lịch ───────────────────────── */

@@ -11,6 +11,7 @@
 import type { ReactNode } from 'react'
 import { cn } from '../../lib/utils'
 import { useEmbedded } from './ModuleTabs'
+import { useIsMobile } from '../../hooks/useIsMobile'
 
 interface PageHeaderProps {
   title: string
@@ -33,6 +34,9 @@ export function PageHeader({
   variant = 'inline',
 }: PageHeaderProps) {
   const embedded = useEmbedded()
+  // Mobile: bỏ emoji đầu tiêu đề (chuẩn Luxury SaaS dùng icon, không dùng emoji); desktop giữ nguyên.
+  const isMobile = useIsMobile(1024)
+  const shownTitle = isMobile ? title.replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u, '') : title
 
   // ── Variant 'bar' — app-bar edge-to-edge (khớp layout/PageHeader cũ, zero render change) ──
   if (variant === 'bar') {
@@ -53,7 +57,7 @@ export function PageHeader({
     return (
       <div className={cn('pf-glass-bar border-b px-6 py-4 max-lg:px-4 max-lg:py-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between', className)}>
         <div className="min-w-0">
-          <h1 className="text-base font-bold [color:var(--pf-text)] max-lg:text-[20px] max-lg:font-[800]">{title}</h1>
+          <h1 className="text-base font-bold [color:var(--pf-text)] max-lg:text-[20px] max-lg:font-[800]">{shownTitle}</h1>
           {subtitle && <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{subtitle}</p>}
         </div>
         {(aside || actions) && (
@@ -79,7 +83,7 @@ export function PageHeader({
         )}
       >
         {subtitle ? (
-          <p className="min-w-0 flex-1 basis-56 text-sm [color:var(--pf-color-muted)]">{subtitle}</p>
+          <p className="min-w-0 flex-1 min-[600px]:basis-56 text-sm [color:var(--pf-color-muted)]">{subtitle}</p>
         ) : (
           <span />
         )}
@@ -103,7 +107,7 @@ export function PageHeader({
           className="text-xl font-bold sm:text-2xl [color:var(--pf-text)] max-lg:text-[22px] max-lg:font-[800]"
           style={{ letterSpacing: '-0.02em' }}
         >
-          {title}
+          {shownTitle}
         </h1>
         {subtitle && (
           <p className="mt-0.5 text-sm [color:var(--pf-color-muted)]">{subtitle}</p>

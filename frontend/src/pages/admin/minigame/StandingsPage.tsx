@@ -139,7 +139,7 @@ export function StandingsPage() {
             <ArrowLeft size={18} />
           </button>
           <div className="flex-1 min-w-0">
-            <p className="text-base font-bold [color:var(--pf-text)] truncate">Bảng Xếp Hạng</p>
+            <p className="text-base font-bold [color:var(--pf-text)] truncate">Bảng xếp hạng</p>
             <p className="text-xs [color:var(--pf-color-muted)] line-clamp-2 break-words">{mg.name} · {standings.length} thành viên</p>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
@@ -243,7 +243,7 @@ export function StandingsPage() {
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader variant="bar"
-        title={`Bảng Xếp Hạng – ${mg.name}`}
+        title={`Bảng xếp hạng – ${mg.name}`}
         subtitle={`${standings.length} thành viên`}
         actions={
           <div className="flex items-center gap-2">

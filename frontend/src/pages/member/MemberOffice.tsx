@@ -6,7 +6,10 @@
  * quay lại tab; lỗi mạng → giữ banner + báo gọn (không xóa trắng màn).
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { RefreshCw } from 'lucide-react'
+import { RefreshCw, Sparkles, Bell, MessageSquare } from 'lucide-react'
+import { HubSectionTitle, TileGrid } from '../../components/mobile/HubParts'
+import { useNotifStore } from '../../store/notifStore'
+import type { AppItem } from '../../components/mobile/hubApps'
 import api from '../../lib/api'
 import { PageShell, PageHeader, ActionButton } from '../../components/shared'
 import { OfficeBanner } from '../../components/aido/OfficeBanner'
@@ -20,6 +23,11 @@ interface AgentResults {
   mitDac: { executedToday: number; running: number; failedToday: number; averageExecutionMs: number }
   notification: { sentToday: number; byChannel: { IN_APP: number; EMAIL: number; TELEGRAM: number }; failedToday: number }
 }
+const MEMBER_AI_TILES: AppItem[] = [
+  { key: 'lisa', label: 'Hỏi Lisa AI', to: '/member/lisa', icon: Sparkles },
+  { key: 'notifications', label: 'Thông báo', to: '/member/notifications', icon: Bell, badge: true },
+  { key: 'community', label: 'Cộng đồng', to: '/community', icon: MessageSquare },
+]
 const fmtLatency = (ms?: number) =>
   typeof ms === 'number' && ms > 0 ? (ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`) : '—'
 
@@ -30,6 +38,7 @@ export function MemberOffice() {
   // refreshing = bấm Làm mới thủ công → spinner + khóa nút (poll 60s/visibility vẫn im lặng).
   const [refreshing, setRefreshing] = useState(false)
   const loadingRef = useRef(false)
+  const unread = useNotifStore((st) => st.unreadCount)
 
   const load = useCallback(async () => {
     if (loadingRef.current) return
@@ -152,6 +161,20 @@ export function MemberOffice() {
             <ActionButton onClick={() => void load()}>Thử lại</ActionButton>
           </div>
         )}
+
+        {/* Chưa có số liệu (API trả rỗng): hiện trạng thái trống thay vì để màn trắng. */}
+        {!results && !error && (
+          <div className="pf-glass flex w-full flex-col items-center gap-1 p-5 text-center">
+            <p className="text-sm font-semibold [color:var(--pf-text)]">Chưa có số liệu hôm nay</p>
+            <p className="text-xs [color:var(--pf-color-muted)]">Các trợ lý AI sẽ báo cáo kết quả ngay khi có hoạt động trong ngày.</p>
+          </div>
+        )}
+
+        {/* Mobile: lối tắt tới những việc thành viên hay làm cùng trợ lý AI (không để màn cụt). */}
+        <div className="lg:hidden">
+          <HubSectionTitle>Hỗ trợ từ AI</HubSectionTitle>
+          <TileGrid items={MEMBER_AI_TILES} unread={unread} />
+        </div>
 
         {/* Kết quả công việc THẬT hôm nay — đồng bộ bố cục dải kết quả của admin AIDO. */}
         {results && (

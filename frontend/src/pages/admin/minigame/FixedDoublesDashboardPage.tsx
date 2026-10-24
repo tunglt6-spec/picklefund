@@ -412,7 +412,7 @@ function CompactRankingCard({ standings, exportId, onExportPng, onExportPdf }: {
       <div className="flex items-center justify-between gap-2 px-4 py-3 border-b" style={{ borderColor: T.border }}>
         <div className="flex items-center gap-2 min-w-0">
           <Trophy size={14} style={{ color: T.warning }} className="shrink-0" />
-          <span className="font-bold text-sm truncate" style={{ color: T.txt1 }}>Bảng Xếp Hạng</span>
+          <span className="font-bold text-sm truncate" style={{ color: T.txt1 }}>Bảng xếp hạng</span>
         </div>
         {standings.length > 0 && (
           <ExportButtons onPng={onExportPng} onPdf={onExportPdf} ariaScope="bảng xếp hạng" />
@@ -765,7 +765,7 @@ export function FixedDoublesDashboardPage() {
     handleSaveScoreApi(matchId, s1, s2)
   }
 
-  // ── Xuất Ảnh/PDF Lịch Thi Đấu — PNG chụp panel lịch, PDF vector bảng đầy đủ mọi trận ──
+  // ── Xuất Ảnh/PDF Lịch thi đấu — PNG chụp panel lịch, PDF vector bảng đầy đủ mọi trận ──
   const doExportSchedulePng = async () => {
     try { const saved = await captureElementAsReportPng(FD_SCHEDULE_ID, `Lich_${mg.name}`.replace(/[^a-zA-Z0-9À-ỹ]/g, '_').replace(/_+/g, '_'), { title: 'Lịch thi đấu', subtitle: mg.name }); if (saved !== false) toast.success('Đã tải ảnh lịch thi đấu') }
     catch { toast.error('Xuất ảnh thất bại') }
@@ -859,7 +859,7 @@ export function FixedDoublesDashboardPage() {
 
       {/* ── page body ── */}
       <div className="pf-center-x w-full max-w-[1280px] px-4 sm:px-6 py-5 space-y-5">
-        <button onClick={() => navigate('/minigames')} className="flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors w-fit">
+        <button onClick={() => navigate('/minigames')} className="max-lg:hidden flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors w-fit">
           <ArrowLeft size={14} /> Danh Sách Giải Đấu
         </button>
 
@@ -894,7 +894,7 @@ export function FixedDoublesDashboardPage() {
               <div className="flex justify-end">
                 <button onClick={handleCreateSchedule}
                   className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-sm [background:var(--pf-primary)] hover:[filter:brightness(0.94)] transition">
-                  <Calendar size={16} /> Tạo Lịch Thi Đấu
+                  <Calendar size={16} /> Tạo Lịch thi đấu
                 </button>
               </div>
             )}
@@ -912,7 +912,7 @@ export function FixedDoublesDashboardPage() {
               <div style={CARD} className="px-4 py-3 flex items-center justify-between gap-2 flex-wrap">
                 <div className="flex items-center gap-2 flex-wrap min-w-0">
                   <Calendar size={14} style={{ color: T.brand }} className="shrink-0" />
-                  <span className="font-bold text-sm" style={{ color: T.txt1 }}>Lịch Thi Đấu</span>
+                  <span className="font-bold text-sm" style={{ color: T.txt1 }}>Lịch thi đấu</span>
                   <span className="text-xs font-medium px-2 py-0.5 rounded-full [background:var(--pf-color-success-soft)] [color:var(--pf-color-success)]">Đội &amp; lịch đã cố định</span>
                   <span className="text-xs" style={{ color: T.txt2 }}>
                     {completed}/{schedule.length} trận đã hoàn thành

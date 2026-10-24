@@ -116,7 +116,7 @@ export function PaymentApprovals() {
   return (
     <PageShell maxWidth={1760}>
       <PageHeader
-        title="Xác Nhận Nộp Quỹ"
+        title="Xác nhận nộp quỹ"
         actions={rows.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined}
       />
 

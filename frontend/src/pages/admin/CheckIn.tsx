@@ -164,11 +164,11 @@ export function CheckIn() {
         <EmptyState
           icon={<ClipboardCheck size={24} />}
           title="Chưa có buổi chơi"
-          description="Tạo buổi chơi ở mục Điểm Danh để bắt đầu check-in."
+          description="Tạo buổi chơi ở mục Điểm danh để bắt đầu check-in."
         />
       ) : (
         <div className="flex flex-col gap-5">
-          {/* Chọn buổi — dropdown lọc (giống "Lọc theo kỳ" ở Điểm Danh) */}
+          {/* Chọn buổi — dropdown lọc (giống "Lọc theo kỳ" ở Điểm danh) */}
           <div className="flex min-w-0 items-center gap-2">
             <span className="text-xs [color:var(--pf-color-muted)] shrink-0">Chọn buổi:</span>
             <div className="relative flex min-w-0 flex-1 items-center sm:inline-flex sm:flex-none">

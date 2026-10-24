@@ -46,7 +46,7 @@ export function useHubData() {
   const hasClub = !!user?.clubId && role !== 'SUPER_ADMIN'
   const activePeriod = clubData ? getActiveChungPeriod(clubData.fundPeriods) : undefined
 
-  const [fin, setFin] = useState<{ balance: number; totalExpense: number } | null>(null)
+  const [fin, setFin] = useState<{ balance: number; totalExpense: number; unpaidCount: number } | null>(null)
   useEffect(() => {
     if (!hasClub || !activePeriod?.id) { setFin(null); return }
     let off = false
@@ -57,13 +57,14 @@ export function useHubData() {
         const common = Number(f?.balance ?? 0)
         const carry = Number(f?.carryForward?.balance ?? 0)
         // Tổng tài sản CLB = Quỹ Chính + số dư chuyển kỳ (khớp màn Thủ quỹ); Chi = tổng chi đã duyệt/đã chi của kỳ.
-        setFin({ balance: Number(f?.clubAssets?.balance ?? (common + carry)), totalExpense: Number(f?.totalExpenses ?? 0) })
+        setFin({ balance: Number(f?.clubAssets?.balance ?? (common + carry)), totalExpense: Number(f?.totalExpenses ?? 0), unpaidCount: Number(f?.unpaidCount ?? 0) })
       })
       .catch(() => { if (!off) setFin(null) })
     return () => { off = true }
   }, [hasClub, activePeriod?.id])
   const balance = fin ? fin.balance : null
   const totalExpense = fin ? fin.totalExpense : null
+  const unpaidCount = fin ? fin.unpaidCount : null
 
   const upcoming = useMemo(() => {
     const tk = todayKey()
@@ -72,7 +73,7 @@ export function useHubData() {
       .sort((a, b) => (a.sessionDate.slice(0, 10) + (a.startTime ?? '')).localeCompare(b.sessionDate.slice(0, 10) + (b.startTime ?? '')))
   }, [clubData?.sessions])
 
-  return { user, role, clubData, hasClub, activePeriod, balance, totalExpense, upcoming, nextSession: upcoming[0] }
+  return { user, role, clubData, hasClub, activePeriod, balance, totalExpense, unpaidCount, upcoming, nextSession: upcoming[0] }
 }
 
 /** Header lớn: logo + thương hiệu + lời chào + tên CLB + chuông + avatar. */
@@ -247,12 +248,12 @@ export function TileGrid({
               >
                 <Icon size={28} strokeWidth={1.9} />
                 {a.badge && unread > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-bold text-white">
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#DC2626] px-1 text-xs font-bold text-white">
                     {unread > 9 ? '9+' : unread}
                   </span>
                 )}
                 {(a.badgeCount ?? 0) > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-xs font-bold text-white">
+                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#DC2626] px-1 text-xs font-bold text-white">
                     {(a.badgeCount ?? 0) > 9 ? '9+' : a.badgeCount}
                   </span>
                 )}

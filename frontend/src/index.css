@@ -301,6 +301,8 @@ select:-webkit-autofill {
   --pf-accent-amber-soft:  #2A1E0E;
   --pf-accent-rose-soft:   #2A1416;
   --pf-accent-teal-soft:   #0C2622;
+  /* Chữ/icon accent sáng hơn trên nền tối (đạt tương phản AA trên ô soft tối). */
+  --pf-accent-blue: #60A5FA; --pf-accent-violet: #A78BFA; --pf-accent-amber: #FBBF24; --pf-accent-rose: #FB7185; --pf-accent-teal: #2DD4BF;
   /* Legacy --color-* neutrals (vài nơi còn dùng) */
   --color-bg:          #0B1120;
   --color-surface:     #131B2E;
@@ -1047,3 +1049,32 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   main :is([class*="text-[10px]"], [class*="text-[10.5px]"], [class*="text-[11px]"], [class*="text-[11.5px]"]):not([data-glass="off"] *) { font-size: 12px; }
   .pf-table-cards tbody td::before { font-size: 11px; }
 }
+
+/* ── MOBILE (<1024px): giao diện Super Admin (data-sa-look) cùng chuẩn thẻ nền đặc/bóng tím mềm với toàn app; chữ phụ >= 12px. ── */
+@media (max-width: 1023px) {
+  [data-sa-look] .pf-stat-card, [data-sa-look] .sa-agent-card {
+    background-color: var(--pf-surface); background-image: none;
+    -webkit-backdrop-filter: none; backdrop-filter: none;
+    border: 1px solid var(--pf-border); border-radius: var(--pf-radius-card);
+    box-shadow: var(--pf-shadow-card);
+  }
+  [data-sa-look] .pf-stat-cell { background-color: var(--pf-surface-muted); box-shadow: none; border-color: var(--pf-border); }
+  [data-sa-look] .pf-stat-card > div:first-child > p,
+  [data-sa-look] .pf-stat-card > p.mt-0\.5,
+  [data-sa-look] .sa-agent-card .sa-agent-grid > div > p:first-child { font-size: 12px; }
+}
+
+/* ── MOBILE (<1024px): chữ trong ô nhập/chọn >= 16px (iOS không tự phóng to; Android đồng bộ). Loại trừ vùng xuất ảnh. ── */
+@media (max-width: 1023px) {
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="file"], [type="hidden"], [type="color"]):not([data-glass="off"] *),
+  select:not([data-glass="off"] *), textarea:not([data-glass="off"] *) { font-size: max(16px, 1em) !important; }
+  /* Bảng rộng cuộn ngang: viền mờ ở mép phải gợi ý còn nội dung (không đổi cấu trúc bảng). */
+  .overflow-x-auto:has(> table) {
+    background:
+      linear-gradient(to right, var(--pf-surface) 30%, transparent) left center / 24px 100% no-repeat local,
+      linear-gradient(to left, var(--pf-surface) 30%, transparent) right center / 24px 100% no-repeat local,
+      radial-gradient(farthest-side at 0 50%, rgba(109,93,251,0.22), transparent) left center / 10px 100% no-repeat scroll,
+      radial-gradient(farthest-side at 100% 50%, rgba(109,93,251,0.22), transparent) right center / 10px 100% no-repeat scroll;
+  }
+}
+

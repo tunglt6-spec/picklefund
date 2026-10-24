@@ -51,7 +51,7 @@ export function PersonalRankingTable({ rankings, compact = false, onEdit, onDele
         <div className="flex items-center gap-2">
           <BarChart2 size={18} className="[color:var(--pf-primary-text)]" />
           <h2 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">
-            Bảng Xếp Hạng Cá Nhân
+            Bảng xếp hạng Cá Nhân
           </h2>
         </div>
         {compact && (
