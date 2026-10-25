@@ -80,6 +80,7 @@ export function ScheduleCalendar() {
   const [month, setMonth] = useState(now.getMonth())
   const [selected, setSelected] = useState<string>(key(now.getFullYear(), now.getMonth(), now.getDate()))
   const [filter, setFilter] = useState<FilterKey>('all')
+  const [showMonth, setShowMonth] = useState(false)
   const [regMap, setRegMap] = useState<Record<string, RegInfo>>({})
   const [regLoading, setRegLoading] = useState(false)
   const [confirmDel, setConfirmDel] = useState<AttendanceSession | null>(null)
@@ -164,9 +165,15 @@ export function ScheduleCalendar() {
 
   const monthSessionCount = monthSessions.length
   const selectedSessions = hasEventsForFilter(filter) ? (byDate[selected] ?? []) : []
+  const nextSessions = hasEventsForFilter(filter) ? [...sessions].filter(s => s.sessionDate.slice(0,10) >= todayKey && s.status !== 'cancelled').sort((a,b)=>a.sessionDate.localeCompare(b.sessionDate) || (a.startTime ?? '').localeCompare(b.startTime ?? '')).slice(0,3) : []
+  const weekStart = new Date(`${selected}T12:00:00`)
+  weekStart.setDate(weekStart.getDate() - (weekStart.getDay()+6)%7)
+  const weekDays = Array.from({length:7},(_,i)=>{const d=new Date(weekStart);d.setDate(d.getDate()+i);return {date:key(d.getFullYear(),d.getMonth(),d.getDate()),day:d.getDate()}})
+  const selectDay = (day: string) => { setSelected(day); if (compact) { const d=new Date(`${day}T12:00:00`);setMonth(d.getMonth());setYear(d.getFullYear()) } }
 
-  const prevMonth = () => { const m = month - 1; if (m < 0) { setMonth(11); setYear((y) => y - 1) } else setMonth(m) }
-  const nextMonth = () => { const m = month + 1; if (m > 11) { setMonth(0); setYear((y) => y + 1) } else setMonth(m) }
+
+  const prevMonth = () => { if (compact) { const d=new Date(year,month-1,1);setSelected(key(d.getFullYear(),d.getMonth(),1)) } const m = month - 1; if (m < 0) { setMonth(11); setYear((y) => y - 1) } else setMonth(m) }
+  const nextMonth = () => { if (compact) { const d=new Date(year,month+1,1);setSelected(key(d.getFullYear(),d.getMonth(),1)) } const m = month + 1; if (m > 11) { setMonth(0); setYear((y) => y + 1) } else setMonth(m) }
   const goToday = () => {
     const t = new Date()
     setYear(t.getFullYear()); setMonth(t.getMonth()); setSelected(key(t.getFullYear(), t.getMonth(), t.getDate()))
@@ -283,6 +290,13 @@ export function ScheduleCalendar() {
           <div className="grid gap-5 lg:grid-cols-3">
             {/* Cột lịch (2/3 desktop) */}
             <div className="lg:col-span-2 flex flex-col gap-3">
+              {compact && <section className="space-y-2" aria-label="Buổi sắp tới">
+                <h2 className="text-sm font-bold [color:var(--pf-text)]">Buổi sắp tới</h2>
+                {nextSessions.length ? nextSessions.map(s=><button key={s.id} onClick={()=>selectDay(s.sessionDate.slice(0,10))} className="pf-mobile-agenda-row w-full text-left">
+                  <span className="text-sm font-bold">{s.sessionDate.slice(0,10).split('-').reverse().join('/')} · {timeRange(s)}</span>
+                  <span className="mt-1 block text-xs [color:var(--pf-text-muted)]">{s.courtName || 'Chưa có sân'} · Xem buổi ›</span>
+                </button>) : <p className="py-3 text-sm [color:var(--pf-text-muted)]">Chưa có buổi sắp tới.</p>}
+              </section>}
               {/* Month nav */}
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
@@ -300,8 +314,12 @@ export function ScheduleCalendar() {
                 <span className="text-xs [color:var(--pf-color-muted)]">{monthSessionCount} buổi trong tháng</span>
               </div>
 
+              {compact && <>
+                <button className="min-h-11 text-left text-sm font-semibold [color:var(--pf-primary-text)]" aria-expanded={showMonth} onClick={()=>setShowMonth(v=>!v)}>{showMonth ? 'Thu gọn lịch tháng' : 'Mở lịch tháng'}</button>
+                {!showMonth && <div className="pf-mobile-week" aria-label="Lịch tuần">{weekDays.map((d,i)=><button key={d.date} onClick={()=>selectDay(d.date)} aria-label={`Ngày ${d.date.split('-').reverse().join('/')}`} aria-pressed={selected===d.date}><span>{WEEKDAYS[i]}</span><strong>{d.day}</strong>{byDate[d.date]?.length ? <span aria-label="Có buổi chơi">•</span> : <span> </span>}</button>)}</div>}
+              </>}
               {/* Lưới lịch */}
-              <div className="pf-glass rounded-2xl p-2.5 sm:p-3" style={{ boxShadow: 'var(--pf-shadow)' }}>
+              <div className={`pf-glass rounded-2xl p-2.5 sm:p-3 ${compact && !showMonth ? 'hidden' : ''}`} style={{ boxShadow: 'var(--pf-shadow)' }}>
                 <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
                   {WEEKDAYS.map((w) => (
                     <div key={w} className="pb-1.5 text-center text-xs font-semibold [color:var(--pf-color-muted)]">{w}</div>

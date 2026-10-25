@@ -50,7 +50,7 @@ export function MobileHeader() {
         <button
           onClick={() => { if ((window.history.state?.idx ?? 0) > 0) navigate(-1); else navigate(APPS_ROUTE) }}
           aria-label="Quay lại"
-          className={`${circle} [color:var(--pf-primary-text)]`}
+          className={`pf-global-back ${circle} [color:var(--pf-primary-text)]`}
           style={{ boxShadow: 'var(--pf-shadow-float)' }}
         >
           <ChevronLeft size={22} />

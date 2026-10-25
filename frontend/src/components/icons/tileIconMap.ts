@@ -38,6 +38,8 @@ const labels: Record<string, PlayfulIconName> = {
   "Tổng quan thi đấu": "competition-overview",
   "Giải đấu": "tournament",
   "Lịch đấu": "fixtures",
+  "Lịch & Kết quả": "fixtures",
+  "Bảng xếp hạng": "ranking",
   "Kết quả": "results",
   "Xếp hạng": "ranking",
   "Đội thi đấu": "team",

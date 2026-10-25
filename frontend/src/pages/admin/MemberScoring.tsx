@@ -1,3 +1,4 @@
+import { MobileSummary } from '../../components/mobile/MobileSummary'
 /**
  * MemberScoring — Chấm điểm thành viên động (Phase 3 UI).
  * 2 tab: "Bảng điểm" (mọi staff xem) + "Thang điểm" (chỉ CLUB_ADMIN).
@@ -319,7 +320,7 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
             <ActionButton
               icon={<Lock size={16} />}
               onClick={() => setConfirmFinalize(true)}
-              disabled={busy}
+              disabled={busy || loading || error}
               className="min-h-11"
             >
               Chốt tháng
@@ -329,11 +330,14 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
       </div>
 
       {/* KPI */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <MetricCard accent="violet" icon={<Users size={18} />} label="Tổng TV" value={stats.total} />
-        <MetricCard accent="teal" icon={<Star size={18} />} label="Xuất sắc" value={stats.excellent} />
-        <MetricCard accent="blue" icon={<Award size={18} />} label="Tốt" value={stats.good} />
-        <MetricCard accent="amber" icon={<TrendingDown size={18} />} label="Cần lưu ý" value={stats.review} sub="cần cải thiện / xem xét" />
+      <MobileSummary module="members" label="Thành viên được chấm điểm" value={loading ? '…' : error ? '—' : stats.total} note={monthLabel(month)} items={[
+        {label:'Xuất sắc',value:loading ? '…' : stats.excellent},{label:'Tốt',value:loading ? '…' : stats.good},{label:'Cần lưu ý',value:loading ? '…' : stats.review},
+      ]} />
+      <div className="hidden gap-3 sm:gap-4 lg:grid lg:grid-cols-4">
+        <MetricCard accent="violet" icon={<Users size={18} />} label="Tổng TV" value={loading ? '…' : error ? '—' : stats.total} />
+        <MetricCard accent="teal" icon={<Star size={18} />} label="Xuất sắc" value={loading ? '…' : error ? '—' : stats.excellent} />
+        <MetricCard accent="blue" icon={<Award size={18} />} label="Tốt" value={loading ? '…' : error ? '—' : stats.good} />
+        <MetricCard accent="amber" icon={<TrendingDown size={18} />} label="Cần lưu ý" value={loading ? '…' : error ? '—' : stats.review} sub="cần cải thiện / xem xét" />
       </div>
 
       {/* Bảng điểm */}

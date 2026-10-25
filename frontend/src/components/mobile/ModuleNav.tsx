@@ -57,7 +57,7 @@ export function MobileModuleMenu({ title, subtitle, items, onSelect, onBack, scr
   groups.sort((a, b) => (a.name === '' ? -1 : b.name === '' ? 1 : 0))
 
   return (
-    <div ref={root} className="mx-auto w-full max-w-2xl px-4 pb-6 pt-3">
+    <div ref={root} data-mobile-function-menu data-has-back={!!onBack} className="mx-auto w-full max-w-2xl px-4 pb-6 pt-3">
       <div className="flex items-center gap-2">
         {onBack && (
           <button type="button" onClick={onBack} aria-label="Quay lại"
@@ -66,7 +66,7 @@ export function MobileModuleMenu({ title, subtitle, items, onSelect, onBack, scr
           </button>
         )}
         <div className="min-w-0">
-          <h1 className="truncate text-[22px] font-[800] leading-tight [color:var(--pf-text)]" style={{ letterSpacing: '-0.02em' }}>{title}</h1>
+          <h1 className="break-words text-[22px] font-[800] leading-tight [color:var(--pf-text)]" style={{ letterSpacing: '-0.02em' }}>{title}</h1>
           {subtitle && <p className="text-sm [color:var(--pf-color-muted)]">{subtitle}</p>}
         </div>
       </div>
@@ -84,7 +84,7 @@ export function MobileModuleMenu({ title, subtitle, items, onSelect, onBack, scr
 /** Header gọn của màn nghiệp vụ: nút quay lại nhóm chức năng + tên chức năng cụ thể. Không mang theo tab/lưới cấp cha. */
 export function MobileFunctionHeader({ title, parent, onBack, right }: { title: string; parent?: string; onBack: () => void; right?: ReactNode }) {
   return (
-    <div className="sticky top-0 z-20 border-b px-4 py-2 [background:var(--pf-surface)] [border-color:var(--pf-border)] lg:hidden">
+    <div className="pf-mobile-function-head sticky top-0 z-20 border-b px-4 py-2 [background:var(--pf-surface)] [border-color:var(--pf-border)] lg:hidden">
       <div className="mx-auto flex w-full max-w-2xl items-center gap-2">
         <button type="button" onClick={onBack} aria-label={parent ? `Quay lại ${parent}` : 'Quay lại'}
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary-text)] active:scale-95">

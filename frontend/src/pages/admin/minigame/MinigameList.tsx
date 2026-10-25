@@ -1,3 +1,4 @@
+import { MobileSummary } from '../../../components/mobile/MobileSummary'
 /**
  * UI-06 — Tournament Center Enterprise Workspace (PickleFund v2.1)
  * Màn trung tâm giải đấu (danh sách minigame/tournament). Kế thừa UI-02 (Golden Reference).
@@ -90,7 +91,7 @@ export function MinigameList() {
   const clubId = user?.clubId ?? ''
   const { getMinigames, deleteMinigame, setMinigamesFromApi, groups } = useMinigameStore()
   const minigames = getMinigames(clubId)
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile(1024)
   const { canManage } = useMinigameDelegate()
   const isClubAdmin = user?.role === 'CLUB_ADMIN'
   const activeMembers = useClubDataStore((s) => s.getClubData(clubId).members).filter((m) => m.status === 'active')
@@ -235,7 +236,7 @@ export function MinigameList() {
         <ActionButton variant="secondary" icon={<UserCheck size={16} />} onClick={() => void openDelegateModal()}>Ủy quyền</ActionButton>
       )}
       {canManage && (
-        <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/thi-dau?tab=tournaments')}>Tạo minigame</ActionButton>
+        <ActionButton icon={<Plus size={16} />} onClick={() => navigate(isMobile ? '/thi-dau?tab=tournaments&create=1' : '/thi-dau?tab=tournaments')}>{isMobile ? 'Tạo giải đấu' : 'Tạo minigame'}</ActionButton>
       )}
     </div>
   )
@@ -301,7 +302,10 @@ export function MinigameList() {
       ) : (
         <>
           {/* ── KPI overview ── */}
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+          <MobileSummary module="compete" label="Giải đang diễn ra" value={inProgress} note={`${totalTournaments} giải toàn CLB`} items={[
+            {label:'Hoàn thành',value:completedTournaments},{label:'Người chơi',value:totalPlayers},{label:'Tổng trận',value:totalMatches},{label:'Trận hoàn thành',value:completedMatches},
+          ]} />
+          <div className="hidden gap-4 lg:grid lg:grid-cols-3 xl:grid-cols-6">
             <MetricCard label="Số giải đấu" value={totalTournaments.toLocaleString('vi-VN')} sub="Toàn CLB" accent="violet" icon={<Trophy size={18} />} />
             <MetricCard label="Đang diễn ra" value={inProgress.toLocaleString('vi-VN')} sub="Giải đang mở" accent="amber" icon={<PlayCircle size={18} />} />
             <MetricCard label="Hoàn thành" value={completedTournaments.toLocaleString('vi-VN')} sub="Giải đã xong" accent="green" icon={<CheckCircle2 size={18} />} />
@@ -340,7 +344,7 @@ export function MinigameList() {
               ) : (
                 <EmptyState icon={<Trophy size={26} />} title="Chưa có giải đấu nào"
                   description="Tạo giải đấu / minigame đầu tiên cho câu lạc bộ."
-                  action={canManage ? <ActionButton icon={<Plus size={15} />} onClick={() => navigate('/thi-dau?tab=tournaments')}>Tạo minigame</ActionButton> : undefined} />
+                  action={canManage ? <ActionButton icon={<Plus size={15} />} onClick={() => navigate(isMobile ? '/thi-dau?tab=tournaments&create=1' : '/thi-dau?tab=tournaments')}>{isMobile ? 'Tạo giải đấu' : 'Tạo minigame'}</ActionButton> : undefined} />
               )
             ) : isMobile ? (
               <div className="p-3">
@@ -371,12 +375,7 @@ export function MinigameList() {
             )}
           </div>
 
-          {/* ── Mobile sticky quick action: Tạo minigame ── */}
-          {isMobile && canManage && (
-            <div className="pointer-events-none fixed right-4 z-30" style={{ bottom: 'calc(132px + env(safe-area-inset-bottom))' }}>
-              <ActionButton className="pointer-events-auto h-12 w-12 shadow-lg" iconOnly ariaLabel="Tạo minigame" icon={<Plus size={20} />} onClick={() => navigate('/thi-dau?tab=tournaments')} />
-            </div>
-          )}
+
         </>
       )}
 

@@ -375,9 +375,14 @@ function Composer({
   // Mobile: ô soạn bài thu gọn 1 dòng cho tới khi chạm vào hoặc có nội dung.
   const compact = useIsMobile(1024)
   const [composerFocused, setComposerFocused] = useState(false)
-  const collapsed = compact && !composerFocused && !body && !imageUrl && mentions.length === 0
+  const collapsed = compact && !composerFocused
   const taRef = useRef<HTMLTextAreaElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    if (!compact || !composerFocused) return
+    const timer = setTimeout(() => taRef.current?.focus(), 30)
+    return () => clearTimeout(timer)
+  }, [compact, composerFocused])
 
   // Tự giãn chiều cao theo nội dung (kiểu Facebook), tối đa ~360px rồi cuộn.
   const growTa = () => {
@@ -444,6 +449,7 @@ function Composer({
   }
 
   const reset = () => {
+    setComposerFocused(false)
     setBody('')
     setImageUrl('')
     setShowMention(false)
@@ -476,10 +482,11 @@ function Composer({
     }
   }
 
-  return (
+  if (collapsed) return <button type="button" onClick={()=>setComposerFocused(true)} className="pf-mobile-agenda-row flex w-full items-center gap-3 text-left" aria-label="Soạn bài viết cộng đồng"><Avatar name={authorName} url={authorUrl} size={40} /><span className="text-sm [color:var(--pf-text-muted)]">{body || imageUrl ? 'Tiếp tục bài viết…' : 'Chia sẻ với CLB…'}</span></button>
+  const composer = (
     <form
       onSubmit={submit}
-      className="pf-glass rounded-2xl p-4"
+      className={compact ? 'pf-mobile-composer' : 'pf-glass rounded-2xl p-4'}
     >
       <div className="flex gap-3">
         <Avatar name={authorName} url={authorUrl} size={40} />
@@ -489,7 +496,7 @@ function Composer({
             value={body}
             onChange={onBodyChange}
             aria-label="Nội dung bài đăng cộng đồng"
-            placeholder="Chia sẻ với cộng đồng CLB…  (gõ @ để gắn thẻ thành viên)"
+            placeholder={compact ? 'Chia sẻ với CLB…' : 'Chia sẻ với cộng đồng CLB…  (gõ @ để gắn thẻ thành viên)'}
             rows={collapsed ? 1 : 4}
             onFocus={() => setComposerFocused(true)}
             className={`${collapsed ? 'min-h-[48px]' : 'min-h-[112px]'} w-full resize-none overflow-y-auto rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-bg)] px-4 py-3 text-base leading-relaxed outline-none [color:var(--pf-text)] placeholder:[color:var(--pf-color-muted)] focus:[border-color:var(--pf-primary-soft)]`}
@@ -534,7 +541,7 @@ function Composer({
             />
           )}
 
-          <div className={`mt-3 flex-wrap items-center justify-between gap-2 ${collapsed ? 'hidden' : 'flex'}`}>
+          <div className={`pf-composer-actions mt-3 flex-wrap items-center justify-between gap-2 ${collapsed ? 'hidden' : 'flex'}`}>
             <div className="flex items-center gap-1">
               <button
                 type="button"
@@ -578,6 +585,8 @@ function Composer({
       </div>
     </form>
   )
+  return compact ? <Modal open={composerFocused} onClose={()=>setComposerFocused(false)} title="Chia sẻ với CLB" subtitle="Gõ @ để gắn thẻ thành viên">{composer}</Modal> : composer
+
 }
 
 /* ────────────────────────────── PostCard ────────────────────────────── */

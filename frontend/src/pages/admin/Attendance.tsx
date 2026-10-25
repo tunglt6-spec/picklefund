@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { MobileSummary } from '../../components/mobile/MobileSummary'
+import { useState, useMemo, useRef } from 'react'
 import { HuyLabel } from '../../components/ui/HuyLabel'
 import { DateInput, TimeInput } from '../../components/ui/DateTimeFields'
 import { AmountHint } from '../../components/ui/AmountHint'
@@ -58,6 +59,15 @@ export function Attendance() {
 
   const [selectedSession, setSelectedSession] = useState<AttendanceSession | null>(null)
   const [attendance, setAttendance] = useState<Record<string, boolean>>({})
+  const [attendanceState, setAttendanceState] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [attendanceSaving, setAttendanceSaving] = useState(false)
+  const attendanceRequest = useRef(0)
+  const attendanceSaveLock = useRef(false)
+  const closeAttendance = () => {
+    if (attendanceSaveLock.current) return
+    attendanceRequest.current += 1
+    setSelectedSession(null)
+  }
   const [showCreate, setShowCreate] = useState(false)
   // courtFee để TRỐNG mặc định (không gợi ý số tiền) — người dùng tự nhập mỗi buổi.
   const [form, setForm] = useState<{ sessionDate: string; startTime: string; endTime: string; courtFee: number | ''; courtName: string }>({ sessionDate: '', startTime: '08:00', endTime: '11:00', courtFee: '', courtName: '' })
@@ -71,18 +81,25 @@ export function Attendance() {
   const [isMoving, setIsMoving] = useState(false)
 
   const openAttendance = async (session: AttendanceSession) => {
+    const request = ++attendanceRequest.current
     setSelectedSession(session)
-    // Default all present, then load existing records from server
+    setAttendanceState('loading')
+    setAttendance({})
+    // Apply the existing default only AFTER the server confirms this is a new attendance sheet.
     const defaultMap = Object.fromEntries(members.filter(m => m.status === 'active').map(m => [m.id, true]))
-    setAttendance(defaultMap)
     try {
       const res = await api.get(`/attendance/${session.id}/attendance`)
-      const records: { memberId: string; status: string }[] = res.data?.data ?? []
+      if (request !== attendanceRequest.current) return
+      const records: { memberId: string; status: string }[] = res.data?.data
+      if (!Array.isArray(records) || records.some(r => typeof r.memberId !== 'string' || !['PRESENT', 'ABSENT'].includes(r.status))) throw new Error('Invalid attendance response')
       if (records.length > 0) {
         const loaded = Object.fromEntries(records.map(r => [r.memberId, r.status === 'PRESENT']))
         setAttendance(loaded)
-      }
-    } catch { /* keep default */ }
+      } else setAttendance(defaultMap)
+      setAttendanceState('ready')
+    } catch {
+      if (request === attendanceRequest.current) setAttendanceState('error')
+    }
   }
 
   const handleToggle = (memberId: string) => {
@@ -90,7 +107,9 @@ export function Attendance() {
   }
 
   const handleSaveAttendance = async () => {
-    if (!selectedSession) return
+    if (!selectedSession || attendanceState !== 'ready' || attendanceSaveLock.current) return
+    attendanceSaveLock.current = true
+    setAttendanceSaving(true)
     const records = members.filter(m => m.status === 'active').map(m => ({ memberId: m.id, status: attendance[m.id] ? 'PRESENT' : 'ABSENT' as const }))
     const count = records.filter(r => r.status === 'PRESENT').length
     try {
@@ -104,6 +123,9 @@ export function Attendance() {
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? 'Lưu điểm danh thất bại'
       toast.error(msg)
+    } finally {
+      attendanceSaveLock.current = false
+      setAttendanceSaving(false)
     }
   }
 
@@ -236,7 +258,8 @@ export function Attendance() {
 
   // Mobile: buổi CẦN thao tác (đang mở, đã tới/qua ngày) lên đầu, rồi buổi sắp tới, cuối cùng buổi đã xong. Desktop: mới nhất trước như cũ.
   const mobile = useIsMobile(1024)
-  const todayStr = new Date().toISOString().slice(0, 10)
+  const localToday = new Date()
+  const todayStr = `${localToday.getFullYear()}-${String(localToday.getMonth() + 1).padStart(2, '0')}-${String(localToday.getDate()).padStart(2, '0')}`
   const prio = (x: AttendanceSession) => (x.status === 'scheduled' ? (x.sessionDate.slice(0, 10) <= todayStr ? 0 : 1) : 2)
   const orderedSessions = [...sessions].sort((a, b) => {
     if (mobile) {
@@ -246,6 +269,55 @@ export function Attendance() {
     }
     return b.sessionDate.localeCompare(a.sessionDate)
   })
+
+  const needAttendance = orderedSessions.filter(s => s.status === 'scheduled' && s.sessionDate.slice(0,10) <= todayStr)
+  const upcomingSessions = orderedSessions.filter(s => s.status === 'scheduled' && s.sessionDate.slice(0,10) > todayStr)
+  const previousSessions = orderedSessions.filter(s => s.status !== 'scheduled')
+  const sessionCard = (session: AttendanceSession) => (
+<div key={session.id} className="pf-glass rounded-2xl p-4" style={{ boxShadow: 'var(--pf-shadow)' }}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-bold [color:var(--pf-text)]">{formatDate(session.sessionDate)}</p>
+                    <div className="mt-0.5 flex items-center gap-1 text-xs [color:var(--pf-color-muted)]">
+                      <Clock size={11} /><span>{session.startTime} – {session.endTime}</span>
+                    </div>
+                    {session.courtName && (
+                      <div className="mt-0.5 flex items-center gap-1 text-xs [color:var(--pf-color-muted)]">
+                        <MapPin size={11} /><span>{session.courtName}</span>
+                      </div>
+                    )}
+                  </div>
+                  <StatusBadge tone={statusTone(session.status)}>{statusText(session.status)}</StatusBadge>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between border-t pt-3 text-xs [border-color:var(--pf-border)] [color:var(--pf-color-muted)]">
+                  <span>Tiền sân: <strong className="[color:var(--pf-text)]">{formatVND(session.courtFee)}</strong></span>
+                  <div className="flex items-center gap-1">
+                    <Users size={11} /><strong className="[color:var(--pf-text)]">{session._count?.attendanceRecords ?? 0}</strong><span>/{members.length}</span>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={() => openAttendance(session)}
+                    disabled={members.length === 0}
+                    className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-white [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] disabled:opacity-40"
+                  >
+                    <CheckSquare size={14} />Điểm danh
+                  </button>
+                  {mobile ? <ActionMenu iconOnly label={`Thao tác buổi ${formatDate(session.sessionDate)}`} items={[
+                    {key:'edit',label:'Sửa buổi',onClick:()=>openEdit(session)},
+                    {key:'delete',label:'Xóa buổi',onClick:()=>setDeleteId(session.id),danger:true},
+                  ]} /> : <>                  <button onClick={() => openEdit(session)} aria-label="Sửa buổi" className="flex h-11 w-11 items-center justify-center rounded-lg border [border-color:var(--pf-border)] [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-primary-text)]">
+                    <Edit2 size={15} />
+                  </button>
+                  <button onClick={() => setDeleteId(session.id)} aria-label="Xóa buổi" className="flex h-11 w-11 items-center justify-center rounded-lg border [border-color:var(--pf-border)] [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)]">
+                    <Trash2 size={15} />
+                  </button>
+</>}
+                </div>
+              </div>
+  )
 
   return (
     <PageShell>
@@ -280,19 +352,9 @@ export function Attendance() {
 
       <div className="flex flex-col gap-5">
         {/* KPI */}
-        {sessions.length > 0 && (
-          <div className="pf-glass p-3 lg:hidden">
-            <div className="grid grid-cols-3 divide-x text-center [border-color:var(--pf-border)]">
-              {([['Buổi chơi', sessions.length], ['Lượt tham gia', totalAttendance], ['TB/buổi', completedSessions > 0 ? (totalAttendance / completedSessions).toFixed(1) : '—']] as [string, string | number][]).map(([l, v]) => (
-                <div key={l} className="min-w-0 px-1">
-                  <p className="text-[20px] font-[800] leading-none [color:var(--pf-text)]" style={{ fontVariantNumeric: 'tabular-nums' }}>{v}</p>
-                  <p className="mt-1 truncate text-xs [color:var(--pf-color-muted)]">{l}</p>
-                </div>
-              ))}
-            </div>
-            <p className="mt-2 border-t pt-2 text-xs [color:var(--pf-color-muted)] [border-color:var(--pf-border)]">{completedSessions} buổi đã hoàn thành</p>
-          </div>
-        )}
+        {sessions.length > 0 && <MobileSummary module="activity" label="Buổi cần điểm danh" value={needAttendance.length} note={`${completedSessions} buổi đã hoàn thành`} items={[
+          {label:'Tổng buổi trong kỳ',value:sessions.length},{label:'Lượt tham gia',value:totalAttendance},{label:'Trung bình / buổi',value:completedSessions ? (totalAttendance/completedSessions).toFixed(1) : '—'},
+        ]} />}
         {sessions.length > 0 && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4 max-lg:hidden">
             <MetricCard accent="violet" icon={<CalendarDays size={18} />} label="Tổng buổi chơi" value={sessions.length} sub={`${completedSessions} đã hoàn thành`} />
@@ -310,70 +372,37 @@ export function Attendance() {
             action={activePeriod && members.length > 0 ? <ActionButton icon={<Plus size={15} />} onClick={() => setShowCreate(true)}>Tạo buổi chơi đầu tiên</ActionButton> : undefined}
           />
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {orderedSessions.map(session => (
-              <div key={session.id} className="pf-glass rounded-2xl p-4" style={{ boxShadow: 'var(--pf-shadow)' }}>
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="font-bold [color:var(--pf-text)]">{formatDate(session.sessionDate)}</p>
-                    <div className="mt-0.5 flex items-center gap-1 text-xs [color:var(--pf-color-muted)]">
-                      <Clock size={11} /><span>{session.startTime} – {session.endTime}</span>
-                    </div>
-                    {session.courtName && (
-                      <div className="mt-0.5 flex items-center gap-1 text-xs [color:var(--pf-color-muted)]">
-                        <MapPin size={11} /><span>{session.courtName}</span>
-                      </div>
-                    )}
-                  </div>
-                  <StatusBadge tone={statusTone(session.status)}>{statusText(session.status)}</StatusBadge>
-                </div>
-
-                <div className="mt-3 flex items-center justify-between border-t pt-3 text-xs [border-color:var(--pf-border)] [color:var(--pf-color-muted)]">
-                  <span>Tiền sân: <strong className="[color:var(--pf-text)]">{formatVND(session.courtFee)}</strong></span>
-                  <div className="flex items-center gap-1">
-                    <Users size={11} /><strong className="[color:var(--pf-text)]">{session._count?.attendanceRecords ?? 0}</strong><span>/{members.length}</span>
-                  </div>
-                </div>
-
-                <div className="mt-3 flex gap-2">
-                  <button
-                    onClick={() => openAttendance(session)}
-                    disabled={members.length === 0}
-                    className="inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-lg px-3 text-sm font-semibold text-white [background:var(--pf-primary)] hover:[background:var(--pf-primary-hover)] disabled:opacity-40"
-                  >
-                    <CheckSquare size={14} />Điểm danh
-                  </button>
-                  <button onClick={() => openEdit(session)} aria-label="Sửa buổi" className="flex h-11 w-11 items-center justify-center rounded-lg border [border-color:var(--pf-border)] [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)] hover:[color:var(--pf-primary-text)]">
-                    <Edit2 size={15} />
-                  </button>
-                  <button onClick={() => setDeleteId(session.id)} aria-label="Xóa buổi" className="flex h-11 w-11 items-center justify-center rounded-lg border [border-color:var(--pf-border)] [color:var(--pf-color-danger)] hover:[background:var(--pf-color-danger-soft)]">
-                    <Trash2 size={15} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+          mobile ? <div className="pf-mobile-session-list">
+            {needAttendance.length > 0 && <><h2>Cần điểm danh · {needAttendance.length} buổi</h2>{needAttendance.map(sessionCard)}</>}
+            {previousSessions.length > 0 && <><h2>Buổi gần nhất</h2>{previousSessions.slice(0,2).map(sessionCard)}
+              {previousSessions.length > 2 && <details><summary className="min-h-11 py-3 text-sm font-semibold [color:var(--pf-primary-text)]">Lịch sử · {previousSessions.length - 2} buổi khác</summary><div className="space-y-2.5">{previousSessions.slice(2).map(sessionCard)}</div></details>}
+            </>}
+            {upcomingSessions.length > 0 && <details open={needAttendance.length === 0 && previousSessions.length === 0}><summary className="min-h-11 py-3 text-sm font-semibold [color:var(--pf-primary-text)]">Sắp tới · {upcomingSessions.length} buổi</summary><div className="space-y-2.5">{upcomingSessions.map(sessionCard)}</div></details>}
+          </div> : <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">{orderedSessions.map(sessionCard)}</div>
         )}
       </div>
 
       {/* Attendance modal */}
       {selectedSession && (
-        <Modal open={!!selectedSession} onClose={() => setSelectedSession(null)}
+        <Modal open={!!selectedSession} onClose={closeAttendance}
           title={`Điểm danh — ${formatDate(selectedSession.sessionDate)}`}
           subtitle={`${selectedSession.courtName ?? ''} · ${selectedSession.startTime}–${selectedSession.endTime}`}
           footer={
             <div className="flex items-center justify-between">
-              <span className="text-sm [color:var(--pf-color-muted)]">Có mặt: <strong className="text-emerald-600">{presentCount}</strong> / {activeMemberList.length}</span>
+              <span className="text-sm [color:var(--pf-color-muted)]">{attendanceState === 'ready' ? <>Có mặt: <strong className="text-emerald-600">{presentCount}</strong> / {activeMemberList.length}</> : 'Chưa sẵn sàng'}</span>
               <div className="flex gap-3">
-                <Button variant="outline" onClick={() => setSelectedSession(null)}>Hủy</Button>
-                <Button onClick={handleSaveAttendance}>Lưu điểm danh</Button>
+                <Button variant="outline" disabled={attendanceSaving} onClick={closeAttendance}>Hủy</Button>
+                <Button disabled={attendanceState !== 'ready' || attendanceSaving} onClick={handleSaveAttendance}>{attendanceSaving ? 'Đang lưu…' : 'Lưu điểm danh'}</Button>
               </div>
             </div>
           }
         >
+          {attendanceState === 'loading' ? <div role="status" className="pf-mobile-loading">Đang tải điểm danh…</div>
+            : attendanceState === 'error' ? <div role="alert" className="space-y-3 py-5 text-sm [color:var(--pf-text)]"><p>Không tải được điểm danh. Chưa có thay đổi nào được lưu.</p><Button variant="outline" onClick={() => void openAttendance(selectedSession)}>Thử lại</Button></div>
+            : <>
           <div className="mb-2 flex items-center justify-between">
             <span className="text-xs [color:var(--pf-color-muted)]">{activeMemberList.length} thành viên</span>
-            <button type="button" onClick={toggleAllAttendance}
+            <button type="button" disabled={attendanceSaving} onClick={toggleAllAttendance}
               className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold [color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)] transition-colors">
               <CheckSquare size={13} />{allPresent ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
             </button>
@@ -381,7 +410,7 @@ export function Attendance() {
           <div className="space-y-1.5 max-h-80 overflow-y-auto">
             {activeMemberList.map(m => (
               <label key={m.id} data-active={attendance[m.id] ? '' : undefined} className="pf-rowcard flex items-center gap-3 px-4 py-2.5 cursor-pointer">
-                <input type="checkbox" checked={!!attendance[m.id]} onChange={() => handleToggle(m.id)}
+                <input type="checkbox" disabled={attendanceSaving} checked={!!attendance[m.id]} onChange={() => handleToggle(m.id)}
                   className="h-4 w-4 rounded accent-emerald-500 shrink-0" />
                 <MemberAvatar name={m.fullName} id={m.id} />
                 <span className="font-medium [color:var(--pf-text)] flex-1 text-sm">{m.fullName}</span>
@@ -390,7 +419,7 @@ export function Attendance() {
                 </span>
               </label>
             ))}
-          </div>
+          </div></>}
         </Modal>
       )}
 

@@ -1,3 +1,4 @@
+import { mobilePeriodLabel } from '../../lib/mobilePresentation'
 /**
  * UI-05 — Reports Center Enterprise Workspace (PickleFund v2.1)
  * Kế thừa UI-02 Dashboard 4.0 (Golden Reference). Tuân thủ UIP-05 (Reports Center Pattern)
@@ -224,7 +225,7 @@ export function Reports() {
     .sort((a, b) => (a.startDate ?? '').localeCompare(b.startDate ?? ''))
     .slice(-6)
     .map(p => ({
-      ky: truncate(p.name, 10),
+      ky: p.name, startDate: p.startDate,
       Thu: clubData.contributions.filter(c => c.fundPeriodId === p.id && c.isConfirmed && (fundFilter === 'ALL' || (c.fundSource ?? 'COMMON') === fundFilter)).reduce((a, c) => a + c.amount, 0),
       Chi: clubData.expenses.filter(e => e.fundPeriodId === p.id && (fundFilter === 'ALL' || (e.fundSource ?? 'COMMON') === fundFilter)).reduce((a, e) => a + e.amount, 0),
     })),
@@ -240,13 +241,13 @@ export function Reports() {
   }, [clubData.expenses, activePeriod?.id, fundFilter])
 
   // Fetch tổng hợp từ BE (real token). Khớp ngữ nghĩa client: Thu=confirmed, Chi=mọi-status.
-  const [barsRemote, setBarsRemote] = useState<{ ky: string; Thu: number; Chi: number }[] | null>(null)
+  const [barsRemote, setBarsRemote] = useState<{ ky: string; startDate?: string; Thu: number; Chi: number }[] | null>(null)
   const [breakdownRemote, setBreakdownRemote] = useState<{ name: string; value: number }[] | null>(null)
   useEffect(() => {
     if (isLocalToken(accessToken) || !activePeriodType) { setBarsRemote(null); return }
     let cancelled = false
     api.get(`/fund-periods/trends?type=${activePeriodType}&limit=6&fundSource=${fundFilter}`)
-      .then(res => { if (!cancelled) setBarsRemote((res.data?.data ?? []).map((t: any) => ({ ky: truncate(t.name ?? '', 10), Thu: Number(t.thu ?? 0), Chi: Number(t.chi ?? 0) }))) })
+      .then(res => { if (!cancelled) setBarsRemote((res.data?.data ?? []).map((t: any) => ({ ky: t.name ?? '', startDate: t.startDate, Thu: Number(t.thu ?? 0), Chi: Number(t.chi ?? 0) }))) })
       .catch(() => { if (!cancelled) setBarsRemote(null) })
     return () => { cancelled = true }
   }, [accessToken, activePeriodType, fundFilter])
@@ -487,7 +488,7 @@ export function Reports() {
                       <ResponsiveContainer width="100%" height={240}>
                         <BarChart data={periodBars} barCategoryGap="28%">
                           <CartesianGrid strokeDasharray="3 3" stroke="var(--pf-border)" vertical={false} />
-                          <XAxis dataKey="ky" tick={{ fontSize: 11, fill: 'var(--pf-color-muted)' }} axisLine={false} tickLine={false} />
+                          <XAxis dataKey="ky" tickFormatter={isMobile ? (name: string, index: number) => mobilePeriodLabel(name, index, periodBars[index]?.startDate) : (name: string) => truncate(name, 10)} tick={{ fontSize: 11, fill: 'var(--pf-color-muted)' }} axisLine={false} tickLine={false} />
                           <YAxis tickFormatter={(v: number) => `${(v / 1e6).toFixed(0)}tr`} tick={{ fontSize: 11, fill: 'var(--pf-color-muted)' }} axisLine={false} tickLine={false} />
                           <Tooltip content={<VNDTooltip />} cursor={{ fill: 'var(--pf-surface-muted)' }} />
                           <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
@@ -565,7 +566,7 @@ export function Reports() {
             <div className="pf-glass mt-4 rounded-[16px]">
               <div className="flex items-center justify-between border-b px-5 py-3 border-[color:var(--pf-border-soft)]">
                 <h3 className="text-sm font-semibold [color:var(--pf-text)]">Bảng chi phí thành viên</h3>
-                <span className="text-xs [color:var(--pf-color-muted)]">Nguồn: backend calculator</span>
+                <span className="hidden lg:inline text-xs [color:var(--pf-color-muted)]">Nguồn: backend calculator</span>
               </div>
               {memberBillRows.length === 0 ? (
                 <EmptyState icon={<Users size={26} />} title="Chưa có dữ liệu" description="Backend summary chưa có bảng chi phí thành viên cho kỳ này." />

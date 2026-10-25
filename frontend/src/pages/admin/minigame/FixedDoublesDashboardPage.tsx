@@ -140,12 +140,12 @@ function MatchMenu({ onScore, onDelete, isDone }: { onScore: () => void; onDelet
   }, [])
   return (
     <div ref={ref} className="relative">
-      <button onClick={() => setOpen(v => !v)}
+      <button aria-label="Thao tác trận đấu" aria-haspopup="menu" aria-expanded={open} onClick={() => setOpen(v => !v)}
         className="w-7 h-7 rounded-lg flex items-center justify-center hover:[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] transition-colors">
         <MoreVertical size={13} />
       </button>
       {open && (
-        <div className="pf-glass absolute right-0 top-full mt-1 w-36 rounded-xl shadow-lg py-1 z-30" style={{ borderColor: T.border }}>
+        <div role="menu" className="pf-glass absolute right-0 top-full mt-1 w-36 rounded-xl shadow-lg py-1 z-30" style={{ borderColor: T.border }}>
           <button onClick={() => { onScore(); setOpen(false) }}
             className="w-full text-left text-sm px-3 py-2 hover:[background:var(--pf-surface-muted)] flex items-center gap-2 [color:var(--pf-text)]">
             <Plus size={13} /> {isDone ? 'Sửa điểm' : 'Nhập điểm'}
@@ -852,6 +852,15 @@ export function FixedDoublesDashboardPage() {
 
   return (
     <div className="flex-1 overflow-y-auto" style={{ background: T.bg }}>
+      {mv.mobile && fdView ? <>
+        <MobileFunctionHeader title={fdView === 'schedule' ? 'Lịch & Kết quả' : 'Bảng xếp hạng'} parent={mg.name} onBack={mv.back} right={
+          <ActionMenu iconOnly label="Thao tác giải đấu" items={[
+            {key:'edit',label:'Chỉnh sửa giải đấu',onClick:()=>navigate(`/minigames/${id}/edit`)},
+            ...(canFinish ? [{key:'finish',label:'Kết thúc giải đấu',onClick:handleEndTournament,danger:!allDone}] : []),
+          ]} />
+        } />
+        <div className="pf-mobile-match-header"><p className="text-sm font-bold [color:var(--pf-text)]">{mg.name}</p><p className="mt-1 text-xs [color:var(--pf-text-muted)]">{mg.startDate.split('-').reverse().join('/')}{mg.endDate ? ` – ${mg.endDate.split('-').reverse().join('/')}` : ''}</p></div>
+      </> : <>
       <PageHeader variant="bar"
         title={`🤝 Đôi Cố Định – ${mg.name}`}
         subtitle={`${mg.startDate}${mg.endDate ? ` — ${mg.endDate}` : ''}`}
@@ -878,6 +887,8 @@ export function FixedDoublesDashboardPage() {
           </>
         }
       />
+      </>}
+
 
       {/* ── page body ── */}
       <div className="pf-center-x w-full max-w-[1280px] px-4 sm:px-6 py-5 space-y-5">
@@ -898,7 +909,7 @@ export function FixedDoublesDashboardPage() {
         )}
 
         {/* KPI — 4 columns */}
-        {fdView && <MobileFunctionHeader title={fdView === 'schedule' ? 'Lịch & Kết quả' : 'Bảng xếp hạng'} parent={mg.name} onBack={mv.back} />}
+
 
         {showSched && kpi && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 max-lg:hidden">

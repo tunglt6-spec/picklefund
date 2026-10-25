@@ -152,6 +152,7 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
   const [form, setForm] = useState<ClubSettings>({ ...emptySettings, ...saved })
   const [saving, setSaving] = useState(false)
 
+  const dirty = JSON.stringify(form) !== JSON.stringify({ ...emptySettings, ...saved })
   const set = (patch: Partial<ClubSettings>) => setForm(f => ({ ...f, ...patch }))
 
   const handleSave = async () => {
@@ -262,8 +263,9 @@ function ClubInfoTab({ clubId }: { clubId: string }) {
         </div>
       </div>
 
-      <div className="flex justify-end">
-        <Button onClick={handleSave} variant="primary" size="md">
+      <div className="pf-mobile-form-footer flex justify-end">
+        <span className="text-xs [color:var(--pf-text-muted)] lg:hidden" role="status">{dirty ? 'Có thay đổi chưa lưu' : 'Thông tin đã lưu'}</span>
+        <Button onClick={handleSave} disabled={saving || !form.name.trim()} variant="primary" size="md">
           {saving ? (
             <span className="flex items-center gap-2"><span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />Đang lưu...</span>
           ) : (

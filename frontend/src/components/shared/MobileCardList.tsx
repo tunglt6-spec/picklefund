@@ -12,6 +12,7 @@ interface MobileCardListProps<T> {
   onItemClick?: (item: T) => void
   className?: string
   emptyText?: string
+  itemLabel?: (item: T) => string
 }
 
 export function MobileCardList<T>({
@@ -21,6 +22,7 @@ export function MobileCardList<T>({
   onItemClick,
   className,
   emptyText = 'Không có dữ liệu',
+  itemLabel,
 }: MobileCardListProps<T>) {
   if (items.length === 0) {
     return (
@@ -35,6 +37,10 @@ export function MobileCardList<T>({
         <div
           key={itemKey(item, i)}
           onClick={onItemClick ? () => onItemClick(item) : undefined}
+          role={itemLabel && onItemClick ? 'button' : undefined}
+          tabIndex={itemLabel && onItemClick ? 0 : undefined}
+          aria-label={itemLabel?.(item)}
+          onKeyDown={itemLabel && onItemClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onItemClick(item) } } : undefined}
           className={cn(
             'pf-glass rounded-2xl p-4',
             onItemClick && 'active:[background:var(--pf-color-muted-soft)]',

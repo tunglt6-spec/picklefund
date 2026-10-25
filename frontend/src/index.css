@@ -1312,7 +1312,57 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   :root:has([data-app-shell]):not([data-theme="dark"]) .recharts-legend-item-text { color: var(--pf-text) !important; }
 }
 
-/* Fresh Sport Glass: vùng xanh–mint nhẹ, GIỚI HẠN (đầu trang Tổng quan) và dải màu phía sau thanh đáy để kính có nội dung để "thấy". */
+/* Premium mobile workspaces: solid content surfaces, glass reserved for navigation. */
+@media (max-width: 1023px) {
+  .pf-mobile-summary { padding: 14px 16px 0; border: 1px solid var(--pf-border-soft); border-top: 2px solid var(--mod-main, var(--pf-primary)); border-radius: 18px; background: var(--pf-surface); }
+  .pf-mobile-summary > div:only-child { padding-bottom: 14px; }
+  .pf-mobile-chip { min-height: 44px; padding: 0 14px; border: 1px solid var(--pf-border-soft); border-radius: 12px; font-size: 13px; font-weight: 600; color: var(--pf-text-muted); background: var(--pf-surface); }
+  .pf-mobile-chip[aria-pressed="true"] { background: var(--pf-primary-soft); color: var(--pf-primary-text); border-color: transparent; }
+  .pf-mobile-filter-button { display: flex; align-items: center; justify-content: center; gap: 4px; min-width: 48px; height: 48px; padding: 0 10px; border-radius: 14px; background: var(--pf-surface); border: 1px solid var(--pf-border); color: var(--pf-text); }
+  .pf-mobile-records { margin: 8px 16px 24px; padding: 0; background: var(--pf-surface); border: 1px solid var(--pf-border-soft); border-radius: 20px; }
+  .pf-mobile-record { padding: 16px; border-bottom: 1px solid var(--pf-border-soft); }
+  .pf-mobile-record:last-child { border-bottom: 0; }
+  .pf-mobile-record > button { min-height: 64px; border-radius: 8px; }
+  .pf-mobile-record :focus-visible, .pf-mobile-member-list [role="button"]:focus-visible { outline: 3px solid var(--pf-focus-ring); outline-offset: 3px; }
+  .pf-mobile-member-list { padding: 0; }
+  .pf-mobile-member-list .pf-cardlist { display: flex; flex-direction: column; gap: 0; }
+  .pf-mobile-member-list .pf-cardlist > div { padding: 16px; border: 0; border-bottom: 1px solid var(--pf-border-soft); border-radius: 0; box-shadow: none; background: var(--pf-surface); }
+  .pf-mobile-member-list .pf-cardlist > div:last-child { border-bottom: 0; }
+  .pf-mobile-member-list .pf-cardlist > div > div { flex-wrap: nowrap; align-items: center; }
+  .pf-mobile-member-list .pf-cardlist > div > div > div:nth-child(2) > div:first-child { flex-wrap: wrap; justify-content: flex-start; }
+  .pf-filter-overlay { align-items: flex-end; justify-content: center; }
+  .pf-filter-backdrop { position: absolute; inset: 0; backdrop-filter: none; }
+  .pf-filter-panel { position: relative; width: 100%; max-width: 672px; max-height: 90dvh; border-radius: 24px 24px 0 0; }
+  .pf-filter-panel > div:last-child { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+  .pf-mobile-loading { padding: 32px 16px; font-size: 14px; color: var(--pf-text-muted); }
+  .pf-mobile-form-footer { position: sticky; bottom: 68px; z-index: 21; margin: 16px -16px 0; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--pf-border-soft); background: var(--pf-surface); }
+  .pf-mobile-form-footer > button { min-width: 140px; }
+  .pf-mobile-session-list { display: flex; flex-direction: column; gap: 10px; }
+  .pf-mobile-session-list .pf-glass { padding: 16px; border: 1px solid var(--pf-border-soft); border-radius: 18px; background: var(--pf-surface); box-shadow: none !important; backdrop-filter: none; }
+  .pf-mobile-session-list h2 { margin: 6px 0 0; font-size: 13px; font-weight: 700; color: var(--pf-text-muted); }
+  .pf-mobile-notif .pf-rowcard { background: var(--pf-surface); }
+  .pf-mobile-notif .pf-rowcard:has([data-unread]) { background: var(--pf-primary-soft); }
+  .pf-mobile-match-header { padding: 14px 16px; background: var(--pf-surface); border-bottom: 1px solid var(--pf-border-soft); }
+  .pf-mobile-agenda-row { display: block; min-height: 64px; padding: 14px 16px; background: var(--pf-surface); color: var(--pf-text); border: 1px solid var(--pf-border-soft); border-radius: 16px; }
+  .pf-mobile-agenda-row.flex { display: flex; }
+  .pf-mobile-week { display: grid; grid-template-columns: repeat(7,minmax(0,1fr)); gap: 2px; background: var(--pf-surface); padding: 6px 2px; border-radius: 16px; border: 1px solid var(--pf-border-soft); }
+  .pf-mobile-week button { display: flex; min-height: 76px; flex-direction: column; align-items: center; justify-content: center; border-radius: 12px; gap: 4px; font-size: 12px; color: var(--pf-text-muted); }
+  .pf-mobile-week button strong { font-size: 15px; color: var(--pf-text); }
+  .pf-mobile-week button[aria-pressed="true"] { background: var(--pf-primary-soft); color: var(--pf-primary-text); }
+  .pf-office-workspace { display: flex; flex-direction: column; gap: 16px; }
+  .pf-office-workspace > * { margin-top: 0; }
+  .pf-office-agent-results { order: 3; }
+  .pf-office-signals { order: 2; }
+  .pf-mobile-composer { padding: 0; border: 0; background: var(--pf-surface); box-shadow: none; }
+  .pf-mobile-composer .pf-composer-actions { position: sticky; bottom: 0; padding: 10px 0; background: var(--pf-surface); }
+  :root:has([data-mobile-function-menu][data-has-back="true"]) .pf-global-back,
+  :root:has(.pf-mobile-function-head) .pf-global-back { display: none; }
+  .pf-sheet-foot { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+  .pf-sheet-foot > div { width: 100%; gap: 12px; flex-wrap: wrap; }
+  @media (prefers-reduced-motion: reduce) { .pf-mobile-member-list .pf-stagger > * { animation: none; } }
+}
+
+/* Fresh Sport Glass: vùng xanh–mint nhẹ ở đầu trang Tổng quan. */
 @media (max-width: 1023px) {
   :root:has([data-app-shell]):not([data-theme="dark"]) .pf-hero-wash {
     background-image: radial-gradient(ellipse at top left, #DCEBFFB3, transparent 70%), linear-gradient(135deg, #E7FAFF70, #E8F9F080);

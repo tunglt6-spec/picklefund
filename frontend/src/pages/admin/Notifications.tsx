@@ -69,15 +69,15 @@ function NotifCard({ n, onOpen, mobile }: { n: HermesNotif; onOpen: (n: HermesNo
         role="button" tabIndex={0}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(n) } }}
         className={`pf-rowcard flex items-start gap-3 p-4 cursor-pointer active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary-text)]
-          ${isRead ? 'opacity-60' : ''}`}>
+          `}>
         <div className={`h-9 w-9 rounded-[12px] ${bg} flex items-center justify-center shrink-0`}>{icon}</div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
             <p className={`text-sm font-[700] ${isRead ? '[color:var(--pf-color-muted)]' : '[color:var(--pf-text)]'}`}>{n.title}</p>
-            {!isRead && <span className="h-2 w-2 rounded-full [background:var(--pf-primary)] shrink-0" />}
+            {!isRead && <span data-unread="" className="h-2 w-2 rounded-full [background:var(--pf-primary)] shrink-0" />}
             {priorityBadge(n.priority)}
           </div>
-          <p className="text-xs [color:var(--pf-color-muted)] leading-relaxed">{n.body}</p>
+          <p className="line-clamp-3 text-sm [color:var(--pf-color-muted)] leading-relaxed">{n.body}</p>
           <p className="text-xs [color:var(--pf-color-muted)] mt-1">{timeAgo(n.createdAt)}</p>
         </div>
       </div>
@@ -207,7 +207,7 @@ function FilterKpiList({ tab, tabs, counts, onChange }: {
 }
 
 export function Notifications() {
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile(1024)
   const navigate = useNavigate()
   const { user } = useAuthStore()
   // Super Admin: nhóm cấp NỀN TẢNG (tài khoản/CLB mới, hệ thống) — KHÔNG dùng nhóm nội bộ CLB.
@@ -218,6 +218,7 @@ export function Notifications() {
   const [notifs, setNotifs] = useState<HermesNotif[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [pushPerm, setPushPerm] = useState<NotificationPermission | 'unsupported'>('default')
   const [pushBusy, setPushBusy] = useState(false)
@@ -258,6 +259,7 @@ export function Notifications() {
 
   const fetchNotifs = useCallback(async () => {
     if (!user) return
+    setLoading(true)
     try {
       const res = await api.get('/hermes/notifications?limit=50')
       const data = res.data?.data ?? res.data
@@ -265,8 +267,9 @@ export function Notifications() {
       const cnt = data?.unreadCount ?? 0
       setUnreadCount(cnt)
       setGlobalUnread(Math.min(cnt, 9))
+      setLoadError(false)
     } catch {
-      // silent
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -339,11 +342,11 @@ export function Notifications() {
 
   if (isMobile) {
     return (
-      <div className="min-h-full [background:var(--pf-bg)]">
+      <div className="pf-mobile-notif min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-20 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
           <div>
-            <div className="text-lg font-[800] [color:var(--pf-text)]">Thông báo</div>
-            <div className="text-xs [color:var(--pf-color-muted)]">{unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}</div>
+
+            <div className="text-xs [color:var(--pf-color-muted)]">{loading ? 'Đang tải thông báo…' : loadError ? 'Chưa cập nhật được thông báo' : unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}</div>
           </div>
           <div className="flex items-center gap-2.5">
             {pushPerm !== 'unsupported' && pushPerm !== 'granted' && (
@@ -359,7 +362,7 @@ export function Notifications() {
               </button>
             )}
             {unreadCount > 0 && (
-              <button onClick={handleReadAll} className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary-text)] active:opacity-70">
+              <button disabled={loading} onClick={handleReadAll} className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary-text)] active:opacity-70">
                 <Check size={13} />Đã đọc
               </button>
             )}
@@ -373,7 +376,8 @@ export function Notifications() {
         <NotificationSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} categories={pushCats} />
 
         <div className="px-4 pt-3 pb-24 space-y-4">
-          <FilterChips tabs={activeTabs} active={tab} counts={counts} onChange={setTab} label="Lọc thông báo" primary={["all", "unread"]} moreLabel="Loại thông báo" />
+          {!loading && !loadError && <FilterChips tabs={activeTabs} active={tab} counts={counts} onChange={setTab} label="Lọc thông báo" primary={["all", "unread"]} moreLabel="Loại thông báo" />}
+          {!loading && loadError && <div role="alert" className="rounded-2xl border p-4 text-sm [background:var(--pf-surface)] [border-color:var(--pf-border)]"><p>Không tải được thông báo. Vui lòng thử lại.</p><button className="mt-2 min-h-11 font-semibold [color:var(--pf-primary-text)]" onClick={()=>void fetchNotifs()}>Thử lại</button></div>}
           {loading && <p className="text-center text-sm [color:var(--pf-color-muted)] py-8">Đang tải...</p>}
 
           {!loading && unread.length > 0 && (
@@ -394,7 +398,7 @@ export function Notifications() {
             </div>
           )}
 
-          {!loading && filtered.length === 0 && (
+          {!loading && !loadError && filtered.length === 0 && (
             <div className="text-center py-12 [color:var(--pf-color-muted)] text-sm">
               <Bell size={32} className="mx-auto mb-3 [color:var(--pf-color-muted)]" />
               Không có thông báo trong mục này

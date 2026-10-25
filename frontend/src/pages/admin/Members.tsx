@@ -809,10 +809,11 @@ export function Members() {
             />
           )
         ) : isMobile ? (
-          <div className="p-3">
+          <div className="pf-mobile-member-list">
             <MobileCardList
               items={rows}
               itemKey={(r) => r.member.id}
+              itemLabel={(r) => `Xem hồ sơ ${r.member.fullName}`}
               onItemClick={(r) => setDetailId(r.member.id)}
               renderCard={(r) => (
                 <div className="flex flex-wrap items-center gap-3">
@@ -827,16 +828,7 @@ export function Members() {
                       <span className="flex items-center gap-1"><Wallet size={12} />{r.periodName ? (r.paid ? 'Đã đóng' : 'Chưa đóng') : '—'}</span>
                     </div>
                   </div>
-                  <div className="flex w-full items-center justify-end gap-2 border-t pt-2 [border-color:var(--pf-border-soft)]" onClick={(e) => e.stopPropagation()}>
-                    <button onClick={() => openEdit(r.member)} className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border px-3.5 text-sm font-semibold [color:var(--pf-text)] [border-color:var(--pf-border)] [background:var(--pf-surface)] active:[background:var(--pf-color-muted-soft)]">
-                      <Edit2 size={15} aria-hidden /> Sửa
-                    </button>
-                    {r.member.status !== 'left' && (
-                      <button onClick={() => handleToggleStatus(r.member)} className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border px-3.5 text-sm font-semibold [color:var(--pf-text)] [border-color:var(--pf-border)] [background:var(--pf-surface)] active:[background:var(--pf-color-muted-soft)]">
-                        {r.member.status === 'active' ? 'Tạm ngưng' : 'Kích hoạt lại'}
-                      </button>
-                    )}
-                  </div>
+                  <span aria-hidden className="shrink-0 text-xl [color:var(--pf-text-muted)]">›</span>
                 </div>
               )}
             />
@@ -862,18 +854,7 @@ export function Members() {
       </>
       )}
 
-      {/* ── Mobile sticky quick action: Thêm thành viên ── */}
-      {isMobile && (
-        <div className="pointer-events-none fixed right-4 z-30" style={{ bottom: 'calc(132px + env(safe-area-inset-bottom))' }}>
-          <ActionButton
-            className="pointer-events-auto h-12 w-12 shadow-lg"
-            iconOnly
-            ariaLabel="Thêm thành viên"
-            icon={<Plus size={20} />}
-            onClick={openCreate}
-          />
-        </div>
-      )}
+
 
       {/* ── Mobile filter bottom sheet ── */}
       {showFilterSheet && (

@@ -1,3 +1,5 @@
+import { MobileSummary } from '../../components/mobile/MobileSummary'
+import { ActionMenu } from '../../components/shared/ActionMenu'
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { HuyLabel } from '../../components/ui/HuyLabel'
 import { DateInput } from '../../components/ui/DateTimeFields'
@@ -30,7 +32,6 @@ import api from '../../lib/api'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import toast from 'react-hot-toast'
 import { useLiveRefresh } from '../../hooks/useLiveRefresh'
-import { moneyColor } from '../../lib/moneyTone'
 import { Portal } from '../../components/ui/Portal'
 
 /* ── Constants ── */
@@ -326,7 +327,11 @@ function AddDrawer({ open, onClose, onSave, editExpense, isSaving, categories, a
 
 interface FilterValues { status: string; rule: string; from: string; to: string }
 
-function FilterPanel({ open, onClose, values, onApply }: {
+function FilterPanel(props: Parameters<typeof FilterPanelContent>[0]) {
+  return props.open ? <FilterPanelContent {...props} /> : null
+}
+
+function FilterPanelContent({ open, onClose, values, onApply }: {
   open: boolean; onClose: () => void; values: FilterValues
   onApply: (v: FilterValues) => void
 }) {
@@ -350,9 +355,9 @@ function FilterPanel({ open, onClose, values, onApply }: {
   }
   return (
     <Portal>
-    <div className="fixed inset-0 z-50 flex justify-end">
-      <div className="flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
-      <div ref={panelRef} role="dialog" aria-modal="true" aria-label="Bộ lọc" tabIndex={-1} className="w-80 [background:var(--pf-surface)] flex flex-col shadow-2xl outline-none">
+    <div className="pf-filter-overlay fixed inset-0 z-50 flex justify-end">
+      <div className="pf-filter-backdrop flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-label="Bộ lọc" tabIndex={-1} className="pf-filter-panel w-80 [background:var(--pf-surface)] flex flex-col shadow-2xl outline-none">
         <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--pf-border)]">
           <h2 className="text-sm font-semibold [color:var(--pf-text)]">Bộ lọc</h2>
           <button onClick={onClose} aria-label="Đóng" className="h-7 w-7 flex items-center justify-center rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]"><X size={14} /></button>
@@ -380,8 +385,8 @@ function FilterPanel({ open, onClose, values, onApply }: {
           <div>
             <label htmlFor="f-Expenses-11" className="block text-xs font-medium [color:var(--pf-text)] mb-2">Khoảng thời gian</label>
             <div className="grid grid-cols-2 gap-2 max-[480px]:grid-cols-1">
-              <DateInput id="f-Expenses-11" value={from} onChange={e => setFrom(e.target.value)} className="input-base text-xs" />
-              <DateInput value={to}   onChange={e => setTo(e.target.value)}   className="input-base text-xs" />
+              <label className="space-y-1 text-xs [color:var(--pf-text-muted)]"><span className="lg:hidden">Từ ngày</span><DateInput id="f-Expenses-11" aria-label="Từ ngày" value={from} onChange={e => setFrom(e.target.value)} className="input-base text-xs" /></label>
+              <label className="space-y-1 text-xs [color:var(--pf-text-muted)]"><span className="lg:hidden">Đến ngày</span><DateInput aria-label="Đến ngày" value={to} onChange={e => setTo(e.target.value)} className="input-base text-xs" /></label>
             </div>
           </div>
         </div>
@@ -514,6 +519,7 @@ export function Expenses() {
   const clubId = user?.clubId ?? ''
   const { getClubData, setExpenses } = useClubDataStore()
   const clubData = getClubData(clubId)
+  const [expenseLoadState, setExpenseLoadState] = useState<'loading' | 'ready' | 'error'>(clubData.expenses.length ? 'ready' : 'loading')
   // Sĩ số hiển thị cho gợi ý "chia đều cho N thành viên" trong form.
   const memberCount = clubData.members.filter(m => m.status === 'active').length
 
@@ -549,7 +555,8 @@ export function Expenses() {
         status: e.status ?? 'pending',
         createdAt: e.createdAt ?? '', createdBy: e.createdById ?? '',
       })))
-    }).catch(() => { if (liveTick === 0) toast.error('Không tải được danh sách chi phí. Vui lòng tải lại trang.') })
+      setExpenseLoadState('ready')
+    }).catch(() => { setExpenseLoadState('error'); if (liveTick === 0) toast.error('Không tải được danh sách chi phí. Vui lòng tải lại trang.') })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clubId, liveTick])
 
@@ -810,7 +817,7 @@ export function Expenses() {
     }, rows)
   }, { success: 'Đã xuất PDF Chi phí!', empty: filtered.length === 0, emptyMsg: 'Không có khoản chi nào để xuất' })
 
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile(1024)
 
   /* ── Mobile layout ── */
   if (isMobile) {
@@ -818,144 +825,63 @@ export function Expenses() {
     const mobileFiltered = filtered
     const pendingCount = periodFiltered.filter(e => e.status === 'pending').length
 
-    const statusTabs: { key: 'all' | ExpenseStatus; label: string }[] = [
-      { key: 'all', label: 'Tất cả' },
-      { key: 'pending', label: `Chờ${pendingCount > 0 ? ` (${pendingCount})` : ''}` },
-      { key: 'approved', label: 'Đã duyệt' },
-      { key: 'rejected', label: 'Từ chối' },
-    ]
+    const activeFilterCount = [filterValues.status !== 'all', filterValues.rule !== 'all', !!filterValues.from, !!filterValues.to].filter(Boolean).length
+    const applyMobileFilters = (values: FilterValues) => { setTab('all'); setFilterValues(values) }
 
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
-        {/* Sticky header */}
-        <div className="sticky top-0 z-20 max-lg:static [background:var(--pf-surface)] backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 pt-3 pb-2 space-y-2">
-          <div className="flex items-center justify-between">
-            <div>
-              {!embedded && <h2 className="text-base font-[700] [color:var(--pf-text)]">Chi Phí</h2>}
-              {(selectedPeriodId || activePeriod) && <p className="text-xs [color:var(--pf-color-muted)]">{allPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name}</p>}
-            </div>
-            <div className="flex flex-wrap items-center justify-end gap-1.5">
-              <button onClick={exportExcel} disabled={exporting} aria-label="Xuất Excel"
-                className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold bg-emerald-50 text-emerald-600 border border-emerald-200">
-                <Download size={16} />Excel
-              </button>
-              <button onClick={exportPDF} disabled={exporting} aria-label="Xuất PDF"
-                className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold bg-rose-50 text-rose-600 border border-rose-200">
-                <FileDown size={16} />PDF
-              </button>
-              <button onClick={() => setShowFilter(true)} aria-label="Bộ lọc"
-                className="flex h-11 w-11 items-center justify-center rounded-xl [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] border border-[color:var(--pf-border)]">
-                <Filter size={16} />
-              </button>
-              {!isMember && (
-                <button onClick={() => setShowAdd(true)} aria-label="Thêm khoản chi"
-                  className="flex h-11 w-11 items-center justify-center rounded-xl text-white"
-                  style={{ background: 'var(--pf-primary)' }}>
-                  <Plus size={18} />
-                </button>
-              )}
-            </div>
+        <div className="pf-mobile-tools px-4 pt-3 pb-2 space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="min-w-0 flex-1 truncate text-xs [color:var(--pf-text-muted)]">{allPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name}</p>
+            <ActionMenu iconOnly label="Thao tác chi phí" items={[
+              { key: 'excel', label: 'Xuất Excel', onClick: exportExcel, disabled: exporting },
+              { key: 'pdf', label: 'Xuất PDF', onClick: exportPDF, disabled: exporting },
+            ]} />
+            {!isMember && <Button onClick={() => setShowAdd(true)} aria-label="Thêm khoản chi"><Plus size={16} />Thêm chi</Button>}
           </div>
-
-          {/* Period selector */}
-          {allPeriods.length > 1 && (
-            <PeriodSelector periods={allPeriods} selectedId={selectedPeriodId} onChange={id => setSelectedPeriodId(id)} />
-          )}
-
-          {/* Search */}
-          <div className="relative">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)] pointer-events-none" />
-            <input value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Tìm khoản chi..." className="input-base pl-8 w-full text-sm py-1.5" />
-          </div>
-
-          {/* Status tabs */}
-          <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-0.5">
-            {statusTabs.map(t => (
-              <button key={t.key} onClick={() => setTab(t.key)}
-                className={`flex-shrink-0 px-3 py-1 rounded-lg text-xs font-[600] transition-all ${
-                  tab === t.key ? 'text-white' : '[background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)]'
-                }`}
-                style={tab === t.key ? { background: 'var(--pf-primary)' } : {}}>
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* KPI strip */}
-        <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-2">
-          {[
-            { label: 'Quỹ Chính', val: commonAmt, kind: 'expense' as const },
-            { label: 'Quỹ Phụ', val: miniAmt, kind: 'expense' as const },
-            { label: 'Đã duyệt', val: approvedAmt, kind: 'expense' as const },
-            { label: 'Chờ duyệt', val: pendingAmt, kind: 'pending' as const },
-          ].map(k => (
-            <div key={k.label} className="pf-stat-card rounded-xl p-3">
-              <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
-                <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1 truncate">{k.label}</p>
-                <p className="text-base font-bold tabular-nums" style={{ color: moneyColor(k.val, k.kind) }}>{formatVND(k.val)}</p>
-              </div>
+          {allPeriods.length > 1 && <PeriodSelector periods={allPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}
+          <div className="flex items-center gap-2">
+            <div className="relative min-w-0 flex-1">
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-text-muted)] pointer-events-none" />
+              <input aria-label="Tìm khoản chi" value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm khoản chi…" className="input-base pl-9 w-full" />
             </div>
-          ))}
+            <button onClick={() => setShowFilter(true)} aria-label={activeFilterCount ? `Bộ lọc (${activeFilterCount})` : 'Bộ lọc'} className="pf-mobile-filter-button"><Filter size={17} />{activeFilterCount > 0 && <span>{activeFilterCount}</span>}</button>
+          </div>
+          <div className="flex flex-wrap items-center gap-2" aria-label="Lọc nhanh chi phí">
+            {[{key:'all',label:'Tất cả'},{key:'pending',label:`Chờ duyệt${pendingCount ? ` (${pendingCount})` : ''}`}].map(t => <button key={t.key} type="button" aria-pressed={tab === t.key} onClick={() => { setTab(t.key as typeof tab); setFilterValues(v=>({...v,status:'all'})) }} className="pf-mobile-chip">{t.label}</button>)}
+            {activeFilterCount > 0 && <button className="min-h-11 px-2 text-xs font-semibold [color:var(--pf-primary-text)]" onClick={() => setFilterValues({status:'all',rule:'all',from:'',to:''})}>Xóa bộ lọc</button>}
+          </div>
+          {activeFilterCount > 0 && <p role="status" className="text-xs [color:var(--pf-text-muted)]">{[filterValues.status !== 'all' ? EXPENSE_STATUS_LABEL[filterValues.status as ExpenseStatus] : '', filterValues.rule !== 'all' ? ruleLabels[filterValues.rule as AllocationRule] : '', filterValues.from ? `Từ ${formatDate(filterValues.from)}` : '', filterValues.to ? `Đến ${formatDate(filterValues.to)}` : ''].filter(Boolean).join(' · ')}</p>}
+          <MobileSummary module="finance" label="Chi đã duyệt" value={expenseLoadState === 'loading' ? '…' : expenseLoadState === 'error' && !richExpenses.length ? '—' : formatVND(approvedAmt)} note={expenseLoadState === 'loading' ? 'Đang tải…' : `${mobileFiltered.length} khoản đang hiển thị`} items={[
+            {label:'Quỹ Chính',value:expenseLoadState === 'loading' ? '…' : formatVND(commonAmt)}, {label:'Quỹ Phụ',value:expenseLoadState === 'loading' ? '…' : formatVND(miniAmt)}, {label:'Chờ duyệt',value:expenseLoadState === 'loading' ? '…' : formatVND(pendingAmt)},
+          ]} />
+          {expenseLoadState === 'error' && <div role="alert" className="text-sm [color:var(--pf-text-muted)]"><p>Chưa cập nhật được chi phí{richExpenses.length ? '. Đang hiển thị dữ liệu đã tải trước đó.' : '.'}</p><button className="min-h-11 font-semibold [color:var(--pf-primary-text)]" onClick={()=>{setExpenseLoadState('loading');setLiveTick(t=>t+1)}}>Thử lại</button></div>}
         </div>
 
         {/* Expense list */}
-        <div className="pf-cardlist px-4 pt-3 pb-24 grid grid-cols-1 gap-2 min-[600px]:grid-cols-2">
-          {mobileFiltered.length === 0 ? (
+        <div className="pf-mobile-records px-4 pt-2 pb-6">
+          {expenseLoadState === 'loading' && !richExpenses.length ? <p role="status" className="pf-mobile-loading">Đang tải chi phí…</p> : mobileFiltered.length === 0 ? (
             <div className="col-span-full text-center py-14 [color:var(--pf-color-muted)] text-sm">
               <Receipt size={36} className="mx-auto [color:var(--pf-color-muted)] opacity-40 mb-3" />
-              {search ? `Không tìm thấy "${search}"` : 'Không có khoản chi nào'}
+              {expenseLoadState === 'error' ? 'Chưa tải được danh sách chi phí' : search ? `Không tìm thấy "${search}"` : 'Không có khoản chi nào'}
             </div>
           ) : mobileFiltered.map(e => (
-            <div key={e.id} className="pf-rowcard px-4 py-3">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-[600] [color:var(--pf-text)] truncate">{e.description}</div>
-                  <div className="text-xs [color:var(--pf-color-muted)] mt-0.5"><span className="lg:hidden">{formatDate(e.expenseDate)}</span><span className="max-lg:hidden">{e.expenseDate}</span> · {e.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính'}</div>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <div className="text-sm font-[700] [color:var(--pf-text)] tabular-nums">-{formatVND(e.amount)}</div>
-                  <span className={`text-xs font-[600] px-1.5 py-0.5 rounded-full ${
-                    e.status === 'approved' || e.status === 'paid' ? 'bg-emerald-50 text-emerald-600' :
-                    e.status === 'pending' ? 'bg-amber-50 text-amber-600' :
-                    'bg-red-50 text-red-500'
-                  }`}>
-                    {EXPENSE_STATUS_LABEL[e.status] ?? e.status}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 mt-2.5 pt-2 border-t border-[color:var(--pf-border)]">
-                {!isMember && e.status === 'pending' && (
-                  <>
-                    <button onClick={() => handleApprove(e.id)}
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-[600] bg-emerald-50 text-emerald-600 active:bg-emerald-100">
-                      <CheckCircle size={12} />Duyệt
-                    </button>
-                    <button onClick={() => handleReject(e.id)}
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-[600] bg-red-50 text-red-500 active:bg-red-100">
-                      <X size={12} />Từ chối
-                    </button>
-                  </>
-                )}
-                <button onClick={() => setDetailExp(e)}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-[600] [background:var(--pf-surface-muted)] [color:var(--pf-color-muted)] active:[background:var(--pf-color-muted-soft)] ml-auto">
-                  <Eye size={12} />Chi tiết
-                </button>
-                {!isMember && (
-                  <>
-                    <button onClick={() => setEditTarget(e)} aria-label="Sửa khoản chi"
-                      className="p-1.5 [color:var(--pf-color-muted)] active:[color:var(--pf-primary-text)]">
-                      <Pencil size={13} />
-                    </button>
-                    <button onClick={() => setConfirmId(e.id)} aria-label="Xóa khoản chi"
-                      className="p-1.5 [color:var(--pf-color-muted)] active:text-red-500">
-                      <Trash2 size={13} />
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
+            <article key={e.id} className="pf-mobile-record flex items-start gap-2">
+              <button onClick={() => setDetailExp(e)} aria-label={`Chi tiết ${e.description}`} className="min-w-0 flex-1 text-left">
+                <span className="flex items-start justify-between gap-3">
+                  <span className="min-w-0 flex-1 text-sm font-semibold [color:var(--pf-text)]">{e.description}</span>
+                  <span className="shrink-0 text-sm font-bold tabular-nums [color:var(--pf-text)]">−{formatVND(e.amount)}</span>
+                </span>
+                <span className="mt-1.5 block text-xs [color:var(--pf-text-muted)]">{formatDate(e.expenseDate)} · {e.fundSource === 'MINI' ? 'Quỹ Phụ' : 'Quỹ Chính'}</span>
+                <span className="mt-2 inline-block"><Badge variant={statusCfg[e.status].variant}>{EXPENSE_STATUS_LABEL[e.status] ?? e.status}</Badge></span>
+              </button>
+              {!isMember && <ActionMenu iconOnly label={`Thao tác ${e.description}`} items={[
+                {key:'detail',label:'Xem chi tiết',onClick:()=>setDetailExp(e)},
+                ...(e.status === 'pending' ? [{key:'approve',label:'Duyệt khoản chi',onClick:()=>handleApprove(e.id)},{key:'reject',label:'Từ chối khoản chi',onClick:()=>handleReject(e.id),danger:true}] : []),
+                {key:'edit',label:'Sửa khoản chi',onClick:()=>setEditTarget(e)},
+                {key:'delete',label:'Xóa khoản chi',onClick:()=>setConfirmId(e.id),danger:true},
+              ]} />}
+            </article>
           ))}
         </div>
 
@@ -974,7 +900,7 @@ export function Expenses() {
         )}
         <AddDrawer open={!!editTarget} onClose={() => setEditTarget(null)} onSave={handleEdit} editExpense={editTarget} isSaving={isSaving} categories={categories} allPeriods={allPeriods} defaultPeriodId={selectedPeriodId || activePeriod?.id || ''} memberCount={memberCount} />
         <AddDrawer open={showAdd} onClose={() => setShowAdd(false)} onSave={handleAdd} isSaving={isSaving} categories={categories} allPeriods={allPeriods} defaultPeriodId={selectedPeriodId || activePeriod?.id || ''} memberCount={memberCount} />
-        <FilterPanel open={showFilter} onClose={() => setShowFilter(false)} values={filterValues} onApply={setFilterValues} />
+        <FilterPanel open={showFilter} onClose={() => setShowFilter(false)} values={filterValues} onApply={applyMobileFilters} />
       </div>
     )
   }

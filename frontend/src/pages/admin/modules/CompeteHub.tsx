@@ -76,7 +76,7 @@ function TournamentsTab() {
   const [sport, setSport] = useState('PICKLEBALL')
   // Mobile (<1024px): danh sách giải trước; form tạo giải (wizard dài) mở sau nút "+ Tạo giải".
   const mobile = useIsMobile(1024)
-  const [creating, setCreating] = useState(false)
+  const [creating, setCreating] = useState(() => new URLSearchParams(window.location.search).get('create') === '1')
   if (mobile && !isMember) {
     return (
       <div className="flex flex-col gap-4 p-4">

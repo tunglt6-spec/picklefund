@@ -1,3 +1,4 @@
+import { MobileSummary } from '../../components/mobile/MobileSummary'
 /**
  * AiDigitalOffice (AIDO) — "Văn phòng AI" tích hợp trong PickleFund.
  *
@@ -499,7 +500,7 @@ export function AiDigitalOffice() {
       </div>
 
       {tab === 'office' && (
-        <div className="space-y-5">
+        <div className="pf-office-workspace space-y-5">
           {/* Office BANNER — 1 ảnh hero tĩnh (thẻ agent vẽ sẵn trong ảnh). Chỉ scale w-full ⇒
               đồng bộ hoàn toàn desktop/tablet/mobile, KHÔNG phủ thẻ DOM (hết đè/cắt/lệch).
               Trạng thái THẬT hiển thị ở KPI + 3 panel + Đội ngũ AI bên dưới. */}
@@ -515,8 +516,15 @@ export function AiDigitalOffice() {
             }
           />
 
+          <div className="lg:hidden">
+            <MobileSummary module="ai" label="Việc chờ duyệt" value={loading ? '…' : summary ? pending : '—'} note={loading ? 'Đang cập nhật…' : `${opsSignals.length} tín hiệu vận hành`} items={[
+              {label:'Sức khỏe CLB',value:health?.score != null ? `${health.score}/100` : '—'},
+              {label:'Tác vụ lỗi',value:loading ? '…' : failed},
+            ]} />
+            <button className="mt-2 min-h-11 px-1 text-sm font-semibold [color:var(--pf-primary-text)]" onClick={()=>setTab('operations')}>Mở vận hành ›</button>
+          </div>
           {/* Kết quả công việc THẬT hôm nay của từng agent — xếp thẳng dưới 5 nhân vật trên banner. */}
-          <div>
+          <div className="pf-office-agent-results">
             <h3 className="mb-2 text-sm font-semibold [color:var(--pf-text)]">Kết quả hôm nay của từng Agent</h3>
             <div className="grid grid-cols-2 gap-3 max-[599px]:[&>:last-child:nth-child(odd)]:col-span-2 lg:grid-cols-5">
               {resultCards.map((c) => (
@@ -548,7 +556,7 @@ export function AiDigitalOffice() {
           {/* Trung tâm điều hành — giữ "Lịch hôm nay" + "Cảnh báo & lưu ý" (KHÔNG trùng Operations
               Center). Dải KPI + hàng đợi duyệt + Đội ngũ/Trạng thái/Luồng đã bỏ khỏi Office View
               (trùng lặp) — xem đầy đủ ở tab Operations/Analytics + /admin/ai-manager. */}
-          <div className="grid gap-5 lg:grid-cols-2">
+          <div className="pf-office-signals grid gap-5 lg:grid-cols-2">
             {/* Lịch hôm nay = buổi chơi trong ngày (client store) */}
             <div className="contents max-lg:hidden">
             <Panel icon={<CalendarDays size={16} />} title="Lịch hôm nay" sub="Buổi chơi trong ngày">
