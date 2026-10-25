@@ -3,7 +3,8 @@
  * GỘP từ dữ liệu ĐÃ CÓ trong client store (điểm danh · đóng quỹ · chuyên cần). KHÔNG gọi API
  * mới, không đổi nghiệp vụ — chỉ tổng hợp & hiển thị.
  */
-import { useMemo, useRef, useState } from 'react'
+import { Fragment, useMemo, useRef, useState } from 'react'
+import { Portal } from '../../components/ui/Portal'
 import { X, Search, DollarSign, CalendarCheck, TrendingUp, Activity } from '../../components/icons/mobileLucide'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -29,6 +30,7 @@ export function MemberActivity() {
   const [selId, setSelId] = useState<string | null>(members[0]?.id ?? null)
   // Mobile: chạm một thành viên mở bảng chi tiết (sheet) thay vì dồn hồ sơ xuống dưới danh sách dài.
   const isCompact = useIsMobile(1024)
+  const DetailContainer = isCompact ? Portal : Fragment
   const [sheetOpen, setSheetOpen] = useState(false)
   const sheetRef = useRef<HTMLDivElement>(null)
   const sheetShown = isCompact && sheetOpen
@@ -125,16 +127,18 @@ export function MemberActivity() {
 
         {/* Chi tiết thành viên */}
         {sel && (
-          <>
+          <DetailContainer>
           {sheetShown && <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setSheetOpen(false)} aria-hidden />}
           <div
+            data-workspace={isCompact ? 'members' : undefined}
+            data-mod={isCompact ? 'members' : undefined}
             ref={sheetRef}
             tabIndex={-1}
             role={sheetShown ? 'dialog' : undefined}
             aria-modal={sheetShown ? true : undefined}
             aria-label={sheetShown ? `Hoạt động của ${sel.m.fullName}` : undefined}
             className={cn('space-y-4', isCompact && (sheetShown
-              ? 'fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-2xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))] [background:var(--pf-surface-muted)]'
+              ? 'fixed inset-x-0 bottom-0 z-50 max-h-[85dvh] overflow-y-auto rounded-t-2xl p-4 pb-[max(1rem,env(safe-area-inset-bottom))] [background:var(--pf-surface-muted)]'
               : 'hidden'))}
           >
             {sheetShown && (
@@ -168,7 +172,7 @@ export function MemberActivity() {
               )}
             </div>
           </div>
-          </>
+          </DetailContainer>
         )}
       </div>
     </PageShell>
