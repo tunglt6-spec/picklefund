@@ -120,7 +120,7 @@ export function ModuleTabs({ tabs, title, defaultKey, paramKey = 'tab', menuBack
     }
     return (
       <div className="flex min-h-full w-full flex-col">
-        {!current?.nested && <MobileFunctionHeader title={current?.menuLabel ?? current?.label ?? ''} parent={title} onBack={goBack} />}
+        {!current?.nested && <MobileFunctionHeader title={current?.menuLabel ?? current?.label ?? ''} parent={title} module={current?.module ?? module} onBack={goBack} />}
         <EmbeddedContext.Provider value={embedded}>
           <div className="flex-1" role="region" aria-label={current?.menuLabel ?? current?.label}>{current?.element}</div>
         </EmbeddedContext.Provider>

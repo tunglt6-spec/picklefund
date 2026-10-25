@@ -1,3 +1,4 @@
+import { MobileSummary } from '../../components/mobile/MobileSummary'
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { ActionMenu } from '../../components/shared/ActionMenu'
 import { useEmbedded } from '../../components/shared/ModuleTabs'
@@ -538,7 +539,7 @@ export function FundPeriods() {
     }
   }
 
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile(1024)
   const embedded = useEmbedded()
 
   const handleGenerateReceipts = async (periodId: string) => {
@@ -639,23 +640,16 @@ export function FundPeriods() {
         </div>
 
         <div className="px-4 pt-4 pb-6 space-y-4">
-          {/* KPI summary */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="pf-stat-card rounded-xl p-4">
-              <div className="text-xs font-[600] [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">Quỹ Chính</div>
-              <div className="text-xl font-[800] [color:var(--pf-primary-text)]">{formatVND(stats.chung.balance)}</div>
-              <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{stats.chung.txCount} giao dịch{stats.chung.totalPending > 0 ? ` · ${formatVND(stats.chung.totalPending)} chờ` : ''}</div>
-            </div>
-            <div className="pf-stat-card rounded-xl p-4">
-              <div className="text-xs font-[600] [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">Quỹ Phụ</div>
-              <div className="text-xl font-[800] [color:var(--pf-primary-text)]">{formatVND(stats.game.balance)}</div>
-              <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{stats.game.txCount} giao dịch{stats.game.totalPending > 0 ? ` · ${formatVND(stats.game.totalPending)} chờ` : ''}</div>
-            </div>
-          </div>
+          <MobileSummary module="finance" label="Số dư Quỹ Chính" value={formatVND(stats.chung.balance)} note={`${stats.chung.txCount} giao dịch`} items={[
+            {label:'Số dư Quỹ Phụ',value:formatVND(stats.game.balance)},
+            {label:'Quỹ Chính chờ xử lý',value:formatVND(stats.chung.totalPending)},
+            {label:'Quỹ Phụ chờ xử lý',value:formatVND(stats.game.totalPending)},
+          ]} />
 
           {/* QR thanh toán */}
           {bankInfo && buildQrUrl(qrPeriodId) && (
-            <div className="pf-glass rounded-xl p-4">
+            <details className="pf-glass rounded-xl p-4">
+              <summary className="min-h-11 cursor-pointer py-3 text-sm font-semibold [color:var(--pf-primary-text)]">QR và thông tin thanh toán</summary>
               <div className="flex items-center gap-2 mb-3">
                 <QrCode size={14} className="[color:var(--pf-primary-text)]" />
                 <span className="text-sm font-[700] [color:var(--pf-text)]">QR Thanh Toán</span>
@@ -686,7 +680,7 @@ export function FundPeriods() {
                   </select>
                 </div>
               )}
-            </div>
+            </details>
           )}
 
           {/* Search */}
@@ -720,30 +714,16 @@ export function FundPeriods() {
                     <div className="flex items-center justify-between text-sm mb-3">
                       <span className="[color:var(--pf-color-muted)]">Mức đóng: <span className="font-[600] [color:var(--pf-text)]">{formatVND(p.contributionAmount)}</span></span>
                     </div>
-                    {!isMember && (
-                      <div className="flex gap-2">
-                        <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary-text)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)] flex items-center justify-center gap-1"
-                          onClick={() => openEdit(p)}><Pencil size={13} />Sửa</button>
-                        {p.status === 'draft' && (
-                          <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] text-green-600 border border-green-200 active:bg-green-50 flex items-center justify-center gap-1"
-                            onClick={() => handleSetStatus(p, 'active')}><Play size={13} />Bắt đầu</button>
-                        )}
-                        {p.status === 'active' && (
-                          <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-color-muted)] border border-[color:var(--pf-border)] active:[background:var(--pf-surface-muted)] flex items-center justify-center gap-1"
-                            onClick={() => handleSetStatus(p, 'closed')}><Lock size={13} />Đóng</button>
-                        )}
-                        {(p.status === 'closed' || p.status === 'finalized') && (
-                          <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] text-emerald-600 border border-emerald-200 active:bg-emerald-50 flex items-center justify-center gap-1"
-                            onClick={() => handleSetStatus(p, 'active')}><LockOpen size={13} />Mở lại</button>
-                        )}
-                        <button className="px-3 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary-text)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
-                          onClick={() => handleGenerateReceipts(p.id)} aria-label="Tạo phiếu thu"><FileText size={13} /></button>
-                        <button className="px-3 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary-text)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
-                          onClick={() => handleDownloadReceiptsPdf(p)} aria-label="Tải PDF phiếu thu"><Download size={13} /></button>
-                        <button className="px-3 py-1.5 rounded-[10px] text-sm font-[600] text-red-500 border border-red-200 active:bg-red-50"
-                          onClick={() => handleDelete(p)} aria-label="Xóa"><Trash2 size={13} /></button>
-                      </div>
-                    )}
+                    {!isMember && <div className="mt-3 flex justify-end"><ActionMenu label="Quản lý kỳ quỹ" items={[
+                      {key:'edit',label:'Chỉnh sửa kỳ quỹ',onClick:()=>openEdit(p)},
+                      ...(p.status === 'draft' ? [{key:'start',label:'Bắt đầu kỳ quỹ',onClick:()=>handleSetStatus(p,'active')}] : []),
+                      ...(p.status === 'active' ? [{key:'close',label:'Đóng kỳ quỹ',onClick:()=>handleSetStatus(p,'closed')}] : []),
+                      ...(['closed','finalized'].includes(p.status) ? [{key:'reopen',label:'Mở lại kỳ quỹ',onClick:()=>handleSetStatus(p,'active')}] : []),
+                      {key:'receipts',label:'Tạo phiếu thu',onClick:()=>handleGenerateReceipts(p.id)},
+                      {key:'pdf',label:'Tải PDF phiếu thu',onClick:()=>handleDownloadReceiptsPdf(p)},
+                      {key:'delete',label:'Xóa kỳ quỹ',onClick:()=>handleDelete(p),danger:true},
+                    ]} /></div>}
+
                   </div>
                 ))}
               </div>
@@ -770,28 +750,14 @@ export function FundPeriods() {
                     <div className="flex items-center justify-between text-sm mb-3">
                       <span className="[color:var(--pf-color-muted)]">Mức đóng: <span className="font-[600] [color:var(--pf-text)]">{formatVND(p.contributionAmount)}</span></span>
                     </div>
-                    {!isMember && (
-                      <div className="flex gap-2">
-                        <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary-text)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)] flex items-center justify-center gap-1"
-                          onClick={() => openEdit(p)}><Pencil size={13} />Sửa</button>
-                        {p.status === 'draft' && (
-                          <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] text-green-600 border border-green-200 active:bg-green-50 flex items-center justify-center gap-1"
-                            onClick={() => handleSetStatus(p, 'active')}><Play size={13} />Bắt đầu</button>
-                        )}
-                        {p.status === 'active' && (
-                          <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-color-muted)] border border-[color:var(--pf-border)] active:[background:var(--pf-surface-muted)] flex items-center justify-center gap-1"
-                            onClick={() => handleSetStatus(p, 'closed')}><Lock size={13} />Đóng</button>
-                        )}
-                        {(p.status === 'closed' || p.status === 'finalized') && (
-                          <button className="flex-1 py-1.5 rounded-[10px] text-sm font-[600] text-emerald-600 border border-emerald-200 active:bg-emerald-50 flex items-center justify-center gap-1"
-                            onClick={() => handleSetStatus(p, 'active')}><LockOpen size={13} />Mở lại</button>
-                        )}
-                        <button className="px-3 py-1.5 rounded-[10px] text-sm font-[600] [color:var(--pf-primary-text)] border [border-color:var(--pf-primary-soft)] active:[background:var(--pf-primary-soft)]"
-                          onClick={() => handleGenerateReceipts(p.id)} aria-label="Tạo phiếu thu"><FileText size={13} /></button>
-                        <button className="px-3 py-1.5 rounded-[10px] text-sm font-[600] text-red-500 border border-red-200 active:bg-red-50"
-                          onClick={() => handleDelete(p)} aria-label="Xóa"><Trash2 size={13} /></button>
-                      </div>
-                    )}
+                    {!isMember && <div className="mt-3 flex justify-end"><ActionMenu label="Quản lý kỳ quỹ" items={[
+                      {key:'edit',label:'Chỉnh sửa kỳ quỹ',onClick:()=>openEdit(p)},
+                      ...(p.status === 'draft' ? [{key:'start',label:'Bắt đầu kỳ quỹ',onClick:()=>handleSetStatus(p,'active')}] : []),
+                      ...(p.status === 'active' ? [{key:'close',label:'Đóng kỳ quỹ',onClick:()=>handleSetStatus(p,'closed')}] : []),
+                      ...(['closed','finalized'].includes(p.status) ? [{key:'reopen',label:'Mở lại kỳ quỹ',onClick:()=>handleSetStatus(p,'active')}] : []),
+                      {key:'receipts',label:'Tạo phiếu thu',onClick:()=>handleGenerateReceipts(p.id)},
+                      {key:'delete',label:'Xóa kỳ quỹ',onClick:()=>handleDelete(p),danger:true},
+                    ]} /></div>}
                   </div>
                 ))}
               </div>

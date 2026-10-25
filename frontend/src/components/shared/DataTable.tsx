@@ -73,7 +73,7 @@ export function DataTable<T>({
               <dl className="mt-2 divide-y [&>div]:py-1.5 text-[13px] [--tw-divide-opacity:1] divide-[color:var(--pf-border-soft)]">
                 {restCols.map((c) => (
                   <div key={c.key} className="flex items-start justify-between gap-3">
-                    <dt className="shrink-0 pt-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] [color:var(--pf-color-muted)]">{c.header}</dt>
+                    <dt className="max-w-[45%] pt-0.5 text-xs font-medium [color:var(--pf-color-muted)]">{c.header}</dt>
                     <dd className="min-w-0 break-words text-right [color:var(--pf-text)]">{cell(c, row, i)}</dd>
                   </div>
                 ))}

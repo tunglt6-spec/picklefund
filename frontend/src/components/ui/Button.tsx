@@ -27,6 +27,7 @@ export const Button = forwardRef<
   return (
     <button
       ref={ref}
+      data-pf-button={variant}
       className={cn(
         'inline-flex items-center justify-center rounded-xl max-lg:rounded-full font-medium transition-all duration-150',
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary-text)] focus-visible:ring-offset-1',

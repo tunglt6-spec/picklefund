@@ -1,3 +1,4 @@
+import { MobileSummary } from '../../components/mobile/MobileSummary'
 import { useCallback, useEffect, useState } from 'react'
 import { CheckCircle2, Clock, RotateCcw, Wallet, ExternalLink, User } from '../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
@@ -120,11 +121,13 @@ export function PaymentApprovals() {
         actions={rows.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined}
       />
 
-      <div className="pf-glass grid grid-cols-3 divide-x p-3 text-center [--tw-divide-opacity:1] lg:hidden" aria-label="Tóm tắt xác nhận nộp quỹ">
-        <div><p className="text-xs [color:var(--pf-color-muted)]">Chờ</p><p className="text-lg font-bold tabular-nums">{stats?.pendingCount ?? 0}</p></div>
-        <div><p className="text-xs [color:var(--pf-color-muted)]">Đã xác nhận</p><p className="text-lg font-bold tabular-nums">{stats?.confirmedCount ?? 0}</p></div>
-        <div><p className="text-xs [color:var(--pf-color-muted)]">Đã thu</p><p className="text-sm font-bold tabular-nums leading-7">{formatVND(Number(stats?.confirmedAmount ?? 0))}</p></div>
-      </div>
+      <div className="mb-4 lg:hidden"><MobileSummary module="finance" label="Chờ xác nhận nộp quỹ"
+        value={loading ? 'Đang tải…' : error || !stats ? '—' : stats.pendingCount}
+        note={loading || error ? undefined : `${rows.length} khoản trong danh sách`}
+        items={loading || error || !stats ? [] : [
+          {label:'Đã xác nhận',value:stats.confirmedCount},
+          {label:'Tổng đã thu',value:formatVND(Number(stats.confirmedAmount))},
+        ]} /></div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 max-lg:hidden">
         <MetricCard label="Chờ xác nhận" value={`${stats?.pendingCount ?? 0}`} accent="amber" icon={<Clock size={18} />} />
         <MetricCard label="Đã xác nhận" value={`${stats?.confirmedCount ?? 0}`} accent="green" icon={<CheckCircle2 size={18} />} />

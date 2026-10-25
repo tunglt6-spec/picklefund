@@ -1,3 +1,4 @@
+import { WorkspaceMark } from '../../../components/mobile/WorkspaceMark'
 import { useRef, useState } from 'react'
 import { ActionTypeText } from '../../../components/ui/ActionTypeText'
 import { useDialogA11y } from '../../../hooks/useDialogA11y'
@@ -117,9 +118,10 @@ export function AiApprovalInbox() {
       <div className="sticky top-0 z-10 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 sm:px-6 py-4">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">
+            <span className="hidden lg:flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">
               <Inbox size={20} className="[color:var(--pf-primary-text)]" />
             </span>
+            <span className="lg:hidden"><WorkspaceMark title="Hộp duyệt AI" module="ai" /></span>
             <div>
               <h1 className="text-xl font-bold [color:var(--pf-text)]">Hộp Duyệt AI</h1>
             </div>

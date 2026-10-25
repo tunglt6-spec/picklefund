@@ -12,6 +12,7 @@ import type { ReactNode } from 'react'
 import { cn } from '../../lib/utils'
 import { useEmbedded } from './ModuleTabs'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { WorkspaceMark } from '../mobile/WorkspaceMark'
 
 interface PageHeaderProps {
   title: string
@@ -57,7 +58,7 @@ export function PageHeader({
     return (
       <div className={cn('pf-glass-bar border-b px-6 py-4 max-lg:px-4 max-lg:py-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between', className)}>
         <div className="min-w-0">
-          <h1 className="text-base font-bold [color:var(--pf-text)] max-lg:text-[20px] max-lg:font-[800]">{shownTitle}</h1>
+          <h1 className="text-base font-bold [color:var(--pf-text)] max-lg:text-[20px] max-lg:font-[800]"><span className="pf-workspace-title">{isMobile && <WorkspaceMark title={shownTitle} />}<span>{shownTitle}</span></span></h1>
           {subtitle && <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{subtitle}</p>}
         </div>
         {(aside || actions) && (
@@ -107,7 +108,7 @@ export function PageHeader({
           className="text-xl font-bold sm:text-2xl [color:var(--pf-text)] max-lg:text-[22px] max-lg:font-[800]"
           style={{ letterSpacing: '-0.02em' }}
         >
-          {shownTitle}
+          <span className="pf-workspace-title">{isMobile && <WorkspaceMark title={shownTitle} />}<span>{shownTitle}</span></span>
         </h1>
         {subtitle && (
           <p className="mt-0.5 text-sm [color:var(--pf-color-muted)]">{subtitle}</p>

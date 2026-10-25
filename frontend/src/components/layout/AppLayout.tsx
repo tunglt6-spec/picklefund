@@ -15,6 +15,7 @@ import { useAuthStore } from '../../store/authStore'
 import { useGuideStore } from '../../store/guideStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { MobileIconContext } from '../icons/MobileIconContext'
+import { workspaceForLocation } from '../../lib/workspaceDesign'
 
 export function AppLayout() {
   useApiSync()
@@ -24,6 +25,7 @@ export function AppLayout() {
   const location = useLocation()
   const { user } = useAuthStore()
   const mobileIcons = useIsMobile(1024)
+  const workspace = workspaceForLocation(location.pathname, location.search)
   const { open: guideOpen, openGuide, closeGuide } = useGuideStore()
 
   // Tự bật tài liệu Hướng dẫn LẦN ĐẦU cho mỗi tài khoản trên trình duyệt này (đánh dấu đã xem
@@ -78,7 +80,7 @@ export function AppLayout() {
             <PushEnableBanner />
             {/* Page transition (Elite): keyed theo pathname → replay hiệu ứng vào mỗi lần
                 đổi route. Đổi ?tab= KHÔNG replay (chỉ đổi search) — tránh nháy khi chuyển tab. */}
-            <div key={location.pathname} className="pf-page">
+            <div key={location.pathname} className="pf-page" data-workspace={workspace} data-mod={workspace}>
               {/* Suspense NGAY TRONG khung app: khi chunk của màn con đang tải, header + thanh đáy vẫn hiện (không nháy cả màn). */}
               <Suspense fallback={<div className="flex min-h-[40vh] items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-[color:var(--pf-border)] border-t-[color:var(--pf-primary-text)]" /></div>}>
                 <Outlet />

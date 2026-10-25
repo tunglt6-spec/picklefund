@@ -1,3 +1,5 @@
+import { MobileSummary } from '../../components/mobile/MobileSummary'
+import { ActionMenu } from '../../components/shared/ActionMenu'
 import { useState, useMemo, useEffect, useCallback } from 'react'
 import { HuyLabel } from '../../components/ui/HuyLabel'
 import { DateInput } from '../../components/ui/DateTimeFields'
@@ -404,72 +406,44 @@ export function Contributions() {
             <p className="text-xs [color:var(--pf-color-muted)]">{chungPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name ?? 'Chưa có kỳ quỹ'}</p>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
-            {contributions.length > 0 && canExportOrgWideData(user?.role) && (
-              <>
-                <button
-                  onClick={exportContribXlsx} disabled={exporting}
-                  aria-label="Xuất Excel"
-                  className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200"
-                >
-                  <FileSpreadsheet size={16} />Excel
-                </button>
-                <button
-                  onClick={exportContribPdf} disabled={exporting}
-                  aria-label="Xuất PDF"
-                  className="inline-flex h-11 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:bg-slate-200"
-                >
-                  <FileText size={16} />PDF
-                </button>
-              </>
-            )}
+            <ActionMenu iconOnly label="Thao tác thu quỹ" items={contributions.length && canExportOrgWideData(user?.role) ? [
+              {key:'excel',label:'Xuất Excel',onClick:exportContribXlsx,disabled:exporting},
+              {key:'pdf',label:'Xuất PDF',onClick:exportContribPdf,disabled:exporting},
+            ] : []} />
             {!isMember && (
-              <button
-                onClick={openCreate}
-                aria-label="Thêm khoản thu"
-                className="flex h-11 w-11 items-center justify-center rounded-xl text-white"
-                style={{ background: 'var(--pf-primary)' }}
-              >
-                <Plus size={18} />
-              </button>
+              <Button onClick={openCreate} aria-label="Thêm khoản thu"><Plus size={16} />Thêm thu</Button>
             )}
           </div>
           </div>
           <PeriodSelector periods={chungPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} label="Kỳ quỹ" />
         </div>
 
-        {/* Summary row */}
-        <div className="px-4 pt-3 pb-1 grid grid-cols-2 gap-3">
-          <div className="pf-stat-card rounded-xl p-4">
-            <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
-              <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Quỹ Chính</p>
-              <p className="text-base font-bold tabular-nums" style={{ color: moneyColor(commonTotal, 'income') }}>{formatVND(commonTotal)}</p>
-            </div>
-          </div>
-          <div className="pf-stat-card rounded-xl p-4">
-            <div data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center" data-hi="">
-              <p className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">Quỹ Phụ</p>
-              <p className="text-base font-bold tabular-nums" style={{ color: moneyColor(miniTotal, 'income') }}>{formatVND(miniTotal)}</p>
-            </div>
-          </div>
+        <div className="px-4 pt-3">
+          <MobileSummary module="finance" label="Quỹ Chính" value={formatVND(commonTotal)} note={`${commonContribs.length} khoản thu`} items={[
+            {label:'Quỹ Phụ',value:formatVND(miniTotal)},
+            {label:'Chờ xác nhận',value:contributions.filter(c=>!c.isConfirmed).length},
+          ]} />
         </div>
 
         {/* Mobile Fund Tabs */}
         <div className="flex gap-1 [background:var(--pf-color-muted-soft)] rounded-[12px] p-1 mx-4 mt-2">
           <button
             onClick={() => setMobileTab('COMMON')}
+            aria-pressed={mobileTab === 'COMMON'}
             className={`flex-1 py-2 rounded-[10px] text-xs font-[700] transition-all ${mobileTab === 'COMMON' ? '[background:var(--pf-surface)] [color:var(--pf-primary-text)] shadow-sm' : '[color:var(--pf-color-muted)]'}`}
           >
             Quỹ Chính
           </button>
           <button
             onClick={() => setMobileTab('MINI')}
+            aria-pressed={mobileTab === 'MINI'}
             className={`flex-1 py-2 rounded-[10px] text-xs font-[700] transition-all ${mobileTab === 'MINI' ? '[background:var(--pf-surface)] [color:var(--pf-primary-text)] shadow-sm' : '[color:var(--pf-color-muted)]'}`}
           >
             Quỹ Phụ
           </button>
         </div>
 
-        <div className="pf-cardlist px-4 pt-3 pb-24 grid grid-cols-1 min-[600px]:grid-cols-2 gap-2">
+        <div className="pf-mobile-records pf-income-records">
           {mobileTab === 'COMMON' ? (
             sortedCommon.length === 0 ? (
               <div className="col-span-full text-center py-14 [color:var(--pf-color-muted)] text-sm">
@@ -485,17 +459,16 @@ export function Contributions() {
                   description={c.notes ?? methodLabel(c.paymentMethod)}
                   amount={c.amount}
                   type="income"
+                  date={formatDate(c.paymentDate)}
+                  compactActions
                   fundSource={c.fundSource ?? 'COMMON'}
                   status={c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
-                  actions={isMember ? undefined : (
-                    <>
-                      <button onClick={() => toggleConfirm(c.id)} aria-label={c.isConfirmed ? 'Bỏ xác nhận khoản thu' : 'Xác nhận khoản thu'} className={`p-2 ${c.isConfirmed ? 'text-emerald-500 active:[color:var(--pf-color-muted)]' : '[color:var(--pf-color-muted)] active:text-emerald-500'}`}>
-                        {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
-                      </button>
-                      <button onClick={() => openEdit(c)} aria-label="Sửa khoản thu" className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary-text)] p-2"><Edit2 size={14} /></button>
-                      <button onClick={() => setDeleteId(c.id)} aria-label="Xóa khoản thu" className="[color:var(--pf-color-muted)] active:text-red-500 p-2"><Trash2 size={14} /></button>
-                    </>
-                  )}
+                  actions={isMember ? undefined : <ActionMenu iconOnly label={`Thao tác khoản thu ${memberName}`} items={[
+                    {key:'confirm',label:c.isConfirmed ? 'Bỏ xác nhận khoản thu' : 'Xác nhận khoản thu',onClick:()=>toggleConfirm(c.id)},
+                    {key:'edit',label:'Sửa khoản thu',onClick:()=>openEdit(c)},
+                    {key:'delete',label:'Xóa khoản thu',onClick:()=>setDeleteId(c.id),danger:true},
+                  ]} />}
+
                 />
               )
             })
@@ -514,18 +487,16 @@ export function Contributions() {
                   description={MINI_INCOME_TYPE_LABELS[c.miniIncomeType ?? 'OTHER']}
                   amount={c.amount}
                   type="income"
+                  date={formatDate(c.paymentDate)}
+                  compactActions
                   fundSource="MINI"
                   status={c.isConfirmed ? 'Đã xác nhận' : 'Chờ xác nhận'}
-                  actions={isMember ? undefined : (
-                    <>
-                      <button onClick={() => toggleConfirm(c.id)} aria-label={c.isConfirmed ? 'Bỏ xác nhận khoản thu' : 'Xác nhận khoản thu'} className={`p-2 ${c.isConfirmed ? 'text-emerald-500 active:[color:var(--pf-color-muted)]' : '[color:var(--pf-color-muted)] active:text-emerald-500'}`}>
-                        {c.isConfirmed ? <CheckCircle size={14} /> : <XCircle size={14} />}
-                      </button>
-                      <button onClick={() => exportMiniReceipt(c)} className="[color:var(--pf-color-muted)] active:text-violet-600 p-2" aria-label="Xuất phiếu thu"><FileText size={14} /></button>
-                      <button onClick={() => openEdit(c)} aria-label="Sửa khoản thu" className="[color:var(--pf-color-muted)] active:[color:var(--pf-primary-text)] p-2"><Edit2 size={14} /></button>
-                      <button onClick={() => setDeleteId(c.id)} aria-label="Xóa khoản thu" className="[color:var(--pf-color-muted)] active:text-red-500 p-2"><Trash2 size={14} /></button>
-                    </>
-                  )}
+                  actions={isMember ? undefined : <ActionMenu iconOnly label={`Thao tác khoản thu ${memberName}`} items={[
+                    {key:'confirm',label:c.isConfirmed ? 'Bỏ xác nhận khoản thu' : 'Xác nhận khoản thu',onClick:()=>toggleConfirm(c.id)},
+                    {key:'receipt',label:'Xuất phiếu thu',onClick:()=>exportMiniReceipt(c)},
+                    {key:'edit',label:'Sửa khoản thu',onClick:()=>openEdit(c)},
+                    {key:'delete',label:'Xóa khoản thu',onClick:()=>setDeleteId(c.id),danger:true},
+                  ]} />}
                 />
               )
             })

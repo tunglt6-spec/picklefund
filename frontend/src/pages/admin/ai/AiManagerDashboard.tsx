@@ -1,3 +1,4 @@
+import { WorkspaceMark } from '../../../components/mobile/WorkspaceMark'
 import { useMemo, useState } from 'react'
 import { mobileText } from '../../../lib/mobileText'
 import { useNavigate } from 'react-router-dom'
@@ -529,9 +530,10 @@ export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } 
       <div className={`[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] py-4 ${embedded ? 'max-lg:hidden' : ''}`}>
         <div className="pf-center-x w-full max-w-[1600px] px-4 sm:px-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3 min-w-0">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">
+            <span className="hidden lg:flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">
               <Bot size={20} className="[color:var(--pf-primary-text)]" />
             </span>
+            <span className="lg:hidden"><WorkspaceMark title="Trung tâm điều hành AI" module="ai" /></span>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-xl font-bold [color:var(--pf-text)]">{mobileText('AI Operations Center', 'Trung tâm điều hành AI')}</h1>

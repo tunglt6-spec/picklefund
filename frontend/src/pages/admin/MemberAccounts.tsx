@@ -1,3 +1,5 @@
+import { MobileSummary } from '../../components/mobile/MobileSummary'
+import { ActionMenu } from '../../components/shared/ActionMenu'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useDialogA11y } from '../../hooks/useDialogA11y'
 import {
@@ -129,7 +131,7 @@ function BulkCreateModal({
               </div>
 
               {/* Header */}
-              <div className="grid grid-cols-[auto_1fr_1fr_1fr] gap-3 px-3 py-2 text-xs font-medium [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] rounded-lg mb-1">
+              <div className="hidden lg:grid grid-cols-[auto_1fr_1fr_1fr] gap-3 px-3 py-2 text-xs font-medium [color:var(--pf-color-muted)] [background:var(--pf-surface-muted)] rounded-lg mb-1">
                 <span />
                 <span>Thành viên</span>
                 <span>Username dự kiến</span>
@@ -139,12 +141,12 @@ function BulkCreateModal({
               <div className="space-y-1">
                 {available.map(m => (
                   <label key={m.id}
-                    className="grid grid-cols-[auto_1fr_1fr_1fr] gap-3 items-center px-3 py-2.5 rounded-lg hover:[background:var(--pf-surface-muted)] cursor-pointer border border-transparent has-[:checked]:[border-color:var(--pf-primary-soft)] has-[:checked]:[background:var(--pf-primary-soft)] transition-colors">
+                    className="grid grid-cols-[auto_minmax(0,1fr)] lg:grid-cols-[auto_1fr_1fr_1fr] gap-x-3 gap-y-1 items-center px-3 py-2.5 rounded-lg hover:[background:var(--pf-surface-muted)] cursor-pointer border border-transparent has-[:checked]:[border-color:var(--pf-primary-soft)] has-[:checked]:[background:var(--pf-primary-soft)] transition-colors">
                     <input type="checkbox" checked={selected.has(m.id)} onChange={() => toggle(m.id)}
                       className="rounded [color:var(--pf-primary-text)]" />
                     <span className="text-sm font-medium [color:var(--pf-text)]">{m.fullName}</span>
-                    <span className="text-sm [color:var(--pf-color-muted)] font-mono">{slugify(m.fullName) || 'user'}</span>
-                    <span className="text-sm [color:var(--pf-color-muted)] font-mono">123456</span>
+                    <span className="max-lg:col-start-2 text-sm [color:var(--pf-color-muted)] font-mono break-all"><span className="lg:hidden font-sans">Tài khoản: </span>{slugify(m.fullName) || 'user'}</span>
+                    <span className="max-lg:col-start-2 text-sm [color:var(--pf-color-muted)] font-mono"><span className="lg:hidden font-sans">Mật khẩu: </span>123456</span>
                   </label>
                 ))}
               </div>
@@ -152,7 +154,7 @@ function BulkCreateModal({
           )}
         </div>
 
-        <div className="px-6 py-4 border-t border-[color:var(--pf-border)] flex items-center justify-between gap-3">
+        <div className="px-6 py-4 border-t border-[color:var(--pf-border)] flex flex-wrap items-center justify-between gap-3">
           <span className="text-sm [color:var(--pf-color-muted)]">Đã chọn: <strong>{selected.size}</strong> thành viên</span>
           <div className="flex gap-2">
             <Button variant="outline" onClick={onClose} disabled={saving}>Hủy</Button>
@@ -303,7 +305,7 @@ export function MemberAccounts() {
   const { user } = useAuthStore()
   const embedded = useEmbedded() // trong module Thành viên: ẩn h1 trùng
   const { getClubData } = useClubDataStore()
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile(1024)
   const clubData = getClubData(user?.clubId ?? '')
   const members = clubData.members.filter(m => m.status === 'active')
 
@@ -382,39 +384,25 @@ export function MemberAccounts() {
   // ── Mobile card list ──────────────────────────────────────────────────────
   if (isMobile) {
     return (
-      <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
+      <div className="pf-account-workspace min-h-full [background:var(--pf-bg)]">
         <div className="[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-4">
           <div className="flex items-center justify-between mb-3">
             <div>
               {!embedded && <h1 className="text-base font-bold [color:var(--pf-text)]">Tài khoản thành viên</h1>}
-              <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{accounts.length} tài khoản</p>
+              <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">Tài khoản truy cập CLB</p>
             </div>
             <div className="flex items-center gap-1.5">
-              {noAccountMembers.length > 0 && (
-                <button onClick={() => setShowBulk(true)} aria-label={`Tạo tài khoản hàng loạt (${noAccountMembers.length} thành viên)`}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-[10px] text-xs font-[700] border [border-color:var(--pf-primary-soft)] [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)] active:opacity-80">
-                  <Users size={11} />{noAccountMembers.length}
-                </button>
-              )}
+              <ActionMenu iconOnly label="Thao tác tài khoản" items={noAccountMembers.length ? [{key:'bulk',label:`Tạo hàng loạt (${noAccountMembers.length} thành viên)`,onClick:()=>setShowBulk(true)}] : []} />
               <Button size="sm" onClick={() => setShowSingle(true)} aria-label="Tạo tài khoản">
                 <UserPlus size={14} /> Tạo tài khoản
               </Button>
             </div>
           </div>
-          {/* KPI mini stats */}
-          <div className="grid grid-cols-2 gap-1.5 mb-3 sm:grid-cols-4">
-            {[
-              { label: 'Tổng', value: accounts.length, color: '[color:var(--pf-primary-text)]' },
-              { label: 'Hoạt động', value: accounts.filter(a => getStatus(a) === 'active').length, color: 'text-emerald-600' },
-              { label: 'Chờ', value: accounts.filter(a => ['pending','must_change'].includes(getStatus(a))).length, color: 'text-amber-600' },
-              { label: 'Khóa', value: accounts.filter(a => getStatus(a) === 'locked').length, color: 'text-red-600' },
-            ].map(s => (
-              <div key={s.label} data-keep="" className="pf-stat-cell rounded-lg px-2 py-2.5 text-center">
-                <div className="text-[10px] uppercase font-semibold tracking-wide [color:var(--pf-color-muted)] mb-1">{s.label}</div>
-                <div className={`text-base font-bold ${s.color}`}>{s.value}</div>
-              </div>
-            ))}
-          </div>
+          <MobileSummary module="members" label="Tài khoản thành viên" value={loading ? '…' : accounts.length} items={[
+            {label:'Hoạt động',value:loading ? '…' : accounts.filter(a=>getStatus(a)==='active').length},
+            {label:'Chờ kích hoạt / đổi mật khẩu',value:loading ? '…' : accounts.filter(a=>['pending','must_change'].includes(getStatus(a))).length},
+            {label:'Đã khóa',value:loading ? '…' : accounts.filter(a=>getStatus(a)==='locked').length},
+          ]} />
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
             <input value={search} onChange={e => setSearch(e.target.value)}
@@ -423,7 +411,7 @@ export function MemberAccounts() {
           </div>
         </div>
 
-        <div className="p-4 space-y-3">
+        <div className="pf-mobile-records">
           {loading ? (
             <div className="text-center py-12 [color:var(--pf-color-muted)] text-sm">Đang tải...</div>
           ) : filtered.length === 0 ? (
@@ -432,32 +420,18 @@ export function MemberAccounts() {
             </div>
           ) : (
             filtered.map(acc => (
-              <div key={acc.id} className="pf-glass rounded-xl p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <p className="font-medium [color:var(--pf-text)] text-sm">{acc.member?.fullName ?? '—'}</p>
-                    <p className="text-xs [color:var(--pf-color-muted)] font-mono mt-0.5">@{acc.username}</p>
-                  </div>
-                  <StatusBadge acc={acc} />
+              <article key={acc.id} className="pf-mobile-record flex items-start gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="break-words text-sm font-semibold [color:var(--pf-text)]">{acc.member?.fullName ?? acc.username}</p>
+                  <p className="mt-1 break-all text-xs [color:var(--pf-text-muted)]">@{acc.username}</p>
+                  <div className="mt-2"><StatusBadge acc={acc} /></div>
+                  <p className="mt-2 text-xs [color:var(--pf-text-muted)]">Đăng nhập cuối: {formatDate(acc.lastLoginAt)}</p>
                 </div>
-                <div className="text-xs [color:var(--pf-color-muted)] mb-3">
-                  Đăng nhập cuối: {formatDate(acc.lastLoginAt)}
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={() => handleReset(acc)}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-[color:var(--pf-border)] text-xs font-medium [color:var(--pf-color-muted)] hover:[background:var(--pf-surface-muted)]">
-                    <RefreshCw size={12} /> Reset MK
-                  </button>
-                  <button onClick={() => handleToggleLock(acc)}
-                    className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-medium transition-colors ${
-                      acc.isActive
-                        ? 'border-red-200 text-red-600 hover:bg-red-50'
-                        : 'border-emerald-200 text-emerald-600 hover:bg-emerald-50'
-                    }`}>
-                    {acc.isActive ? <><Lock size={12} /> Khóa</> : <><Unlock size={12} /> Mở</> }
-                  </button>
-                </div>
-              </div>
+                <ActionMenu iconOnly label={`Thao tác tài khoản ${acc.username}`} items={[
+                  {key:'reset',label:'Đặt lại mật khẩu',onClick:()=>handleReset(acc)},
+                  {key:'lock',label:acc.isActive ? 'Khóa tài khoản' : 'Mở khóa tài khoản',onClick:()=>handleToggleLock(acc),danger:acc.isActive},
+                ]} />
+              </article>
             ))
           )}
         </div>

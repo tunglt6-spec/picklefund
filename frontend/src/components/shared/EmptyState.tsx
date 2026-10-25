@@ -21,6 +21,7 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div
+      data-pf-empty
       className={cn(
         'flex flex-col items-center justify-center gap-3 py-16 text-center',
         className,
@@ -28,6 +29,7 @@ export function EmptyState({
     >
       {icon && (
         <div
+          data-pf-empty-icon
           className="flex h-14 w-14 items-center justify-center rounded-2xl"
           style={{ background: 'var(--pf-primary-soft)', color: 'var(--pf-primary)' }}
         >

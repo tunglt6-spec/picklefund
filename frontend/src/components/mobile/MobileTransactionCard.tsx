@@ -10,15 +10,17 @@ interface MobileTransactionCardProps {
   type: 'income' | 'expense'
   fundSource?: string
   status?: string
+  date?: string
+  compactActions?: boolean
   actions?: ReactNode
 }
 
-export function MobileTransactionCard({ name, description, amount, type, fundSource, status, actions }: MobileTransactionCardProps) {
+export function MobileTransactionCard({ name, description, amount, type, fundSource, status, date, compactActions, actions }: MobileTransactionCardProps) {
   const isIncome = type === 'income'
   const formatted = new Intl.NumberFormat('vi-VN').format(Math.abs(amount)) + 'đ'
 
   return (
-    <div className="pf-rowcard px-3 py-3 flex flex-wrap items-center gap-2">
+    <div className={`pf-rowcard px-3 py-3 flex flex-wrap items-center gap-2 ${compactActions ? 'pf-transaction-compact' : ''}`}>
       <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-sm font-bold ${
         isIncome ? '[background:var(--pf-green-soft)] [color:var(--pf-green)]' : '[background:var(--pf-color-danger-soft)] [color:var(--pf-color-danger)]'
       }`}>
@@ -27,6 +29,7 @@ export function MobileTransactionCard({ name, description, amount, type, fundSou
       <div className="flex-1 basis-28 min-w-0">
         <div className="text-sm font-[600] [color:var(--pf-text)] break-words">{name}</div>
         <div className="text-xs [color:var(--pf-color-muted)] break-words">{description}{fundSource ? ` · ${FUND_LABEL[fundSource] ?? fundSource}` : ''}</div>
+        {date && <p className="mt-1 text-xs [color:var(--pf-color-muted)]">{date}</p>}
       </div>
       <div className="flex flex-col items-end flex-shrink-0 max-w-[140px] min-[600px]:max-w-none">
         <span className={`text-sm font-[700] tabular-nums ${isIncome ? '[color:var(--pf-green)]' : '[color:var(--pf-text)]'}`}>

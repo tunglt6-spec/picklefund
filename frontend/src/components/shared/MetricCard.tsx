@@ -73,6 +73,7 @@ export function MetricCard({
         className,
       )}
       data-brand={tone === 'brand' ? '' : undefined}
+      data-pf-metric
     >
       <div className="flex items-center justify-between gap-2">
         <span className="pf-metric-label text-xs font-semibold uppercase tracking-wide leading-tight [color:var(--pf-color-muted)]">

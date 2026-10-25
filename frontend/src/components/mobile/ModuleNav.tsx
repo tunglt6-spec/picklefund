@@ -2,6 +2,8 @@ import { useEffect, useRef, type ReactNode } from 'react'
 import { ChevronLeft } from '../icons/mobileLucide'
 import { HubSectionTitle, TileGrid } from './HubParts'
 import type { AppItem } from './hubApps'
+import type { ModuleKey } from './hubApps'
+import { WorkspaceMark } from './WorkspaceMark'
 
 export interface MenuItem extends AppItem {
   /** Nhóm trong lưới (vd "Quản trị"); mục không có nhóm xếp trước. */
@@ -82,7 +84,7 @@ export function MobileModuleMenu({ title, subtitle, items, onSelect, onBack, scr
 }
 
 /** Header gọn của màn nghiệp vụ: nút quay lại nhóm chức năng + tên chức năng cụ thể. Không mang theo tab/lưới cấp cha. */
-export function MobileFunctionHeader({ title, parent, onBack, right }: { title: string; parent?: string; onBack: () => void; right?: ReactNode }) {
+export function MobileFunctionHeader({ title, parent, onBack, right, module }: { title: string; parent?: string; onBack: () => void; right?: ReactNode; module?: ModuleKey }) {
   return (
     <div className="pf-mobile-function-head sticky top-0 z-20 border-b px-4 py-2 [background:var(--pf-surface)] [border-color:var(--pf-border)] lg:hidden">
       <div className="mx-auto flex w-full max-w-2xl items-center gap-2">
@@ -90,7 +92,11 @@ export function MobileFunctionHeader({ title, parent, onBack, right }: { title: 
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary-text)] active:scale-95">
           <ChevronLeft size={22} aria-hidden />
         </button>
-        <h1 className="min-w-0 flex-1 truncate text-lg font-[800] [color:var(--pf-text)]">{title}</h1>
+        <WorkspaceMark title={title} module={module} />
+        <div className="min-w-0 flex-1">
+          {parent && <p className="pf-workspace-eyebrow">{parent}</p>}
+          <h1 className="break-words text-[17px] font-bold leading-snug [color:var(--pf-text)]">{title}</h1>
+        </div>
         {right}
       </div>
     </div>
