@@ -248,7 +248,7 @@ export function MemberAttendance() {
         <div className="min-w-0 space-y-4 lg:col-span-2">
           <div className="grid grid-cols-2 gap-4">
             <MetricCard label="Buổi tham gia" value={`${attendedCount} / ${completedSessions.length}`} sub={`Tỷ lệ: ${rate}%`} accent="blue" icon={<CheckCircle size={18} />} />
-            <MetricCard label="Tỷ lệ tham gia" value={`${rate}%`} sub="So với toàn kỳ" accent={rate >= 50 ? 'green' : 'amber'} icon={<TrendingUp size={18} />} />
+            <MetricCard label="Tỷ lệ tham gia" signal={rate >= 50 ? 'success' : 'warning'} value={`${rate}%`} sub="So với toàn kỳ" accent={rate >= 50 ? 'green' : 'amber'} icon={<TrendingUp size={18} />} />
             <MetricCard label="Sắp diễn ra" value={`${scheduledCount} buổi`} sub="Trong kỳ này" accent="amber" icon={<Clock size={18} />} signal={countSignal(scheduledCount, 'pending')} />
             <MetricCard label="Chi phí sân" value={courtCostText} sub="Cả kỳ · khớp Phiếu thu" accent="green" icon={<MapPin size={18} />} />
           </div>

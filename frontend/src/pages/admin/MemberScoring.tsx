@@ -1,3 +1,4 @@
+import { countSignal } from '../../lib/statusDesign'
 import { MobileSummary } from '../../components/mobile/MobileSummary'
 /**
  * MemberScoring — Chấm điểm thành viên động (Phase 3 UI).
@@ -331,13 +332,13 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
 
       {/* KPI */}
       <MobileSummary module="members" label="Thành viên được chấm điểm" tone={loading || error ? 'neutral' : 'success'} value={loading ? '…' : error ? '—' : stats.total} note={monthLabel(month)} items={[
-        {label:'Xuất sắc',value:loading ? '…' : stats.excellent},{label:'Tốt',value:loading ? '…' : stats.good},{label:'Cần lưu ý',value:loading ? '…' : stats.review},
+        {label:'Xuất sắc',value:loading ? '…' : error ? '—' : stats.excellent},{label:'Tốt',value:loading ? '…' : error ? '—' : stats.good},{label:'Cần lưu ý',value:loading ? '…' : error ? '—' : stats.review,tone:loading || error ? 'neutral' : countSignal(stats.review,'pending')},
       ]} />
       <div className="hidden gap-3 sm:gap-4 lg:grid lg:grid-cols-4">
         <MetricCard accent="violet" icon={<Users size={18} />} label="Tổng TV" value={loading ? '…' : error ? '—' : stats.total} />
         <MetricCard accent="teal" icon={<Star size={18} />} label="Xuất sắc" value={loading ? '…' : error ? '—' : stats.excellent} />
         <MetricCard accent="blue" icon={<Award size={18} />} label="Tốt" value={loading ? '…' : error ? '—' : stats.good} />
-        <MetricCard accent="amber" icon={<TrendingDown size={18} />} label="Cần lưu ý" value={loading ? '…' : error ? '—' : stats.review} sub="cần cải thiện / xem xét" />
+        <MetricCard accent="amber" icon={<TrendingDown size={18} />} label="Cần lưu ý" signal={loading || error ? 'neutral' : countSignal(stats.review,'pending')} value={loading ? '…' : error ? '—' : stats.review} sub="cần cải thiện / xem xét" />
       </div>
 
       {/* Bảng điểm */}

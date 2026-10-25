@@ -543,7 +543,7 @@ export function AiDigitalOffice() {
                 >
                   <span className="text-sm font-semibold" style={{ color: c.color }}>{c.name}</span>
                   <p className="pf-summary-item mt-1 text-2xl font-bold leading-none" data-pf-signal={loading ? 'neutral' : c.key === 'MAIKA' ? clubHealthSignal(health?.score) : !results ? 'neutral' : c.key === 'HERMES' ? countSignal(results.hermes?.failedToday, 'failure') : c.key === 'MIT_DAT' ? countSignal(results.mitDac?.failedToday, 'failure') : c.key === 'NOTIFICATION' ? countSignal(results.notification?.failedToday, 'failure') : 'success'} style={{ color: c.color }}>
-                    {compactTitle && !results ? '—' : c.value}
+                    {compactTitle && !results && c.key !== 'MAIKA' ? '—' : c.value}
                     {c.unit && <span className="ml-1 text-xs font-medium [color:var(--pf-color-muted)]">{c.unit}</span>}
                   </p>
                   <p className="mt-1 text-xs font-medium [color:var(--pf-color-muted)]">{c.headline}</p>
@@ -709,7 +709,7 @@ export function AiDigitalOffice() {
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <MetricCard icon={<Activity size={18} />} accent="violet" label="Tác vụ hôm nay" value={executedToday} />
-            <MetricCard icon={<CheckCircle2 size={18} />} accent="teal" label="Thành công" value={successRate != null ? `${successRate}%` : '—'} sub="Hôm nay" />
+            <MetricCard icon={<CheckCircle2 size={18} />} accent="teal" label="Thành công" signal={successRate == null ? 'neutral' : countSignal(failedToday,'failure')} value={successRate != null ? `${successRate}%` : '—'} sub="Hôm nay" />
             <MetricCard icon={<Gauge size={18} />} accent="blue" label="Latency TB" signal="neutral" value={latency} sub="Thời gian thực thi" />
             <MetricCard icon={<AlertTriangle size={18} />} accent="rose" label="Thất bại hôm nay" signal={countSignal(failedToday, 'failure')} value={failedToday} negative={failedToday > 0} />
           </div>
