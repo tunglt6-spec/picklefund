@@ -1,3 +1,4 @@
+import { countSignal } from '../../lib/statusDesign'
 import { useState, useEffect } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { DollarSign, CheckCircle, Clock, Search, Receipt, ChevronDown, ChevronUp, FileSpreadsheet, FileText, Send } from '../../components/icons/mobileLucide'
@@ -301,7 +302,7 @@ export function MemberContributions() {
           <div className="grid grid-cols-2 gap-4">
             <MetricCard label="Tổng đã đóng" value={formatVND(totalPaid)} money={{ value: totalPaid, kind: 'income' }} sub={`${contributions.length} khoản`} accent="green" icon={<DollarSign size={18} />} />
             <MetricCard label="Đã xác nhận" value={`${confirmedCount} khoản`} sub={formatVND(contributions.filter(c => c.isConfirmed).reduce((s, c) => s + c.amount, 0))} accent="green" icon={<CheckCircle size={18} />} />
-            <MetricCard label="Chờ xác nhận" value={`${pendingCount} khoản`} sub={activePeriod ? `Kỳ ${activePeriod.name}` : 'Không có kỳ mở'} accent="amber" icon={<Clock size={18} />} />
+            <MetricCard label="Chờ xác nhận" value={`${pendingCount} khoản`} sub={activePeriod ? `Kỳ ${activePeriod.name}` : 'Không có kỳ mở'} accent="amber" icon={<Clock size={18} />} signal={countSignal(pendingCount, 'pending')} />
             <MetricCard label="Đã báo nộp" value={`${myPayments.length} khoản`} sub="Chờ/đã duyệt" accent="blue" icon={<Send size={18} />} />
           </div>
 

@@ -1,3 +1,4 @@
+import { countSignal } from '../../lib/statusDesign'
 /**
  * UI-03 — Member Management Enterprise Workspace (PickleFund v2.1)
  * Kế thừa UI-02 Dashboard 4.0 (Golden Reference). Tuân thủ UIP-03 (Member Workspace
@@ -772,7 +773,7 @@ export function Members() {
       <div className={isMobile ? 'hidden' : 'grid grid-cols-2 gap-3 max-[599px]:[&>:last-child:nth-child(odd)]:col-span-2 lg:grid-cols-5'}>
         <MetricCard label="Tổng thành viên" value={totalMembers.toLocaleString('vi-VN')} sub="Toàn CLB" accent="blue" icon={<Users size={18} />} />
         <MetricCard label="Đang hoạt động" value={activeCount.toLocaleString('vi-VN')} sub="Thành viên active" accent="green" icon={<UserCheck size={18} />} />
-        <MetricCard label="Tạm ngưng" value={inactiveCount.toLocaleString('vi-VN')} sub="Tạm nghỉ sinh hoạt" accent="amber" icon={<Power size={18} />} />
+        <MetricCard label="Tạm ngưng" value={inactiveCount.toLocaleString('vi-VN')} sub="Tạm nghỉ sinh hoạt" accent="amber" icon={<Power size={18} />} signal={countSignal(inactiveCount, 'pending')} />
         <MetricCard label="Đã rời CLB" value={leftCount.toLocaleString('vi-VN')} sub="Không còn sinh hoạt" accent="rose" icon={<UserMinus size={18} />} />
         <MetricCard label="AI Rating TB" value={aiRating?.average != null ? `${aiRating.average}/100` : 'Chưa có'} sub={aiRating?.average != null ? `Điểm hoạt động · ${aiRating.rated} TV` : 'Chưa có dữ liệu'} accent="violet" icon={<Sparkles size={18} />} />
       </div>

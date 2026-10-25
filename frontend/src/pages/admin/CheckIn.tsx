@@ -1,3 +1,4 @@
+import { countSignal } from '../../lib/statusDesign'
 /**
  * CheckIn (15) — Check-in nhanh một chạm. Chọn buổi (gần hôm nay), tick PRESENT, lưu.
  * Tái dụng endpoint CÓ SẴN: GET /attendance/:id/attendance, GET /attendance/:id/registrations,
@@ -201,7 +202,7 @@ export function CheckIn() {
               <div className="grid grid-cols-3 gap-3 sm:gap-4">
                 <MetricCard compact accent="violet" icon={<UserCheck size={18} />} label="Đã đăng ký" value={registeredCount} />
                 <MetricCard compact accent="green" icon={<Check size={18} />} label="Đã check-in" value={present.size} />
-                <MetricCard compact accent="rose" icon={<Users size={18} />} label="Vắng" value={rows.length - present.size} />
+                <MetricCard compact accent="rose" icon={<Users size={18} />} label="Vắng" value={rows.length - present.size} signal={countSignal(rows.length - present.size, 'pending')} />
               </div>
 
               {!isMember && (

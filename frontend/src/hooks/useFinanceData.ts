@@ -4,7 +4,7 @@
  * useApiSync, các màn này vẫn đúng số vì tái dùng NGUYÊN VẸN phép tính client (mapping giống useApiSync).
  */
 import { useLiveRefresh } from './useLiveRefresh'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef, type SetStateAction } from 'react'
 import api from '../lib/api'
 import type { FundContribution, LivingExpense, Member, ExpenseStatus } from '../types'
 
@@ -50,38 +50,46 @@ export function mapExpense(e: any): LivingExpense {
 
 /** Tải TOÀN BỘ contributions của CLB vào state cục bộ (dùng cho màn cần tổng hợp toàn lịch sử). */
 export function useClubContributions(clubId: string) {
-  const [data, setData] = useState<FundContribution[]>([])
-  const reload = useCallback(() => {
-    if (!clubId) return
-    api
-      .get(`/contributions?clubId=${clubId}`)
-      .then((r) => setData((r.data?.data ?? []).map(mapContribution)))
-      .catch(() => {
-        /* local-token/offline → giữ rỗng như trước */
-      })
-  }, [clubId])
-  useEffect(() => {
-    reload()
-  }, [reload])
-  useLiveRefresh(reload, !!clubId)
-  return { data, reload, setData }
+  return useFinanceCollection(clubId, 'contributions', mapContribution)
 }
 
 /** Tải TOÀN BỘ expenses của CLB vào state cục bộ (dùng cho màn cần tổng hợp toàn lịch sử). */
 export function useClubExpenses(clubId: string) {
-  const [data, setData] = useState<LivingExpense[]>([])
-  const reload = useCallback(() => {
+  return useFinanceCollection(clubId, 'expenses', mapExpense)
+}
+
+/** Keep the last confirmed snapshot on refresh failure; never confuse an error with an empty list. */
+function useFinanceCollection<T>(clubId: string, resource: string, map: (raw: unknown) => T) {
+  const [snapshot, setSnapshot] = useState<{ clubId: string; data: T[]; updatedAt: number | null; error: boolean; refreshing: boolean }>(
+    { clubId, data: [], updatedAt: null, error: false, refreshing: !!clubId },
+  )
+  const request = useRef(0)
+  const reload = useCallback(async () => {
+    const id = ++request.current
     if (!clubId) return
-    api
-      .get(`/expenses?clubId=${clubId}`)
-      .then((r) => setData((r.data?.data ?? []).map(mapExpense)))
-      .catch(() => {
-        /* local-token/offline → giữ rỗng như trước */
-      })
-  }, [clubId])
+    setSnapshot(prev => prev.clubId === clubId ? { ...prev, error: false, refreshing: true } : { clubId, data: [], updatedAt: null, error: false, refreshing: true })
+    try {
+      const result = await api.get(`/${resource}?clubId=${clubId}`)
+      const data = result.data?.data
+      if (!Array.isArray(data)) throw new Error('Invalid finance response')
+      const mapped = data.map(map)
+      if (id === request.current) setSnapshot({ clubId, data: mapped, updatedAt: Date.now(), error: false, refreshing: false })
+    } catch {
+      if (id === request.current) setSnapshot(prev => ({ ...prev, error: true, refreshing: false }))
+    }
+  }, [clubId, resource, map])
   useEffect(() => {
-    reload()
+    void reload()
+    return () => { request.current++ }
   }, [reload])
   useLiveRefresh(reload, !!clubId)
-  return { data, reload, setData }
+  const scoped = snapshot.clubId === clubId
+  const setData = useCallback((action: SetStateAction<T[]>) => setSnapshot(prev => prev.clubId !== clubId ? prev : ({ ...prev, data: typeof action === 'function' ? (action as (rows: T[]) => T[])(prev.data) : action })), [clubId])
+  return {
+    data: scoped ? snapshot.data : [], reload, setData,
+    updatedAt: scoped ? snapshot.updatedAt : null,
+    loading: !!clubId && (!scoped || (snapshot.updatedAt == null && !snapshot.error)),
+    refreshing: scoped && snapshot.refreshing,
+    error: scoped && snapshot.error,
+  }
 }

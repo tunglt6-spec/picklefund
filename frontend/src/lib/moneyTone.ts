@@ -43,14 +43,7 @@ const VAR: Record<Exclude<MoneyTone, 'neutral'>, string> = {
 
 /** Màu chữ số tiền: dùng ĐÚNG màu Xanh/Đỏ của bảng & biểu đồ (token --pf-money-*), tự đổi sáng/tối. */
 export function moneyColor(value: number | null | undefined, kind: MoneyKind = 'balance'): string | undefined {
-  let t = moneyTone(value, kind)
-  // Mobile (<1024px, Luxury SaaS): số dư dương/khoản chi bình thường dùng màu chữ chính; chỉ ĐỎ cho thiếu hụt/âm/nợ,
-  // VÀNG cho khoản chờ xử lý, XANH trầm cho khoản thu. Màn lớn giữ quy tắc cũ.
-  if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-    if (kind === 'balance' || kind === 'signed') t = t === 'danger' ? 'danger' : 'neutral'
-    else if (kind === 'expense') t = 'neutral'
-    else if (kind === 'debt') t = t === 'danger' ? 'danger' : 'neutral'
-  }
+  const t = moneyTone(value, kind)
   if (t === 'neutral') return undefined
   return VAR[t]
 }

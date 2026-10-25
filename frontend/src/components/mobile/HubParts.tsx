@@ -1,4 +1,5 @@
-import { useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useLiveRefresh } from '../../hooks/useLiveRefresh'
 import { useNavigate } from 'react-router-dom'
 import { Search, ChevronRight, X } from '../icons/mobileLucide'
 import { useAuthStore } from '../../store/authStore'
@@ -48,12 +49,20 @@ export function useHubData() {
   // Tóm tắt kỳ quỹ lấy từ CÙNG endpoint màn Thủ quỹ dùng (không tính lại công thức ở đây).
   const [fin, setFin] = useState<{ assets: number; totalExpense: number; unpaidCount: number } | null>(null)
   const [finState, setFinState] = useState<LoadState>('loading')
+  const [finUpdatedAt, setFinUpdatedAt] = useState<number | null>(null)
+  const [finScope, setFinScope] = useState<string | null>(null)
+  const [finTick, setFinTick] = useState(0)
+  const requestedPeriod = useRef<string | null>(null)
+  useLiveRefresh(() => setFinTick(t => t + 1), hasClub && !!activePeriod?.id)
   const hasData = !!clubData
   useEffect(() => {
-    if (!hasClub) { setFin(null); setFinState('ok'); return }
-    if (!activePeriod?.id) { setFin(null); setFinState(hasData ? 'ok' : 'loading'); return }
+    if (!hasClub) { setFin(null); setFinState('ok'); setFinUpdatedAt(null); requestedPeriod.current = null; return }
+    if (!activePeriod?.id) { setFin(null); setFinState(hasData ? 'ok' : 'loading'); setFinUpdatedAt(null); requestedPeriod.current = null; return }
     let off = false
-    setFinState('loading')
+    if (requestedPeriod.current !== activePeriod.id) {
+      requestedPeriod.current = activePeriod.id
+      setFin(null); setFinState('loading'); setFinUpdatedAt(null)
+    }
     api.get(`/fund-periods/${activePeriod.id}/summary`)
       .then((res) => {
         if (off) return
@@ -62,10 +71,12 @@ export function useHubData() {
         const carry = Number(f?.carryForward?.balance ?? 0)
         setFin({ assets: Number(f?.clubAssets?.balance ?? (common + carry)), totalExpense: Number(f?.totalExpenses ?? 0), unpaidCount: Number(f?.unpaidCount ?? 0) })
         setFinState('ok')
+        setFinScope(activePeriod.id)
+        setFinUpdatedAt(Date.now())
       })
-      .catch(() => { if (!off) { setFin(null); setFinState('error') } })
+      .catch(() => { if (!off) setFinState('error') })
     return () => { off = true }
-  }, [hasClub, activePeriod?.id, hasData])
+  }, [hasClub, activePeriod?.id, hasData, finTick])
 
   const upcoming = useMemo(() => {
     const tk = todayKey()
@@ -74,7 +85,10 @@ export function useHubData() {
       .sort((a, b) => (a.sessionDate.slice(0, 10) + (a.startTime ?? '')).localeCompare(b.sessionDate.slice(0, 10) + (b.startTime ?? '')))
   }, [clubData?.sessions])
 
-  return { user, role, clubData, hasClub, activePeriod, fin, finState, upcoming, nextSession: upcoming[0] }
+  const scoped = !!activePeriod?.id && finScope === activePeriod.id
+  return { user, role, clubData, hasClub, activePeriod, fin: scoped ? fin : null,
+    finState: hasClub && activePeriod?.id && !scoped && finState === 'ok' ? 'loading' as LoadState : finState,
+    finUpdatedAt: scoped ? finUpdatedAt : null, upcoming, nextSession: upcoming[0] }
 }
 
 /** Ô tìm kiếm CHỨC NĂNG toàn app (khác với ô tìm dữ liệu trong từng màn). */

@@ -1,3 +1,5 @@
+import { DataFreshness } from '../../components/shared/DataFreshness'
+import { countSignal, clubHealthSignal } from '../../lib/statusDesign'
 import { MobileSummary } from '../../components/mobile/MobileSummary'
 /**
  * AiDigitalOffice (AIDO) — "Văn phòng AI" tích hợp trong PickleFund.
@@ -67,13 +69,13 @@ interface AgentResults {
 const RISK_META: Record<string, { label: string; color: string }> = {
   low: { label: 'Thấp', color: 'var(--pf-green)' },
   medium: { label: 'Trung bình', color: 'var(--pf-accent-amber, #F59E0B)' },
-  high: { label: 'Cao', color: '#FB923C' },
+  high: { label: 'Cao', color: 'var(--pf-high-risk-signal, #FB923C)' },
   critical: { label: 'Nghiêm trọng', color: 'var(--pf-accent-rose, #EF4444)' },
 }
 /** Màu/nhãn trạng thái workflow run (Hermes). */
 const RUN_STATUS_META: Record<string, { label: string; color: string }> = {
   COMPLETED: { label: 'Hoàn tất', color: 'var(--pf-green)' },
-  RUNNING: { label: 'Đang chạy', color: 'var(--pf-accent-sky, #3B82F6)' },
+  RUNNING: { label: 'Đang chạy', color: 'var(--pf-running-signal, var(--pf-accent-sky, #3B82F6))' },
   PENDING: { label: 'Chờ', color: 'var(--pf-accent-amber, #F59E0B)' },
   FAILED: { label: 'Thất bại', color: 'var(--pf-accent-rose, #EF4444)' },
   CANCELLED: { label: 'Đã hủy', color: 'var(--pf-color-muted, var(--pf-color-muted))' },
@@ -428,8 +430,9 @@ export function AiDigitalOffice() {
               className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-white"
               style={{ background: 'rgba(17,24,39,0.72)' }}
             >
-              <LiveDot color={connected ? 'var(--pf-green)' : 'var(--pf-accent-amber, #F59E0B)'} size={8} active={connected} />
-              {connected ? 'REAL-TIME' : 'ĐỊNH KỲ'}{updatedAt ? ` · ${updatedAt.toLocaleTimeString('vi-VN')}` : ''}
+              <DataFreshness mode="push" connected={connected} heartbeatAt={beatAt} updatedAt={updatedAt?.getTime()} loading={loading} error={error} />
+              <span className="hidden lg:inline-flex items-center gap-1.5"><LiveDot color={connected ? 'var(--pf-green)' : 'var(--pf-accent-amber, #F59E0B)'} size={8} active={connected} />
+              {connected ? 'REAL-TIME' : 'ĐỊNH KỲ'}{updatedAt ? ` · ${updatedAt.toLocaleTimeString('vi-VN')}` : ''}</span>
             </div>
           }
         />
@@ -510,16 +513,17 @@ export function AiDigitalOffice() {
                 className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-white"
                 style={{ background: 'rgba(17,24,39,0.72)' }}
               >
-                <LiveDot color={connected ? 'var(--pf-green)' : 'var(--pf-accent-amber, #F59E0B)'} size={8} active={connected} />
-                {connected ? 'REAL-TIME' : 'ĐỊNH KỲ'}{updatedAt ? ` · ${updatedAt.toLocaleTimeString('vi-VN')}` : ''}
+                <DataFreshness mode="push" connected={connected} heartbeatAt={beatAt} updatedAt={updatedAt?.getTime()} loading={loading} error={error} />
+              <span className="hidden lg:inline-flex items-center gap-1.5"><LiveDot color={connected ? 'var(--pf-green)' : 'var(--pf-accent-amber, #F59E0B)'} size={8} active={connected} />
+                {connected ? 'REAL-TIME' : 'ĐỊNH KỲ'}{updatedAt ? ` · ${updatedAt.toLocaleTimeString('vi-VN')}` : ''}</span>
               </div>
             }
           />
 
           <div className="lg:hidden">
-            <MobileSummary module="ai" label="Việc chờ duyệt" value={loading ? '…' : summary ? pending : '—'} note={loading ? 'Đang cập nhật…' : `${opsSignals.length} tín hiệu vận hành`} items={[
-              {label:'Sức khỏe CLB',value:health?.score != null ? `${health.score}/100` : '—'},
-              {label:'Tác vụ lỗi',value:loading ? '…' : failed},
+            <MobileSummary module="ai" label="Việc chờ duyệt" tone={loading || !summary ? 'neutral' : countSignal(pending, 'pending')} value={loading ? '…' : summary ? pending : '—'} note={loading ? 'Đang cập nhật…' : `${opsSignals.length} tín hiệu vận hành`} items={[
+              {label:'Sức khỏe CLB',value:health?.score != null ? `${health.score}/100` : '—',tone:clubHealthSignal(health?.score)},
+              {label:'Tác vụ lỗi',value:loading ? '…' : failed,tone:loading || !summary ? 'neutral' : countSignal(failed,'failure')},
             ]} />
             <button className="mt-2 min-h-11 px-1 text-sm font-semibold [color:var(--pf-primary-text)]" onClick={()=>setTab('operations')}>Mở vận hành ›</button>
           </div>
@@ -538,8 +542,8 @@ export function AiDigitalOffice() {
                   }}
                 >
                   <span className="text-sm font-semibold" style={{ color: c.color }}>{c.name}</span>
-                  <p className="mt-1 text-2xl font-bold leading-none" style={{ color: c.color }}>
-                    {c.value}
+                  <p className="pf-summary-item mt-1 text-2xl font-bold leading-none" data-pf-signal={loading ? 'neutral' : c.key === 'MAIKA' ? clubHealthSignal(health?.score) : !results ? 'neutral' : c.key === 'HERMES' ? countSignal(results.hermes?.failedToday, 'failure') : c.key === 'MIT_DAT' ? countSignal(results.mitDac?.failedToday, 'failure') : c.key === 'NOTIFICATION' ? countSignal(results.notification?.failedToday, 'failure') : 'success'} style={{ color: c.color }}>
+                    {compactTitle && !results ? '—' : c.value}
                     {c.unit && <span className="ml-1 text-xs font-medium [color:var(--pf-color-muted)]">{c.unit}</span>}
                   </p>
                   <p className="mt-1 text-xs font-medium [color:var(--pf-color-muted)]">{c.headline}</p>
@@ -613,9 +617,9 @@ export function AiDigitalOffice() {
           {/* Vận hành = tập trung hàng đợi/live. "Tác vụ hôm nay" (executed) chỉ hiển thị ở tab
               Analytics để tránh trùng số giữa 2 tab. */}
           <div className="grid grid-cols-3 gap-3">
-            <MetricCard icon={<PlayCircle size={18} />} accent="blue" label="Đang chạy" value={running} />
-            <MetricCard icon={<Clock size={18} />} accent="amber" label="Chờ duyệt" value={pending} />
-            <MetricCard icon={<AlertTriangle size={18} />} accent="rose" label="Thất bại" value={failed} negative={failed > 0} />
+            <MetricCard icon={<PlayCircle size={18} />} accent="blue" label="Đang chạy" value={summary ? running : '—'} signal={summary ? countSignal(running,'healthy') : 'neutral'} />
+            <MetricCard icon={<Clock size={18} />} accent="amber" label="Chờ duyệt" signal={countSignal(summary?.pendingApprovals, 'pending')} value={summary ? pending : '—'} />
+            <MetricCard icon={<AlertTriangle size={18} />} accent="rose" label="Thất bại" signal={summary ? countSignal(failed, 'failure') : 'neutral'} value={summary ? failed : '—'} negative={failed > 0} />
           </div>
 
           <div className="grid gap-5 lg:grid-cols-2">
@@ -706,8 +710,8 @@ export function AiDigitalOffice() {
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <MetricCard icon={<Activity size={18} />} accent="violet" label="Tác vụ hôm nay" value={executedToday} />
             <MetricCard icon={<CheckCircle2 size={18} />} accent="teal" label="Thành công" value={successRate != null ? `${successRate}%` : '—'} sub="Hôm nay" />
-            <MetricCard icon={<Gauge size={18} />} accent="blue" label="Latency TB" value={latency} sub="Thời gian thực thi" />
-            <MetricCard icon={<AlertTriangle size={18} />} accent="rose" label="Thất bại hôm nay" value={failedToday} negative={failedToday > 0} />
+            <MetricCard icon={<Gauge size={18} />} accent="blue" label="Latency TB" signal="neutral" value={latency} sub="Thời gian thực thi" />
+            <MetricCard icon={<AlertTriangle size={18} />} accent="rose" label="Thất bại hôm nay" signal={countSignal(failedToday, 'failure')} value={failedToday} negative={failedToday > 0} />
           </div>
 
           <div className="grid gap-5 lg:grid-cols-2">
@@ -765,7 +769,7 @@ export function AiDigitalOffice() {
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { label: 'Chờ duyệt', value: pending, color: 'var(--pf-accent-amber, #F59E0B)' },
-                  { label: 'Đã duyệt', value: summary?.approvedActions ?? 0, color: 'var(--pf-accent-sky, #3B82F6)' },
+                  { label: 'Đã duyệt', value: summary?.approvedActions ?? 0, color: 'var(--pf-completed-signal, var(--pf-accent-sky, #3B82F6))' },
                   { label: 'Từ chối', value: summary?.rejectedActions ?? 0, color: 'var(--pf-color-muted, var(--pf-color-muted))' },
                   { label: 'Thất bại', value: failed, color: 'var(--pf-accent-rose, #EF4444)' },
                 ].map((it) => (
@@ -774,7 +778,7 @@ export function AiDigitalOffice() {
                       <span className="h-2.5 w-2.5 rounded-full" style={{ background: it.color }} />
                       <span className="text-xs [color:var(--pf-color-muted)]">{it.label}</span>
                     </div>
-                    <p className="mt-1 text-2xl font-bold tabular-nums [color:var(--pf-text)]">{it.value}</p>
+                    <p className="pf-summary-item mt-1 text-2xl font-bold tabular-nums [color:var(--pf-text)]" data-pf-signal={!summary ? 'neutral' : it.label === 'Chờ duyệt' ? countSignal(it.value,'pending') : it.label === 'Thất bại' || it.label === 'Từ chối' ? countSignal(it.value,'failure') : 'success'}>{summary ? it.value : '—'}</p>
                   </div>
                 ))}
               </div>

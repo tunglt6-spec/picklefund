@@ -1,3 +1,4 @@
+import { countSignal } from '../../lib/statusDesign'
 import { MobileSummary } from '../../components/mobile/MobileSummary'
 import { ActionMenu } from '../../components/shared/ActionMenu'
 import { useState, useEffect, useMemo, useRef } from 'react'
@@ -8,7 +9,7 @@ import {
 } from '../../components/icons/mobileLucide'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
-import { useEmbedded } from '../../components/shared'
+import { useEmbedded, ErrorState } from '../../components/shared'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { Button } from '../../components/ui/Button'
@@ -44,7 +45,7 @@ function getStatus(acc: MemberUserAccount): AccountStatus {
 const STATUS_CONFIG: Record<AccountStatus, { label: string; color: string; icon: React.ReactNode }> = {
   active:      { label: 'Hoạt động',        color: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: <CheckCircle2 size={12} /> },
   pending:     { label: 'Chưa kích hoạt',   color: 'bg-amber-50 text-amber-700 border-amber-200',       icon: <Clock size={12} /> },
-  must_change: { label: 'Cần đổi mật khẩu', color: 'bg-blue-50 text-blue-700 border-blue-200',          icon: <AlertCircle size={12} /> },
+  must_change: { label: 'Cần đổi mật khẩu', color: 'max-lg:bg-[var(--pf-color-warning-soft)] max-lg:text-[var(--pf-color-warning)] bg-blue-50 text-blue-700 border-blue-200',          icon: <AlertCircle size={12} /> },
   locked:      { label: 'Bị khóa',           color: 'bg-red-50 text-red-700 border-red-200',             icon: <XCircle size={12} /> },
 }
 
@@ -311,6 +312,7 @@ export function MemberAccounts() {
 
   const [accounts, setAccounts] = useState<MemberUserAccount[]>([])
   const [loading, setLoading] = useState(true)
+  const [accountError, setAccountError] = useState(false)
   const [search, setSearch] = useState('')
   const [showBulk, setShowBulk] = useState(false)
   const [showSingle, setShowSingle] = useState(false)
@@ -318,10 +320,12 @@ export function MemberAccounts() {
 
   const fetchAccounts = async () => {
     setLoading(true)
+    setAccountError(false)
     try {
       const res = await api.get('/member-users')
       setAccounts(res.data.data)
     } catch {
+      setAccountError(true)
       toast.error('Không tải được danh sách tài khoản')
     } finally {
       setLoading(false)
@@ -398,10 +402,10 @@ export function MemberAccounts() {
               </Button>
             </div>
           </div>
-          <MobileSummary module="members" label="Tài khoản thành viên" value={loading ? '…' : accounts.length} items={[
-            {label:'Hoạt động',value:loading ? '…' : accounts.filter(a=>getStatus(a)==='active').length},
-            {label:'Chờ kích hoạt / đổi mật khẩu',value:loading ? '…' : accounts.filter(a=>['pending','must_change'].includes(getStatus(a))).length},
-            {label:'Đã khóa',value:loading ? '…' : accounts.filter(a=>getStatus(a)==='locked').length},
+          <MobileSummary module="members" label="Tài khoản thành viên" tone={loading || accountError ? 'neutral' : countSignal(accounts.length, 'healthy')} value={loading ? '…' : accountError ? '—' : accounts.length} items={accountError ? [] : [
+            {label:'Hoạt động',value:loading ? '…' : accounts.filter(a=>getStatus(a)==='active').length,tone:loading ? 'neutral' : 'success'},
+            {label:'Chờ kích hoạt / đổi mật khẩu',value:loading ? '…' : accounts.filter(a=>['pending','must_change'].includes(getStatus(a))).length,tone:loading ? 'neutral' : countSignal(accounts.filter(a=>['pending','must_change'].includes(getStatus(a))).length,'pending')},
+            {label:'Đã khóa',value:loading ? '…' : accounts.filter(a=>getStatus(a)==='locked').length,tone:loading ? 'neutral' : countSignal(accounts.filter(a=>getStatus(a)==='locked').length,'failure')},
           ]} />
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
@@ -414,7 +418,7 @@ export function MemberAccounts() {
         <div className="pf-mobile-records">
           {loading ? (
             <div className="text-center py-12 [color:var(--pf-color-muted)] text-sm">Đang tải...</div>
-          ) : filtered.length === 0 ? (
+          ) : accountError ? <ErrorState onRetry={fetchAccounts} /> : filtered.length === 0 ? (
             <div className="text-center py-12 [color:var(--pf-color-muted)] text-sm">
               {accounts.length === 0 ? 'Chưa có tài khoản nào' : 'Không tìm thấy'}
             </div>

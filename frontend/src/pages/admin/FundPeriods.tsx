@@ -1,3 +1,4 @@
+import { FinancialDataState } from '../../components/shared/FinancialDataState'
 import { MobileSummary } from '../../components/mobile/MobileSummary'
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { ActionMenu } from '../../components/shared/ActionMenu'
@@ -92,7 +93,7 @@ export function FundPeriods() {
 
   // Option 3: tự tải contributions vào state CỤC BỘ (không đọc global store) → khi Phase D cắt
   // full-load trong useApiSync, màn này vẫn đúng số (tái dùng nguyên vẹn mọi phép tính client).
-  const { data: contributions, reload: loadContributions } = useClubContributions(clubId)
+  const { data: contributions, reload: loadContributions, ...financeState } = useClubContributions(clubId)
 
   const setPeriods = (fn: (prev: FundPeriod[]) => FundPeriod[]) =>
     savePeriods(clubId, fn(getClubData(clubId).fundPeriods))
@@ -639,11 +640,12 @@ export function FundPeriods() {
           </div>
         </div>
 
+        <FinancialDataState sources={[{...financeState,reload:loadContributions}]}>
         <div className="px-4 pt-4 pb-6 space-y-4">
-          <MobileSummary module="finance" label="Số dư Quỹ Chính" value={formatVND(stats.chung.balance)} note={`${stats.chung.txCount} giao dịch`} items={[
-            {label:'Số dư Quỹ Phụ',value:formatVND(stats.game.balance)},
-            {label:'Quỹ Chính chờ xử lý',value:formatVND(stats.chung.totalPending)},
-            {label:'Quỹ Phụ chờ xử lý',value:formatVND(stats.game.totalPending)},
+          <MobileSummary module="finance" label="Quỹ Chính đã thu" money={{value:stats.chung.balance,kind:'income'}} value={formatVND(stats.chung.balance)} note={`${stats.chung.txCount} giao dịch`} items={[
+            {label:'Quỹ Phụ đã thu',value:formatVND(stats.game.balance),money:{value:stats.game.balance,kind:'income'}},
+            {label:'Quỹ Chính chờ xử lý',value:formatVND(stats.chung.totalPending),money:{value:stats.chung.totalPending,kind:'pending'}},
+            {label:'Quỹ Phụ chờ xử lý',value:formatVND(stats.game.totalPending),money:{value:stats.game.totalPending,kind:'pending'}},
           ]} />
 
           {/* QR thanh toán */}
@@ -899,6 +901,7 @@ export function FundPeriods() {
           onClose={() => setShowBulkImport(false)}
           onImported={() => window.location.reload()}
         />
+        </FinancialDataState>
       </div>
     )
   }

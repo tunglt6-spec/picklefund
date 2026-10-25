@@ -1,3 +1,6 @@
+import { useLiveRefresh } from '../../hooks/useLiveRefresh'
+import { FinancialDataState } from '../../components/shared/FinancialDataState'
+import { countSignal } from '../../lib/statusDesign'
 /**
  * MemberDebts — bản Công nợ dành cho MEMBER trong module "Cá nhân": CÙNG dữ liệu/logic
  * canonical như admin Debts (suy trạng thái từ contributions + số tiền còn nợ từ
@@ -41,7 +44,7 @@ export function MemberDebts() {
   const accessToken = useAuthStore((s) => s.accessToken)
   const data = useClubDataStore((s) => s.getClubData(clubId))
   const { members, fundPeriods } = data
-  const { data: contributions } = useClubContributions(clubId)
+  const { data: contributions, ...financeState } = useClubContributions(clubId)
 
   const activePeriod = useMemo(
     () => getActiveChungPeriod(fundPeriods) ?? null,
@@ -51,16 +54,25 @@ export function MemberDebts() {
 
   // Canonical/thành viên từ fund-periods summary (financial-calculator): số dư + đã-đóng-đủ.
   const [memberInfo, setMemberInfo] = useState<Record<string, { balance: number; paid: boolean }>>({})
+  const [liveTick, setLiveTick] = useState(0)
+  useLiveRefresh(() => setLiveTick(t => t + 1), !!activePeriod?.id && !isLocalToken(accessToken))
+  const [summaryState, setSummaryState] = useState({scope:'',updatedAt:null as number|null,loading:true,error:false,refreshing:false})
+  const needsSummary = !!activePeriod?.id && !isLocalToken(accessToken)
   useEffect(() => {
     if (!activePeriod?.id || isLocalToken(accessToken)) { setMemberInfo({}); return }
+    const scope = activePeriod.id
     let cancelled = false
-    api.get(`/fund-periods/${activePeriod.id}/summary`).then((res) => {
+    setSummaryState(prev=>prev.scope===scope ? {...prev,loading:prev.updatedAt==null,error:false,refreshing:true} : {scope,updatedAt:null,loading:true,error:false,refreshing:true})
+    api.get(`/fund-periods/${scope}/summary`).then((res) => {
       if (cancelled) return
-      const list = (res.data?.data?.members ?? []) as { memberId: string; balance: number; contributionPaid?: boolean }[]
+      const list = res.data?.data?.members as { memberId: string; balance: number; contributionPaid?: boolean }[]
+      if (!Array.isArray(list)) throw new Error('Invalid debt summary')
       setMemberInfo(Object.fromEntries(list.map((m) => [m.memberId, { balance: m.balance, paid: !!m.contributionPaid }])))
-    }).catch(() => { if (!cancelled) setMemberInfo({}) })
+      setSummaryState({scope,updatedAt:Date.now(),loading:false,error:false,refreshing:false})
+    }).catch(() => { if (!cancelled) setSummaryState(prev=>({...prev,loading:false,error:true,refreshing:false})) })
     return () => { cancelled = true }
-  }, [activePeriod?.id, accessToken])
+  }, [activePeriod?.id, accessToken, liveTick])
+  const summarySnapshot = summaryState.scope === activePeriod?.id ? summaryState : {...summaryState,updatedAt:null,loading:true,error:false}
 
   const rows = useMemo<DebtRow[]>(() => {
     const commonContribs = contributions.filter((c) => (c.fundSource ?? 'COMMON') === 'COMMON')
@@ -129,6 +141,8 @@ export function MemberDebts() {
         title="Công nợ cá nhân"
         subtitle={activePeriod ? `Kỳ ${activePeriod.name} · ${amount ? formatVND(amount) : 'chưa đặt mức'}/người` : 'Chưa có kỳ quỹ đang mở'}
       />
+      <FinancialDataState sources={[financeState,...(needsSummary ? [{...summarySnapshot,reload:()=>setLiveTick(t=>t+1)}] : [])]}>
+
 
       {!hasData ? (
         <EmptyState icon={<Users size={24} />} title="Chưa có thành viên hoạt động" description="Thêm thành viên và mở kỳ quỹ để theo dõi công nợ." />
@@ -137,8 +151,8 @@ export function MemberDebts() {
           {/* CỘT TRÁI (2/3) — KPI 2×2 + bảng thành viên */}
           <div className="min-w-0 space-y-4 lg:col-span-2">
             <div className="grid grid-cols-2 gap-4">
-              <MetricCard accent="rose" icon={<AlertCircle size={18} />} label="Còn nợ" value={stats.unpaid} sub="thành viên chưa đóng" />
-              <MetricCard accent="teal" icon={<Users size={18} />} label="Đã đóng" value={stats.paid} sub="thành viên đã đóng đủ" />
+              <MetricCard accent="rose" icon={<AlertCircle size={18} />} label="Còn nợ" signal={countSignal(stats.unpaid, 'failure')} value={stats.unpaid} sub="thành viên chưa đóng" />
+              <MetricCard accent="teal" icon={<Users size={18} />} label="Đã đóng" signal={countSignal(stats.paid, 'healthy')} value={stats.paid} sub="thành viên đã đóng đủ" />
               <MetricCard accent="violet" icon={<Wallet size={18} />} label="Tổng công nợ" value={formatVND(stats.totalDebt)} money={{ value: stats.totalDebt, kind: 'debt' }} />
               <MetricCard accent="teal" icon={<Users size={18} />} label="Tỷ lệ đã thu" value={`${stats.collectRate}%`} sub={`${stats.paid}/${rows.length} đã đóng`} />
             </div>
@@ -212,6 +226,7 @@ export function MemberDebts() {
           </ChartCard>
         </div>
       )}
+      </FinancialDataState>
     </PageShell>
   )
 }

@@ -302,7 +302,7 @@ export function MinigameList() {
       ) : (
         <>
           {/* ── KPI overview ── */}
-          <MobileSummary module="compete" label="Giải đang diễn ra" value={inProgress} note={`${totalTournaments} giải toàn CLB`} items={[
+          <MobileSummary module="compete" label="Giải đang diễn ra" tone={inProgress > 0 ? 'success' : 'neutral'} value={inProgress} note={`${totalTournaments} giải toàn CLB`} items={[
             {label:'Hoàn thành',value:completedTournaments},{label:'Người chơi',value:totalPlayers},{label:'Tổng trận',value:totalMatches},{label:'Trận hoàn thành',value:completedMatches},
           ]} />
           <div className="hidden gap-4 lg:grid lg:grid-cols-3 xl:grid-cols-6">

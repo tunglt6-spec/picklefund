@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useBrandingStore } from '../../store/brandingStore'
 import { useNotifStore } from '../../store/notifStore'
-import { PickleFundLogoMark } from '../ui/PickleFundLogoMark'
+import { BrandLogo } from '../ui/BrandLogo'
 import { AvatarMenu } from './AvatarMenu'
 import { APPS_ROUTE, LISA_ROUTES, notifRouteByRole } from './navConfig'
 
@@ -61,11 +61,7 @@ export function MobileHeader() {
         aria-label="Trang Ứng dụng"
         className="flex min-h-[44px] min-w-0 flex-1 items-center gap-2 text-left"
       >
-        {branding.logoUrl ? (
-          <img src={branding.logoUrl} alt="" className="h-8 w-8 shrink-0 rounded-lg object-cover" />
-        ) : (
-          <span className="shrink-0"><PickleFundLogoMark size={32} /></span>
-        )}
+        <BrandLogo src={branding.logoUrl} size={32} />
         <span className="truncate text-[18px] font-[800] tracking-tight [color:var(--pf-text)]">
           {branding.shortName ?? branding.displayName ?? 'PickleFund'}
         </span>

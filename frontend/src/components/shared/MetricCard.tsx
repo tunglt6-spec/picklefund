@@ -5,7 +5,8 @@
 import type { ReactNode } from 'react'
 import { cn } from '../../lib/utils'
 import { accentVars, type ModuleAccent } from './tokens'
-import { moneyColor, type MoneyKind } from '../../lib/moneyTone'
+import { moneyColor, moneyTone, type MoneyKind } from '../../lib/moneyTone'
+import { readingSignal, type SignalTone } from '../../lib/statusDesign'
 
 /**
  * Tông màu KPI theo NGUYÊN TẮC dùng chung (SaaS): nền tint nhạt + viền trên 3px + số/icon
@@ -42,7 +43,9 @@ interface MetricCardProps {
   negative?: boolean
   /** Tông màu value-based (opt-in): nền tint + viền trên + số/icon theo màu. */
   tone?: MetricTone
-  /** Tô màu SỐ TIỀN theo giá trị (Xanh dương/tốt · Đỏ âm/chi/nợ · Vàng báo động) — xem lib/moneyTone. Cập nhật tức thì khi value đổi. */
+  /** Mobile operational signal; preserves the desktop accent/tone presentation. */
+  signal?: SignalTone
+  /** Tô màu SỐ TIỀN theo giá trị (Xanh lá/tốt · Đỏ âm/chi/nợ · Vàng báo động) — xem lib/moneyTone. Cập nhật tức thì khi value đổi. */
   money?: { value: number | null | undefined; kind?: MoneyKind }
   className?: string
   /** Thu gọn (mobile 3 cột): ẩn icon, padding nhỏ, số vừa. */
@@ -58,12 +61,15 @@ export function MetricCard({
   trend,
   negative,
   tone,
+  signal,
   money,
   className,
   compact,
 }: MetricCardProps) {
   const a = accentVars(accent)
   const t = tone ? TONE_PALETTE[tone] : null
+  const semanticTone = tone === 'success' || tone === 'warning' || tone === 'danger' || tone === 'neutral' ? tone : undefined
+  const shownSignal = money ? moneyTone(money.value, money.kind) : signal ?? (negative ? 'danger' : semanticTone ?? readingSignal(value))
   return (
     <div
       className={cn(
@@ -74,6 +80,7 @@ export function MetricCard({
       )}
       data-brand={tone === 'brand' ? '' : undefined}
       data-pf-metric
+      data-pf-signal={shownSignal}
     >
       <div className="flex items-center justify-between gap-2">
         <span className="pf-metric-label text-xs font-semibold uppercase tracking-wide leading-tight [color:var(--pf-color-muted)]">

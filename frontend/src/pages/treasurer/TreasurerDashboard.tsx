@@ -1,3 +1,4 @@
+import { countSignal } from '../../lib/statusDesign'
 import { moneyColor } from '../../lib/moneyTone'
 import { useMemo, useCallback, useState, useEffect } from 'react'
 import { DollarSign, CreditCard, Building2, FileText, AlertTriangle, Clock, TrendingUp, TrendingDown, Wallet } from '../../components/icons/mobileLucide'
@@ -231,9 +232,9 @@ export function TreasurerDashboard() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-          <MetricCard label="Chưa Đóng Quỹ" value={`${unpaidMembers} người`} icon={<AlertTriangle size={18} />} tone={unpaidMembers > 0 ? 'warning' : undefined} accent="amber" />
-          <MetricCard label="Chi Thiếu Hóa Đơn" value={`${noReceipt.length} khoản`} icon={<FileText size={18} />} tone={noReceipt.length > 0 ? 'warning' : undefined} accent="amber" />
-          <MetricCard label="Chờ Xác Nhận" value={`${pendingCount} khoản`} icon={<Clock size={18} />} tone="neutral" />
+          <MetricCard label="Chưa Đóng Quỹ" value={`${unpaidMembers} người`} icon={<AlertTriangle size={18} />} tone={unpaidMembers > 0 ? 'warning' : undefined} accent="amber" signal={countSignal(unpaidMembers, 'pending')} />
+          <MetricCard label="Chi Thiếu Hóa Đơn" value={`${noReceipt.length} khoản`} icon={<FileText size={18} />} tone={noReceipt.length > 0 ? 'warning' : undefined} accent="amber" signal={countSignal(noReceipt.length, 'pending')} />
+          <MetricCard label="Chờ Xác Nhận" value={`${pendingCount} khoản`} icon={<Clock size={18} />} tone="neutral" signal={countSignal(pendingCount, 'pending')} />
         </div>
 
         {/* Action items */}

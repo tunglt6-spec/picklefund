@@ -1,3 +1,4 @@
+import { countSignal } from '../../lib/statusDesign'
 import { useState } from 'react'
 import { CheckCircle, Clock, MapPin, Search, UserPlus, UserCheck, TrendingUp } from '../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
@@ -248,7 +249,7 @@ export function MemberAttendance() {
           <div className="grid grid-cols-2 gap-4">
             <MetricCard label="Buổi tham gia" value={`${attendedCount} / ${completedSessions.length}`} sub={`Tỷ lệ: ${rate}%`} accent="blue" icon={<CheckCircle size={18} />} />
             <MetricCard label="Tỷ lệ tham gia" value={`${rate}%`} sub="So với toàn kỳ" accent={rate >= 50 ? 'green' : 'amber'} icon={<TrendingUp size={18} />} />
-            <MetricCard label="Sắp diễn ra" value={`${scheduledCount} buổi`} sub="Trong kỳ này" accent="amber" icon={<Clock size={18} />} />
+            <MetricCard label="Sắp diễn ra" value={`${scheduledCount} buổi`} sub="Trong kỳ này" accent="amber" icon={<Clock size={18} />} signal={countSignal(scheduledCount, 'pending')} />
             <MetricCard label="Chi phí sân" value={courtCostText} sub="Cả kỳ · khớp Phiếu thu" accent="green" icon={<MapPin size={18} />} />
           </div>
 

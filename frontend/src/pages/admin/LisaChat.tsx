@@ -224,15 +224,15 @@ export function LisaChat() {
         {/* Header */}
         <div className="shrink-0 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-3 py-3 flex items-center justify-between" style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}>
           <div className="flex items-center gap-1.5 min-w-0">
-            <button onClick={() => navigate('/aido')} aria-label="Quay lại AI Digital Office" className="flex h-11 w-11 items-center justify-center -ml-1 [color:var(--pf-color-muted)] active:opacity-60">
+            <button onClick={() => navigate('/aido')} aria-label="Quay lại AIDO" className="flex h-11 w-11 items-center justify-center -ml-1 [color:var(--pf-color-muted)] active:opacity-60">
               <ArrowLeft size={20} />
             </button>
             <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm border-2 [border-color:var(--pf-surface)]">
               <img src="/lisa-avatar.jpg?v=2" alt="Lisa" className="w-full h-full object-cover" />
             </div>
             <div className="min-w-0">
-              <p className="text-base font-[800] [color:var(--pf-text)] truncate">Lisa AI</p>
-              <p className="text-xs text-emerald-500 font-medium">● Trực tuyến</p>
+              <h1 className="text-base font-[800] [color:var(--pf-text)] truncate">Lisa AI</h1>
+              <p className="text-xs [color:var(--pf-color-muted)] font-medium">Trợ lý CLB</p>
             </div>
           </div>
           <button onClick={() => fetchBrief()} disabled={briefLoading} aria-label="Làm mới thông tin" className="flex h-11 w-11 shrink-0 items-center justify-center [color:var(--pf-color-muted)] active:opacity-60 disabled:opacity-60 disabled:pointer-events-none">

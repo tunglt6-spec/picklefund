@@ -1396,6 +1396,58 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   [data-theme="dark"] [data-workspace] { --workspace-ink: color-mix(in srgb, var(--mod-main, #3882F6) 40%, #ECF4FF); }
 }
 
+/* Operational signals: traffic-light semantics, independent of module identity. */
+@media (max-width: 1023px) {
+  :root:has([data-app-shell]) {
+    --pf-signal-success: #22C55E; --pf-signal-success-ink: #15803D; --pf-signal-success-soft: #F0FDF4;
+    --pf-signal-warning: #FACC15; --pf-signal-warning-ink: #A16207; --pf-signal-warning-soft: #FEFCE8;
+    --pf-signal-danger: #F43F5E; --pf-signal-danger-ink: #C81E3A; --pf-signal-danger-soft: #FFF1F2;
+    --pf-color-success: var(--pf-signal-success-ink); --pf-color-success-soft: var(--pf-signal-success-soft);
+    --pf-color-warning: var(--pf-signal-warning-ink); --pf-color-warning-soft: var(--pf-signal-warning-soft);
+    --pf-color-danger: var(--pf-signal-danger-ink); --pf-color-danger-soft: var(--pf-signal-danger-soft);
+    --pf-green: var(--pf-signal-success-ink); --pf-green-soft: var(--pf-signal-success-soft);
+    --pf-tone-success: var(--pf-signal-success-ink); --pf-tone-warning: var(--pf-signal-warning-ink); --pf-tone-danger: var(--pf-signal-danger-ink);
+    --pf-money-pos: var(--pf-signal-success-ink); --pf-money-warn: var(--pf-signal-warning-ink); --pf-money-neg: var(--pf-signal-danger-ink);
+    --pf-accent-rose: var(--pf-signal-danger-ink); --pf-accent-amber: var(--pf-signal-warning-ink);
+    --pf-running-signal: var(--pf-signal-success-ink); --pf-completed-signal: var(--pf-signal-success-ink); --pf-high-risk-signal: var(--pf-signal-danger-ink);
+    --color-green-500: #15803D; --color-green-600: #15803D; --color-emerald-500: #15803D; --color-emerald-600: #15803D;
+    --color-red-500: #C81E3A; --color-red-600: #C81E3A; --color-rose-500: #C81E3A; --color-rose-600: #C81E3A;
+    --color-amber-500: #A16207; --color-amber-600: #A16207; --color-yellow-500: #A16207; --color-yellow-600: #A16207;
+    --color-green-50: #F0FDF4; --color-emerald-50: #F0FDF4; --color-green-100: #DCFCE7; --color-emerald-100: #DCFCE7;
+    --color-green-700: #15803D; --color-emerald-700: #15803D; --color-red-700: #C81E3A; --color-rose-700: #C81E3A;
+    --color-red-50: #FFF1F2; --color-rose-50: #FFF1F2; --color-red-100: #FFE4E6; --color-rose-100: #FFE4E6;
+    --color-amber-50: #FEFCE8; --color-yellow-50: #FEFCE8; --color-amber-100: #FEF9C3; --color-yellow-100: #FEF9C3;
+    --color-amber-700: #A16207; --color-yellow-700: #A16207; --color-orange-500: #A16207; --color-orange-600: #A16207;
+  }
+  :root:has([data-app-shell])[data-theme="dark"] {
+    --pf-signal-success-ink: #4ADE80; --pf-signal-success-soft: #052E16;
+    --pf-signal-warning-ink: #FDE047; --pf-signal-warning-soft: #422006;
+    --pf-signal-danger-ink: #FB7185; --pf-signal-danger-soft: #4C0519;
+    --color-green-500: #4ADE80; --color-green-600: #4ADE80; --color-green-700: #4ADE80;
+    --color-emerald-500: #4ADE80; --color-emerald-600: #4ADE80; --color-emerald-700: #4ADE80;
+    --color-red-500: #FB7185; --color-red-600: #FB7185; --color-red-700: #FB7185;
+    --color-rose-500: #FB7185; --color-rose-600: #FB7185; --color-rose-700: #FB7185;
+    --color-amber-500: #FDE047; --color-amber-600: #FDE047; --color-amber-700: #FDE047;
+    --color-yellow-500: #FDE047; --color-yellow-600: #FDE047; --color-yellow-700: #FDE047; --color-orange-500: #FDE047; --color-orange-600: #FDE047;
+    --color-green-50: #052E16; --color-emerald-50: #052E16; --color-green-100: #052E16; --color-emerald-100: #052E16;
+    --color-red-50: #4C0519; --color-rose-50: #4C0519; --color-red-100: #4C0519; --color-rose-100: #4C0519;
+    --color-amber-50: #422006; --color-yellow-50: #422006; --color-amber-100: #422006; --color-yellow-100: #422006;
+  }
+  [data-pf-signal] { --signal-ink: var(--pf-text); --signal-mark: var(--pf-color-muted); --signal-soft: var(--pf-color-muted-soft); }
+  [data-pf-signal="success"] { --signal-ink: var(--pf-signal-success-ink); --signal-mark: var(--pf-signal-success); --signal-soft: var(--pf-signal-success-soft); }
+  [data-pf-signal="warning"] { --signal-ink: var(--pf-signal-warning-ink); --signal-mark: var(--pf-signal-warning); --signal-soft: var(--pf-signal-warning-soft); }
+  [data-pf-signal="danger"] { --signal-ink: var(--pf-signal-danger-ink); --signal-mark: var(--pf-signal-danger); --signal-soft: var(--pf-signal-danger-soft); }
+  [data-pf-metric]:is([data-pf-signal="success"],[data-pf-signal="warning"],[data-pf-signal="danger"]) { border-top: 3px solid var(--signal-mark); }
+  [data-pf-metric]:is([data-pf-signal="success"],[data-pf-signal="warning"],[data-pf-signal="danger"]) .pf-metric-body > p { color: var(--signal-ink) !important; }
+  [data-pf-metric]:is([data-pf-signal="success"],[data-pf-signal="warning"],[data-pf-signal="danger"]) .pf-metric-icon { background: var(--signal-soft); color: var(--signal-ink); }
+  .pf-mobile-summary[data-pf-signal] { border-top-color: var(--signal-mark); }
+  .pf-mobile-summary[data-pf-signal] .pf-summary-value, .pf-summary-item[data-pf-signal] { color: var(--signal-ink); }
+  .pf-summary-item[data-pf-signal] { color: var(--signal-ink) !important; }
+  .pf-data-freshness { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; max-width: 100%; padding: 6px 9px; border-radius: 10px; color: var(--signal-ink); background: var(--signal-soft); font-size: 11px; font-weight: 600; line-height: 1.4; }
+  .pf-signal-dot { width: 8px; height: 8px; flex: 0 0 8px; border-radius: 50%; background: var(--signal-mark); box-shadow: 0 0 0 1px color-mix(in srgb, var(--signal-ink) 25%, transparent); }
+  .pf-data-freshness time { font-variant-numeric: tabular-nums; font-weight: 500; }
+}
+
 /* Fresh Sport Glass: vùng xanh–mint nhẹ ở đầu trang Tổng quan. */
 @media (max-width: 1023px) {
   :root:has([data-app-shell]):not([data-theme="dark"]) .pf-hero-wash {

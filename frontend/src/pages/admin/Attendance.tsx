@@ -1,3 +1,4 @@
+import { countSignal } from '../../lib/statusDesign'
 import { MobileSummary } from '../../components/mobile/MobileSummary'
 import { useState, useMemo, useRef } from 'react'
 import { HuyLabel } from '../../components/ui/HuyLabel'
@@ -352,7 +353,7 @@ export function Attendance() {
 
       <div className="flex flex-col gap-5">
         {/* KPI */}
-        {sessions.length > 0 && <MobileSummary module="activity" label="Buổi cần điểm danh" value={needAttendance.length} note={`${completedSessions} buổi đã hoàn thành`} items={[
+        {sessions.length > 0 && <MobileSummary module="activity" label="Buổi cần điểm danh" tone={countSignal(needAttendance.length, 'pending')} value={needAttendance.length} note={`${completedSessions} buổi đã hoàn thành`} items={[
           {label:'Tổng buổi trong kỳ',value:sessions.length},{label:'Lượt tham gia',value:totalAttendance},{label:'Trung bình / buổi',value:completedSessions ? (totalAttendance/completedSessions).toFixed(1) : '—'},
         ]} />}
         {sessions.length > 0 && (

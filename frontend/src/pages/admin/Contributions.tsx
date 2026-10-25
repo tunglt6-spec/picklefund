@@ -1,6 +1,8 @@
+import { FinancialDataState } from '../../components/shared/FinancialDataState'
+import { useLiveRefresh } from '../../hooks/useLiveRefresh'
 import { MobileSummary } from '../../components/mobile/MobileSummary'
 import { ActionMenu } from '../../components/shared/ActionMenu'
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { HuyLabel } from '../../components/ui/HuyLabel'
 import { DateInput } from '../../components/ui/DateTimeFields'
 import { AmountHint } from '../../components/ui/AmountHint'
@@ -73,12 +75,20 @@ export function Contributions() {
   const [form, setForm] = useState<typeof BLANK_COMMON>({ ...BLANK_COMMON, amount: '' })
 
   // Refresh contributions + periods when page mounts (in case data changed from another tab/session)
-  useEffect(() => {
+  const [financeState, setFinanceState] = useState({scope:clubId,updatedAt:null as number|null,loading:true,error:false})
+  const financeRequest = useRef(0)
+  const reloadFinance = useCallback(() => {
     if (!clubId) return
-    Promise.allSettled([
+    const request = ++financeRequest.current
+    setFinanceState(prev=>prev.scope===clubId ? {...prev,loading:prev.updatedAt==null,error:false} : {scope:clubId,updatedAt:null,loading:true,error:false})
+    return Promise.allSettled([
       api.get(`/contributions?clubId=${clubId}`),
       api.get(`/fund-periods?clubId=${clubId}`),
     ]).then(([contribsRes, periodsRes]) => {
+      if (request !== financeRequest.current) return
+      if (contribsRes.status !== 'fulfilled' || periodsRes.status !== 'fulfilled') throw new Error('Incomplete finance snapshot')
+      if (contribsRes.status === 'fulfilled' && !Array.isArray(contribsRes.value.data?.data)) throw new Error('Invalid contributions response')
+      if (periodsRes.status === 'fulfilled' && !Array.isArray(periodsRes.value.data?.data)) throw new Error('Invalid fund periods response')
       if (contribsRes.status === 'fulfilled') {
         const raw = contribsRes.value.data?.data ?? []
         saveContributions(clubId, raw.map((c: any) => ({
@@ -103,9 +113,13 @@ export function Contributions() {
           finalizedAt: p.finalizedAt ?? undefined, createdBy: p.createdById ?? '',
         })))
       }
-    })
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [clubId])
+      const complete = contribsRes.status === 'fulfilled' && periodsRes.status === 'fulfilled'
+      setFinanceState(prev=>({scope:clubId,updatedAt:complete ? Date.now() : prev.updatedAt,loading:false,error:!complete}))
+    }).catch(()=>{if(request===financeRequest.current)setFinanceState(prev=>({...prev,loading:false,error:true}))})
+  }, [clubId,saveContributions,setFundPeriods])
+  useEffect(()=>{void reloadFinance();return()=>{financeRequest.current++}},[reloadFinance])
+  useLiveRefresh(reloadFinance,!!clubId)
+  const scopedFinanceState = financeState.scope === clubId ? financeState : {...financeState,updatedAt:null,loading:true,error:false}
 
   // Sync selectedPeriodId and formPeriodId once activePeriod is known (handles async load)
   useEffect(() => {
@@ -418,10 +432,11 @@ export function Contributions() {
           <PeriodSelector periods={chungPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} label="Kỳ quỹ" />
         </div>
 
+        <FinancialDataState sources={[{...scopedFinanceState,reload:reloadFinance}]}>
         <div className="px-4 pt-3">
-          <MobileSummary module="finance" label="Quỹ Chính" value={formatVND(commonTotal)} note={`${commonContribs.length} khoản thu`} items={[
-            {label:'Quỹ Phụ',value:formatVND(miniTotal)},
-            {label:'Chờ xác nhận',value:contributions.filter(c=>!c.isConfirmed).length},
+          <MobileSummary module="finance" label="Quỹ Chính" money={{value:commonTotal,kind:'income'}} value={formatVND(commonTotal)} note={`${commonContribs.length} khoản thu`} items={[
+            {label:'Quỹ Phụ',value:formatVND(miniTotal),money:{value:miniTotal,kind:'income'}},
+            {label:'Chờ xác nhận',value:contributions.filter(c=>!c.isConfirmed).length,tone:contributions.some(c=>!c.isConfirmed)?'warning':'success'},
           ]} />
         </div>
 
@@ -610,6 +625,7 @@ export function Contributions() {
           </form>
         </Modal>
         <ConfirmDialog open={!!deleteId} title="Xóa khoản thu?" message="Hành động này không thể hoàn tác." onConfirm={handleDelete} onCancel={() => setDeleteId(null)} />
+        </FinancialDataState>
       </div>
     )
   }

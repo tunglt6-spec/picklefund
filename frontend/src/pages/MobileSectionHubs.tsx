@@ -9,6 +9,7 @@ import {
 import { SuperSummary } from '../components/mobile/SuperSummary'
 import { formatVND, cn } from '../lib/utils'
 import { moneyColor } from '../lib/moneyTone'
+import { DataFreshness } from '../components/shared/DataFreshness'
 
 const WEEKDAYS = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy']
 const weekdayOf = (d: string) => WEEKDAYS[new Date(`${d.slice(0, 10)}T00:00:00`).getDay()]
@@ -31,7 +32,7 @@ function SessionBadge({ date, status }: { date: string; status: string }) {
 export function MobileHome() {
   const navigate = useNavigate()
   const wide = useIsWide()
-  const { user, role, clubData, hasClub, activePeriod, fin, finState, upcoming } = useHubData()
+  const { user, role, clubData, hasClub, activePeriod, fin, finState, finUpdatedAt, upcoming } = useHubData()
   const unread = useNotifStore((s) => s.unreadCount)
   if (!user || !role) return null
   if (wide) return <Navigate to={homeByRole[role]} replace />
@@ -129,10 +130,11 @@ export function MobileHome() {
             <p className="px-4 pt-3 text-xs [color:var(--pf-color-muted)]">
               {activePeriod ? `Kỳ quỹ đang mở: ${activePeriod.name}` : clubData ? 'Chưa có kỳ quỹ đang mở' : 'Đang tải kỳ quỹ…'}
             </p>
+            <div className="px-4 pt-2"><DataFreshness updatedAt={finUpdatedAt} loading={finState === 'loading'} error={finState === 'error'} mode="poll" /></div>
             <div className="grid grid-cols-2 divide-x pb-3 pt-2 [border-color:var(--pf-border)]">
               <div className="min-w-0 px-4">
                 <p className="text-xs font-semibold [color:var(--pf-color-muted)]">Tổng tài sản CLB</p>
-                {finState === 'loading' ? <Skeleton className="mt-1.5 h-6 w-24" /> : finState === 'error' || !fin ? (
+                {finState === 'loading' ? <Skeleton className="mt-1.5 h-6 w-24" /> : !fin ? (
                   <p className="mt-1 text-sm [color:var(--pf-color-muted)]">{finState === 'error' ? 'Không tải được' : 'Chưa có dữ liệu'}</p>
                 ) : (
                   <p className="mt-0.5 truncate text-[20px] font-[800] leading-tight" style={{ color: moneyColor(fin.assets, 'balance') }}>{formatVND(fin.assets)}</p>
@@ -141,7 +143,7 @@ export function MobileHome() {
               </div>
               <div className="min-w-0 px-4">
                 <p className="text-xs font-semibold [color:var(--pf-color-muted)]">Chi trong kỳ</p>
-                {finState === 'loading' ? <Skeleton className="mt-1.5 h-6 w-24" /> : finState === 'error' || !fin ? (
+                {finState === 'loading' ? <Skeleton className="mt-1.5 h-6 w-24" /> : !fin ? (
                   <p className="mt-1 text-sm [color:var(--pf-color-muted)]">{finState === 'error' ? 'Không tải được' : 'Chưa có dữ liệu'}</p>
                 ) : (
                   <p className="mt-0.5 truncate text-[20px] font-[800] leading-tight" style={{ color: moneyColor(fin.totalExpense, 'expense') }}>{formatVND(fin.totalExpense)}</p>

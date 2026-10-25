@@ -1,3 +1,4 @@
+import { countSignal } from '../../lib/statusDesign'
 import { MobileSummary } from '../../components/mobile/MobileSummary'
 import { useCallback, useEffect, useState } from 'react'
 import { CheckCircle2, Clock, RotateCcw, Wallet, ExternalLink, User } from '../../components/icons/mobileLucide'
@@ -121,15 +122,15 @@ export function PaymentApprovals() {
         actions={rows.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined}
       />
 
-      <div className="mb-4 lg:hidden"><MobileSummary module="finance" label="Chờ xác nhận nộp quỹ"
+      <div className="mb-4 lg:hidden"><MobileSummary module="finance" label="Chờ xác nhận nộp quỹ" tone={loading || error || !stats ? 'neutral' : countSignal(stats.pendingCount, 'pending')}
         value={loading ? 'Đang tải…' : error || !stats ? '—' : stats.pendingCount}
         note={loading || error ? undefined : `${rows.length} khoản trong danh sách`}
         items={loading || error || !stats ? [] : [
-          {label:'Đã xác nhận',value:stats.confirmedCount},
-          {label:'Tổng đã thu',value:formatVND(Number(stats.confirmedAmount))},
+          {label:'Đã xác nhận',value:stats.confirmedCount,tone:'success'},
+          {label:'Tổng đã thu',value:formatVND(Number(stats.confirmedAmount)),money:{value:Number(stats.confirmedAmount),kind:'income'}},
         ]} /></div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 max-lg:hidden">
-        <MetricCard label="Chờ xác nhận" value={`${stats?.pendingCount ?? 0}`} accent="amber" icon={<Clock size={18} />} />
+        <MetricCard label="Chờ xác nhận" value={`${stats?.pendingCount ?? 0}`} accent="amber" icon={<Clock size={18} />} signal={countSignal(stats?.pendingCount ?? 0, 'pending')} />
         <MetricCard label="Đã xác nhận" value={`${stats?.confirmedCount ?? 0}`} accent="green" icon={<CheckCircle2 size={18} />} />
         <MetricCard label="Tổng đã thu (xác nhận)" value={formatVND(Number(stats?.confirmedAmount ?? 0))} money={{ value: Number(stats?.confirmedAmount ?? 0), kind: 'income' }} accent="blue" icon={<Wallet size={18} />} />
       </div>

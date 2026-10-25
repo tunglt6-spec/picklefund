@@ -330,7 +330,7 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
       </div>
 
       {/* KPI */}
-      <MobileSummary module="members" label="Thành viên được chấm điểm" value={loading ? '…' : error ? '—' : stats.total} note={monthLabel(month)} items={[
+      <MobileSummary module="members" label="Thành viên được chấm điểm" tone={loading || error ? 'neutral' : 'success'} value={loading ? '…' : error ? '—' : stats.total} note={monthLabel(month)} items={[
         {label:'Xuất sắc',value:loading ? '…' : stats.excellent},{label:'Tốt',value:loading ? '…' : stats.good},{label:'Cần lưu ý',value:loading ? '…' : stats.review},
       ]} />
       <div className="hidden gap-3 sm:gap-4 lg:grid lg:grid-cols-4">

@@ -1,3 +1,4 @@
+import { countSignal } from '../../lib/statusDesign'
 import { useCallback, useEffect, useState } from 'react'
 import {
   ShieldAlert,
@@ -129,7 +130,7 @@ export function CommunityModeration({ embedded }: { embedded?: boolean } = {}) {
           label="Báo cáo đang chờ"
           value={`${tab === 'OPEN' ? rows.length : '—'}`}
           accent="amber"
-          icon={<Flag size={18} />}
+          icon={<Flag size={18} />} signal={countSignal(tab === 'OPEN' ? rows.length : '—', 'pending')}
         />
         <div className="contents max-lg:hidden"><MetricCard
           label="Đang xem"

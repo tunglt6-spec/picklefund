@@ -1,3 +1,4 @@
+import { FinancialDataState } from '../../components/shared/FinancialDataState'
 /**
  * MemberActivity (v2.1) — Lịch sử hoạt động Thành viên (Hướng A): hồ sơ hoạt động từng TV,
  * GỘP từ dữ liệu ĐÃ CÓ trong client store (điểm danh · đóng quỹ · chuyên cần). KHÔNG gọi API
@@ -23,7 +24,7 @@ export function MemberActivity() {
   const data = useClubDataStore((s) => s.getClubData(clubId))
   const members = data.members ?? []
   // Option 3: self-fetch cục bộ (không đọc global store).
-  const { data: contributions } = useClubContributions(clubId)
+  const { data: contributions, ...financeState } = useClubContributions(clubId)
   const attSummary = data.memberAttendanceSummary ?? []
 
   const [q, setQ] = useState('')
@@ -92,8 +93,8 @@ export function MemberActivity() {
 
   return (
     <PageShell>
-      <PageHeader title="Lịch sử hoạt động"        actions={<ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} />}
-      />
+      <PageHeader title="Lịch sử hoạt động" actions={<ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} />} />
+      <FinancialDataState sources={[financeState]}>
 
       <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
         {/* Danh sách thành viên */}
@@ -175,6 +176,7 @@ export function MemberActivity() {
           </DetailContainer>
         )}
       </div>
+      </FinancialDataState>
     </PageShell>
   )
 }
