@@ -233,7 +233,7 @@ jobs:
             fi
 
             if [ "$HEALTH_OK" = "true" ]; then
-              if ! check_url https://app.picklefund.uk/; then
+              if ! check_url https://picklefund.vn/; then
                 echo "ERROR: Frontend health check failed"
                 docker compose ps
                 docker compose logs nginx --tail=100
@@ -295,7 +295,7 @@ jobs:
 
             ROLLBACK_OK=true
             check_url https://api.picklefund.uk/health || ROLLBACK_OK=false
-            check_url https://app.picklefund.uk/       || ROLLBACK_OK=false
+            check_url https://picklefund.vn/       || ROLLBACK_OK=false
 
             if [ "$ROLLBACK_OK" = "true" ]; then
               send_telegram "$(printf '⚠️ PickleFund deploy failed, rollback success\nFailed commit: %s\nRolled back to: %s' "$SHORT_SHA" "${PREVIOUS_COMMIT:0:7}")"

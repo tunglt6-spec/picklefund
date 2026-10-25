@@ -22,7 +22,7 @@ export interface LegalDoc {
   sections: LegalSection[]
 }
 
-const CONTACT = { org: 'PickleFund – Sports Club Manager', website: 'https://app.picklefund.uk', email: 'support@picklefund.uk' }
+const CONTACT = { org: 'PickleFund – Sports Club Manager', website: 'https://picklefund.vn', email: 'support@picklefund.uk' }
 
 export const LEGAL_DOCS: Record<'terms' | 'privacy' | 'cookie', LegalDoc> = {
   terms: {

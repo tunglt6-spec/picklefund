@@ -27,7 +27,7 @@ import { ReferralsService } from '../referrals/referrals.service';
 export class BillingCheckoutService {
   private readonly logger = new Logger(BillingCheckoutService.name);
   private readonly appUrl =
-    process.env.APP_PUBLIC_URL || process.env.APP_URL || 'https://app.picklefund.uk';
+    process.env.APP_PUBLIC_URL || process.env.APP_URL || 'https://picklefund.vn';
   private readonly apiUrl =
     process.env.API_PUBLIC_URL || process.env.API_URL || 'https://api.picklefund.uk';
 

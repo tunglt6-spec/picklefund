@@ -6,13 +6,13 @@
 #
 # Env (tuỳ chọn):
 #   API_BASE          (mặc định https://api.picklefund.uk/api)
-#   APP_BASE          (mặc định https://app.picklefund.uk)
+#   APP_BASE          (mặc định https://picklefund.vn)
 #   REAL_ADMIN_TOKEN  — nếu có, kiểm tra thêm endpoint cần auth trả 200.
 # ============================================================================
 set -uo pipefail
 
 API_BASE="${API_BASE:-https://api.picklefund.uk/api}"
-APP_BASE="${APP_BASE:-https://app.picklefund.uk}"
+APP_BASE="${APP_BASE:-https://picklefund.vn}"
 PASS=0; FAIL=0; NV=0
 p() { printf '  [PASS] %s\n' "$1"; PASS=$((PASS+1)); }
 f() { printf '  [FAIL] %s\n' "$1"; FAIL=$((FAIL+1)); }

@@ -33,7 +33,9 @@ export function useAidoSocket(
     const host = window.location.hostname
     const wsUrl =
       (import.meta.env.VITE_WS_URL as string | undefined) ??
-      (host.endsWith('picklefund.uk')
+      (host === 'picklefund.vn' || host === 'www.picklefund.vn'
+        ? window.location.origin
+        : host.endsWith('picklefund.uk')
         ? 'https://api.picklefund.uk'
         : `${window.location.protocol}//${host}:3000`)
 

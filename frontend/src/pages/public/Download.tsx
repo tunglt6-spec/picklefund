@@ -9,7 +9,7 @@ import type { LucideIcon } from 'lucide-react'
 import { PublicPage, PageHero, PUBLIC_CONTAINER } from './PublicPage'
 
 const PLATFORMS: { icon: LucideIcon; title: string; steps: string[] }[] = [
-  { icon: Globe, title: 'Trên trình duyệt (mọi thiết bị)', steps: ['Mở picklefund.uk', 'Đăng nhập và dùng ngay — không cần cài đặt'] },
+  { icon: Globe, title: 'Trên trình duyệt (mọi thiết bị)', steps: ['Mở picklefund.vn', 'Đăng nhập và dùng ngay — không cần cài đặt'] },
   { icon: Smartphone, title: 'Điện thoại (PWA)', steps: ['Mở website bằng trình duyệt trên điện thoại', 'Chọn "Thêm vào màn hình chính" (Add to Home Screen)', 'Mở như một ứng dụng độc lập'] },
   { icon: MonitorSmartphone, title: 'Máy tính (PWA)', steps: ['Mở website bằng Chrome/Edge', 'Nhấn biểu tượng "Cài đặt" trên thanh địa chỉ', 'Ứng dụng chạy trong cửa sổ riêng'] },
 ]

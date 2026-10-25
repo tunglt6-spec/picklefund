@@ -1328,7 +1328,9 @@ ${facts}`;
         const allowed =
           host === 'localhost' ||
           host.endsWith('.picklefund.uk') ||
-          host === 'picklefund.uk';
+          host === 'picklefund.uk' ||
+          host === 'picklefund.vn' ||
+          host === 'www.picklefund.vn';
         // chặn IP literal (metadata 169.254.x, private ranges…)
         if (!allowed || /^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return null;
         const ctl = new AbortController();
@@ -1525,7 +1527,7 @@ ${facts}`;
     <div style="font-size:13px;font-weight:700;margin-bottom:2px;">Cảnh báo</div>
     ${alerts}
     <div style="text-align:center;margin-top:18px;">
-      <a href="https://app.picklefund.uk/aido" style="display:inline-block;background:#6D5DFB;color:#fff;text-decoration:none;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;">Xem báo cáo đầy đủ</a>
+      <a href="https://picklefund.vn/aido" style="display:inline-block;background:#6D5DFB;color:#fff;text-decoration:none;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;">Xem báo cáo đầy đủ</a>
     </div>
     <p style="font-size:11px;color:#aaa;margin-top:16px;text-align:center;">${esc(r.meta.clubName || 'PickleFund')} · AIDO Executive Report · mọi con số từ dữ liệu thật của CLB</p>
   </div>

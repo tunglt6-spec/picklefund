@@ -18,7 +18,7 @@ export class MockProvider implements PaymentProvider {
   readonly name = 'MOCK' as const;
   private readonly secret = process.env.MOCK_WEBHOOK_SECRET || 'pf-mock-secret';
   private readonly appUrl =
-    process.env.APP_PUBLIC_URL || process.env.APP_URL || 'https://app.picklefund.uk';
+    process.env.APP_PUBLIC_URL || process.env.APP_URL || 'https://picklefund.vn';
 
   isConfigured(): boolean {
     return true;

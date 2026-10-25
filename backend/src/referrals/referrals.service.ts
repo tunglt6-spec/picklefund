@@ -12,7 +12,7 @@ import { HermesService } from '../hermes/hermes.service';
 export class ReferralsService {
   private readonly logger = new Logger(ReferralsService.name);
   private readonly appUrl =
-    process.env.APP_PUBLIC_URL || process.env.APP_URL || 'https://app.picklefund.uk';
+    process.env.APP_PUBLIC_URL || process.env.APP_URL || 'https://picklefund.vn';
 
   constructor(
     private prisma: PrismaService,

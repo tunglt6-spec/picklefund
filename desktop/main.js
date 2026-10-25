@@ -2,7 +2,7 @@ const { app, BrowserWindow, Menu, shell, dialog } = require('electron')
 const path = require('path')
 
 // Production URL — update when deploying to production
-const PRODUCTION_URL = 'https://app.picklefund.uk'
+const PRODUCTION_URL = 'https://picklefund.vn'
 // For local Docker usage: 'http://localhost'
 const APP_URL = process.env.PICKLEFUND_URL || PRODUCTION_URL
 
