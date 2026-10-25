@@ -1,3 +1,4 @@
+import { useIsMobile } from '../../../hooks/useIsMobile'
 import { WorkspaceMark } from '../../../components/mobile/WorkspaceMark'
 import { useMemo, useState } from 'react'
 import { mobileText } from '../../../lib/mobileText'
@@ -305,6 +306,7 @@ export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } 
   const { policies, intel, summary, opsSignals, loading, availability } = useAiManager()
   const rt = useOperationsRuntime()
   const [teamFilter, setTeamFilter] = useState<'all' | 'active' | 'planned'>('all')
+  const mobileLayout = useIsMobile(1024)
   const [moreKpi, setMoreKpi] = useState(false)
 
   const sections = useMemo(() => buildSections(role === 'SUPER_ADMIN'), [role])
@@ -517,11 +519,13 @@ export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } 
     ]
   }, [ag, rt.alerts, rt.generatedAt])
 
+  const hasPlannedAgents = rosterAll.some(agent => !agent.implemented)
   const roster = useMemo(() => {
+    if (mobileLayout && !hasPlannedAgents) return rosterAll
     if (teamFilter === 'planned') return rosterAll.filter(r => !r.implemented)
     if (teamFilter === 'active') return rosterAll.filter(r => r.implemented)
     return rosterAll
-  }, [rosterAll, teamFilter])
+  }, [rosterAll, teamFilter, mobileLayout, hasPlannedAgents])
 
   return (
     <div className="[background:var(--pf-bg)]">
@@ -651,7 +655,7 @@ export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } 
           <PanelTitle
             icon={<Bot size={16} />}
             right={
-              <div className="flex items-center gap-1 rounded-lg [background:var(--pf-color-muted-soft)] p-0.5 text-xs">
+              <div className={`flex items-center gap-1 rounded-lg [background:var(--pf-color-muted-soft)] p-0.5 text-xs ${!hasPlannedAgents ? 'max-lg:hidden' : ''}`}>
                 {([['all', 'Tất cả'], ['active', 'Hoạt động'], ['planned', 'Dự kiến']] as const).map(([v, l]) => (
                   <button
                     key={v}
