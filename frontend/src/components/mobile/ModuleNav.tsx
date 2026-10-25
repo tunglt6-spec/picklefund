@@ -72,7 +72,7 @@ export function MobileModuleMenu({ title, subtitle, items, onSelect, onBack, scr
       </div>
       {children}
       {groups.map((g, gi) => (
-        <div key={g.name || '_'}>
+        <div key={g.name || '_'} className="pf-glass-group" data-mod={g.items[0]?.module}>
           {g.name && <HubSectionTitle first={gi === 0}>{g.name}</HubSectionTitle>}
           <TileGrid items={g.items} onSelect={(it) => onSelect(it as MenuItem)} />
         </div>

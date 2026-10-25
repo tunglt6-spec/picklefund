@@ -83,9 +83,12 @@ export function MobileAppHub() {
           <TileGrid items={matches} unread={unread} empty={`Không tìm thấy chức năng “${query}”.`} />
         </>
       ) : (
-        groups.map((g, gi) => (
-          <section key={g.key} aria-label={g.title}>
-            <HubSectionTitle first={gi === 0}>{g.title}</HubSectionTitle>
+        groups.map((g) => (
+          <section key={g.key} aria-label={g.title} className="pf-glass-group" data-mod={g.items[0]?.module}>
+            <div className="flex items-center justify-between gap-2">
+              <HubSectionTitle first>{g.title}</HubSectionTitle>
+              <span className="pf-group-count">{g.items.length} chức năng</span>
+            </div>
             <TileGrid items={g.items} unread={unread} editing={editing} onMove={(k, d) => move(g.key, k, d)} />
           </section>
         ))
