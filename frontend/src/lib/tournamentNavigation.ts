@@ -33,4 +33,3 @@ export function tournamentSectionLinks(mg: MiniGame) {
     return true
   })
 }
-
