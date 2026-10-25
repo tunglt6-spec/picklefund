@@ -1,4 +1,6 @@
 import { MobileSummary } from '../../../components/mobile/MobileSummary'
+import { ActionMenu } from '../../../components/shared/ActionMenu'
+import { tournamentSectionTarget, tournamentSectionLinks, type TournamentSection } from '../../../lib/tournamentNavigation'
 /**
  * UI-06 — Tournament Center Enterprise Workspace (PickleFund v2.1)
  * Màn trung tâm giải đấu (danh sách minigame/tournament). Kế thừa UI-02 (Golden Reference).
@@ -12,7 +14,7 @@ import { MobileSummary } from '../../../components/mobile/MobileSummary'
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDialogA11y } from '../../../hooks/useDialogA11y'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   Plus, Eye, Edit2, Trash2, Trophy, Users, Activity, CheckCircle2,
   PlayCircle, AlertCircle, RefreshCw, UserCheck, Check,
@@ -87,6 +89,9 @@ interface TourRow {
 
 export function MinigameList() {
   const navigate = useNavigate()
+  const [params, setParams] = useSearchParams()
+  const requestedSection = params.get('section')
+  const section: TournamentSection | null = requestedSection === 'schedule' || requestedSection === 'results' || requestedSection === 'standings' ? requestedSection : null
   const { user, accessToken } = useAuthStore()
   const clubId = user?.clubId ?? ''
   const { getMinigames, deleteMinigame, setMinigamesFromApi, groups } = useMinigameStore()
@@ -94,6 +99,8 @@ export function MinigameList() {
   const isMobile = useIsMobile(1024)
   const { canManage } = useMinigameDelegate()
   const isClubAdmin = user?.role === 'CLUB_ADMIN'
+  const tournamentBase = user?.role === 'MEMBER_VIEW' ? '/member/thi-dau' : '/thi-dau'
+  const openTournament = (mg: MiniGame) => navigate(isMobile && section ? tournamentSectionTarget(section, mg) : `/minigames/${mg.id}`)
   const activeMembers = useClubDataStore((s) => s.getClubData(clubId).members).filter((m) => m.status === 'active')
 
   /* ── Ủy quyền minigame (CLUB_ADMIN) ── */
@@ -236,7 +243,7 @@ export function MinigameList() {
         <ActionButton variant="secondary" icon={<UserCheck size={16} />} onClick={() => void openDelegateModal()}>Ủy quyền</ActionButton>
       )}
       {canManage && (
-        <ActionButton icon={<Plus size={16} />} onClick={() => navigate(isMobile ? '/thi-dau?tab=tournaments&create=1' : '/thi-dau?tab=tournaments')}>{isMobile ? 'Tạo giải đấu' : 'Tạo minigame'}</ActionButton>
+        <ActionButton icon={<Plus size={16} />} onClick={() => navigate(isMobile ? `${tournamentBase}?tab=tournaments&create=1` : '/thi-dau?tab=tournaments')}>{isMobile ? 'Tạo giải đấu' : 'Tạo minigame'}</ActionButton>
       )}
     </div>
   )
@@ -330,6 +337,7 @@ export function MinigameList() {
             />
           </div>
 
+          {isMobile && section && <div role="status" className="mt-3 flex items-center justify-between gap-2 text-sm [color:var(--pf-text-muted)]"><span>Chọn giải để xem {section === 'schedule' ? 'lịch đấu' : section === 'results' ? 'kết quả' : 'xếp hạng'}</span><button className="min-h-11 shrink-0 font-semibold [color:var(--pf-primary-text)]" onClick={()=>{const next=new URLSearchParams(params);next.delete('section');setParams(next,{replace:true})}}>Xem tất cả</button></div>}
           {/* ── Tournament list: DataTable (desktop) / MobileCardList (mobile) ── */}
           <div className="pf-glass mt-4 rounded-[16px]">
             <div className="flex items-center justify-between border-b px-5 py-3 border-[color:var(--pf-border-soft)]">
@@ -344,11 +352,11 @@ export function MinigameList() {
               ) : (
                 <EmptyState icon={<Trophy size={26} />} title="Chưa có giải đấu nào"
                   description="Tạo giải đấu / minigame đầu tiên cho câu lạc bộ."
-                  action={canManage ? <ActionButton icon={<Plus size={15} />} onClick={() => navigate(isMobile ? '/thi-dau?tab=tournaments&create=1' : '/thi-dau?tab=tournaments')}>{isMobile ? 'Tạo giải đấu' : 'Tạo minigame'}</ActionButton> : undefined} />
+                  action={canManage ? <ActionButton icon={<Plus size={15} />} onClick={() => navigate(isMobile ? `${tournamentBase}?tab=tournaments&create=1` : '/thi-dau?tab=tournaments')}>{isMobile ? 'Tạo giải đấu' : 'Tạo minigame'}</ActionButton> : undefined} />
               )
             ) : isMobile ? (
               <div className="p-3">
-                <MobileCardList items={rows} itemKey={(r) => r.mg.id} onItemClick={(r) => navigate(`/minigames/${r.mg.id}`)}
+                <MobileCardList items={rows} itemKey={(r) => r.mg.id} onItemClick={(r) => openTournament(r.mg)}
                   renderCard={(r) => (
                     <div>
                       <div className="flex items-start justify-between gap-2">
@@ -364,7 +372,16 @@ export function MinigameList() {
                       </div>
                       {r.matchCount > 0 && <div className="mt-2"><Progress pct={r.pct} /></div>}
                       <div className="mt-3 flex items-center justify-end gap-1 border-t pt-2 border-[color:var(--pf-border-soft)]">
-                        <RowActions r={r} />
+                        <div onClick={e=>e.stopPropagation()} className="flex items-center gap-2">
+                          <button type="button" className="min-h-11 px-3 text-sm font-semibold [color:var(--pf-primary-text)]" onClick={()=>openTournament(r.mg)}>Xem giải</button>
+                          <ActionMenu label={`Chức năng ${r.mg.name}`} iconOnly items={[
+                            ...tournamentSectionLinks(r.mg).map(link=>({key:link.key,label:link.label,onClick:()=>navigate(link.to)})),
+                            ...(canManage ? [
+                              {key:'edit',label:'Chỉnh sửa',onClick:()=>navigate(`/minigames/${r.mg.id}/edit`)},
+                              {key:'delete',label:'Xóa giải đấu',danger:true,onClick:()=>void handleDelete(r.mg.id,r.mg.name)},
+                            ] : []),
+                          ]}/>
+                        </div>
                       </div>
                     </div>
                   )}

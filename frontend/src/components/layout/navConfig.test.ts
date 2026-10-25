@@ -41,7 +41,8 @@ test('thanh đáy admin/member đi THẲNG vào nội dung (lịch, thi đấu, 
   for (const r of ['CLUB_ADMIN', 'MEMBER_VIEW'] as Role[]) {
     const [, cal, compete, community] = bottomTabsByRole[r]
     assert.ok(cal.to.includes('hoat-dong'), r)
-    assert.ok(compete.to.endsWith('thi-dau'), r)
+    assert.ok(compete.to.endsWith('thi-dau?tab=tournaments'), r)
+    assert.ok(cal.to.endsWith('?tab=schedule'), r)
     assert.equal(community.to, '/community')
   }
 })

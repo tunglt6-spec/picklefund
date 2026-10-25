@@ -1,20 +1,19 @@
 /**
- * CompeteHub — module "Thi đấu" (/thi-dau). Sports Tournament Engine — M1 IA.
- *
- * 5 tab cấp cao (ModuleTabs, sync ?tab=): Tổng quan · Giải đấu · Lịch đấu · Kết quả · Xếp hạng.
- * - Tổng quan: chọn bộ môn + MinigameOverviewPanel (dữ liệu thật).
- * - Giải đấu: form tạo giải (admin, giữ nguyên luồng cũ) + nút vào danh sách đầy đủ.
- * - Lịch đấu / Kết quả / Xếp hạng: danh sách giải THẬT, deep-link sang trang chi tiết hiện có
- *   (/minigames/:id/schedule · /minigames/:id · /minigames/:id/standings). KHÔNG bịa dữ liệu.
- * MEMBER_VIEW không tạo giải → tab Giải đấu chỉ xem tổng quan + danh sách.
+ * Thi đấu: mobile uses one tournament library with actions scoped to each tournament.
+ * Desktop keeps the existing five workspaces. Old mobile section links are redirected
+ * by canonicalMobileRoute, retaining the requested schedule/results/standings context.
  */
+import { tournamentSectionTarget } from '../../../lib/tournamentNavigation'
+import { useMinigameDelegate } from '../../../hooks/useMinigameDelegate'
 import { nav } from '../../../components/mobile/navCatalog'
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ListChecks, CalendarDays, ClipboardList, Trophy, RefreshCw } from '../../../components/icons/mobileLucide'
 import { ModuleTabs, StatusBadge } from '../../../components/shared'
 import { Button } from '../../../components/ui/Button'
 import { MinigameForm } from '../minigame/MinigameForm'
+import { MinigameList } from '../minigame/MinigameList'
+import { MobileFunctionHeader } from '../../../components/mobile/ModuleNav'
 import { MinigameOverviewPanel } from '../minigame/MinigameOverviewPanel'
 import { useAuthStore } from '../../../store/authStore'
 import api from '../../../lib/api'
@@ -74,33 +73,6 @@ function TournamentsTab() {
   const { user } = useAuthStore()
   const isMember = user?.role === 'MEMBER_VIEW'
   const [sport, setSport] = useState('PICKLEBALL')
-  // Mobile (<1024px): danh sách giải trước; form tạo giải (wizard dài) mở sau nút "+ Tạo giải".
-  const mobile = useIsMobile(1024)
-  const [creating, setCreating] = useState(() => new URLSearchParams(window.location.search).get('create') === '1')
-  if (mobile && !isMember) {
-    return (
-      <div className="flex flex-col gap-4 p-4">
-        <div className="flex items-center justify-between gap-2">
-          <button onClick={() => setCreating((v) => !v)} className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-4 text-sm font-bold text-white" style={{ background: 'var(--pf-grad-brand)', boxShadow: 'var(--pf-shadow-pill)' }}>
-            {creating ? 'Đóng form' : '+ Tạo giải'}
-          </button>
-          <button onClick={() => navigate('/minigames')} className="inline-flex min-h-[44px] items-center gap-1.5 rounded-full border px-3.5 text-sm font-semibold [color:var(--pf-primary-text)] [border-color:var(--pf-border)] [background:var(--pf-surface)]">
-            <ListChecks size={16} /> Tất cả giải
-          </button>
-        </div>
-        {creating && (
-          <div className="pf-glass-strong overflow-hidden"><MinigameForm embedded onSportChange={setSport} /></div>
-        )}
-        <label className="block">
-          <span className="mb-1 block text-xs font-semibold [color:var(--pf-color-muted)]">Bộ môn</span>
-          <select value={sport} onChange={(e) => setSport(e.target.value)} className="input-base w-full">
-            {SPORTS.map((x) => <option key={x.v} value={x.v}>{x.label}</option>)}
-          </select>
-        </label>
-        <MinigameOverviewPanel sport={sport} />
-      </div>
-    )
-  }
 
   return (
     <div className="p-4 sm:p-6 flex flex-col gap-4">
@@ -129,24 +101,6 @@ const NAV_META: Record<NavKind, { title: string; sub: string; icon: typeof Calen
   schedule: { title: 'Lịch đấu', sub: 'Chọn giải để xem lịch thi đấu chi tiết', icon: CalendarDays, to: (id) => `/minigames/${id}/schedule`, empty: 'Chưa có giải nào để xem lịch.' },
   results: { title: 'Kết quả', sub: 'Chọn giải để nhập / xem kết quả trận', icon: ClipboardList, to: (id) => `/minigames/${id}`, empty: 'Chưa có giải nào để xem kết quả.' },
   standings: { title: 'Xếp hạng', sub: 'Chọn giải để xem bảng xếp hạng', icon: Trophy, to: (id) => `/minigames/${id}/standings`, empty: 'Chưa có giải nào để xem xếp hạng.' },
-}
-
-/**
- * Đích của icon Lịch đấu / Kết quả / Xếp hạng theo THỂ THỨC giải — chỉ mobile: mở ĐÚNG khu vực chức năng của giải
- * thay vì trang tổng quan dài. Màn lớn giữ đích cũ (`NAV_META.to`).
- */
-function mobileTarget(kind: NavKind, mg: MiniGame): string {
-  const id = mg.id
-  const sport = String(mg.sport ?? '')
-  const fmt = String(mg.formatType ?? '')
-  const teamStyle = ['FOOTBALL', 'BASKETBALL', 'VOLLEYBALL', 'AIR_VOLLEYBALL'].includes(sport)
-    || (mg.participantType === 'PAIR' && (fmt === 'GROUP_STAGE' || fmt === 'KNOCKOUT'))
-  if (teamStyle) return `/minigames/${id}?view=${kind === 'standings' ? 'standings' : 'schedule'}`
-  if (sport === 'GOLF' && fmt !== 'KNOCKOUT') return `/minigames/${id}?view=${kind === 'standings' ? 'leaderboard' : 'scores'}`
-  if (sport === 'RUNNING') return `/minigames/${id}`
-  if (fmt === 'FIXED_DOUBLES_ROUND_ROBIN') return `/minigames/${id}?view=${kind === 'standings' ? 'standings' : 'schedule'}`
-  if (fmt === 'KNOCKOUT') return `/minigames/${id}`
-  return kind === 'standings' ? `/minigames/${id}/standings` : `/minigames/${id}/schedule`
 }
 
 function TournamentNavList({ kind }: { kind: NavKind }) {
@@ -196,7 +150,7 @@ function TournamentNavList({ kind }: { kind: NavKind }) {
           {items.map(mg => {
             const st = normalizeMinigameStatus(mg.status)
             return (
-              <button key={mg.id} onClick={() => navigate(compact ? mobileTarget(kind, mg) : meta.to(mg.id))}
+              <button key={mg.id} onClick={() => navigate(compact ? tournamentSectionTarget(kind, mg) : meta.to(mg.id))}
                 className="pf-glass text-left rounded-2xl p-4 hover:-translate-y-0.5 hover:[border-color:var(--pf-primary-soft)] transition-all">
                 <div className="flex items-start justify-between gap-2">
                   <span className="text-2xl leading-none">{sportEmoji(mg.sport) || '🏓'}</span>
@@ -215,16 +169,33 @@ function TournamentNavList({ kind }: { kind: NavKind }) {
   )
 }
 
+function MobileTournamentLibrary() {
+  const [params, setParams] = useSearchParams()
+  const { canManage } = useMinigameDelegate()
+  const creating = params.get('create') === '1' && canManage
+  if (!creating) return <>
+    <MobileFunctionHeader title="Giải đấu" parent="Thi đấu" module="compete" onBack={() => { const next = new URLSearchParams(params); next.delete('tab'); next.delete('section'); next.delete('create'); setParams(next) }} />
+    <MinigameList />
+  </>
+  return <>
+    <MobileFunctionHeader title="Tạo giải đấu" parent="Giải đấu" module="compete" onBack={() => { const next = new URLSearchParams(params); next.delete('create'); setParams(next) }} />
+    <MinigameForm embedded />
+  </>
+}
+
 export function CompeteHub() {
+  const mobile = useIsMobile(1024)
   return (
     <ModuleTabs
       title="Thi đấu"
       tabs={[
         { key: 'overview', ...nav('cmp.overview'), label: 'Tổng quan', element: <OverviewTab /> },
-        { key: 'tournaments', ...nav('cmp.tournaments'), label: 'Giải đấu', element: <TournamentsTab /> },
+        { key: 'tournaments', ...nav('cmp.tournaments'), nested: mobile, label: 'Giải đấu', element: mobile ? <MobileTournamentLibrary /> : <TournamentsTab /> },
+        ...(!mobile ? [
         { key: 'schedule', ...nav('cmp.schedule'), label: 'Lịch đấu', element: <TournamentNavList kind="schedule" /> },
         { key: 'results', ...nav('cmp.results'), label: 'Kết quả', element: <TournamentNavList kind="results" /> },
         { key: 'standings', ...nav('cmp.standings'), label: 'Xếp hạng', element: <TournamentNavList kind="standings" /> },
+        ] : []),
       ]}
     />
   )

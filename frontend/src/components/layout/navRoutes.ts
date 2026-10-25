@@ -28,15 +28,15 @@ const APPS_MATCH = ['/aido', '/member/aido', '/admin/ai-alerts', '/admin/ai-appr
 export const bottomTabsByRole: Record<Role, BottomTab[]> = {
   CLUB_ADMIN: [
     { label: 'Tổng quan', to: MOBILE_HOME, icon: 'home', match: HOME_MATCH },
-    { label: 'Lịch', to: '/hoat-dong', icon: 'calendar', match: CAL_MATCH },
-    { label: 'Thi đấu', to: '/thi-dau', icon: 'trophy', match: COMPETE_MATCH },
+    { label: 'Lịch', to: '/hoat-dong?tab=schedule', icon: 'calendar', match: CAL_MATCH },
+    { label: 'Thi đấu', to: '/thi-dau?tab=tournaments', icon: 'trophy', match: COMPETE_MATCH },
     { label: 'Cộng đồng', to: '/community', icon: 'community', match: ['/community'] },
     { label: 'Ứng dụng', to: APPS_ROUTE, icon: 'apps', match: APPS_MATCH },
   ],
   MEMBER_VIEW: [
     { label: 'Tổng quan', to: MOBILE_HOME, icon: 'home', match: HOME_MATCH },
-    { label: 'Lịch', to: '/member/hoat-dong', icon: 'calendar', match: CAL_MATCH },
-    { label: 'Thi đấu', to: '/member/thi-dau', icon: 'trophy', match: COMPETE_MATCH },
+    { label: 'Lịch', to: '/member/hoat-dong?tab=schedule', icon: 'calendar', match: CAL_MATCH },
+    { label: 'Thi đấu', to: '/member/thi-dau?tab=tournaments', icon: 'trophy', match: COMPETE_MATCH },
     { label: 'Cộng đồng', to: '/community', icon: 'community', match: ['/community'] },
     { label: 'Ứng dụng', to: APPS_ROUTE, icon: 'apps', match: APPS_MATCH },
   ],

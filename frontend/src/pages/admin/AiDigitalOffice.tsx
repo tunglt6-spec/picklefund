@@ -384,7 +384,7 @@ export function AiDigitalOffice() {
     { key: 'report', label: 'Báo cáo điều hành', to: '', icon: FileText, module: 'ai' },
     { key: 'operations', label: 'Vận hành', to: '', icon: Activity, badgeCount: pending, module: 'ai' },
     { key: 'analytics', label: 'Phân tích', to: '', icon: BarChart3, module: 'ai' },
-    { key: 'ops-center', label: 'Trung tâm điều hành AI', to: '', icon: Cpu, module: 'ai' },
+    { key: 'ops-center', label: 'Trung tâm điều hành AI', to: '/admin/ai-manager', icon: Cpu, module: 'ai' },
   ]
   const currentLabel = tabs.find((t) => t.key === tab)?.label
 
@@ -437,7 +437,7 @@ export function AiDigitalOffice() {
           }
         />
         <HubSectionTitle>Chức năng AIDO</HubSectionTitle>
-        <TileGrid items={menuTiles} onSelect={(it) => setTab(it.key)} />
+        <TileGrid items={menuTiles} onSelect={(it) => it.to ? navigate(it.to) : setTab(it.key)} />
       </div>
     </PageShell>
   )

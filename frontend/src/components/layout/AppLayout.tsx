@@ -1,5 +1,5 @@
 import { useEffect, Suspense } from 'react'
-import { Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft } from '../icons/mobileLucide'
 import { Sidebar } from './Sidebar'
 import { MobileHeader } from './MobileHeader'
@@ -16,6 +16,7 @@ import { useGuideStore } from '../../store/guideStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { MobileIconContext } from '../icons/MobileIconContext'
 import { workspaceForLocation } from '../../lib/workspaceDesign'
+import { canonicalMobileRoute } from '../../lib/mobileCanonicalRoutes'
 
 export function AppLayout() {
   useApiSync()
@@ -45,6 +46,8 @@ export function AppLayout() {
   // vị trí GIỐNG NHAU cho MỌI màn card (đặt 1 nơi ở AppLayout).
   // Màn chat Lisa toàn màn không có thanh đáy.
   const fromAido = new URLSearchParams(location.search).get('from') === 'aido'
+  const canonical = mobileIcons ? canonicalMobileRoute(user?.role, location.pathname, location.search, location.hash) : null
+  if (canonical) return <Navigate to={canonical} replace state={location.state} />
 
   return (
     <MobileIconContext.Provider value={mobileIcons}>

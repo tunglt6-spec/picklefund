@@ -54,9 +54,6 @@ export const APP_GROUPS: Record<Role, AppGroup[]> = {
     { key: 'compete', title: 'Thi đấu', items: [
       { key: 'compete-overview', label: NAV_CATALOG['cmp.overview'].label, to: '/thi-dau?tab=overview', icon: NAV_CATALOG['cmp.overview'].icon, module: NAV_CATALOG['cmp.overview'].module },
       { key: 'tournaments', label: NAV_CATALOG['cmp.tournaments'].label, to: '/thi-dau?tab=tournaments', icon: NAV_CATALOG['cmp.tournaments'].icon, module: NAV_CATALOG['cmp.tournaments'].module },
-      { key: 'matches', label: NAV_CATALOG['cmp.schedule'].label, to: '/thi-dau?tab=schedule', icon: NAV_CATALOG['cmp.schedule'].icon, module: NAV_CATALOG['cmp.schedule'].module },
-      { key: 'results', label: NAV_CATALOG['cmp.results'].label, to: '/thi-dau?tab=results', icon: NAV_CATALOG['cmp.results'].icon, module: NAV_CATALOG['cmp.results'].module },
-      { key: 'standings', label: NAV_CATALOG['cmp.standings'].label, to: '/thi-dau?tab=standings', icon: NAV_CATALOG['cmp.standings'].icon, module: NAV_CATALOG['cmp.standings'].module },
     ] },
     { key: 'community', title: 'Cộng đồng', items: [
       { key: 'feed', label: NAV_CATALOG['com.feed'].label, to: '/community?tab=feed', icon: NAV_CATALOG['com.feed'].icon, module: NAV_CATALOG['com.feed'].module },
@@ -92,9 +89,6 @@ export const APP_GROUPS: Record<Role, AppGroup[]> = {
     ] },
     { key: 'compete', title: 'Thi đấu', items: [
       { key: 'tournaments', label: NAV_CATALOG['cmp.tournaments'].label, to: '/member/thi-dau?tab=tournaments', icon: NAV_CATALOG['cmp.tournaments'].icon, module: NAV_CATALOG['cmp.tournaments'].module },
-      { key: 'matches', label: NAV_CATALOG['cmp.schedule'].label, to: '/member/thi-dau?tab=schedule', icon: NAV_CATALOG['cmp.schedule'].icon, module: NAV_CATALOG['cmp.schedule'].module },
-      { key: 'results', label: NAV_CATALOG['cmp.results'].label, to: '/member/thi-dau?tab=results', icon: NAV_CATALOG['cmp.results'].icon, module: NAV_CATALOG['cmp.results'].module },
-      { key: 'standings', label: NAV_CATALOG['cmp.standings'].label, to: '/member/thi-dau?tab=standings', icon: NAV_CATALOG['cmp.standings'].icon, module: NAV_CATALOG['cmp.standings'].module },
     ] },
     { key: 'community', title: 'Cộng đồng', items: [
       { key: 'feed', label: NAV_CATALOG['com.feed'].label, to: '/community?tab=feed', icon: NAV_CATALOG['com.feed'].icon, module: NAV_CATALOG['com.feed'].module },
