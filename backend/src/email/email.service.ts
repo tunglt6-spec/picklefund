@@ -48,7 +48,7 @@ export class EmailService {
     try {
       const baseFrom =
         this.config.get<string>('SMTP_FROM') ??
-        'PickleFund <noreply@picklefund.app>';
+        'PickleFund <lienhe@picklefund.vn>';
       // Giữ address đã xác thực, chỉ đổi display name nếu có fromName (object form để
       // nodemailer tự escape tên có dấu/ký tự đặc biệt).
       const from = opts?.fromName
