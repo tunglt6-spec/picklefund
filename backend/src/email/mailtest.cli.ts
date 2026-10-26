@@ -9,7 +9,7 @@ async function main() {
   const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM } = process.env;
   if (!to) throw new Error('Thiếu địa chỉ nhận: node dist/email/mailtest.cli.js <email>');
   if (!SMTP_HOST || !SMTP_USER || !SMTP_PASS) throw new Error('Chưa cấu hình SMTP_HOST/SMTP_USER/SMTP_PASS');
-  const from = SMTP_FROM ?? 'PickleFund <lienhe@picklefund.vn>';
+  const from = SMTP_FROM ?? 'PickleFund <noreply@picklefund.uk>';
   const transporter = nodemailer.createTransport({
     host: SMTP_HOST,
     port: Number(SMTP_PORT ?? 587),
