@@ -206,7 +206,8 @@ export function SessionRegistration() {
                             : { borderColor: 'var(--pf-border)', color: 'transparent' }
                         }
                       >
-                        {on && <SelectionCheck size={15} strokeWidth={2.8} aria-hidden="true" />}
+                        <Check className="hidden lg:block" size={14} />
+                        {on && <SelectionCheck className="lg:hidden" size={15} strokeWidth={2.8} aria-hidden="true" />}
                       </span>
                     </button>
                   )

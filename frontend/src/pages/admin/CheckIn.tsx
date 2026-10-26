@@ -242,7 +242,8 @@ export function CheckIn() {
                             : { borderColor: 'var(--pf-border)', color: 'transparent' }
                         }
                       >
-                        {on && <SelectionCheck size={16} strokeWidth={2.8} aria-hidden="true" />}
+                        <Check className="hidden lg:block" size={15} />
+                        {on && <SelectionCheck className="lg:hidden" size={16} strokeWidth={2.8} aria-hidden="true" />}
                       </span>
                     </button>
                   )
