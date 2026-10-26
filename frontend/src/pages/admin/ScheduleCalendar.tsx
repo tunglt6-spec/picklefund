@@ -290,7 +290,7 @@ export function ScheduleCalendar() {
           <div className="grid gap-5 lg:grid-cols-3">
             {/* Cột lịch (2/3 desktop) */}
             <div className="lg:col-span-2 flex flex-col gap-3">
-              {compact && <section className="space-y-2" aria-label="Buổi sắp tới">
+              {compact && <section className="pf-record-grid space-y-2" aria-label="Buổi sắp tới">
                 <h2 className="text-sm font-bold [color:var(--pf-text)]">Buổi sắp tới</h2>
                 {nextSessions.length ? nextSessions.map(s=><button key={s.id} onClick={()=>selectDay(s.sessionDate.slice(0,10))} className="pf-mobile-agenda-row w-full text-left">
                   <span className="text-sm font-bold">{s.sessionDate.slice(0,10).split('-').reverse().join('/')} · {timeRange(s)}</span>

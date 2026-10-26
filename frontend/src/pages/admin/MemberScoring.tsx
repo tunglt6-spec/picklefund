@@ -798,11 +798,11 @@ function RulesTab() {
               <h3 className="mb-3 text-sm font-bold uppercase tracking-wide [color:var(--pf-color-muted)]">
                 {CATEGORY_LABELS[c]}
               </h3>
-              <ul className="flex flex-col gap-2">
+              <ul className="pf-record-grid flex flex-col gap-2">
                 {grouped[c].map((rule) => (
                   <li
                     key={rule.id}
-                    className="flex items-center justify-between gap-3 rounded-[16px] border p-3 border-[color:var(--pf-border)] max-lg:flex-col max-lg:items-stretch max-lg:gap-2"
+                    className="pf-rule-tile flex items-center justify-between gap-3 rounded-[16px] border p-3 border-[color:var(--pf-border)] max-lg:flex-col max-lg:items-stretch max-lg:gap-2"
                   >
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
@@ -816,14 +816,14 @@ function RulesTab() {
                       </div>
                     </div>
                     {/* Mobile: tên quy tắc chiếm cả hàng; điểm ở hàng phụ; Bật/Tắt · Sửa · Xóa gom vào menu */}
-                    <div className="flex items-center justify-between gap-2 lg:hidden">
+                    <div className="pf-rule-actions flex items-center justify-between gap-2 lg:hidden">
                       <span
                         className="text-base font-bold tabular-nums"
                         style={{ color: rule.delta >= 0 ? 'var(--pf-color-success)' : 'var(--pf-color-danger)' }}
                       >
                         {rule.delta > 0 ? '+' : ''}{rule.delta} điểm
                       </span>
-                      <ActionMenu items={[
+                      <ActionMenu iconOnly label={`Thao tác quy tắc ${rule.label}`} items={[
                         { key: 'toggle', label: rule.active ? 'Tắt quy tắc' : 'Bật quy tắc', onClick: () => toggleActive(rule) },
                         { key: 'edit', label: 'Sửa', onClick: () => setEditRule(rule) },
                         { key: 'del', label: 'Xóa', danger: true, onClick: () => setDeleteRuleId(rule.id) },

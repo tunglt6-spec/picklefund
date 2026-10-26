@@ -569,7 +569,7 @@ function AiWorkspace() {
                   <p className="text-sm [color:var(--pf-text)]">Hệ thống AI ổn định · {failed === 0 ? 'không có lỗi tồn đọng' : `${failed} tác vụ lỗi cần xem`}.</p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="pf-record-grid space-y-2">
                   {opsSignals.slice(0, 6).map((sig, i) => {
                     const c = sig.level === 'warning'
                       ? 'var(--pf-accent-rose, #EF4444)'
@@ -606,7 +606,7 @@ function AiWorkspace() {
               {pendingList.length === 0 ? (
                 <p className="text-sm [color:var(--pf-color-muted)]">Không có hành động nào chờ duyệt.</p>
               ) : (
-                <div className="space-y-2">
+                <div className="pf-record-grid space-y-2">
                   {pendingList.slice(0, 8).map((p) => {
                     const rk = riskMeta(p.riskLevel)
                     return (
@@ -638,11 +638,11 @@ function AiWorkspace() {
               {runs.length === 0 ? (
                 <p className="text-sm [color:var(--pf-color-muted)]">Chưa có workflow run nào.</p>
               ) : (
-                <div className="space-y-2">
+                <div className="pf-record-grid space-y-2">
                   {runs.slice(0, 8).map((run) => {
                     const rs = runMeta(run.status)
                     return (
-                      <div key={run.id} className="flex items-center gap-2.5 rounded-xl border px-3 py-2.5 [border-color:var(--pf-border)]">
+                      <div key={run.id} className="pf-run-tile flex items-center gap-2.5 rounded-xl border px-3 py-2.5 [border-color:var(--pf-border)]">
                         <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: rs.color }} />
                         <div className="min-w-0 flex-1">
                           <p className="text-sm [color:var(--pf-text)] truncate">{run.triggerType ?? 'workflow'}</p>
@@ -664,7 +664,7 @@ function AiWorkspace() {
             {(summary?.recentActivities ?? []).length === 0 ? (
               <p className="text-sm [color:var(--pf-color-muted)]">Chưa có hoạt động.</p>
             ) : (
-              <div className="grid gap-2.5 sm:grid-cols-2">
+              <div className="pf-record-grid grid gap-2.5 sm:grid-cols-2">
                 {(summary?.recentActivities ?? []).slice(0, 8).map((ev) => (
                   <div key={ev.id} className="flex items-start gap-2 text-sm">
                     <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full [background:var(--pf-primary)]" />

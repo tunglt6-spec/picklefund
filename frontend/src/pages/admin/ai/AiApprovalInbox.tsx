@@ -166,7 +166,7 @@ export function AiApprovalInbox() {
                 <p className="text-xs [color:var(--pf-color-muted)] mt-1">Khi AI tạo yêu cầu cần duyệt, nó sẽ hiện ở đây.</p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="pf-record-grid pf-approval-records space-y-2">
                 {pending.map(a => (
                   <div key={a.id} className="rounded-xl border border-[color:var(--pf-border)] p-3">
                     <div className="flex items-center justify-between gap-2">
@@ -291,7 +291,7 @@ export function AiApprovalInbox() {
               <p className="text-xs [color:var(--pf-color-muted)] mt-1">Hành động sau khi được duyệt sẽ xuất hiện ở đây.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div className="pf-record-grid pf-approval-records grid grid-cols-1 md:grid-cols-2 gap-2">
               {executable.map(a => (
                 <div key={a.id} className="rounded-xl border border-[color:var(--pf-border)] p-3">
                   <div className="flex items-center justify-between gap-2">

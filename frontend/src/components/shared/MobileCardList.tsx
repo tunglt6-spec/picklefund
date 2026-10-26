@@ -32,7 +32,7 @@ export function MobileCardList<T>({
     )
   }
   return (
-    <div className={cn('pf-stagger pf-cardlist grid grid-cols-1 min-[600px]:grid-cols-2 gap-2.5', className)}>
+    <div className={cn('pf-record-grid pf-stagger pf-cardlist grid grid-cols-1 min-[600px]:grid-cols-2 gap-2.5', className)}>
       {items.map((item, i) => (
         <div
           key={itemKey(item, i)}

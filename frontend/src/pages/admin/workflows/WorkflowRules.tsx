@@ -356,7 +356,7 @@ export function WorkflowRules() {
               {ruleGroups.map(([cat, grpRules]) => (
                 <div key={cat}>
                   <p className="text-xs font-bold uppercase tracking-wider [color:var(--pf-color-muted)] mb-2">{cat} · {grpRules.length}</p>
-                  <div className="space-y-2">
+                  <div className="pf-record-grid space-y-2">
               {grpRules.map((r) => (
                 <div key={r.id} id={`wf-rule-${r.id}`} className="rounded-xl border border-[color:var(--pf-border)] p-3 transition-shadow">
                   <div className="flex items-start justify-between gap-2 flex-wrap">
@@ -469,7 +469,7 @@ export function WorkflowRules() {
           ) : runs.length === 0 ? (
             <p className="text-sm [color:var(--pf-color-muted)]">Chưa có lần chạy nào.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="pf-record-grid space-y-2">
               {runs.map((run) => (
                 <button
                   key={run.id}

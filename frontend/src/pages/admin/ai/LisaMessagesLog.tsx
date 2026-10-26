@@ -66,7 +66,7 @@ export function LisaMessagesLog() {
             <MetricCard icon={<MessageSquare size={18} />} label="Lượt hỏi–đáp" value={items.length} tone="info" />
           </div>
 
-          <div className="flex flex-col gap-3">
+          <div className="pf-record-grid flex flex-col gap-3">
             {items.map((m) => (
               <div
                 key={m.id}

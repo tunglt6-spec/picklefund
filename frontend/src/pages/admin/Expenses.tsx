@@ -866,7 +866,7 @@ export function Expenses() {
               {expenseLoadState === 'error' ? 'Chưa tải được danh sách chi phí' : search ? `Không tìm thấy "${search}"` : 'Không có khoản chi nào'}
             </div>
           ) : mobileFiltered.map(e => (
-            <article key={e.id} className="pf-mobile-record flex items-start gap-2">
+            <article key={e.id} className="pf-expense-record pf-mobile-record flex items-start gap-2">
               <button onClick={() => setDetailExp(e)} aria-label={`Chi tiết ${e.description}`} className="min-w-0 flex-1 text-left">
                 <span className="flex items-start justify-between gap-3">
                   <span className="min-w-0 flex-1 text-sm font-semibold [color:var(--pf-text)]">{e.description}</span>

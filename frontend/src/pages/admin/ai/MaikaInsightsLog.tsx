@@ -78,7 +78,7 @@ export function MaikaInsightsLog() {
             <MetricCard icon={<AlertTriangle size={18} />} label="Cảnh báo bất thường" value={anomalies} tone={anomalies > 0 ? 'warning' : 'success'} />
           </div>
 
-          <div className="flex flex-col gap-3">
+          <div className="pf-record-grid flex flex-col gap-3">
             {items.map((it) => {
               const meta = TYPE_META[it.type] ?? { tone: 'neutral' as StatusTone, label: it.type, icon: <Brain size={14} /> }
               return (

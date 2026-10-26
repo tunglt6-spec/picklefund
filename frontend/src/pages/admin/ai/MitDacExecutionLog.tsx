@@ -82,7 +82,7 @@ export function MitDacExecutionLog() {
             <MetricCard icon={<RotateCcw size={18} />} label="Chờ chạy lại" value={pending} tone={pending > 0 ? 'warning' : 'success'} />
           </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="pf-record-grid pf-stacked-records flex flex-col gap-2">
             {items.map((a) => {
               const meta = STATUS_META[a.status] ?? { tone: 'neutral' as StatusTone, label: a.status }
               return (

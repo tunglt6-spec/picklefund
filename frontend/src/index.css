@@ -952,10 +952,11 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   .pf-table-cards button { min-height: 44px; min-width: 44px; }
 }
 
-/* Fold mở / tablet nhỏ: thẻ bảng thô xếp 2 cột */
-@media (min-width: 600px) and (max-width: 1023px) {
-  .pf-table-cards tbody { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .pf-table-cards tbody tr { margin: 0; }
+/* Mobile records keep the same two-column rhythm on phones and foldables. */
+@media (max-width: 1023px) {
+  .pf-table-cards tbody { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .pf-table-cards tbody tr { margin: 0; min-width: 0; }
+  .pf-table-cards tbody tr:has(td[colspan]) { grid-column: 1 / -1; }
 }
 
 /* Thẻ KPI: bỏ ô con (nền/viền/bóng) — nhãn + số hiển thị thẳng trên thẻ, áp dụng CHỈ điện thoại/Fold (<1024px); desktop giữ nguyên */
@@ -1355,16 +1356,13 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   .pf-mobile-chip { min-height: 44px; padding: 0 14px; border: 1px solid var(--pf-border-soft); border-radius: 12px; font-size: 13px; font-weight: 600; color: var(--pf-text-muted); background: var(--pf-surface); }
   .pf-mobile-chip[aria-pressed="true"] { background: var(--pf-primary-soft); color: var(--pf-primary-text); border-color: transparent; }
   .pf-mobile-filter-button { display: flex; align-items: center; justify-content: center; gap: 4px; min-width: 48px; height: 48px; padding: 0 10px; border-radius: 14px; background: var(--pf-surface); border: 1px solid var(--pf-border); color: var(--pf-text); }
-  .pf-mobile-records { margin: 8px 16px 24px; padding: 0; background: var(--pf-surface); border: 1px solid var(--pf-border-soft); border-radius: 20px; }
-  .pf-mobile-record { padding: 16px; border-bottom: 1px solid var(--pf-border-soft); }
-  .pf-mobile-record:last-child { border-bottom: 0; }
+  .pf-mobile-records { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 8px 16px 24px; padding: 0; background: transparent; border: 0; }
+  .pf-mobile-record { min-width: 0; padding: 12px; border: 1px solid var(--pf-border); border-radius: 14px; background: var(--pf-surface); }
   .pf-mobile-record > button { min-height: 64px; border-radius: 8px; }
   .pf-mobile-record :focus-visible, .pf-mobile-member-list [role="button"]:focus-visible { outline: 3px solid var(--pf-focus-ring); outline-offset: 3px; }
   .pf-mobile-member-list { padding: 0; }
-  .pf-mobile-member-list .pf-cardlist { display: flex; flex-direction: column; gap: 0; }
-  .pf-mobile-member-list .pf-cardlist > div { padding: 16px; border: 0; border-bottom: 1px solid var(--pf-border-soft); border-radius: 0; box-shadow: none; background: var(--pf-surface); }
-  .pf-mobile-member-list .pf-cardlist > div:last-child { border-bottom: 0; }
-  .pf-mobile-member-list .pf-cardlist > div > div { flex-wrap: nowrap; align-items: center; }
+  .pf-mobile-member-list .pf-cardlist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 10px; }
+  .pf-mobile-member-list .pf-cardlist > div { min-width: 0; padding: 12px; border: 1px solid var(--pf-border); border-radius: 14px; background: var(--pf-surface); }
   .pf-mobile-member-list .pf-cardlist > div > div > div:nth-child(2) > div:first-child { flex-wrap: wrap; justify-content: flex-start; }
   .pf-filter-overlay { align-items: flex-end; justify-content: center; }
   .pf-filter-backdrop { position: absolute; inset: 0; backdrop-filter: none; }
@@ -1400,13 +1398,13 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
 
 /* Shared mobile workspace language. Desktop and export surfaces retain their layout. */
 @media (max-width: 1023px) {
-  .pf-income-records > .pf-rowcard.pf-transaction-compact { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; column-gap: 10px; row-gap: 6px; padding: 16px 12px; border: 0; border-bottom: 1px solid var(--pf-border-soft); border-radius: 0; box-shadow: none; background: transparent; }
-  .pf-income-records > .pf-transaction-compact:last-child { border-bottom: 0; }
-  .pf-transaction-compact > div:first-child { grid-column: 1; grid-row: 1 / 3; align-self: start; }
+  .pf-income-records > .pf-rowcard.pf-transaction-compact { display: grid; grid-template-columns: 28px minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto auto; gap: 8px; padding: 12px; border: 1px solid var(--pf-border); border-radius: 14px; }
+  .pf-transaction-compact > div:first-child { grid-column: 1; grid-row: 1; align-self: start; width: 28px; height: 28px; }
   .pf-transaction-compact > div:nth-child(2) { grid-column: 2; grid-row: 1; }
-  .pf-transaction-compact > div:nth-child(3) { grid-column: 2; grid-row: 2; align-items: flex-start; max-width: none; }
+  .pf-transaction-compact > div:nth-child(3) { grid-column: 1 / -1; grid-row: 2; align-items: flex-start; max-width: none; }
   .pf-transaction-compact > div:nth-child(3) span { text-align: left; }
-  .pf-transaction-compact > div:nth-child(4) { grid-column: 3; grid-row: 1 / 3; align-self: start; width: auto; border: 0; padding: 0; }
+  .pf-transaction-compact > div:nth-child(3) > span { max-width: 100%; overflow-wrap: anywhere; }
+  .pf-transaction-compact > div:nth-child(4) { grid-column: 1 / -1; grid-row: 3; justify-self: end; align-self: end; width: auto; border: 0; padding: 0; }
   [data-workspace] { --workspace-ink: color-mix(in srgb, var(--mod-main, #3882F6) 60%, #14213D); }
   .pf-workspace-mark.pf-tile-ico { display: inline-flex; flex: 0 0 36px; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 12px; box-shadow: inset 0 1px 2px #FFFFFFD9, inset 0 -1px 3px #08266B24, 0 3px 8px #17386A12; }
   .pf-workspace-mark.pf-tile-ico::before { inset: 2px; border-radius: 9px; }
@@ -1602,7 +1600,7 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
     }
     :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) :is(
       .pf-home-panel, .pf-hero-wash, .pf-glass, .pf-glass-strong, .pf-glass-flat,
-      .pf-toolbar, [data-pf-metric], .pf-mobile-summary, .pf-mobile-records,
+      .pf-toolbar, [data-pf-metric], .pf-mobile-summary,
       .pf-mobile-week, .pf-mobile-agenda-row, .pf-agent-card, .pf-mobile-composer,
       .pf-mobile-match-header, [data-pf-empty], [data-pf-surface="card"], [data-pf-surface="filter"], [data-pf-surface="notification"]
     ) {
@@ -1650,9 +1648,6 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
     }
     :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) .pf-selection-indicator { border-width: 2px; }
     :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) .pf-rowcard[aria-pressed="false"] .pf-selection-indicator { border-color: var(--pf-border-strong) !important; background: var(--pf-surface); }
-    :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) :is(.pf-income-records > .pf-rowcard.pf-transaction-compact, .pf-mobile-member-list .pf-cardlist > div) {
-      background: transparent !important; box-shadow: none; border-bottom-color: var(--pf-border);
-    }
     :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) :is(.pf-mobile-record, .pf-home-panel .border-t, .pf-home-panel .border-b) { border-color: var(--pf-border); }
     :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) [data-pf-button="secondary"]:not(:disabled) { box-shadow: inset 0 1px 0 #FFFFFFB3, 0 2px 8px #17386A08; }
     /* Keep the actual traffic-light value and colored top edge intact. */
@@ -1730,27 +1725,96 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   .pf-ai-runtime-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .pf-ai-operations .pf-function-grid { gap: 12px 8px; margin-top: 0; }
   .pf-ai-operations .pf-tile-btn { min-height: 64px; gap: 4px; }
-  .pf-ai-roster-grid { grid-template-columns: minmax(0, 1fr); gap: 8px; }
-  .pf-ai-agent { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; grid-template-rows: 48px auto auto; gap: 8px; padding: 12px; align-items: center; }
+  .pf-ai-roster-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .pf-ai-agent { display: grid; grid-template-columns: 26px minmax(0, 1fr); grid-template-rows: 28px 48px auto auto; gap: 6px; padding: 10px; align-items: center; }
   .pf-ai-agent-head { display: contents; }
-  .pf-ai-agent-head > span:first-child { grid-column: 1; grid-row: 1; width: 32px; height: 32px; }
-  .pf-ai-agent-head > span:last-child { grid-column: 3; grid-row: 1; padding: 3px 7px; font-size: 10px; white-space: nowrap; }
-  .pf-ai-agent-identity { grid-column: 2; grid-row: 1; min-width: 0; }
+  .pf-ai-agent-head > span:first-child { grid-column: 1; grid-row: 1; width: 26px; height: 26px; }
+  .pf-ai-agent-head > span:last-child { grid-column: 2; grid-row: 1; justify-self: end; padding: 2px 4px; font-size: 9px; white-space: nowrap; gap: 3px; }
+  .pf-ai-agent-identity { grid-column: 1 / -1; grid-row: 2; min-width: 0; }
   .pf-ai-agent-identity p:first-child { font-size: 14px; line-height: 18px; }
   .pf-ai-agent-identity p:last-child { margin-top: 2px; font-size: 11px; line-height: 13px; }
-  .pf-ai-agent-stats { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: auto; gap: 0; }
+  .pf-ai-agent-stats { grid-column: 1 / -1; grid-row: 3; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: auto; gap: 0; }
   .pf-ai-agent-stats[data-count="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .pf-ai-agent-stats > .pf-stat-cell { grid-column: auto; min-height: 56px; max-height: none; padding: 0 4px; border: 0; border-radius: 0; background: transparent !important; box-shadow: none; }
   :root:has([data-app-shell]) .pf-ai-dashboard .pf-ai-agent .pf-ai-agent-stats > .pf-stat-cell { background: transparent !important; box-shadow: none; }
   .pf-ai-agent-stats > .pf-stat-cell + .pf-stat-cell { border-left: 1px solid var(--pf-border-soft); }
   .pf-ai-agent-stats .pf-stat-cell > div:first-child { display: flex; align-items: center; justify-content: center; min-height: 26px; font-size: 11px; line-height: 13px; font-weight: 500; text-transform: none; letter-spacing: 0; }
   .pf-ai-agent-stats .pf-stat-cell > div:last-child { font-size: clamp(14px, 4cqw, 18px); white-space: normal; overflow-wrap: anywhere; }
-  .pf-ai-agent-foot { grid-column: 1 / -1; grid-row: 3; margin: 0; font-size: 10px; line-height: 14px; }
+  .pf-ai-agent-foot { grid-column: 1 / -1; grid-row: 4; margin: 0; font-size: 10px; line-height: 14px; }
 }
 @media screen and (min-width: 600px) and (max-width: 1023px) {
   .pf-ai-operations .pf-function-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-  .pf-ai-agent { grid-template-columns: 32px minmax(130px, 1.15fr) minmax(220px, 1.6fr) auto; grid-template-rows: auto auto; }
-  .pf-ai-agent-head > span:last-child { grid-column: 4; }
-  .pf-ai-agent-stats { grid-column: 3; grid-row: 1; }
-  .pf-ai-agent-foot { grid-column: 2 / -1; grid-row: 2; }
+  .pf-ai-agent { grid-template-columns: 32px minmax(0, 1fr) auto; grid-template-rows: 48px auto auto; padding: 12px; gap: 8px; }
+  .pf-ai-agent-head > span:first-child { width: 32px; height: 32px; }
+  .pf-ai-agent-head > span:last-child { grid-column: 3; font-size: 10px; padding: 3px 7px; }
+  .pf-ai-agent-identity { grid-column: 2; grid-row: 1; }
+  .pf-ai-agent-stats { grid-column: 1 / -1; grid-row: 2; }
+  .pf-ai-agent-foot { grid-column: 1 / -1; grid-row: 3; }
+}
+
+/* Repeated business records: two equal columns, row-major reading order. */
+@media screen and (max-width: 1023px) {
+  .pf-record-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; gap: 10px; }
+  .pf-record-grid > * { min-width: 0; margin-block: 0; }
+  .pf-record-grid :is(p, span, dl, dd) { overflow-wrap: anywhere; }
+  .pf-record-grid .truncate { white-space: normal; text-overflow: clip; }
+  .pf-record-grid .flex.justify-between { flex-wrap: wrap; }
+  .pf-record-grid > :is(h2, h3, [data-pf-empty], [role="status"], .col-span-full), .pf-mobile-records > :not(.pf-mobile-record):not(.pf-transaction-compact) { grid-column: 1 / -1; }
+  .pf-mobile-records > .pf-mobile-record { display: flex; flex-direction: column; gap: 8px; }
+  .pf-mobile-records > .pf-mobile-record > :first-child { width: 100%; }
+  .pf-mobile-records > .pf-mobile-record > .relative { align-self: flex-end; margin-top: auto; }
+  .pf-expense-record > button > span:first-child { flex-direction: column; gap: 6px; }
+  .pf-account-status { max-width: 100%; padding: 2px 5px; font-size: 11px; }
+  .pf-account-status > svg { flex-shrink: 0; }
+  .pf-account-workspace .pf-mobile-summary { margin-bottom: 12px; }
+  .pf-member-tile { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: start; gap: 8px; }
+  .pf-member-tile > :first-child { grid-column: 1; grid-row: 1; width: 28px !important; height: 28px !important; font-size: 12px !important; }
+  .pf-member-tile-identity { display: contents; }
+  .pf-mobile-member-list .pf-cardlist .pf-member-tile-heading { grid-column: 2; grid-row: 1; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 4px; }
+  .pf-member-tile-heading p { font-size: 13px; }
+  .pf-member-tile-heading [data-pf-signal] { max-width: 100%; white-space: normal; padding: 2px 4px; font-size: 10px; }
+  .pf-member-tile-meta { grid-column: 1 / -1; grid-row: 2; flex-wrap: wrap; gap: 6px; }
+  .pf-member-tile-chevron { display: none; }
+  .pf-rule-actions { margin-top: auto; flex-wrap: wrap; }
+  .pf-rule-actions > span { font-size: 14px; }
+  .pf-run-tile { display: grid; grid-template-columns: 8px minmax(0, 1fr); grid-template-rows: 1fr auto; gap: 8px; align-items: start; }
+  .pf-run-tile > span:first-child { grid-column: 1; grid-row: 1; margin-top: 5px; }
+  .pf-run-tile > div { grid-column: 2; grid-row: 1; }
+  .pf-run-tile > span:last-child { grid-column: 2; grid-row: 2; }
+  .pf-record-grid[data-record-kind="signals"] > div { flex-direction: column; gap: 8px; }
+  .pf-stacked-records > div { flex-direction: column; align-items: flex-start; }
+  .pf-approval-records > div > div:first-child > div { flex-wrap: wrap; }
+  .pf-approval-records button { min-height: 44px; }
+  .pf-record-grid .whitespace-pre-line { min-width: 0; overflow-wrap: anywhere; }
+  .pf-session-heading { flex-direction: column; gap: 6px; }
+  .pf-session-finance { flex-wrap: wrap; gap: 6px; }
+  .pf-session-actions { margin-top: auto; padding-top: 12px; }
+  .pf-session-actions > button { min-width: 0; }
+  .pf-record-grid > .pf-session-card { display: flex; flex-direction: column; }
+}
+@media screen and (max-width: 479px) {
+  .pf-table-cards tbody tr { padding: 10px; }
+  .pf-table-cards tbody td { flex-direction: column; align-items: flex-start; gap: 2px; white-space: normal; text-align: left !important; overflow-wrap: anywhere; }
+  .pf-table-cards tbody td::before { max-width: 100%; letter-spacing: 0; }
+  .pf-record-grid > .pf-record-card, .pf-mobile-member-list .pf-cardlist > div, .pf-record-grid > .pf-session-card { padding: 10px; }
+  .pf-mobile-records > .pf-mobile-record { padding: 10px; }
+  .pf-mobile-records .text-sm, .pf-record-grid .text-sm { font-size: 12px; }
+  .pf-mobile-records .text-xs, .pf-record-grid .text-xs { font-size: 11px; }
+  .pf-ai-agent-stats .pf-stat-cell > div:first-child { font-size: 10px; line-height: 12px; }
+  .pf-ai-agent-stats .pf-stat-cell > div:last-child { font-size: 13px; }
+  .pf-ai-agent-stats > .pf-stat-cell { padding-inline: 2px; }
+  .pf-ai-agent { grid-template-rows: 28px 48px 1fr 14px; }
+  .pf-ai-agent-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); align-self: start; }
+  .pf-ai-agent-stats[data-count="3"] > .pf-stat-cell:last-child { grid-column: 1 / -1; min-height: 32px; flex-direction: row; justify-content: space-between; gap: 4px; border-left: 0; border-top: 1px solid var(--pf-border-soft); padding-top: 4px; }
+  .pf-ai-agent-stats[data-count="3"] > .pf-stat-cell:last-child > div:first-child { width: auto; min-height: 0; justify-content: flex-start; text-align: left; }
+  .pf-ai-agent-stats[data-count="3"] > .pf-stat-cell:last-child > div:last-child { width: auto; margin-top: 0; }
+  .pf-session-actions > button { font-size: 12px; padding-inline: 6px; gap: 0; }
+  .pf-session-actions > button > svg { display: none; }
+  .pf-rule-tile .font-medium { font-size: 12px; }
+  .pf-rule-tile [data-pf-signal] { font-size: 10px; padding-inline: 4px; white-space: normal; }
+}
+@media screen and (min-width: 600px) and (max-width: 1023px) {
+  .pf-record-grid, .pf-mobile-records, .pf-mobile-member-list .pf-cardlist { gap: 12px; }
+  .pf-session-heading { flex-direction: row; }
+  .pf-member-tile-heading p { font-size: 14px; }
 }

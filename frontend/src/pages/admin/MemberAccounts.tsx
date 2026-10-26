@@ -54,7 +54,7 @@ function StatusBadge({ acc }: { acc: MemberUserAccount }) {
   const s = getStatus(acc)
   const cfg = STATUS_CONFIG[s]
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${cfg.color}`}>
+    <span className={`pf-account-status inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${cfg.color}`}>
       {cfg.icon}{cfg.label}
     </span>
   )

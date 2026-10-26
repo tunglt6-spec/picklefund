@@ -818,19 +818,19 @@ export function Members() {
               itemLabel={(r) => `Xem hồ sơ ${r.member.fullName}`}
               onItemClick={(r) => setDetailId(r.member.id)}
               renderCard={(r) => (
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="pf-member-tile flex flex-wrap items-center gap-3">
                   <MemberAvatar name={r.member.fullName} id={r.member.id} size={42} />
-                  <div className="min-w-0 flex-1 basis-32">
-                    <div className="flex items-center justify-between gap-2">
+                  <div className="pf-member-tile-identity min-w-0 flex-1 basis-32">
+                    <div className="pf-member-tile-heading flex items-center justify-between gap-2">
                       <p className="break-words font-semibold [color:var(--pf-text)]">{r.member.fullName}</p>
                       <StatusBadge tone={STATUS_TONE[r.member.status] ?? 'neutral'} dot>{STATUS_LABEL[r.member.status] ?? r.member.status}</StatusBadge>
                     </div>
-                    <div className="mt-1 flex items-center gap-3 text-xs [color:var(--pf-color-muted)]">
+                    <div className="pf-member-tile-meta mt-1 flex items-center gap-3 text-xs [color:var(--pf-color-muted)]">
                       <span className="flex items-center gap-1"><ClipboardList size={12} />{r.hasAttendance ? `${r.attended}/${r.totalSessions} buổi` : '— buổi'}</span>
                       <span className="flex items-center gap-1"><Wallet size={12} />{r.periodName ? (r.paid ? 'Đã đóng' : 'Chưa đóng') : '—'}</span>
                     </div>
                   </div>
-                  <span aria-hidden className="shrink-0 text-xl [color:var(--pf-text-muted)]">›</span>
+                  <span aria-hidden className="pf-member-tile-chevron shrink-0 text-xl [color:var(--pf-text-muted)]">›</span>
                 </div>
               )}
             />

@@ -104,7 +104,7 @@ export function AlertCenterPage() {
   ]
 
   const SignalList = ({ items }: { items: IntelSignal[] }) => (
-    <div className="space-y-2">
+    <div className="pf-record-grid space-y-2" data-record-kind="signals">
       {[...items].sort((a, b) => severityRank(b.level) - severityRank(a.level)).map((s, i) => (
         <div key={`${s.code}-${i}`} className="flex items-start justify-between gap-3 rounded-xl border border-[color:var(--pf-border)] px-3 py-2.5">
           <div className="min-w-0">

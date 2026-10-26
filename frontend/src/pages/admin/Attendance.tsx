@@ -275,8 +275,8 @@ export function Attendance() {
   const upcomingSessions = orderedSessions.filter(s => s.status === 'scheduled' && s.sessionDate.slice(0,10) > todayStr)
   const previousSessions = orderedSessions.filter(s => s.status !== 'scheduled')
   const sessionCard = (session: AttendanceSession) => (
-<div key={session.id} className="pf-glass rounded-2xl p-4" style={{ boxShadow: 'var(--pf-shadow)' }}>
-                <div className="flex items-start justify-between gap-2">
+<div key={session.id} className="pf-session-card pf-glass rounded-2xl p-4" style={{ boxShadow: 'var(--pf-shadow)' }}>
+                <div className="pf-session-heading flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="font-bold [color:var(--pf-text)]">{formatDate(session.sessionDate)}</p>
                     <div className="mt-0.5 flex items-center gap-1 text-xs [color:var(--pf-color-muted)]">
@@ -291,14 +291,14 @@ export function Attendance() {
                   <StatusBadge tone={statusTone(session.status)}>{statusText(session.status)}</StatusBadge>
                 </div>
 
-                <div className="mt-3 flex items-center justify-between border-t pt-3 text-xs [border-color:var(--pf-border)] [color:var(--pf-color-muted)]">
+                <div className="pf-session-finance mt-3 flex items-center justify-between border-t pt-3 text-xs [border-color:var(--pf-border)] [color:var(--pf-color-muted)]">
                   <span>Tiền sân: <strong className="[color:var(--pf-text)]">{formatVND(session.courtFee)}</strong></span>
                   <div className="flex items-center gap-1">
                     <Users size={11} /><strong className="[color:var(--pf-text)]">{session._count?.attendanceRecords ?? 0}</strong><span>/{members.length}</span>
                   </div>
                 </div>
 
-                <div className="mt-3 flex gap-2">
+                <div className="pf-session-actions mt-3 flex gap-2">
                   <button
                     onClick={() => openAttendance(session)}
                     disabled={members.length === 0}
@@ -374,11 +374,11 @@ export function Attendance() {
           />
         ) : (
           mobile ? <div className="pf-mobile-session-list">
-            {needAttendance.length > 0 && <><h2>Cần điểm danh · {needAttendance.length} buổi</h2>{needAttendance.map(sessionCard)}</>}
-            {previousSessions.length > 0 && <><h2>Buổi gần nhất</h2>{previousSessions.slice(0,2).map(sessionCard)}
-              {previousSessions.length > 2 && <details><summary className="min-h-11 py-3 text-sm font-semibold [color:var(--pf-primary-text)]">Lịch sử · {previousSessions.length - 2} buổi khác</summary><div className="space-y-2.5">{previousSessions.slice(2).map(sessionCard)}</div></details>}
+            {needAttendance.length > 0 && <><h2>Cần điểm danh · {needAttendance.length} buổi</h2><div className="pf-record-grid">{needAttendance.map(sessionCard)}</div></>}
+            {previousSessions.length > 0 && <><h2>Buổi gần nhất</h2><div className="pf-record-grid">{previousSessions.slice(0,2).map(sessionCard)}</div>
+              {previousSessions.length > 2 && <details><summary className="min-h-11 py-3 text-sm font-semibold [color:var(--pf-primary-text)]">Lịch sử · {previousSessions.length - 2} buổi khác</summary><div className="pf-record-grid space-y-2.5">{previousSessions.slice(2).map(sessionCard)}</div></details>}
             </>}
-            {upcomingSessions.length > 0 && <details open={needAttendance.length === 0 && previousSessions.length === 0}><summary className="min-h-11 py-3 text-sm font-semibold [color:var(--pf-primary-text)]">Sắp tới · {upcomingSessions.length} buổi</summary><div className="space-y-2.5">{upcomingSessions.map(sessionCard)}</div></details>}
+            {upcomingSessions.length > 0 && <details open={needAttendance.length === 0 && previousSessions.length === 0}><summary className="min-h-11 py-3 text-sm font-semibold [color:var(--pf-primary-text)]">Sắp tới · {upcomingSessions.length} buổi</summary><div className="pf-record-grid space-y-2.5">{upcomingSessions.map(sessionCard)}</div></details>}
           </div> : <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">{orderedSessions.map(sessionCard)}</div>
         )}
       </div>

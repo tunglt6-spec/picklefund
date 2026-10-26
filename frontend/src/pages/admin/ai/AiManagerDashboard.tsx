@@ -728,7 +728,7 @@ export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } 
             ) : !availability.policies ? (
               <p className="text-sm [color:var(--pf-color-muted)]">Không tải được chính sách duyệt (endpoint không khả dụng).</p>
             ) : (
-              <div className="space-y-2">
+              <div className="pf-record-grid space-y-2">
                 {policies.map(p => (
                   <div key={p.riskLevel} className="rounded-xl border border-[color:var(--pf-border)] p-3">
                     <div className="flex items-center justify-between">
@@ -767,7 +767,7 @@ export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } 
                 <CheckCircle2 size={16} /> Không có cảnh báo — hệ thống ổn định.
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="pf-record-grid space-y-2">
                 {riskSignals.map((s, i) => {
                   const st = SIGNAL_STYLE[s.level]
                   return (
@@ -800,7 +800,7 @@ export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } 
             ) : (
               <div className="space-y-2.5">
                 {/* Lưới 2×2 ô trạng thái — canh đều theo tọa độ (đồng bộ style Đội ngũ AI). */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="pf-record-grid grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {runtimeHealth.map((h, i) => (
                     <div key={`rt-${i}`} className="rounded-lg border border-[color:var(--pf-border)] px-3 py-2">
                       <div className="flex items-center gap-2">
