@@ -703,7 +703,7 @@ export function FundPeriods() {
                 <Building2 size={14} className="[color:var(--pf-primary-text)]" />
                 <span className="text-sm font-[700] [color:var(--pf-text)]">Quỹ Chính ({chungPeriods.length})</span>
               </div>
-              <div className="space-y-2">
+              <div className="pf-record-grid pf-period-records space-y-2">
                 {chungPeriods.map(p => (
                   <div key={p.id} className="pf-rowcard p-4">
                     <div className="flex items-start justify-between gap-2 mb-2">
@@ -716,7 +716,7 @@ export function FundPeriods() {
                     <div className="flex items-center justify-between text-sm mb-3">
                       <span className="[color:var(--pf-color-muted)]">Mức đóng: <span className="font-[600] [color:var(--pf-text)]">{formatVND(p.contributionAmount)}</span></span>
                     </div>
-                    {!isMember && <div className="mt-3 flex justify-end"><ActionMenu label="Quản lý kỳ quỹ" items={[
+                    {!isMember && <div className="mt-3 flex justify-end"><ActionMenu iconOnly label={`Quản lý kỳ quỹ ${p.name}`} items={[
                       {key:'edit',label:'Chỉnh sửa kỳ quỹ',onClick:()=>openEdit(p)},
                       ...(p.status === 'draft' ? [{key:'start',label:'Bắt đầu kỳ quỹ',onClick:()=>handleSetStatus(p,'active')}] : []),
                       ...(p.status === 'active' ? [{key:'close',label:'Đóng kỳ quỹ',onClick:()=>handleSetStatus(p,'closed')}] : []),
@@ -739,7 +739,7 @@ export function FundPeriods() {
                 <Trophy size={14} className="[color:var(--pf-primary-text)]" />
                 <span className="text-sm font-[700] [color:var(--pf-text)]">Quỹ Phụ ({gamePeriods.length})</span>
               </div>
-              <div className="space-y-2">
+              <div className="pf-record-grid pf-period-records space-y-2">
                 {gamePeriods.map(p => (
                   <div key={p.id} className="pf-rowcard p-4">
                     <div className="flex items-start justify-between gap-2 mb-2">
@@ -752,7 +752,7 @@ export function FundPeriods() {
                     <div className="flex items-center justify-between text-sm mb-3">
                       <span className="[color:var(--pf-color-muted)]">Mức đóng: <span className="font-[600] [color:var(--pf-text)]">{formatVND(p.contributionAmount)}</span></span>
                     </div>
-                    {!isMember && <div className="mt-3 flex justify-end"><ActionMenu label="Quản lý kỳ quỹ" items={[
+                    {!isMember && <div className="mt-3 flex justify-end"><ActionMenu iconOnly label={`Quản lý kỳ quỹ ${p.name}`} items={[
                       {key:'edit',label:'Chỉnh sửa kỳ quỹ',onClick:()=>openEdit(p)},
                       ...(p.status === 'draft' ? [{key:'start',label:'Bắt đầu kỳ quỹ',onClick:()=>handleSetStatus(p,'active')}] : []),
                       ...(p.status === 'active' ? [{key:'close',label:'Đóng kỳ quỹ',onClick:()=>handleSetStatus(p,'closed')}] : []),
@@ -1081,7 +1081,7 @@ export function FundPeriods() {
                 </div>
               ) : (
                 <>
-                <ul className="pf-cardlist grid grid-cols-1 min-[600px]:grid-cols-2 gap-3 p-3 lg:hidden">
+                <ul className="pf-record-grid pf-cardlist grid grid-cols-1 min-[600px]:grid-cols-2 gap-3 p-3 lg:hidden">
                   {paginated.map(p => (
                     <li key={p.id} className="pf-rowcard p-4">
                       <div className="flex items-start justify-between gap-3">

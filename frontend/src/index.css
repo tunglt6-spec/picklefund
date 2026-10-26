@@ -1785,6 +1785,10 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   .pf-stacked-records > div { flex-direction: column; align-items: flex-start; }
   .pf-approval-records > div > div:first-child > div { flex-wrap: wrap; }
   .pf-approval-records button { min-height: 44px; }
+  .pf-period-records > .pf-rowcard { display: flex; flex-direction: column; min-width: 0; }
+  .pf-period-records > .pf-rowcard > div:first-child { flex-direction: column; align-items: flex-start; }
+  .pf-period-records > .pf-rowcard > div:first-child > div { min-width: 0; overflow-wrap: anywhere; }
+  .pf-period-records > .pf-rowcard > div:last-child { margin-top: auto; padding-top: 8px; }
   .pf-record-grid .whitespace-pre-line { min-width: 0; overflow-wrap: anywhere; }
   .pf-session-heading { flex-direction: column; gap: 6px; }
   .pf-session-finance { flex-wrap: wrap; gap: 6px; }
@@ -1793,6 +1797,9 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   .pf-record-grid > .pf-session-card { display: flex; flex-direction: column; }
 }
 @media screen and (max-width: 479px) {
+  .pf-role-records > li > div { flex-direction: column; align-items: stretch; }
+  .pf-role-records > li > div > span { align-self: flex-start; max-width: 100%; white-space: normal; }
+  .pf-role-records > li > div:last-child > button { justify-content: center; }
   .pf-table-cards tbody tr { padding: 10px; }
   .pf-table-cards tbody td { flex-direction: column; align-items: flex-start; gap: 2px; white-space: normal; text-align: left !important; overflow-wrap: anywhere; }
   .pf-table-cards tbody td::before { max-width: 100%; letter-spacing: 0; }
