@@ -73,12 +73,17 @@ export function MobileModuleMenu({ title, subtitle, items, onSelect, onBack, scr
         </div>
       </div>
       {children}
-      {groups.map((g, gi) => (
-        <div key={g.name || '_'} className="pf-glass-group" data-mod={g.items[0]?.module}>
-          {g.name && <HubSectionTitle first={gi === 0}>{g.name}</HubSectionTitle>}
-          <TileGrid items={g.items} onSelect={(it) => onSelect(it as MenuItem)} />
-        </div>
-      ))}
+      <div className="pf-module-groups">
+        {groups.map((g) => (
+          <section key={g.name || '_'} className="pf-glass-group" data-mod={g.items[0]?.module} aria-label={g.name || 'Chức năng chính'}>
+            <div className="pf-module-group-head">
+              <HubSectionTitle first>{g.name || 'Chức năng chính'}</HubSectionTitle>
+              <span className="pf-group-count">{g.items.length} chức năng</span>
+            </div>
+            <TileGrid items={g.items} onSelect={(it) => onSelect(it as MenuItem)} />
+          </section>
+        ))}
+      </div>
     </div>
   )
 }

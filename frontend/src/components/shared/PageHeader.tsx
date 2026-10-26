@@ -77,6 +77,7 @@ export function PageHeader({
     if (!subtitle && !actions && !aside) return null
     return (
       <header
+        data-pf-toolbar={subtitle || aside ? 'context' : 'actions'}
         className={cn(
           'mb-4 flex flex-col gap-2 min-[600px]:flex-row min-[600px]:flex-wrap min-[600px]:items-center min-[600px]:justify-between lg:gap-2',
           actions ? 'pf-toolbar' : '',

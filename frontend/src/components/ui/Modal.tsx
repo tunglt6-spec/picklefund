@@ -73,7 +73,7 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
       )}>
         {/* Header */}
         <div className="pf-sheet-head flex items-start justify-between px-6 py-4 border-b border-[color:var(--pf-border)] shrink-0">
-          <div>
+          <div className="min-w-0">
             <h2 className="text-base font-semibold [color:var(--pf-text)]">{title}</h2>
             {subtitle && <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">{subtitle}</p>}
           </div>
@@ -87,7 +87,7 @@ export function Modal({ open, onClose, title, subtitle, children, size = 'md', f
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5">
+        <div className="pf-sheet-body min-h-0 flex-1 overflow-y-auto px-6 py-5">
           {children}
         </div>
 

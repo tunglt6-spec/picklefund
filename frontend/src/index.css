@@ -1519,13 +1519,13 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   .pf-app-directory, .pf-module-directory, .pf-home-layout { max-width: 960px; }
   .pf-app-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 12px; margin-top: 10px; align-items: stretch; }
   .pf-app-groups > .pf-glass-group { margin-top: 0; }
-  .pf-module-directory { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; align-items: start; }
-  .pf-module-directory > :not(.pf-glass-group) { grid-column: 1 / -1; }
-  .pf-module-directory:not(:has(> .pf-glass-group ~ .pf-glass-group)) > .pf-glass-group { grid-column: 1 / -1; }
+  .pf-module-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 12px; align-items: stretch; }
+  .pf-module-groups > .pf-glass-group { margin-top: 0; min-width: 0; }
+  .pf-module-groups > .pf-glass-group:only-child { grid-column: 1 / -1; }
   .pf-function-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   /* A single standalone menu uses bounded cells rather than filling the entire display. */
   .pf-glass-group .pf-function-grid { grid-template-columns: repeat(auto-fit, minmax(64px, 84px)); justify-content: start; }
-  .pf-app-groups .pf-function-grid, .pf-module-directory:has(> .pf-glass-group ~ .pf-glass-group) .pf-function-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .pf-app-groups .pf-function-grid, .pf-module-groups:has(> .pf-glass-group ~ .pf-glass-group) .pf-function-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .pf-home-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; align-items: start; }
   .pf-home-layout > header, .pf-home-wide { grid-column: 1 / -1; }
   .pf-home-section { min-width: 0; }
@@ -1674,4 +1674,40 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
       :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) :is(input, textarea, select, .pf-sheet-head, .pf-sheet-foot, .pf-mobile-form-footer) { background-color: var(--pf-surface) !important; }
     }
   }
+}
+
+/* Mobile layout rhythm for nested directories, records and detail sheets. */
+@media screen and (max-width: 1023px) {
+  .pf-module-groups { display: grid; gap: 12px; margin-top: 12px; }
+  .pf-module-group-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 40px; }
+  .pf-module-group-head .pf-hub-section-title { margin: 0; min-width: 0; flex: 1; }
+  .pf-module-group-head h2 { font-size: 15px; line-height: 20px; }
+  .pf-module-groups .pf-function-grid { margin-top: 10px; }
+  .pf-module-groups > .pf-glass-group { margin-top: 0; padding: 12px; }
+  .pf-cardlist > .pf-record-card { min-width: 0; height: 100%; }
+  .pf-record-card :is(dl, dt, dd) { min-width: 0; overflow-wrap: anywhere; }
+  :root:has([data-app-shell]) .pf-toolbar[data-pf-toolbar="actions"] {
+    padding: 0; border: 0; background: transparent !important; box-shadow: none;
+  }
+  .pf-toolbar[data-pf-toolbar="actions"] > span:empty { display: none; }
+  .pf-toolbar[data-pf-toolbar="actions"] > div:last-child { margin-left: auto; justify-content: flex-end; }
+  :root:has([data-app-shell]) .pf-sheet-head { padding: 14px 16px; align-items: flex-start; }
+  :root:has([data-app-shell]) .pf-sheet-head h2 { overflow-wrap: anywhere; line-height: 1.4; }
+  :root:has([data-app-shell]) .pf-modal-panel > .pf-sheet-body { padding: 16px; }
+  :root:has([data-app-shell]) .pf-sheet-foot { padding: 12px 16px max(12px, env(safe-area-inset-bottom)); flex-wrap: wrap; gap: 8px; }
+  .pf-sheet-foot > button:not([aria-label]) { flex: 1 1 120px; }
+  .pf-drawer-panel .pf-sheet-head > button { width: 44px; height: 44px; }
+  .pf-detail-head { padding: 14px 16px; flex-wrap: wrap; gap: 12px; }
+  .pf-detail-head > div { min-width: 0; flex-wrap: wrap; gap: 8px; }
+  .pf-detail-grid { padding: 16px; gap: 16px; }
+  .pf-detail-grid > div { min-width: 0; overflow-wrap: anywhere; padding-bottom: 12px; border-bottom: 1px solid var(--pf-border-soft); }
+  .pf-detail-grid > div > div { font-size: 14px; line-height: 1.5; }
+  .pf-detail-row { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); align-items: start; min-height: 44px; padding: 10px 0; border-bottom: 1px solid var(--pf-border-soft); }
+  .pf-detail-row :is(dt, dd) { min-width: 0; overflow-wrap: anywhere; }
+  .pf-detail-row dt { font-size: 12px; }
+  .pf-detail-row dt > span { flex-shrink: 0; }
+}
+@media screen and (max-width: 359px) {
+  .pf-detail-grid { grid-template-columns: minmax(0, 1fr); }
+  .pf-detail-grid > .col-span-2 { grid-column: auto; }
 }

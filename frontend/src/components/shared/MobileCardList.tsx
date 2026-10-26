@@ -42,7 +42,7 @@ export function MobileCardList<T>({
           aria-label={itemLabel?.(item)}
           onKeyDown={itemLabel && onItemClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onItemClick(item) } } : undefined}
           className={cn(
-            'pf-glass rounded-2xl p-4',
+            'pf-record-card pf-glass rounded-2xl p-4',
             onItemClick && 'active:[background:var(--pf-color-muted-soft)]',
           )}
         >

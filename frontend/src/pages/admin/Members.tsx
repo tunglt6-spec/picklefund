@@ -98,13 +98,13 @@ function DrawerShell({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={`relative flex flex-col [background:var(--pf-surface)] ${
+        className={`pf-drawer-panel relative flex flex-col [background:var(--pf-surface)] ${
           isMobile
             ? 'w-full max-h-[88dvh] rounded-t-[24px] animate-fadeIn min-[600px]:mx-auto min-[600px]:max-w-lg'
             : 'h-full w-full max-w-md shadow-2xl animate-fadeIn'
         }`}
       >
-        <div className="flex items-center justify-between gap-3 border-b px-5 py-4 border-[color:var(--pf-border)]">
+        <div className="pf-sheet-head flex items-center justify-between gap-3 border-b px-5 py-4 border-[color:var(--pf-border)]">
           <div className="min-w-0">
             <h2 className="text-base font-semibold [color:var(--pf-text)]">{title}</h2>
             {subtitle && <p className="mt-0.5 truncate text-xs [color:var(--pf-color-muted)]">{subtitle}</p>}
@@ -117,9 +117,9 @@ function DrawerShell({
             <X size={18} />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto">{children}</div>
+        <div className="pf-sheet-body min-h-0 flex-1 overflow-y-auto">{children}</div>
         {footer && (
-          <div className="flex items-center gap-3 border-t px-5 py-4 border-[color:var(--pf-border)]">{footer}</div>
+          <div className="pf-sheet-foot flex items-center gap-3 border-t px-5 py-4 border-[color:var(--pf-border)]">{footer}</div>
         )}
       </div>
     </div>
@@ -272,6 +272,7 @@ function MemberDetailDrawer({
             <button
               key={k}
               onClick={() => setTab(k)}
+              aria-pressed={tab === k}
               className="min-h-11 flex-1 rounded-full px-4 py-2 text-sm font-semibold transition-colors"
               style={tab === k
                 ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' }
@@ -353,7 +354,7 @@ function MemberDetailDrawer({
 
 function DetailRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3">
+    <div className="pf-detail-row flex items-center justify-between gap-3">
       <dt className="flex items-center gap-2 [color:var(--pf-color-muted)]">
         <span className="[color:var(--pf-color-muted)]">{icon}</span>{label}
       </dt>

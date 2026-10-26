@@ -439,7 +439,7 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
     <div className="fixed inset-0 z-50 flex">
       <div className="flex-1 bg-slate-900/30 backdrop-blur-[2px]" onClick={onClose} />
       <div ref={panelRef} role="dialog" aria-modal="true" aria-label="Chi tiết khoản chi" tabIndex={-1} className="w-full max-w-lg [background:var(--pf-surface)] flex flex-col shadow-2xl outline-none">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-[color:var(--pf-border)]">
+        <div className="pf-detail-head flex items-center justify-between px-6 py-4 border-b border-[color:var(--pf-border)]">
           <button onClick={onClose} className="flex items-center gap-2 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] transition-colors">
             <ArrowLeft size={15} />Chi tiết khoản chi
           </button>
@@ -457,7 +457,7 @@ function DetailView({ exp, onClose, onDelete, onApprove, onReject, onEdit, onAtt
           )}
         </div>
         <div className="flex-1 overflow-y-auto">
-          <div className="px-6 py-5 grid grid-cols-2 gap-x-8 gap-y-4">
+          <div className="pf-detail-grid px-6 py-5 grid grid-cols-2 gap-x-8 gap-y-4">
             {fields.map((f, i) => (
               <div key={i} className={f.span ? 'col-span-2' : ''}>
                 <p className="text-xs font-semibold [color:var(--pf-color-muted)] uppercase tracking-wide mb-1">{f.label}</p>
