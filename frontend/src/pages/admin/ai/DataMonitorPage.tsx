@@ -102,7 +102,7 @@ export function DataMonitorPage() {
                 {new Date(report.generatedAt).toLocaleString('vi-VN', { hour12: false })}
               </span>
             </div>
-            <div className="pf-record-grid space-y-3">
+            <div className="pf-record-grid pf-data-checks space-y-3">
               {report.checks.map(c => (
                 <div key={c.key} className="rounded-xl border border-[color:var(--pf-border)] p-3.5">
                   <div className="flex items-center justify-between gap-3">
