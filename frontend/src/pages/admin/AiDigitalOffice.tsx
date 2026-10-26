@@ -117,8 +117,8 @@ export function AiDigitalOffice() {
   if (mobile && !['report', 'operations', 'analytics'].includes(selected ?? '')) return (
     <PageShell>
       <PageHeader title="AIDO" subtitle="Điều hành, báo cáo và phân tích AI của CLB" />
-      <HubSectionTitle>Chức năng AIDO</HubSectionTitle>
-      <div className="pf-glass-group [&>ul]:grid-cols-2 min-[640px]:[&>ul]:grid-cols-4" data-mod="ai">
+      <HubSectionTitle first>Chức năng AIDO</HubSectionTitle>
+      <div className="pf-glass-group" data-mod="ai">
         <TileGrid items={MOBILE_AIDO_FEATURES} onSelect={item => navigate(item.to)} />
       </div>
     </PageShell>

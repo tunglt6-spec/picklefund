@@ -118,7 +118,7 @@ export function HubSearch({ value, onChange, placeholder = 'Tìm chức năng…
 /** Tiêu đề mục + (tuỳ chọn) liên kết/nút bên phải. */
 export function HubSectionTitle({ children, right, first }: { children: ReactNode; right?: ReactNode; first?: boolean }) {
   return (
-    <div className={cn('flex items-center justify-between', first ? 'mt-2' : 'mt-6')}>
+    <div className={cn('pf-hub-section-title flex items-center justify-between', first ? 'mt-2' : 'mt-6')}>
       <h2 className="text-[17px] font-[800] [color:var(--pf-text)]">{children}</h2>
       {right}
     </div>
@@ -175,7 +175,7 @@ export function TileGrid({
   const mobileIcons = useContext(MobileIconContext)
   if (items.length === 0) return <p className="py-10 text-center text-sm [color:var(--pf-color-muted)]">{empty ?? 'Không có chức năng phù hợp.'}</p>
   return (
-    <ul className="mt-3 grid grid-cols-3 gap-x-3 gap-y-5 min-[640px]:grid-cols-6">
+    <ul data-count={items.length} data-editing={editing} className="pf-function-grid mt-3 grid grid-cols-3 gap-x-3 gap-y-5 min-[640px]:grid-cols-6">
       {items.map((a, i) => {
         const Icon = a.icon
         const playfulName = tileIconName(a)
@@ -195,12 +195,12 @@ export function TileGrid({
                   ? <PlayfulIcon name={playfulName} size={40} variant="on-color" strokeWidth={1.8} aria-hidden />
                   : <Icon size={28} strokeWidth={1.9} aria-hidden />}
                 {count > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--pf-color-danger)] px-1 text-xs font-bold text-white">
+                  <span className="pf-tile-badge absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--pf-color-danger)] px-1 text-xs font-bold text-white">
                     {count > 9 ? '9+' : count}
                   </span>
                 )}
               </span>
-              <span className="w-full break-words text-center text-xs font-semibold leading-tight [color:var(--pf-text)]">{a.label}</span>
+              <span className="pf-tile-label w-full break-words text-center text-xs font-semibold leading-tight [color:var(--pf-text)]">{a.label}</span>
             </button>
             {editing && onMove && (
               <div className="absolute inset-x-0 top-0 flex justify-between px-0.5">
