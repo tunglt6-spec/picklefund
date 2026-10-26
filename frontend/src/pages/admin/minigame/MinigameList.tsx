@@ -226,7 +226,7 @@ export function MinigameList() {
   const resetFilters = () => { setModeTab('all'); setStatusFilter('all'); setSearch('') }
 
   const statusChips = (
-    <div className="flex items-center gap-1 overflow-x-auto rounded-full border p-1 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
+    <div data-pf-surface="filter" className="flex items-center gap-1 overflow-x-auto rounded-full border p-1 [background:var(--pf-surface)] border-[color:var(--pf-border)]">
       {STATUS_FILTERS.map(([v, l]) => (
         <button key={v} onClick={() => setStatusFilter(v)} aria-pressed={statusFilter === v}
           className="whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold transition-colors"

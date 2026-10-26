@@ -29,6 +29,7 @@ export function FilterChips<K extends string>({
           <button
             key={k}
             type="button"
+            data-pf-filter-control=""
             aria-pressed={on}
             onClick={() => onChange(k)}
             className={cn(

@@ -76,7 +76,7 @@ test('không có phần tử position:fixed nằm trong khối .pf-glass (backdr
   assert.deepEqual(bad, [])
 })
 
-test('thẻ số liệu: ô con dùng .pf-stat-cell đặc, không tint trong suốt trên --pf-glass-bg', () => {
+test('ô thống kê không lấy tint từ kính; fallback giữ token bề mặt', () => {
   const s = readFileSync(join(SRC, 'pages/admin/ai/AiManagerDashboard.tsx'), 'utf8')
   assert.ok(!/color-mix\([^)]*var\(--pf-glass-bg\)\)/.test(s))
   assert.match(s, /pf-stat-cell/)

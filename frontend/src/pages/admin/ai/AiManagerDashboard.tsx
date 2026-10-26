@@ -635,7 +635,7 @@ export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } 
         </Card>
 
         {/* Backend status banner — trung thực */}
-        <details className="lg:hidden order-last rounded-2xl border [border-color:var(--pf-border)] [background:var(--pf-surface)] px-4 py-3">
+        <details data-pf-surface="card" className="lg:hidden order-last rounded-2xl border [border-color:var(--pf-border)] [background:var(--pf-surface)] px-4 py-3">
           <summary className="flex min-h-[44px] cursor-pointer items-center text-sm font-semibold [color:var(--pf-text)]">Chi tiết kỹ thuật</summary>
           <p className="mt-1 text-xs leading-relaxed [color:var(--pf-color-muted)]">
             Hàng đợi, phê duyệt và cầu thực thi (Mít Đặc) đã hoạt động. Duyệt không tự thực thi: hành động đã duyệt được thực thi thủ công qua Mít Đặc (Hộp Duyệt). Cầu thực thi hiện chưa chạy nghiệp vụ thật. Chỉ số lấy từ dữ liệu thật.
