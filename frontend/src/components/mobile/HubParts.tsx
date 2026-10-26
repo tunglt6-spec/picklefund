@@ -11,6 +11,7 @@ import type { Role } from '../../types'
 import { PlayfulIcon } from '../icons/PlayfulIcon'
 import { tileIconName } from '../icons/tileIconMap'
 import { MobileIconContext } from '../icons/MobileIconContext'
+import { mobileTileLabel } from '../../lib/mobileTileLabels'
 
 export { fold } from '../../lib/fold'
 
@@ -162,7 +163,7 @@ export function ListRow({ title, sub, onClick, trailing, icon }: { title: string
   )
 }
 
-/** Lưới ô icon 3 cột (mobile). `editing` hiện nút ‹/› để sắp xếp (trang Ứng dụng). */
+/** Lưới ô icon 4 cột (mobile). `editing` hiện nút ‹/› để sắp xếp (trang Ứng dụng). */
 export function TileGrid({
   items, unread = 0, editing = false, onMove, onSelect, empty,
 }: {
@@ -200,15 +201,15 @@ export function TileGrid({
                   </span>
                 )}
               </span>
-              <span className="pf-tile-label w-full break-words text-center text-xs font-semibold leading-tight [color:var(--pf-text)]">{a.label}</span>
+              <span className="pf-tile-label w-full break-words text-center text-xs font-semibold leading-tight [color:var(--pf-text)]"><span className="pf-tile-caption-mobile">{mobileTileLabel(a.label)}</span><span className="pf-tile-caption-full">{a.label}</span></span>
             </button>
             {editing && onMove && (
-              <div className="absolute inset-x-0 top-0 flex justify-between px-0.5">
+              <div className="mt-1 flex gap-1">
                 <button
                   onClick={() => onMove(a.key, -1)}
                   disabled={i === 0}
                   aria-label={`Chuyển ${a.label} lên trước`}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white shadow disabled:opacity-30 [background:var(--pf-primary)]"
+                  className="flex h-11 min-w-0 flex-1 items-center justify-center rounded-lg text-sm font-bold text-white shadow disabled:opacity-30 [background:var(--pf-primary)]"
                 >
                   ‹
                 </button>
@@ -216,7 +217,7 @@ export function TileGrid({
                   onClick={() => onMove(a.key, 1)}
                   disabled={i === items.length - 1}
                   aria-label={`Chuyển ${a.label} ra sau`}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white shadow disabled:opacity-30 [background:var(--pf-primary)]"
+                  className="flex h-11 min-w-0 flex-1 items-center justify-center rounded-lg text-sm font-bold text-white shadow disabled:opacity-30 [background:var(--pf-primary)]"
                 >
                   ›
                 </button>

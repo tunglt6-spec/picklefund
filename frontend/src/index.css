@@ -1448,7 +1448,8 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   .pf-data-freshness time { font-variant-numeric: tabular-nums; font-weight: 500; }
 }
 
-/* Compact mobile function density: smaller artwork, full labels and generous hit targets. */
+/* Four-column mobile directory with concise captions and full accessible names. */
+.pf-tile-caption-mobile { display: none; }
 @media (max-width: 1023px) {
   .pf-glass-group { margin-top: 10px; padding: 10px 10px 12px; border-radius: 18px; }
   .pf-glass-group .pf-hub-section-title { margin-top: 0; }
@@ -1456,34 +1457,20 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   .pf-glass-group > ul { margin-top: 10px; }
   .pf-group-count { padding: 2px 6px; border-radius: 6px; }
   .pf-function-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px 8px; }
-  .pf-function-grid:is([data-count="3"], [data-count="5"], [data-count="6"]) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .pf-function-grid:is([data-count="2"], [data-count="4"]) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .pf-function-grid[data-count="1"] { grid-template-columns: minmax(0, 1fr); }
-  .pf-function-grid .pf-tile-btn { gap: 4px; min-height: 68px; }
+  .pf-function-grid .pf-tile-btn { flex-direction: column; gap: 5px; min-height: 68px; }
+  .pf-tile-caption-mobile { display: inline; }
+  .pf-tile-caption-full { display: none; }
   .pf-function-grid .pf-tile-ico { width: 48px; max-width: 48px; flex-shrink: 0; border-radius: 16px; box-shadow: inset 0 1px 2px #FFFFFFD9, inset 0 -2px 4px #08266B24, 0 3px 7px #17386A14; }
   .pf-function-grid .pf-tile-ico::before { inset: 2px; border-radius: 13px; }
   [data-theme="dark"] .pf-function-grid .pf-tile-ico { box-shadow: inset 0 1px 2px #FFFFFFB3, inset 0 -2px 4px #08266B40, 0 3px 7px #00000040; }
   .pf-function-grid .pf-tile-ico > svg { width: 28px; height: 28px; }
-  .pf-function-grid .pf-tile-label { min-height: 15px; font-size: 12px; line-height: 15px; font-weight: 600; }
+  .pf-function-grid .pf-tile-label { min-height: 15px; text-wrap: balance; font-size: 12px; line-height: 15px; font-weight: 600; }
   .pf-function-grid .pf-tile-badge { height: 18px; min-width: 18px; font-size: 10px; line-height: 14px; }
-  .pf-function-grid:is([data-count="1"], [data-count="2"], [data-count="4"]):not([data-editing="true"]) .pf-tile-btn { flex-direction: row; gap: 8px; min-height: 56px; text-align: left; }
-  .pf-function-grid:is([data-count="1"], [data-count="2"], [data-count="4"]):not([data-editing="true"]) .pf-tile-ico { width: 44px; max-width: 44px; flex: 0 0 44px; }
-  .pf-function-grid:is([data-count="1"], [data-count="2"], [data-count="4"]):not([data-editing="true"]) .pf-tile-label { min-height: 0; text-align: left; }
   [data-app-shell] [data-pf-metric] { padding: 12px; gap: 6px; border-radius: 16px; }
   [data-app-shell] [data-pf-metric] .pf-metric-icon { width: 28px; height: 28px; border-radius: 9px; }
   .pf-mobile-summary { padding: 12px 12px 0; border-radius: 16px; }
   .pf-mobile-summary > div:only-child { padding-bottom: 12px; }
 }
-@media (max-width: 359px) {
-  .pf-function-grid:not([data-count="1"]):not([data-count="2"]):not([data-count="4"]) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-@media (min-width: 640px) and (max-width: 1023px) {
-  .pf-function-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-  .pf-function-grid[data-count="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .pf-function-grid[data-count="5"] { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-  .pf-function-grid[data-count="6"] { grid-template-columns: repeat(6, minmax(0, 1fr)); }
-}
-
 /* Fresh Sport Glass: vùng xanh–mint nhẹ ở đầu trang Tổng quan. */
 @media (max-width: 1023px) {
   :root:has([data-app-shell]):not([data-theme="dark"]) .pf-hero-wash {

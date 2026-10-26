@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { matchesMobileTile } from '../lib/mobileTileLabels'
 import { useModerationPending } from '../hooks/useModerationPending'
 import { Navigate } from 'react-router-dom'
 import { ArrowUpDown, Check } from '../components/icons/mobileLucide'
@@ -42,7 +43,7 @@ export function MobileAppHub() {
   }, [role, order, modPending])
 
   const q = fold(query.trim())
-  const matches: AppItem[] = q ? groups.flatMap((g) => g.items).filter((a) => fold(a.label).includes(q) || fold(g_title(groups, a)).includes(q)) : []
+  const matches: AppItem[] = q ? groups.flatMap((g) => g.items).filter((a) => matchesMobileTile(a.label, q) || fold(g_title(groups, a)).includes(q)) : []
 
   // Chuyển ô trong CÙNG nhóm (đổi chỗ với ô kề bên).
   const move = (groupKey: string, key: string, dir: -1 | 1) => {
