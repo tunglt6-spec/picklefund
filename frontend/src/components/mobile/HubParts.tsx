@@ -6,7 +6,7 @@ import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore, DEMO_CLUB_ID } from '../../store/clubDataStore'
 import { getActiveChungPeriod, cn } from '../../lib/utils'
 import api from '../../lib/api'
-import type { AppItem } from './hubApps'
+import type { AppItem, ModuleKey } from './hubApps'
 import type { Role } from '../../types'
 import { PlayfulIcon } from '../icons/PlayfulIcon'
 import { tileIconName } from '../icons/tileIconMap'
@@ -127,10 +127,11 @@ export function HubSectionTitle({ children, right, first }: { children: ReactNod
 }
 
 /** Khối nội dung chuẩn: bề mặt trắng, viền xám mảnh, bóng trung tính. */
-export function Panel({ children, className }: { children: ReactNode; className?: string }) {
+export function Panel({ children, className, module }: { children: ReactNode; className?: string; module?: ModuleKey }) {
   return (
     <section
-      className={cn('rounded-[var(--pf-radius-card)] border [background:var(--pf-surface)] [border-color:var(--pf-border)]', className)}
+      data-mod={module}
+      className={cn('pf-home-panel rounded-[var(--pf-radius-card)] border [background:var(--pf-surface)] [border-color:var(--pf-border)]', className)}
       style={{ boxShadow: 'var(--pf-shadow-card)' }}
     >
       {children}

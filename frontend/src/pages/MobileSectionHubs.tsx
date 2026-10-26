@@ -69,7 +69,7 @@ export function MobileHome() {
       {hasClub && hasSchedule && (
         <div className="pf-home-section">
           <HubSectionTitle>{todays.length > 0 ? 'Hôm nay' : 'Buổi sắp tới'}</HubSectionTitle>
-          <Panel className="mt-2 overflow-hidden border-l-4 [border-left-color:var(--mod-activity)]">
+          <Panel module="activity" className="mt-2 overflow-hidden border-l-4 [border-left-color:var(--mod-activity)]">
             {!clubData ? (
               <div className="space-y-2 p-4"><Skeleton className="h-4 w-1/3" /><Skeleton className="h-5 w-2/3" /><Skeleton className="h-4 w-1/2" /></div>
             ) : shown.length === 0 ? (
@@ -108,7 +108,7 @@ export function MobileHome() {
       {role !== 'SUPER_ADMIN' && (
         <div className="pf-home-section">
           <HubSectionTitle>Việc cần xử lý</HubSectionTitle>
-          <Panel className="mt-2 overflow-hidden">
+          <Panel module="system" className="mt-2 overflow-hidden">
             {todoLoading ? (
               <div className="space-y-2 p-4"><Skeleton className="h-4 w-1/2" /><Skeleton className="h-4 w-2/3" /></div>
             ) : todo.length === 0 ? (
@@ -126,7 +126,7 @@ export function MobileHome() {
       {hasClub && (
         <div className="pf-home-section pf-home-wide">
           <HubSectionTitle>Tài chính</HubSectionTitle>
-          <Panel className="mt-2 overflow-hidden">
+          <Panel module="finance" className="mt-2 overflow-hidden">
             <p className="px-4 pt-3 text-xs [color:var(--pf-color-muted)]">
               {activePeriod ? `Kỳ quỹ đang mở: ${activePeriod.name}` : clubData ? 'Chưa có kỳ quỹ đang mở' : 'Đang tải kỳ quỹ…'}
             </p>
