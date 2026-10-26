@@ -8,6 +8,7 @@ const labels: Record<string, PlayfulIconName> = {
   "Ứng dụng": "apps",
   "Danh sách thành viên": "members",
   "Chấm điểm": "member-rating",
+  "Bảng điểm": "ranking",
   "Quy tắc chấm điểm": "rating-rules",
   "Tài khoản thành viên": "member-accounts",
   "Vai trò & phân quyền": "roles",

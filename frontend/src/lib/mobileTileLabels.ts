@@ -4,6 +4,7 @@ import { fold } from './fold'
 const SHORT_LABELS: Record<string, string> = {
   'Danh sách thành viên': 'Thành viên',
   'Tài khoản thành viên': 'Tài khoản',
+  'Quy tắc chấm điểm': 'Quy tắc',
   'Vai trò & phân quyền': 'Phân quyền',
   'Lịch sử hoạt động': 'Lịch sử',
   'Xác nhận nộp quỹ': 'Xác nhận',

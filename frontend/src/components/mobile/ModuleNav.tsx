@@ -75,7 +75,7 @@ export function MobileModuleMenu({ title, subtitle, items, onSelect, onBack, scr
       {children}
       <div className="pf-module-groups">
         {groups.map((g) => (
-          <section key={g.name || '_'} className="pf-glass-group" data-mod={g.items[0]?.module} aria-label={g.name || 'Chức năng chính'}>
+          <section key={g.name || '_'} className="pf-glass-group" data-mod={g.items[0]?.module} data-layout={groups.length === 1 && g.items.length <= 3 ? 'compact' : undefined} data-items={g.items.length} aria-label={g.name || 'Chức năng chính'}>
             <div className="pf-module-group-head">
               <HubSectionTitle first>{g.name || 'Chức năng chính'}</HubSectionTitle>
               <span className="pf-group-count">{g.items.length} chức năng</span>

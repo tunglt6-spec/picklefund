@@ -18,3 +18,7 @@ test('deep tournament menu resolves both icons to the solid glass registry', () 
   assert.equal(tileIconName({key:'schedule',label:'Lịch & Kết quả',module:'compete'}), 'fixtures')
   assert.equal(tileIconName({key:'standings',label:'Bảng xếp hạng',module:'compete'}), 'ranking')
 })
+
+test('scoreboard menu resolves to the approved palette icon instead of an inherited white control glyph', () => {
+  assert.equal(tileIconName({key:'scoreboard',label:'Bảng điểm',module:'members'}), 'ranking')
+})

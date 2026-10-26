@@ -226,6 +226,8 @@ function miniSpan(i: number, n: number): string {
   return `${narrow} ${wide}`
 }
 
+const MOBILE_STAT_LABELS: Record<string, string> = { Workflow: 'Luồng việc', Approval: 'Phê duyệt', Completed: 'Hoàn tất' }
+
 function MiniStat({ label, value, className = '' }: { label: string; value: React.ReactNode; className?: string }) {
   const long = typeof value === 'string' && value.length > 7
   return (
@@ -257,7 +259,7 @@ function Card({ children, className = '' }: { children: React.ReactNode; classNa
 
 function PanelTitle({ icon, children, right }: { icon: React.ReactNode; children: React.ReactNode; right?: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between mb-4">
+    <div className="pf-ai-panel-title flex items-center justify-between mb-4">
       <div className="flex items-center gap-2">
         <span className="[color:var(--pf-color-muted)]">{icon}</span>
         <h3 className="text-sm font-semibold [color:var(--pf-text)] uppercase tracking-wide">{children}</h3>
@@ -528,7 +530,7 @@ export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } 
   }, [rosterAll, teamFilter, mobileLayout, hasPlannedAgents])
 
   return (
-    <div className="[background:var(--pf-bg)]">
+    <div className="pf-ai-dashboard [background:var(--pf-bg)]">
       {/* Header — KHÔNG bọc scroll riêng (tránh scroll lồng cắt chân khi nhúng tab AIDO) và
           KHÔNG sticky (thanh tab AIDO đã sticky top-0; 2 sticky sẽ chồng nhau). */}
       <div className={`[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] py-4 ${embedded ? 'max-lg:hidden' : ''}`}>
@@ -551,7 +553,7 @@ export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } 
         </div>
       </div>
 
-      <div className="pf-center-x w-full max-w-[1600px] px-4 sm:px-6 py-5 space-y-6 max-lg:flex max-lg:flex-col max-lg:gap-5 max-lg:space-y-0">
+      <div className="pf-ai-workspace pf-center-x w-full max-w-[1600px] px-4 sm:px-6 py-5 space-y-6 max-lg:flex max-lg:flex-col max-lg:gap-5 max-lg:space-y-0">
         {/* ── HÀNG KPI RUNTIME TỔNG QUAN (9 chỉ số) — dữ liệu THẬT ── */}
         <div className="max-lg:-order-2">
           <div className="mb-2.5 flex items-center justify-between">
@@ -573,7 +575,7 @@ export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } 
             </div>
           </div>
           {rt.loading && !rt.summary ? (
-            <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9">
+            <div className="pf-ai-runtime-grid grid grid-cols-3 gap-2.5 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9">
               {Array.from({ length: 9 }).map((_, i) => (
                 <div key={i} className="h-[74px] animate-pulse rounded-xl border border-[color:var(--pf-border)] [background:var(--pf-surface-muted)]" />
               ))}
@@ -584,7 +586,7 @@ export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } 
               <button onClick={rt.refresh} className="shrink-0 rounded-lg [background:var(--pf-surface)] px-3 py-1 text-xs font-semibold text-amber-700 border border-amber-200">Thử lại</button>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9">
+            <div className="pf-ai-runtime-grid grid grid-cols-3 gap-2.5 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9">
               {KPI9.map((k, ki) => {
                 const c = KPI_COLORS[k.color]
                 return (
@@ -614,7 +616,7 @@ export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } 
         {/* Hub điều hướng — TẤT CẢ card trong 1 lưới gọn, 4 card/hàng từ ~1024px (laptop 1280 luôn
             thấy 4 cột), sát nhau, hết trống chỗ. Mọi card dùng CHUNG 1 tông tím Hermes cho đồng nhất. */}
         {/* Mobile: lưới icon chọn khu vực (cùng hệ thống trang Ứng dụng). */}
-        <Card className="max-lg:-order-1 lg:hidden">
+        <Card className="pf-ai-operations max-lg:-order-1 lg:hidden">
           <PanelTitle icon={<LayoutGrid size={16} />}>Khu Vực Vận Hành</PanelTitle>
           <TileGrid
             items={sections.filter(s => s.to).map((s): AppItem => ({
@@ -651,7 +653,7 @@ export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } 
         </div>
 
         {/* AI Team roster — số liệu runtime THẬT đúng nhiệm vụ từng agent */}
-        <Card>
+        <Card className="pf-ai-roster-panel">
           <PanelTitle
             icon={<Bot size={16} />}
             right={
@@ -673,16 +675,16 @@ export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } 
           {roster.length === 0 ? (
             <p className="text-sm [color:var(--pf-color-muted)]">Không có agent nào ở bộ lọc này.</p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+            <div className="pf-ai-roster-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
               {roster.map(t => {
                 const color = AGENT_COLOR[t.key] ?? 'var(--pf-primary)'
                 return (
                 <div
                   key={t.key}
-                  className="pf-stat-card @container rounded-xl p-4 flex flex-col gap-2.5"
+                  className="pf-ai-agent pf-stat-card @container rounded-xl p-4 flex flex-col gap-2.5"
                   style={{ '--accent': color } as React.CSSProperties}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="pf-ai-agent-head flex items-center justify-between">
                     <span className="flex h-9 w-9 items-center justify-center rounded-full" style={{ background: `color-mix(in srgb, ${color} 14%, transparent)`, color }}>
                       <Bot size={16} />
                     </span>
@@ -691,24 +693,24 @@ export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } 
                       Hoạt động
                     </span>
                   </div>
-                  <div>
+                  <div className="pf-ai-agent-identity" title={t.role}>
                     <p className="text-sm font-bold" style={{ color }}>{t.name}</p>
                     <p className="text-xs [color:var(--pf-color-muted)] leading-snug line-clamp-2">{t.role}</p>
                   </div>
                   {t.stats ? (
-                    <div className="grid grid-cols-6 auto-rows-fr gap-1.5">
+                    <div className="pf-ai-agent-stats grid grid-cols-6 auto-rows-fr gap-1.5" data-count={t.stats.length}>
                       {t.stats.map((s, i) => (
-                        <MiniStat key={s.l} label={s.l} value={s.v} className={miniSpan(i, t.stats!.length)} />
+                        <MiniStat key={s.l} label={mobileLayout ? (MOBILE_STAT_LABELS[s.l] ?? s.l) : s.l} value={s.v} className={miniSpan(i, t.stats!.length)} />
                       ))}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-3 gap-1">
+                    <div className="pf-ai-agent-stats grid grid-cols-3 gap-1" data-count="3">
                       {Array.from({ length: 3 }).map((_, i) => (
                         <div key={i} className="h-[38px] animate-pulse rounded-lg [background:var(--pf-surface-muted)]" />
                       ))}
                     </div>
                   )}
-                  <p className="text-xs [color:var(--pf-color-muted)]">{t.foot}</p>
+                  <p className="pf-ai-agent-foot text-xs [color:var(--pf-color-muted)]">{t.foot}</p>
                 </div>
                 )
               })}
