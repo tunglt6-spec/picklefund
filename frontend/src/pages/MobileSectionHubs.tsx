@@ -63,7 +63,7 @@ export function MobileHome() {
         <p className="mt-0.5 text-sm capitalize [color:var(--pf-color-muted)]">{dateLine}</p>
       </header>
 
-      {role === 'SUPER_ADMIN' && <SuperSummary />}
+      {role === 'SUPER_ADMIN' && <div className="pf-home-section pf-home-wide"><SuperSummary /></div>}
 
       {/* Hôm nay / buổi sắp tới */}
       {hasClub && hasSchedule && (
