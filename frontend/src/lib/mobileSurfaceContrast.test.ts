@@ -23,8 +23,14 @@ test('body, secondary and signal text remain readable on the shared light canvas
 })
 
 test('mobile workspaces share one canvas and card color without module tint assignments', () => {
-  assert.equal(color('--pf-bg'), '#F4F7FB')
-  assert.equal(color('--pf-surface'), '#EDF2F7')
+  // Cards must be visibly lighter than the canvas, rather than disappearing into it.
+  assert.ok(luminance(color('--pf-surface')) - luminance(color('--pf-bg')) >= 0.04)
   assert.ok(!palette.includes('--mod-surface'))
   assert.match(palette, /background-image: none/)
+})
+
+test('input boundaries remain distinguishable on both light surfaces', () => {
+  for (const surface of [color('--pf-surface'), color('--pf-bg')]) {
+    assert.ok((luminance(surface) + 0.05) / (luminance(color('--pf-border-strong')) + 0.05) >= 3)
+  }
 })

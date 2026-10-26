@@ -6,6 +6,7 @@
 import { useSearchParams } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CalendarPlus, Check, Users, Save, ChevronDown } from '../../components/icons/mobileLucide'
+import { Check as SelectionCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -198,14 +199,14 @@ export function SessionRegistration() {
                     >
                       <span className="truncate text-sm font-medium [color:var(--pf-text)]">{r.memberName}</span>
                       <span
-                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border"
+                        className="pf-selection-indicator flex h-6 w-6 shrink-0 items-center justify-center rounded-full border"
                         style={
                           on
                             ? { background: 'var(--pf-primary)', color: '#fff', borderColor: 'var(--pf-primary)' }
                             : { borderColor: 'var(--pf-border)', color: 'transparent' }
                         }
                       >
-                        <Check size={14} />
+                        {on && <SelectionCheck size={15} strokeWidth={2.8} aria-hidden="true" />}
                       </span>
                     </button>
                   )

@@ -8,6 +8,7 @@ import { countSignal } from '../../lib/statusDesign'
 import { useSearchParams } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { UserCheck, Users, Save, ClipboardCheck, Check, ChevronDown } from '../../components/icons/mobileLucide'
+import { Check as SelectionCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -234,14 +235,14 @@ export function CheckIn() {
                         )}
                       </span>
                       <span
-                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border"
+                        className="pf-selection-indicator flex h-7 w-7 shrink-0 items-center justify-center rounded-full border"
                         style={
                           on
                             ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)', borderColor: 'var(--pf-primary)' }
                             : { borderColor: 'var(--pf-border)', color: 'transparent' }
                         }
                       >
-                        <Check size={15} />
+                        {on && <SelectionCheck size={16} strokeWidth={2.8} aria-hidden="true" />}
                       </span>
                     </button>
                   )

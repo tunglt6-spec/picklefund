@@ -1546,9 +1546,9 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
    Screen-only; desktop, dark preference and report exports retain their existing treatment. */
 @media screen and (max-width: 1023px) {
   :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) {
-    --pf-bg: #F4F7FB; --pf-surface: #EDF2F7; --pf-surface-muted: #E5EBF3;
-    --pf-border: #D3DDE8; --pf-border-soft: #DCE4ED; --pf-border-strong: #7D8FA5;
-    --pf-text: #162B43; --pf-text-muted: #435A70; --pf-color-muted: #435A70; --pf-color-muted-soft: #E5EBF3;
+    --pf-bg: #EDF2F7; --pf-surface: #F8FAFD; --pf-surface-muted: #E3EAF3;
+    --pf-border: #B8C7D9; --pf-border-soft: #CCD7E4; --pf-border-strong: #70869F;
+    --pf-text: #10243A; --pf-text-muted: #3E536B; --pf-color-muted: #3E536B; --pf-color-muted-soft: #E3EAF3;
     --pf-primary: #245DE4; --pf-primary-hover: #194AC2; --pf-primary-text: #194AC2;
     --pf-color-primary: #245DE4; --pf-primary-soft: #DEEAFC; --pf-color-primary-soft: #DEEAFC;
     --lg-surface: rgb(237 242 247 / 0.92); --lg-strong: rgb(237 242 247 / 0.97);
@@ -1568,11 +1568,10 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     :root:not([data-theme="dark"]):not([data-glass="off"]) [data-app-shell] .pf-glass-group {
       position: relative;
-      background: linear-gradient(125deg, #FFFFFF33, #FFFFFF05 44%, #FFFFFF14), rgb(237 242 247 / 0.22);
-      -webkit-backdrop-filter: blur(22px) saturate(1.1); backdrop-filter: blur(22px) saturate(1.1);
-      border-color: #FFFFFFCC; border-right-color: #8395AC33; border-bottom-color: #7388A438;
-      box-shadow: inset 0 1px 0 #FFFFFFE6, inset 1px 0 0 #FFFFFF99,
-        inset 0 -1px 0 #FFFFFF66, 0 7px 22px #1835530C, 0 1px 3px #1835530A;
+      background: linear-gradient(180deg, #FFFFFF26, #FFFFFF00 34%), rgb(248 250 253 / 0.84);
+      -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+      border-color: #B8C7D9;
+      box-shadow: inset 0 1px 0 #FFFFFFE6, 0 4px 14px #18355314, 0 1px 2px #1835530D;
     }
     :root:not([data-theme="dark"]):not([data-glass="off"]) [data-app-shell] .pf-glass-group::before {
       content: ''; position: absolute; inset: 2px; border-radius: inherit; pointer-events: none;
@@ -1588,18 +1587,18 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   }
 }
 
-/* Authenticated mobile content glass. Shared with portals; exports and desktop stay solid.
-   Only the outer card blurs. Repeated rows and inner controls use transparent paint. */
+/* Mobile material hierarchy: defined content cards, restrained glass on floating layers.
+   No blur on business content. Repeated rows keep clear dividers and selected states. */
 @media screen and (max-width: 1023px) {
   @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) {
-      --pf-content-glass: linear-gradient(125deg, #FFFFFF2E, #FFFFFF04 48%, #FFFFFF10), rgb(237 242 247 / 0.34);
-      --pf-content-inner: rgb(237 242 247 / 0.18);
-      --pf-glass-bg-strong: rgb(237 242 247 / 0.68);
-      --pf-content-panel: rgb(237 242 247 / 0.82);
-      --lg-surface: rgb(237 242 247 / 0.76); --lg-strong: rgb(237 242 247 / 0.86);
-      --pf-content-edge: #FFFFFFB3;
-      --pf-content-shadow: inset 0 1px 0 #FFFFFFCC, inset 1px 0 0 #FFFFFF66, 0 4px 16px #17386A0A;
+      --pf-content-glass: linear-gradient(180deg, #FFFFFF24, #FFFFFF00 40%), rgb(248 250 253 / 0.94);
+      --pf-content-inner: rgb(239 244 250 / 0.94);
+      --pf-glass-bg-strong: rgb(248 250 253 / 0.96);
+      --pf-content-panel: rgb(248 250 253 / 0.97);
+      --lg-surface: rgb(248 250 253 / 0.94); --lg-strong: rgb(248 250 253 / 0.97);
+      --pf-content-edge: #B8C7D9;
+      --pf-content-shadow: inset 0 1px 0 #FFFFFFE6, 0 4px 14px #18355314, 0 1px 2px #1835530D;
     }
     :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) :is(
       .pf-home-panel, .pf-hero-wash, .pf-glass, .pf-glass-strong, .pf-glass-flat,
@@ -1608,9 +1607,8 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
       .pf-mobile-match-header, [data-pf-empty], [data-pf-surface="card"], [data-pf-surface="filter"], [data-pf-surface="notification"]
     ) {
       background: var(--pf-content-glass) !important;
-      -webkit-backdrop-filter: blur(16px) saturate(1.08); backdrop-filter: blur(16px) saturate(1.08);
+      -webkit-backdrop-filter: none; backdrop-filter: none;
       border-color: var(--pf-content-edge); box-shadow: var(--pf-content-shadow);
-      border-right-color: #8395AC2E; border-bottom-color: #7388A438;
     }
     :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) :is(
       .pf-rowcard, .pf-stat-card, .pf-stat-cell, .pf-seg, .pf-mobile-chip:not([aria-pressed="true"]),
@@ -1618,14 +1616,14 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
     ) {
       background: var(--pf-content-glass) !important;
       -webkit-backdrop-filter: none; backdrop-filter: none;
-      border-color: var(--pf-content-edge); box-shadow: inset 0 1px 0 #FFFFFF99, 0 2px 8px #17386A06;
+      border-color: var(--pf-content-edge); box-shadow: inset 0 1px 0 #FFFFFFCC, 0 2px 6px #17386A0D;
     }
     /* Avoid blur stacking and oversized scrolling layers in long lists. */
     :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) :is(
       .pf-glass, .pf-glass-strong, .pf-glass-flat, .pf-home-panel, .pf-glass-group, .pf-mobile-records, .pf-stat-card
     ) :is(.pf-glass, .pf-glass-strong, .pf-glass-flat, .pf-rowcard, .pf-stat-card, .pf-stat-cell, [data-pf-metric], [data-pf-empty], .pf-mobile-agenda-row) {
       background: var(--pf-content-inner) !important;
-      -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 1px 0 #FFFFFF66;
+      -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 1px 0 #FFFFFF99;
     }
     :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) :is(.pf-cardlist > .pf-glass, .pf-mobile-records) {
       -webkit-backdrop-filter: none; backdrop-filter: none;
@@ -1635,16 +1633,27 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
     /* Dialog panels are portaled to body, outside the app frame. */
     :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) :is(.pf-modal-panel, .pf-filter-panel, [role="dialog"][aria-modal="true"]) {
       background: var(--pf-content-panel) !important;
-      -webkit-backdrop-filter: blur(18px) saturate(1.08); backdrop-filter: blur(18px) saturate(1.08);
+      -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
       border: 1px solid var(--pf-content-edge); box-shadow: inset 0 1px 0 #FFFFFFCC, 0 14px 40px #17386A26;
     }
     :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) :is(.pf-sheet-head, .pf-sheet-foot, .pf-mobile-form-footer, .pf-mobile-composer .pf-composer-actions) {
-      background: rgb(237 242 247 / 0.72); border-color: var(--pf-content-edge);
+      background: rgb(239 244 250 / 0.98); border-color: var(--pf-content-edge);
       -webkit-backdrop-filter: none; backdrop-filter: none;
     }
     :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) :is(input, textarea, select):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="hidden"]):not([type="submit"]):not(:disabled):not([readonly]) {
-      background-color: rgb(244 247 251 / 0.46);
+      background-color: #F8FAFD; border-color: var(--pf-border-strong);
     }
+    :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) :is(input, textarea, select):focus-visible { outline: 3px solid var(--pf-focus-ring); outline-offset: 2px; }
+    /* Selected business rows must stay visually different from their unselected peers. */
+    :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) :is(.pf-rowcard[aria-pressed="true"], .pf-rowcard[data-active], .pf-rowcard:has(input:checked)) {
+      background: #DFEAFF !important; border-color: #3767D5; box-shadow: inset 3px 0 0 #245DE4, 0 2px 6px #17386A0D;
+    }
+    :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) .pf-selection-indicator { border-width: 2px; }
+    :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) .pf-rowcard[aria-pressed="false"] .pf-selection-indicator { border-color: var(--pf-border-strong) !important; background: var(--pf-surface); }
+    :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) :is(.pf-income-records > .pf-rowcard.pf-transaction-compact, .pf-mobile-member-list .pf-cardlist > div) {
+      background: transparent !important; box-shadow: none; border-bottom-color: var(--pf-border);
+    }
+    :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) :is(.pf-mobile-record, .pf-home-panel .border-t, .pf-home-panel .border-b) { border-color: var(--pf-border); }
     :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) [data-pf-button="secondary"]:not(:disabled) { box-shadow: inset 0 1px 0 #FFFFFFB3, 0 2px 8px #17386A08; }
     /* Keep the actual traffic-light value and colored top edge intact. */
     :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) [data-pf-metric]:is([data-pf-signal="success"], [data-pf-signal="warning"], [data-pf-signal="danger"]) { border-top-color: var(--signal-mark); }
