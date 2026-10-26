@@ -277,7 +277,7 @@ export function MemberNotifications() {
   }
 
   return (
-    <PageShell maxWidth={1760}>
+    <PageShell maxWidth={1760} className="pf-member-notifications">
       <PageHeader
         title="Thông báo"
         subtitle={unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}

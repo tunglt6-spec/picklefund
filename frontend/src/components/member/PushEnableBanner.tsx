@@ -53,6 +53,7 @@ export function PushEnableBanner() {
 
   return (
     <div
+      data-pf-surface="notification"
       className="sticky top-0 z-30 flex items-center gap-3 border-b px-4 py-2.5 sm:px-6"
       style={{ background: 'var(--pf-primary-soft)', borderColor: 'var(--pf-border)' }}
     >

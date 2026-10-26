@@ -1540,38 +1540,26 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   [data-theme="dark"] .pf-hero-wash { background-image: linear-gradient(135deg, rgba(0,143,186,0.18), rgba(0,155,114,0.14)); border: 1px solid rgba(255,255,255,0.08); }
 }
 
-/* Sport tonal surfaces: unify navigation, content and fields without white slabs.
-   Screen-only, authenticated mobile light theme; print/export and desktop retain their palette. */
+/* Unified mobile light surfaces: one canvas and one card color across all workspaces.
+   Screen-only; desktop, dark preference and report exports retain their existing treatment. */
 @media screen and (max-width: 1023px) {
   :root:has([data-app-shell]):not([data-theme="dark"]):not([data-glass="off"]) {
-    --pf-bg: #DFEAF0; --pf-surface: #DFE9F2; --pf-surface-muted: #D0E0EB;
-    --pf-border: #B5CAD9; --pf-border-soft: #C0D2DF; --pf-border-strong: #698299;
-    --pf-text: #162B43; --pf-text-muted: #435A70; --pf-color-muted: #435A70; --pf-color-muted-soft: #D6E4ED;
+    --pf-bg: #F4F7FB; --pf-surface: #EDF2F7; --pf-surface-muted: #E5EBF3;
+    --pf-border: #D3DDE8; --pf-border-soft: #DCE4ED; --pf-border-strong: #7D8FA5;
+    --pf-text: #162B43; --pf-text-muted: #435A70; --pf-color-muted: #435A70; --pf-color-muted-soft: #E5EBF3;
     --pf-primary: #245DE4; --pf-primary-hover: #194AC2; --pf-primary-text: #194AC2;
-    --pf-color-primary: #245DE4; --pf-primary-soft: #CBDEFA; --pf-color-primary-soft: #CBDEFA;
-    --lg-surface: rgb(218 232 242 / 0.82); --lg-strong: rgb(218 232 242 / 0.94);
-    --lg-inner: inset 0 1px 0 #FFFFFF66; --lg-border-hi: #FFFFFF80;
-    --pf-signal-success-ink: #11632F; --pf-signal-warning-ink: #805000; --pf-signal-danger-ink: #AA1734;
-  }
-  [data-mod="members"] { --mod-surface: #DAE6F6; }
-  [data-mod="finance"] { --mod-surface: #D8EDE5; }
-  [data-mod="activity"] { --mod-surface: #D8ECF0; }
-  [data-mod="compete"] { --mod-surface: #E5E0F3; }
-  [data-mod="community"] { --mod-surface: #E7DFF4; }
-  [data-mod="ai"] { --mod-surface: #E1E2F6; }
-  [data-mod="system"] { --mod-surface: #DCE6F2; }
-  :root:not([data-theme="dark"]):not([data-glass="off"]) [data-app-shell] :is(.pf-page[data-workspace], .pf-home-panel[data-mod]) {
-    --pf-surface: var(--mod-surface, #DFE9F2);
-    --pf-surface-muted: color-mix(in srgb, var(--pf-surface) 90%, var(--mod-main, #245DE4));
-    --pf-border-soft: color-mix(in srgb, var(--mod-main, #245DE4) 16%, var(--pf-surface));
+    --pf-color-primary: #245DE4; --pf-primary-soft: #DEEAFC; --pf-color-primary-soft: #DEEAFC;
+    --lg-surface: rgb(237 242 247 / 0.92); --lg-strong: rgb(237 242 247 / 0.97);
+    --lg-inner: inset 0 1px 0 #FFFFFF99; --lg-border-hi: #FFFFFFA6;
+    --pf-signal-success-ink: #0C7935; --pf-signal-warning-ink: #9B5900; --pf-signal-danger-ink: #D01D3B;
   }
   :root:not([data-theme="dark"]):not([data-glass="off"]) [data-app-shell] .bg-white { background-color: var(--pf-surface); }
-  :root:not([data-theme="dark"]):not([data-glass="off"]) [data-app-shell] .pf-hero-wash {
-    background: linear-gradient(115deg, #C3DCF8, #C5E8DE); border-color: #AFCEDB;
+  :root:not([data-theme="dark"]):not([data-glass="off"]) [data-app-shell].pf-wash { background-image: none; }
+  :root:not([data-theme="dark"]):not([data-glass="off"]) [data-app-shell] :is(.pf-glass-group, .pf-hero-wash) {
+    background: var(--pf-surface); border-color: var(--pf-border-soft);
+    box-shadow: inset 0 1px 0 #FFFFFFA6, 0 3px 12px #17386A08;
   }
-  :root:not([data-theme="dark"]):not([data-glass="off"]) .pf-wash:has(.pf-glass-group) {
-    background-image: radial-gradient(ellipse at 0% 15%, #4E8BEA30, transparent 55%),
-      radial-gradient(ellipse at 100% 48%, #15B89B26, transparent 52%),
-      radial-gradient(ellipse at 15% 95%, #9063DB20, transparent 50%);
-  }
+  :root:not([data-theme="dark"]):not([data-glass="off"]) [data-app-shell] .pf-mobile-notif .pf-rowcard:has([data-unread]) { background: var(--pf-surface); }
+  :root:not([data-theme="dark"]):not([data-glass="off"]) [data-app-shell] [data-pf-surface="notification"] { background: var(--pf-surface) !important; }
+  :root:not([data-theme="dark"]) [data-app-shell] .pf-member-notifications .pf-rowcard { opacity: 1; }
 }
