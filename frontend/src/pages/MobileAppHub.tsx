@@ -63,7 +63,7 @@ export function MobileAppHub() {
   if (wide) return <Navigate to={homeByRole[role]} replace />
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 pb-4 pt-3">
+    <div className="pf-app-directory mx-auto w-full max-w-2xl px-4 pb-4 pt-3">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-[22px] font-[800] [color:var(--pf-text)]" style={{ letterSpacing: '-0.02em' }}>Ứng dụng</h1>
         {!q && (
@@ -84,7 +84,7 @@ export function MobileAppHub() {
           <TileGrid items={matches} unread={unread} empty={`Không tìm thấy chức năng “${query}”.`} />
         </>
       ) : (
-        groups.map((g) => (
+        <div className="pf-app-groups">{groups.map((g) => (
           <section key={g.key} aria-label={g.title} className="pf-glass-group" data-mod={g.items[0]?.module}>
             <div className="flex items-center justify-between gap-2">
               <HubSectionTitle first>{g.title}</HubSectionTitle>
@@ -92,7 +92,7 @@ export function MobileAppHub() {
             </div>
             <TileGrid items={g.items} unread={unread} editing={editing} onMove={(k, d) => move(g.key, k, d)} />
           </section>
-        ))
+        ))}</div>
       )}
     </div>
   )

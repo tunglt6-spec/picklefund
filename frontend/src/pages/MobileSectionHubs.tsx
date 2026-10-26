@@ -55,7 +55,7 @@ export function MobileHome() {
   const todoLoading = hasClub && finState === 'loading' && (role === 'CLUB_ADMIN' || role === 'CLUB_TREASURER')
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 pb-4 pt-3">
+    <div className="pf-home-layout mx-auto w-full max-w-2xl px-4 pb-4 pt-3">
       <header className="pf-hero-wash -mx-1 rounded-2xl px-4 py-3 max-lg:block">
         <h1 className="text-[22px] font-[800] leading-tight [color:var(--pf-text)]" style={{ letterSpacing: '-0.02em' }}>
           {greeting()}, {user.username}
@@ -67,7 +67,7 @@ export function MobileHome() {
 
       {/* Hôm nay / buổi sắp tới */}
       {hasClub && hasSchedule && (
-        <>
+        <div className="pf-home-section">
           <HubSectionTitle>{todays.length > 0 ? 'Hôm nay' : 'Buổi sắp tới'}</HubSectionTitle>
           <Panel className="mt-2 overflow-hidden border-l-4 [border-left-color:var(--mod-activity)]">
             {!clubData ? (
@@ -101,12 +101,12 @@ export function MobileHome() {
               Xem lịch đầy đủ <ChevronRight size={16} aria-hidden />
             </button>
           </Panel>
-        </>
+        </div>
       )}
 
       {/* Việc cần xử lý */}
       {role !== 'SUPER_ADMIN' && (
-        <>
+        <div className="pf-home-section">
           <HubSectionTitle>Việc cần xử lý</HubSectionTitle>
           <Panel className="mt-2 overflow-hidden">
             {todoLoading ? (
@@ -119,12 +119,12 @@ export function MobileHome() {
               </ul>
             )}
           </Panel>
-        </>
+        </div>
       )}
 
       {/* Tài chính — nêu rõ phạm vi (toàn CLB · kỳ quỹ đang mở) */}
       {hasClub && (
-        <>
+        <div className="pf-home-section pf-home-wide">
           <HubSectionTitle>Tài chính</HubSectionTitle>
           <Panel className="mt-2 overflow-hidden">
             <p className="px-4 pt-3 text-xs [color:var(--pf-color-muted)]">
@@ -155,16 +155,16 @@ export function MobileHome() {
               Xem chi tiết tài chính <ChevronRight size={16} aria-hidden />
             </button>
           </Panel>
-        </>
+        </div>
       )}
 
       {/* Lối tắt quan trọng — phần còn lại ở "Ứng dụng" */}
-      <HubSectionTitle right={
+      <div className="pf-home-section pf-home-wide pf-home-shortcuts"><HubSectionTitle right={
         <button onClick={() => navigate('/ung-dung')} className="flex min-h-[44px] items-center gap-0.5 px-1 text-sm font-semibold [color:var(--pf-primary-text)]">
           Tất cả ứng dụng <ChevronRight size={16} aria-hidden />
         </button>
       }>Lối tắt</HubSectionTitle>
-      <TileGrid items={homeApps(role)} unread={unread} />
+      <TileGrid items={homeApps(role)} unread={unread} /></div>
     </div>
   )
 }

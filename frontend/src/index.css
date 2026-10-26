@@ -1504,6 +1504,27 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   .pf-mobile-summary { padding: 12px 12px 0; border-radius: 16px; }
   .pf-mobile-summary > div:only-child { padding-bottom: 12px; }
 }
+/* Expanded foldables: use the wider canvas without stretching phone-sized icon cells.
+   The approved phone layout remains unchanged below 600px, desktop begins at 1024px. */
+.pf-app-groups { display: contents; }
+@media (min-width: 600px) and (max-width: 1023px) {
+  .pf-app-directory, .pf-module-directory, .pf-home-layout { max-width: 960px; }
+  .pf-app-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 10px; align-items: start; }
+  .pf-app-groups > .pf-glass-group { margin-top: 0; }
+  .pf-module-directory { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 12px; align-items: start; }
+  .pf-module-directory > :not(.pf-glass-group) { grid-column: 1 / -1; }
+  .pf-module-directory:not(:has(> .pf-glass-group ~ .pf-glass-group)) > .pf-glass-group { grid-column: 1 / -1; }
+  .pf-function-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  /* A single standalone menu uses bounded cells rather than filling the entire display. */
+  .pf-glass-group .pf-function-grid { grid-template-columns: repeat(auto-fit, minmax(64px, 84px)); justify-content: start; }
+  .pf-app-groups .pf-function-grid, .pf-module-directory:has(> .pf-glass-group ~ .pf-glass-group) .pf-function-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .pf-home-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; align-items: start; }
+  .pf-home-layout > header, .pf-home-wide { grid-column: 1 / -1; }
+  .pf-home-section { min-width: 0; }
+  .pf-home-section > .pf-hub-section-title { margin-top: 16px; }
+  .pf-home-shortcuts .pf-function-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+}
+
 /* Fresh Sport Glass: vùng xanh–mint nhẹ ở đầu trang Tổng quan. */
 @media (max-width: 1023px) {
   :root:has([data-app-shell]):not([data-theme="dark"]) .pf-hero-wash {

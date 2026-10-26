@@ -59,7 +59,7 @@ export function MobileModuleMenu({ title, subtitle, items, onSelect, onBack, scr
   groups.sort((a, b) => (a.name === '' ? -1 : b.name === '' ? 1 : 0))
 
   return (
-    <div ref={root} data-mobile-function-menu data-has-back={!!onBack} className="mx-auto w-full max-w-2xl px-4 pb-6 pt-3">
+    <div ref={root} data-mobile-function-menu data-has-back={!!onBack} className="pf-module-directory mx-auto w-full max-w-2xl px-4 pb-6 pt-3">
       <div className="flex items-center gap-2">
         {onBack && (
           <button type="button" onClick={onBack} aria-label="Quay lại"
