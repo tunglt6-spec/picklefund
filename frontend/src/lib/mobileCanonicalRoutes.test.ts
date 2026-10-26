@@ -44,6 +44,23 @@ test('nested settings selection survives moving from the standalone page to the 
   assert.equal(url.searchParams.get('tab'),'settings')
   assert.equal(url.searchParams.get('view'),'branding')
 })
+
+test('retired mobile AIDO overview links reach the operating center without granting member access', () => {
+  for (const role of ['CLUB_ADMIN', 'SUPER_ADMIN'] as const) {
+    for (const tab of ['office', 'ops-center']) {
+      const destination = canonicalMobileRoute(role, '/aido', `?tab=${tab}&from=aido&period=p1`, '#agents')!
+      const url = new URL(destination, 'https://picklefund.vn')
+      assert.equal(url.pathname, '/admin/ai-manager')
+      assert.equal(url.searchParams.get('period'), 'p1')
+      assert.equal(url.searchParams.has('from'), false)
+      assert.equal(url.searchParams.has('tab'), false)
+      assert.equal(url.hash, '#agents')
+      assert.equal(canonicalMobileRoute(role, url.pathname, url.search, url.hash), null)
+    }
+  }
+  assert.equal(canonicalMobileRoute('MEMBER_VIEW', '/aido', '?tab=office'), null)
+  assert.equal(canonicalMobileRoute('MEMBER_VIEW', '/member/aido'), null)
+})
 test('tournament actions follow the existing sport and format screens, with no repeated destination', () => {
   for (const [sport,formatType,participantType] of [
     ['PICKLEBALL','RANDOM_DOUBLES','INDIVIDUAL'],['PICKLEBALL','FIXED_DOUBLES_ROUND_ROBIN','PAIR'],

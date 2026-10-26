@@ -1,6 +1,5 @@
 import { DataFreshness } from '../../components/shared/DataFreshness'
 import { countSignal, clubHealthSignal } from '../../lib/statusDesign'
-import { MobileSummary } from '../../components/mobile/MobileSummary'
 /**
  * AiDigitalOffice (AIDO) — "Văn phòng AI" tích hợp trong PickleFund.
  *
@@ -21,7 +20,7 @@ import {
   Bot, Sparkles, Workflow, Zap, Bell, Activity, CheckCircle2, Clock,
   AlertTriangle, PlayCircle, ArrowRight, Gauge, RefreshCw, ShieldCheck,
   ListChecks, BarChart3, Inbox, GitBranch, ShieldAlert, PieChart, CalendarDays,
-  LayoutDashboard, FileText, Cpu,
+  FileText, Cpu,
 } from '../../components/icons/mobileLucide'
 import api from '../../lib/api'
 import type { AiActionSummary, AiActionListItem } from '../../hooks/useAiManager'
@@ -102,12 +101,37 @@ interface AgentView {
 const fmtLatency = (ms?: number) =>
   typeof ms === 'number' && ms > 0 ? (ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`) : '—'
 
+const MOBILE_AIDO_FEATURES: AppItem[] = [
+  { key: 'ops-center', label: 'Trung tâm điều hành AI', to: '/admin/ai-manager', icon: Cpu, module: 'ai' },
+  { key: 'operations', label: 'Vận hành', to: '/aido?tab=operations', icon: Activity, module: 'ai' },
+  { key: 'report', label: 'Báo cáo điều hành', to: '/aido?tab=report', icon: FileText, module: 'ai' },
+  { key: 'analytics', label: 'Phân tích', to: '/aido?tab=analytics', icon: BarChart3, module: 'ai' },
+]
+
+/** Mobile AIDO is a function directory; operational data is loaded inside the selected function. */
 export function AiDigitalOffice() {
+  const mobile = useIsMobile(1024)
+  const [params] = useSearchParams()
+  const navigate = useNavigate()
+  const selected = params.get('tab')
+  if (mobile && !['report', 'operations', 'analytics'].includes(selected ?? '')) return (
+    <PageShell>
+      <PageHeader title="AIDO" subtitle="Điều hành, báo cáo và phân tích AI của CLB" />
+      <HubSectionTitle>Chức năng AIDO</HubSectionTitle>
+      <div className="pf-glass-group [&>ul]:grid-cols-2 min-[640px]:[&>ul]:grid-cols-4" data-mod="ai">
+        <TileGrid items={MOBILE_AIDO_FEATURES} onSelect={item => navigate(item.to)} />
+      </div>
+    </PageShell>
+  )
+  return <AiWorkspace />
+}
+
+function AiWorkspace() {
   // Mobile: tiêu đề rút gọn "AIDO" (1 dòng) — desktop giữ nguyên "AIDO — AI Digital Office".
   const compactTitle = useIsMobile(1024)
   const navigate = useNavigate()
   // Cho phép mở thẳng 1 tab qua URL (?tab=ops-center) — dùng khi bấm "Quay lại AI Operations Center".
-  // Mobile (<1024px): mở /aido → MENU icon (5 chức năng) thay cho thanh tab; chọn 1 ô → vào chức năng đó, có nút quay lại menu.
+  // Mobile: the parent directory mounts this workspace only for a selected operational function.
   // Tab nằm trên URL (?tab=) như ModuleTabs → nút Back của trình duyệt về đúng menu, deep-link ?tab=ops-center vẫn hoạt động.
   const [searchParams, setSearchParams] = useSearchParams()
   const VALID_TABS = ['office', 'report', 'operations', 'analytics', 'ops-center']
@@ -379,23 +403,17 @@ export function AiDigitalOffice() {
     { key: 'ops-center', label: 'Trung tâm điều hành AI' },
   ]
 
-  const menuTiles: AppItem[] = [
-    { key: 'office', label: 'Tổng quan', to: '', icon: LayoutDashboard, module: 'ai' },
-    { key: 'report', label: 'Báo cáo điều hành', to: '', icon: FileText, module: 'ai' },
-    { key: 'operations', label: 'Vận hành', to: '', icon: Activity, badgeCount: pending, module: 'ai' },
-    { key: 'analytics', label: 'Phân tích', to: '', icon: BarChart3, module: 'ai' },
-    { key: 'ops-center', label: 'Trung tâm điều hành AI', to: '/admin/ai-manager', icon: Cpu, module: 'ai' },
-  ]
   const currentLabel = tabs.find((t) => t.key === tab)?.label
 
   if (loading && !summary) return <PageShell><LoadingState /></PageShell>
-  // Lỗi tải dữ liệu vận hành → VẪN giữ Office View (banner không cần API) + báo lỗi gọn + thử
-  // lại, thay vì xóa trắng cả màn (tránh cảm giác "chập chờn" khi refresh gặp blip mạng).
+  // Keep retry available when operational data cannot load. The office banner is desktop-only.
   if (error) return (
     <PageShell>
-      <PageHeader title={compactTitle ? "AIDO" : "AIDO — AI Digital Office"} />
+      {compactTitle
+        ? <MobileFunctionHeader title={currentLabel ?? 'AIDO'} parent="AIDO" onBack={() => setTab('menu')} module="ai" />
+        : <PageHeader title="AIDO — AI Digital Office" />}
       <div className="space-y-4">
-        <OfficeBanner />
+        {!compactTitle && <OfficeBanner />}
         <div
           className="mx-auto flex w-full max-w-2xl flex-col items-center gap-2 rounded-2xl border p-5 text-center [border-color:var(--pf-border)]"
           style={{ background: 'var(--pf-surface)' }}
@@ -408,39 +426,6 @@ export function AiDigitalOffice() {
     </PageShell>
   )
 
-  if (compactTitle && tab === 'menu') return (
-    <PageShell>
-      <PageHeader
-        title="AIDO"
-        actions={
-          <ActionButton
-            variant="ghost"
-            icon={<RefreshCw size={15} className={loading ? 'animate-spin' : ''} />}
-            onClick={() => void load()}
-            disabled={loading}
-          >
-            {loading ? 'Đang tải…' : 'Làm mới'}
-          </ActionButton>
-        }
-      />
-      <div className="space-y-2">
-        <OfficeBanner
-          badge={
-            <div
-              className="absolute right-3 top-3 flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-white"
-              style={{ background: 'rgba(17,24,39,0.72)' }}
-            >
-              <DataFreshness mode="push" connected={connected} heartbeatAt={beatAt} updatedAt={updatedAt?.getTime()} loading={loading} error={error} />
-              <span className="hidden lg:inline-flex items-center gap-1.5"><LiveDot color={connected ? 'var(--pf-green)' : 'var(--pf-accent-amber, #F59E0B)'} size={8} active={connected} />
-              {connected ? 'REAL-TIME' : 'ĐỊNH KỲ'}{updatedAt ? ` · ${updatedAt.toLocaleTimeString('vi-VN')}` : ''}</span>
-            </div>
-          }
-        />
-        <HubSectionTitle>Chức năng AIDO</HubSectionTitle>
-        <TileGrid items={menuTiles} onSelect={(it) => it.to ? navigate(it.to) : setTab(it.key)} />
-      </div>
-    </PageShell>
-  )
 
   return (
     <PageShell>
@@ -502,7 +487,7 @@ export function AiDigitalOffice() {
         </div>
       </div>
 
-      {tab === 'office' && (
+      {!compactTitle && tab === 'office' && (
         <div className="pf-office-workspace space-y-5">
           {/* Office BANNER — 1 ảnh hero tĩnh (thẻ agent vẽ sẵn trong ảnh). Chỉ scale w-full ⇒
               đồng bộ hoàn toàn desktop/tablet/mobile, KHÔNG phủ thẻ DOM (hết đè/cắt/lệch).
@@ -520,13 +505,6 @@ export function AiDigitalOffice() {
             }
           />
 
-          <div className="lg:hidden">
-            <MobileSummary module="ai" label="Việc chờ duyệt" tone={loading || !summary ? 'neutral' : countSignal(pending, 'pending')} value={loading ? '…' : summary ? pending : '—'} note={loading ? 'Đang cập nhật…' : `${opsSignals.length} tín hiệu vận hành`} items={[
-              {label:'Sức khỏe CLB',value:health?.score != null ? `${health.score}/100` : '—',tone:clubHealthSignal(health?.score)},
-              {label:'Tác vụ lỗi',value:loading ? '…' : failed,tone:loading || !summary ? 'neutral' : countSignal(failed,'failure')},
-            ]} />
-            <button className="mt-2 min-h-11 px-1 text-sm font-semibold [color:var(--pf-primary-text)]" onClick={()=>setTab('operations')}>Mở vận hành ›</button>
-          </div>
           {/* Kết quả công việc THẬT hôm nay của từng agent — xếp thẳng dưới 5 nhân vật trên banner. */}
           <div className="pf-office-agent-results">
             <h3 className="mb-2 text-sm font-semibold [color:var(--pf-text)]">Kết quả hôm nay của từng Agent</h3>

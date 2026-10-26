@@ -39,7 +39,7 @@ export function canonicalMobileRoute(role: Role | undefined, pathname: string, s
       return `${pathname}?${params}${hash}`
     }
   }
-  if (role === 'CLUB_ADMIN' && pathname === '/aido' && params.get('tab') === 'ops-center') {
+  if ((role === 'CLUB_ADMIN' || role === 'SUPER_ADMIN') && pathname === '/aido' && ['office', 'ops-center'].includes(params.get('tab') ?? '')) {
     params.delete('tab'); params.delete('from')
     return `/admin/ai-manager${params.size ? `?${params}` : ''}${hash}`
   }
