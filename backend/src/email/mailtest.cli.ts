@@ -26,6 +26,7 @@ async function main() {
 }
 
 main().catch((e) => {
+  console.log(`MAILTEST ARGS to=${JSON.stringify(process.argv[2] ?? '')} codes=${Array.from(process.argv[2] ?? '').map((c) => c.charCodeAt(0)).join(',')} from=${JSON.stringify(process.env.SMTP_FROM ?? '')}`);
   console.log(`MAILTEST FAIL ${e instanceof Error ? e.message : String(e)}`);
   process.exit(1);
 });
