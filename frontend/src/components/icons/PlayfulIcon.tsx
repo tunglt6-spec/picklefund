@@ -1,6 +1,8 @@
-import { forwardRef, useId, type SVGProps } from 'react'
+import { forwardRef, useContext, useId, type SVGProps } from 'react'
 import { playfulGlyphs, type PlayfulIconName } from './playfulGlyphs'
 import { glassGlyphs } from './glassGlyphs'
+import { GlassLineIcon } from './GlassLineIcon'
+import { MobileIconContext, MobileIconThemeContext } from './MobileIconContext'
 
 type Props = Omit<SVGProps<SVGSVGElement>, 'name'> & {
   name: PlayfulIconName
@@ -17,6 +19,9 @@ export const PlayfulIcon = forwardRef<SVGSVGElement, Props>(function PlayfulIcon
 }, ref) {
   const glyph = playfulGlyphs[name]
   const id = useId().replaceAll(':', '')
+  const mobile = useContext(MobileIconContext)
+  const theme = useContext(MobileIconThemeContext)
+  if (mobile) return <GlassLineIcon ref={ref} {...props} name={name} size={size} theme={theme} colorMode={variant === 'mono' ? 'inherit' : 'palette'} />
   const solid = variant === 'on-color'
   const primary = variant === 'duotone' ? glyph.color : 'currentColor'
   const soft = variant === 'mono' ? 'none' : variant === 'on-color' ? '#FFFFFF' : glyph.soft

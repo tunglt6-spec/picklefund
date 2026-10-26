@@ -1,4 +1,4 @@
-import { useEffect, Suspense } from 'react'
+import { useEffect, useSyncExternalStore, Suspense } from 'react'
 import { Navigate, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeft } from '../icons/mobileLucide'
 import { Sidebar } from './Sidebar'
@@ -14,9 +14,17 @@ import { useApplyBranding } from '../../hooks/useApplyBranding'
 import { useAuthStore } from '../../store/authStore'
 import { useGuideStore } from '../../store/guideStore'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { MobileIconContext } from '../icons/MobileIconContext'
+import { MobileIconContext, MobileIconThemeContext } from '../icons/MobileIconContext'
+import { useThemeStore } from '../../store/themeStore'
 import { workspaceForLocation } from '../../lib/workspaceDesign'
 import { canonicalMobileRoute } from '../../lib/mobileCanonicalRoutes'
+
+const subscribeSystemTheme = (onChange: () => void) => {
+  const query = window.matchMedia('(prefers-color-scheme: dark)')
+  query.addEventListener('change', onChange)
+  return () => query.removeEventListener('change', onChange)
+}
+const systemIsDark = () => window.matchMedia('(prefers-color-scheme: dark)').matches
 
 export function AppLayout() {
   useApiSync()
@@ -26,6 +34,9 @@ export function AppLayout() {
   const location = useLocation()
   const { user } = useAuthStore()
   const mobileIcons = useIsMobile(1024)
+  const theme = useThemeStore(s => s.theme)
+  const systemDark = useSyncExternalStore(subscribeSystemTheme, systemIsDark, () => false)
+  const iconTheme = theme === 'dark' || (theme === 'system' && systemDark) ? 'dark' : 'light'
   const workspace = workspaceForLocation(location.pathname, location.search)
   const { open: guideOpen, openGuide, closeGuide } = useGuideStore()
 
@@ -51,6 +62,7 @@ export function AppLayout() {
 
   return (
     <MobileIconContext.Provider value={mobileIcons}>
+    <MobileIconThemeContext.Provider value={iconTheme}>
     <div data-app-shell className="pf-wash flex h-[100dvh] overflow-hidden [background-color:var(--pf-bg)]">
       {/* Desktop sidebar */}
       <div className="hidden lg:flex lg:flex-shrink-0">
@@ -102,6 +114,7 @@ export function AppLayout() {
       {/* Tài liệu Hướng dẫn — render 1 lần, điều khiển qua guideStore (nút header + auto-open) */}
       <UserGuideModal open={guideOpen} onClose={closeGuide} />
     </div>
+    </MobileIconThemeContext.Provider>
     </MobileIconContext.Provider>
   )
 }
