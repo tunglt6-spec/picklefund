@@ -1248,14 +1248,30 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   .pf-tile-btn:focus-visible { outline: 3px solid var(--pf-focus-ring); outline-offset: 5px; border-radius: 14px; }
   .pf-glass-group {
     margin-top: 16px; padding: 14px 12px 18px; border-radius: 22px;
-    background: linear-gradient(135deg, color-mix(in srgb, var(--mod-tint, var(--pf-surface)) 74%, var(--pf-surface)), var(--pf-surface));
-    border: 1px solid color-mix(in srgb, var(--mod-main, var(--pf-border)) 12%, var(--pf-surface));
-    box-shadow: inset 0 1px 0 #FFFFFFB3, 0 2px 8px #17386A04;
+    background: linear-gradient(135deg, #FFFFFF52, #FFFFFF0A 48%, #FFFFFF26), #FFFFFF29;
+    -webkit-backdrop-filter: blur(18px) saturate(1.35);
+    backdrop-filter: blur(18px) saturate(1.35);
+    border: 1px solid #FFFFFF99;
+    border-bottom-color: #FFFFFF52;
+    box-shadow: inset 0 1px 0 #FFFFFFD9, inset 1px 0 0 #FFFFFF80,
+      inset 0 -1px 0 #4864821A, 0 6px 20px #17386A0D, 0 1px 3px #17386A0A;
+  }
+  /* Ambient color sits behind the directory; only group surfaces blur it, never the icons/text. */
+  .pf-wash:has(.pf-glass-group) {
+    background-image: radial-gradient(ellipse at 0% 15%, #8ABEFF66, transparent 55%),
+      radial-gradient(ellipse at 100% 48%, #7BE3CB59, transparent 52%),
+      radial-gradient(ellipse at 15% 95%, #C7AEF94D, transparent 50%);
+    background-attachment: scroll;
   }
   .pf-glass-group h2 { margin-top: 0; font-size: 17px; letter-spacing: -0.02em; }
   .pf-glass-group > ul { margin-top: 16px; }
-  .pf-group-count { padding: 3px 7px; border-radius: 8px; font-size: 10px; font-weight: 600; color: var(--pf-text-muted); background: var(--pf-surface); white-space: nowrap; }
-  [data-theme="dark"] .pf-glass-group { box-shadow: inset 0 1px 0 #FFFFFF0D; }
+  .pf-group-count { padding: 3px 7px; border-radius: 8px; font-size: 10px; font-weight: 600; color: var(--pf-text-muted); background: #FFFFFF38; white-space: nowrap; }
+  [data-theme="dark"] .pf-glass-group {
+    background: linear-gradient(135deg, #FFFFFF14, #FFFFFF02 48%, #FFFFFF08), #0C182A66;
+    border-color: #FFFFFF30; border-bottom-color: #FFFFFF14;
+    box-shadow: inset 0 1px 0 #FFFFFF40, inset 1px 0 0 #FFFFFF14, 0 8px 24px #040A1826;
+  }
+  [data-theme="dark"] .pf-group-count { background: #FFFFFF0D; }
   [data-theme="dark"] .pf-tile-ico { box-shadow: inset 0 1px 2px #FFFFFFB3, inset 0 -3px 5px #08266B40, 0 5px 10px #00000040; }
 
   /* Liquid Glass (chỉ bề mặt nhỏ/cố định): thanh đáy, header, popover, đầu/cuối bảng trượt. */
@@ -1291,6 +1307,23 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
     }
   }
   @media (prefers-reduced-motion: reduce) { .pf-tile-ico { transition: none; } .pf-tile-btn:active .pf-tile-ico { transform: none; } }
+
+  /* Respect reduced transparency, disabled glass, exports and unsupported browsers. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .pf-glass-group, [data-theme="dark"] .pf-glass-group { background: var(--pf-surface); }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .pf-glass-group, [data-theme="dark"] .pf-glass-group { background: var(--pf-surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  }
+  [data-glass="off"] .pf-glass-group {
+    background: var(--pf-surface); -webkit-backdrop-filter: none; backdrop-filter: none;
+    border-color: var(--pf-border); box-shadow: none;
+  }
+  [data-glass="off"] .pf-wash:has(.pf-glass-group), .pf-wash[data-glass="off"]:has(.pf-glass-group) { background-image: none; }
+  @media print {
+    .pf-glass-group { background: #fff !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; box-shadow: none !important; }
+    .pf-wash:has(.pf-glass-group) { background-image: none !important; }
+  }
 
   /* Nút xuất Excel/PDF/Ảnh: một kiểu phụ trung tính (bỏ nền xanh/hồng riêng). */
   main button:is([aria-label="Xuất Excel"], [aria-label="Xuất PDF"], [aria-label="Xuất ảnh"], [title="Xuất Excel"], [title="Xuất PDF"], [title="Xuất ảnh"], [title="Excel"], [title="PDF"]) {
