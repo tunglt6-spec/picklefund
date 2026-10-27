@@ -1,3 +1,4 @@
+import { PhoneToolbar } from '../../../components/mobile/PhoneToolbar'
 /**
  * FootballDashboardPage (Pha 1b + 1c) — Dashboard bộ môn BÓNG ĐÁ.
  * 3 tab: Đội bóng (roster nhiều người) · Lịch & Kết quả (vòng tròn, nhập tỉ số) ·
@@ -790,7 +791,11 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                   <p className="text-sm [color:var(--pf-color-muted)]">
                     {isKnockout ? 'Loại trực tiếp' : `Vòng tròn${hasDoubleLeg ? ' (lượt đi & về)' : ''}`} · {matches.length} trận · đã có kết quả {completedMatches}/{matches.length}
                   </p>
-                  <div className="flex items-center gap-2">
+                  <PhoneToolbar label="Công cụ lịch và kết quả" tools={[
+                    {key:'png',label:'Xuất ảnh',icon:<ImageIcon />,onClick:()=>void exportSchedule('png')},
+                    {key:'pdf',label:'PDF',icon:<FileDown />,onClick:()=>void exportSchedule('pdf')},
+                    ...(canAdvance?[{key:'advance',label:'Vòng sau',icon:<ChevronRight />,primary:true,onClick:advanceKnockout}]:[]),
+                  ]} more={<ActionMenu iconOnly label="Thao tác lịch và kết quả" items={[{key:'clear',label:'Xóa lịch và tạo lại',icon:<Trash2 size={16}/>,danger:true,onClick:clearSchedule}]} />} fallback={                  <div className="flex items-center gap-2">
                     <ActionMenu items={[{ key: 'png', label: 'Xuất ảnh lịch', onClick: () => exportSchedule('png') }, { key: 'pdf', label: 'Xuất PDF lịch', onClick: () => exportSchedule('pdf') }]} />
                     <button onClick={() => exportSchedule('png')} className="max-lg:hidden inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-border)] transition-colors"><ImageIcon size={14} /> Xuất ảnh</button>
                     <button onClick={() => exportSchedule('pdf')} className="max-lg:hidden inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-border)] transition-colors"><FileDown size={14} /> Xuất PDF</button>
@@ -802,7 +807,7 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
                     <button onClick={clearSchedule} className="inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-color-danger)] [background:var(--pf-color-danger-soft)] hover:[background:var(--pf-color-danger-soft)] transition-colors">
                       <Trash2 size={14} /> Xóa lịch & tạo lại
                     </button>
-                  </div>
+                  </div>} />
                 </div>
                 <div id={`sched-${id}`} className="flex flex-col gap-4">
                 {matchGroups.map(grp => (
@@ -864,11 +869,14 @@ export function FootballDashboardPage({ resync }: { resync?: () => void }) {
             </div>
           ) : (
             <>
-              <div className="flex justify-end gap-2">
+              <PhoneToolbar label="Công cụ xếp hạng đội" tools={[
+                {key:'png',label:'Xuất ảnh',icon:<ImageIcon />,onClick:()=>void exportStandings('png')},
+                {key:'pdf',label:'PDF',icon:<FileDown />,onClick:()=>void exportStandings('pdf')},
+              ]} fallback={              <div className="flex justify-end gap-2">
                 <ActionMenu items={[{ key: 'png', label: 'Xuất ảnh BXH', onClick: () => exportStandings('png') }, { key: 'pdf', label: 'Xuất PDF BXH', onClick: () => exportStandings('pdf') }]} />
                 <button onClick={() => exportStandings('png')} className="max-lg:hidden inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-border)] transition-colors"><ImageIcon size={14} /> Xuất ảnh</button>
                 <button onClick={() => exportStandings('pdf')} className="max-lg:hidden inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-border)] transition-colors"><FileDown size={14} /> Xuất PDF</button>
-              </div>
+              </div>} />
               {isKnockout ? (
             <div id={`std-${id}`} className="pf-glass rounded-[16px] p-5">
               {champion ? (

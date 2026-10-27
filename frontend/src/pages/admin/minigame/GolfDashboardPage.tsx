@@ -1,3 +1,4 @@
+import { PhoneToolbar } from '../../../components/mobile/PhoneToolbar'
 /**
  * GolfDashboardPage (Pha 2) — Dashboard bộ môn GOLF (stroke-play / leaderboard).
  * 3 tab: Golfer (cá nhân: member CLB + khách) · Nhập điểm (số gậy từng vòng) ·
@@ -406,11 +407,14 @@ export function GolfDashboardPage({ resync }: { resync?: () => void }) {
             </div>
           ) : (
             <>
-              <div className="flex justify-end gap-2">
+              <PhoneToolbar label="Công cụ xếp hạng golf" tools={[
+                {key:'png',label:'Xuất ảnh',icon:<ImageIcon />,onClick:()=>void exportLeaderboard('png')},
+                {key:'pdf',label:'PDF',icon:<FileDown />,onClick:()=>void exportLeaderboard('pdf')},
+              ]} fallback={              <div className="flex justify-end gap-2">
                 <ActionMenu items={[{ key: 'png', label: 'Xuất ảnh BXH', onClick: () => exportLeaderboard('png') }, { key: 'pdf', label: 'Xuất PDF BXH', onClick: () => exportLeaderboard('pdf') }]} />
                 <button onClick={() => exportLeaderboard('png')} className="max-lg:hidden inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-color-muted-soft)] transition-colors"><ImageIcon size={14} /> Xuất ảnh</button>
                 <button onClick={() => exportLeaderboard('pdf')} className="max-lg:hidden inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold [color:var(--pf-text)] [background:var(--pf-color-muted-soft)] hover:[background:var(--pf-color-muted-soft)] transition-colors"><FileDown size={14} /> Xuất PDF</button>
-              </div>
+              </div>} />
             <div id={`golf-lb-${id}`} className="pf-glass-strong rounded-[16px] overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="pf-rows w-full text-sm">

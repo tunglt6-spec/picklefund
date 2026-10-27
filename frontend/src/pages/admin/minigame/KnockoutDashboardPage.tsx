@@ -1,3 +1,4 @@
+import { PhoneToolbar } from '../../../components/mobile/PhoneToolbar'
 /**
  * KnockoutDashboardPage (M3) — Dashboard LOẠI TRỰC TIẾP (single-elimination) cho nhóm vợt/đơn.
  * Người chơi đã đăng ký ở wizard → "Tạo nhánh" (POST /:id/knockout, backend tự tạo đội-đơn) →
@@ -172,15 +173,18 @@ export function KnockoutDashboardPage() {
   return (
     <div className="flex-1 overflow-y-auto [background:var(--pf-surface-muted)]">
       <PageHeader variant="bar" title={`${de ? 'Loại kép' : ((mg as unknown as { sport?: string }).sport === 'GOLF' ? 'Golf Match Play' : 'Loại trực tiếp')} – ${mg.name}`} subtitle={de ? 'Double-elimination · WB / LB / Chung kết' : ((mg as unknown as { sport?: string }).sport === 'GOLF' ? 'Match Play · loại trực tiếp — nhập số HỐ THẮNG mỗi trận' : 'Single-elimination · nhánh đấu tìm nhà vô địch')}
-        actions={
+        className="pf-phone-header"
+        actions={<PhoneToolbar label="Công cụ nhánh đấu" tools={[
+          ...(matches.length===0?[{key:'generate',label:'Tạo nhánh',icon:<Swords />,primary:true,onClick:generate,disabled:busy}]:canAdvance?[{key:'advance',label:'Vòng sau',icon:<ChevronRight />,primary:true,onClick:advance,disabled:busy}]:[]),
+        ]} moreLabel="Xuất" more={koRows.length?<ExportActions compact onExcel={doExportExcel} onPdf={doExportPdf}/>:undefined} fallback={
           <div className="flex items-center gap-2">
             {koRows.length > 0 && <div className="contents max-lg:hidden"><ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /></div>}
             {koRows.length > 0 && <ActionMenu items={[{ key: 'xlsx', label: 'Xuất Excel', onClick: doExportExcel }, { key: 'pdf', label: 'Xuất PDF', onClick: doExportPdf }]} />}
             {matches.length === 0
               ? <Button size="sm" onClick={generate} disabled={busy}><Swords size={14} /> Tạo nhánh đấu</Button>
               : canAdvance && <Button size="sm" onClick={advance} disabled={busy}><ChevronRight size={14} /> Vòng kế tiếp</Button>}
-          </div>
-        } />
+          </div>} />}
+      />
 
       <div className="p-4 sm:p-6">
         <button onClick={() => navigate('/minigames')} className="max-lg:hidden flex items-center gap-1.5 text-sm [color:var(--pf-color-muted)] hover:[color:var(--pf-text)] mb-4 transition-colors"><ArrowLeft size={14} /> Danh Sách Giải Đấu</button>

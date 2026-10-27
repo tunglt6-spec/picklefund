@@ -1,3 +1,4 @@
+import { PhoneToolbar } from '../../../components/mobile/PhoneToolbar'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useMobileView } from '../../../components/mobile/useMobileView'
 import { MobileFunctionHeader, MobileModuleMenu } from '../../../components/mobile/ModuleNav'
@@ -953,7 +954,14 @@ export function FixedDoublesDashboardPage() {
                     {completed}/{schedule.length} trận đã hoàn thành
                   </span>
                 </div>
-                <ActionMenu
+                <PhoneToolbar label="Công cụ lịch đôi cố định" tools={[
+                  {key:'png',label:'Xuất ảnh',icon:<ImageIcon />,onClick:doExportSchedulePng},
+                  {key:'pdf',label:'PDF',icon:<FileText />,onClick:doExportSchedulePdf},
+                ]} more={<ActionMenu iconOnly label="Thao tác lịch đôi cố định" items={[
+                  ...(canEnter&&teams.length>=2?[{key:'swap',label:'Đổi chỗ người chơi',onClick:()=>{setSwapSel([]);setShowSwap(true)}}]:[]),
+                  ...(canEnter&&isDoubleLeg?[{key:'rmleg',label:'Xóa lượt về',onClick:handleRemoveReturnLeg,danger:true}]:[]),
+                  {key:'clear',label:'Xóa lịch',onClick:handleClearSchedule,danger:true},
+                ]}/>} fallback={                <ActionMenu
                   className="shrink-0"
                   items={[
                     { key: 'png', label: 'Xuất ảnh lịch', onClick: doExportSchedulePng },
@@ -962,7 +970,7 @@ export function FixedDoublesDashboardPage() {
                     ...(canEnter && isDoubleLeg ? [{ key: 'rmleg', label: 'Xóa lượt về', onClick: handleRemoveReturnLeg, danger: true }] : []),
                     { key: 'clear', label: 'Xóa lịch', onClick: handleClearSchedule, danger: true },
                   ]}
-                />
+                />} />
                 <div className="flex items-center gap-2 shrink-0 flex-wrap max-lg:hidden" data-html2canvas-ignore="true">
                   <ExportButtons onPng={doExportSchedulePng} onPdf={doExportSchedulePdf} ariaScope="lịch thi đấu" />
                   {canEnter && teams.length >= 2 && (

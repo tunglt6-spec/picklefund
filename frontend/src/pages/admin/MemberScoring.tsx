@@ -781,11 +781,12 @@ function RulesTab() {
 
   return (
     <div className="flex flex-col gap-5">
+      <PhoneToolbar label="Công cụ quy tắc chấm điểm" tools={[{key:'add',label:'Thêm quy tắc',icon:<Plus />,primary:true,onClick:()=>setShowAdd(true)}]} fallback={
       <div className="flex justify-end">
         <ActionButton icon={<Plus size={16} />} onClick={() => setShowAdd(true)} className="min-h-11">
           Thêm quy tắc
         </ActionButton>
-      </div>
+      </div>} />
 
       {loading ? (
         <LoadingState rows={4} />

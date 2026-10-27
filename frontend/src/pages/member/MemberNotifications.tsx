@@ -8,7 +8,7 @@ import api from '../../lib/api'
 import { useNotifStore } from '../../store/notifStore'
 import { enablePush, syncPushIfGranted, sendTestPush, pushPermission } from '../../lib/push'
 import { NotificationSettingsModal } from '../../components/member/NotificationSettingsModal'
-import { FilterChips } from '../../components/shared/FilterChips'
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 
 type HermesNotif = {
   id: string
@@ -281,8 +281,13 @@ export function MemberNotifications() {
       <PageHeader
         title="Thông báo"
         subtitle={unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}
-        actions={
-          <div className="flex items-center gap-2">
+        className="pf-phone-header"
+        actions={<PhoneToolbar label="Công cụ thông báo cá nhân" tools={[
+          {key:'filter',label:'Lọc',icon:<Bell />,active:tab!=='all',content:<select aria-label="Loại thông báo cá nhân" className="input-base" value={tab} onChange={e=>setTab(e.target.value as TabKey)}>{TABS.map(([k,l])=><option key={k} value={k}>{l} ({counts[k as TabKey]??0})</option>)}</select>},
+          {key:'read',label:'Đã đọc',icon:<Check />,disabled:!unreadCount,onClick:handleReadAll},
+          ...(pushPerm!=='unsupported'?[{key:'push',label:'Thiết bị',icon:<BellRing />,active:pushPerm==='granted',content:<div className="space-y-3"><p>{pushPerm==='granted'?'Thông báo trên thiết bị đã bật.':'Bật thông báo để nhận cập nhật trên thiết bị.'}</p><button className="pf-mobile-chip" disabled={pushBusy} onClick={pushPerm==='granted'?onTestPush:onEnablePush}>{pushBusy?'Đang xử lý…':pushPerm==='granted'?'Gửi thông báo thử':'Bật thông báo'}</button></div>}]:[]),
+          {key:'settings',label:'Cài đặt',icon:<Settings />,onClick:()=>setSettingsOpen(true)},
+        ]} fallback={<div className="flex items-center gap-2">
             {pushPerm !== 'unsupported' && pushPerm !== 'granted' && (
               <button onClick={onEnablePush} disabled={pushBusy}
                 className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-white disabled:opacity-60 [background:var(--pf-primary)]">
@@ -310,7 +315,8 @@ export function MemberNotifications() {
               <Settings size={16} />
             </button>
           </div>
-        }
+        } />}
+
       />
 
       <NotificationSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
@@ -323,7 +329,6 @@ export function MemberNotifications() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
           {/* CỘT TRÁI — KPI-lọc xếp DỌC, sát lề trái; desktop đứng yên khi cuộn */}
           <div className="lg:w-[260px] lg:shrink-0 lg:sticky lg:top-4 lg:self-start">
-            <div className="lg:hidden"><FilterChips tabs={TABS as [TabKey, string][]} active={tab} counts={counts} onChange={setTab} label="Lọc thông báo" primary={["all", "unread"]} moreLabel="Loại thông báo" /></div>
             <div className="contents max-lg:hidden"><FilterKpiList tab={tab} counts={counts} onChange={setTab} /></div>
           </div>
 
