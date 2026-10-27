@@ -16,7 +16,7 @@ import {
 import api from '../../../lib/api'
 import type { IntelSignal, SignalLevel } from '../../../hooks/useAiManager'
 import {
-  PageShell, PageHeader, MetricCard, StatusBadge, LoadingState, ErrorState,
+  PageShell, PageHeader, MetricCard, StatusBadge, LoadingState, ErrorState, ResponsiveTabs,
   type StatusTone,
 } from '../../../components/shared'
 import { TRIGGER_LABELS as TRIGGER_LABEL } from '../../../hooks/useWorkflows'
@@ -138,7 +138,8 @@ export function AlertCenterPage() {
           </div>
 
           {/* Lọc theo mức */}
-          <div className="pf-glass-strong flex gap-1 rounded-xl p-1 w-fit overflow-x-auto">
+          <div className="lg:hidden"><ResponsiveTabs label="Mức cảnh báo" active={level} onChange={key=>setLevel(key as typeof level)} tabs={LEVEL_TABS.map(t=>({key:t.id,label:t.label}))} /></div>
+          <div className="pf-glass-strong flex gap-1 rounded-xl p-1 w-fit overflow-x-auto max-lg:hidden">
             {LEVEL_TABS.map(t => (
               <button
                 key={t.id}

@@ -153,7 +153,7 @@ export function GroupAssignment() {
   )
 
   const toolbar = (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="pf-group-toolbar flex items-center gap-2 flex-wrap">
       <Button size="sm" variant="outline" onClick={handleAutoGenerate} disabled={busy}><Shuffle size={14} /> Chia Tự Động</Button>
       <Button size="sm" variant="outline" onClick={handleAddGroup}><Plus size={14} /> Thêm bảng</Button>
       {myGroups.length > 0 && (
@@ -176,7 +176,7 @@ export function GroupAssignment() {
               <p className="text-xs [color:var(--pf-color-muted)]">{mg.name} · {myParts.length} người</p>
             </div>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-0.5">{toolbar}</div>
+          <div className="pb-0.5">{toolbar}</div>
         </div>
       ) : (
         <PageHeader variant="bar" title={`Xếp Bảng – ${mg.name}`} subtitle={`${myParts.length} người tham gia · tự động hoặc thủ công`} actions={toolbar} />

@@ -11,7 +11,7 @@ import api from '../../../lib/api'
 import { exportGenericExcel, exportGenericTablePDF } from '../../../lib/export'
 import { useExportRunner } from '../../../hooks/useExportRunner'
 import {
-  PageShell, PageHeader, StatusBadge, LoadingState, ErrorState, EmptyState, ExportActions,
+  PageShell, PageHeader, StatusBadge, LoadingState, ErrorState, EmptyState, ExportActions, ResponsiveTabs,
   type StatusTone,
 } from '../../../components/shared'
 import { TableCardsWrap } from '../../../components/shared/TableCardsWrap'
@@ -116,7 +116,7 @@ export function AuditLogViewer() {
       <div className="flex flex-col gap-4">
         {/* Bộ lọc */}
         <div className="flex flex-col gap-2">
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-col lg:flex-row gap-2">
             <div className="relative flex-1">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
               <input
@@ -126,7 +126,9 @@ export function AuditLogViewer() {
                 className="w-full rounded-xl border border-[color:var(--pf-border)] py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--pf-primary-text)]"
               />
             </div>
-            <div className="pf-glass-strong flex gap-1 rounded-xl p-1 overflow-x-auto">
+            <div className="lg:hidden"><ResponsiveTabs label="Loại thao tác trong nhật ký" active={action} onChange={setAction}
+              tabs={ACTION_OPTIONS.map(key=>({key,label:({CREATE:'Tạo mới',UPDATE:'Cập nhật',DELETE:'Xóa',EXPORT:'Xuất dữ liệu',LOCK:'Khóa'} as Record<string,string>)[key] ?? key}))} /></div>
+            <div className="pf-glass-strong flex gap-1 rounded-xl p-1 overflow-x-auto max-lg:hidden">
               {ACTION_OPTIONS.map(opt => (
                 <button
                   key={opt}

@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import toast from 'react-hot-toast'
 import { PageHeader } from '../../../components/shared/PageHeader'
 import { ResponsiveTabs } from '../../../components/shared/ResponsiveTabs'
+import { ExportActions } from '../../../components/shared/ExportActions'
 import { useMinigameStore } from '../../../store/minigameStore'
 import { useAuthStore } from '../../../store/authStore'
 import { useClubDataStore } from '../../../store/clubDataStore'
@@ -143,12 +144,7 @@ export function StandingsPage() {
             <p className="text-xs [color:var(--pf-color-muted)] line-clamp-2 break-words">{mg.name} · {standings.length} thành viên</p>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <button onClick={doExportPng} aria-label="Xuất ảnh" className="inline-flex h-9 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] active:opacity-70">
-              <ImageIcon size={14} /> Ảnh
-            </button>
-            <button onClick={doExportPdf} aria-label="Xuất PDF" className="inline-flex h-9 items-center gap-1 rounded-xl px-2.5 text-xs font-semibold [background:var(--pf-primary-soft)] [color:var(--pf-primary-text)] active:opacity-70">
-              <FileText size={14} /> PDF
-            </button>
+            <ExportActions onImage={doExportPng} onPdf={doExportPdf} />
             {canShare() && (
               <button onClick={doShare} aria-label="Chia sẻ" className="flex h-9 w-9 items-center justify-center rounded-xl text-white [background:var(--pf-primary)] active:opacity-70">
                 <Share2 size={16} />
@@ -158,17 +154,8 @@ export function StandingsPage() {
         </div>
 
         {/* Scrollable group tabs */}
-        <div className="flex gap-1.5 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-3 py-2 overflow-x-auto">
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id)}
-              className={cn(
-                'shrink-0 text-xs font-medium px-3 py-1.5 rounded-[8px] transition-colors',
-                activeTab === t.id ? 'text-white shadow-sm' : '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]'
-              )}
-              style={activeTab === t.id ? { background: 'var(--pf-primary)' } : {}}>
-              {t.label}
-            </button>
-          ))}
+        <div className="border-b border-[color:var(--pf-border)] px-4 py-2">
+          <ResponsiveTabs label="Chọn bảng xếp hạng" tabs={tabs.map(t=>({key:t.id,label:t.label}))} active={activeTab} onChange={setActiveTab} />
         </div>
 
         <div id={EXPORT_ID} className="px-4 py-4 space-y-3">
