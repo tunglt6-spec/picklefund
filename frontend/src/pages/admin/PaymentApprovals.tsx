@@ -1,3 +1,4 @@
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 import { countSignal } from '../../lib/statusDesign'
 import { MobileSummary } from '../../components/mobile/MobileSummary'
 import { useCallback, useEffect, useState } from 'react'
@@ -119,7 +120,8 @@ export function PaymentApprovals() {
     <PageShell maxWidth={1760}>
       <PageHeader
         title="Xác nhận nộp quỹ"
-        actions={rows.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} /> : undefined}
+        className="pf-phone-header"
+        actions={rows.length > 0 ? <PhoneToolbar label="Công cụ xác nhận quỹ" tools={[]} moreLabel="Xuất" more={<ExportActions compact onExcel={doExportExcel} onPdf={doExportPdf}/>} fallback={<ExportActions onExcel={doExportExcel} onPdf={doExportPdf}/>} /> : undefined}
       />
 
       <div className="mb-4 lg:hidden"><MobileSummary module="finance" label="Chờ xác nhận nộp quỹ" tone={loading || error || !stats ? 'neutral' : countSignal(stats.pendingCount, 'pending')}

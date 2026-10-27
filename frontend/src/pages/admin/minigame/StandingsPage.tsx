@@ -1,6 +1,7 @@
+import { PhoneToolbar } from '../../../components/mobile/PhoneToolbar'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Image as ImageIcon, FileText, Share2 } from '../../../components/icons/mobileLucide'
+import { Filter, ArrowLeft, Image as ImageIcon, FileText, Share2 } from '../../../components/icons/mobileLucide'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 import toast from 'react-hot-toast'
 import { PageHeader } from '../../../components/shared/PageHeader'
@@ -143,20 +144,11 @@ export function StandingsPage() {
             <p className="text-base font-bold [color:var(--pf-text)] truncate">Bảng xếp hạng</p>
             <p className="text-xs [color:var(--pf-color-muted)] line-clamp-2 break-words">{mg.name} · {standings.length} thành viên</p>
           </div>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <ExportActions onImage={doExportPng} onPdf={doExportPdf} />
-            {canShare() && (
-              <button onClick={doShare} aria-label="Chia sẻ" className="flex h-9 w-9 items-center justify-center rounded-xl text-white [background:var(--pf-primary)] active:opacity-70">
-                <Share2 size={16} />
-              </button>
-            )}
-          </div>
         </div>
-
-        {/* Scrollable group tabs */}
-        <div className="border-b border-[color:var(--pf-border)] px-4 py-2">
-          <ResponsiveTabs label="Chọn bảng xếp hạng" tabs={tabs.map(t=>({key:t.id,label:t.label}))} active={activeTab} onChange={setActiveTab} />
-        </div>
+        <div className="px-4 py-3"><PhoneToolbar label="Công cụ bảng xếp hạng" fallback={null} tools={[
+          {key:'group',label:'Bảng',icon:<Filter />,active:activeTab!=='all',content:<select aria-label="Chọn bảng xếp hạng" className="input-base" value={activeTab} onChange={e=>setActiveTab(e.target.value)}>{tabs.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</select>},
+          ...(canShare()?[{key:'share',label:'Chia sẻ',icon:<Share2 />,onClick:doShare}]:[]),
+        ]} moreLabel="Xuất" more={<ExportActions compact onImage={doExportPng} onPdf={doExportPdf}/>} /></div>
 
         <div id={EXPORT_ID} className="px-4 py-4 space-y-3">
           {/* Bar chart */}

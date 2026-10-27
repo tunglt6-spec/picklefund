@@ -9,7 +9,7 @@ import api from '../../lib/api'
 import { useNotifStore } from '../../store/notifStore'
 import { enablePush, syncPushIfGranted, sendTestPush, pushPermission } from '../../lib/push'
 import { NotificationSettingsModal, ADMIN_PUSH_CATEGORIES, SUPER_PUSH_CATEGORIES } from '../../components/member/NotificationSettingsModal'
-import { FilterChips } from '../../components/shared/FilterChips'
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 
 type HermesNotif = {
   id: string
@@ -343,40 +343,19 @@ export function Notifications() {
   if (isMobile) {
     return (
       <div className="pf-mobile-notif min-h-full [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-20 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
-          <div>
-
-            <div className="text-xs [color:var(--pf-color-muted)]">{loading ? 'Đang tải thông báo…' : loadError ? 'Chưa cập nhật được thông báo' : unreadCount > 0 ? `${unreadCount} chưa đọc` : 'Tất cả đã đọc'}</div>
-          </div>
-          <div className="flex items-center gap-2.5">
-            {pushPerm !== 'unsupported' && pushPerm !== 'granted' && (
-              <button onClick={onEnablePush} disabled={pushBusy}
-                className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-[600] text-white disabled:opacity-60 [background:var(--pf-primary)]">
-                <BellRing size={13} />{pushBusy ? 'Đang bật…' : 'Bật push'}
-              </button>
-            )}
-            {pushPerm === 'granted' && (
-              <button onClick={onTestPush} disabled={pushBusy}
-                className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary-text)] disabled:opacity-60 active:opacity-70">
-                <BellRing size={13} />{pushBusy ? 'Đang gửi…' : 'Gửi thử'}
-              </button>
-            )}
-            {unreadCount > 0 && (
-              <button disabled={loading} onClick={handleReadAll} className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary-text)] active:opacity-70">
-                <Check size={13} />Đã đọc
-              </button>
-            )}
-            <button onClick={() => setSettingsOpen(true)} aria-label="Cài đặt thông báo"
-              className="flex h-9 w-9 items-center justify-center rounded-lg [color:var(--pf-color-muted)] active:[background:var(--pf-color-muted-soft)]">
-              <Settings size={16} />
-            </button>
-          </div>
+        <div className="px-4 pt-3">
+          <PhoneToolbar label="Công cụ thông báo" fallback={null} tools={[
+            {key:'filter',label:'Lọc',icon:<Inbox />,active:tab!=='all',detail:activeTabs.find(([k])=>k===tab)?.[1],content:<select aria-label="Loại thông báo" className="input-base" value={tab} onChange={e=>setTab(e.target.value as TabKey)}>{activeTabs.map(([k,l])=><option key={k} value={k}>{l} ({counts[k]??0})</option>)}</select>},
+            {key:'read',label:'Đã đọc',icon:<Check />,disabled:loading||!unreadCount,onClick:handleReadAll},
+            ...(pushPerm!=='unsupported'?[{key:'push',label:'Thiết bị',icon:<BellRing />,active:pushPerm==='granted',content:<div className="space-y-3"><p>{pushPerm==='granted'?'Thông báo trên thiết bị đã bật.':'Bật thông báo để nhận cập nhật trên thiết bị.'}</p><button className="pf-mobile-chip" disabled={pushBusy} onClick={pushPerm==='granted'?onTestPush:onEnablePush}>{pushBusy?'Đang xử lý…':pushPerm==='granted'?'Gửi thông báo thử':'Bật thông báo'}</button></div>}]:[]),
+            {key:'settings',label:'Cài đặt',icon:<Settings />,onClick:()=>setSettingsOpen(true)},
+          ]}/>
+          <p className="mt-2 text-xs [color:var(--pf-text-muted)]">{loading?'Đang tải thông báo…':loadError?'Chưa cập nhật được thông báo':unreadCount>0?`${unreadCount} chưa đọc`:'Tất cả đã đọc'}</p>
         </div>
 
         <NotificationSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} categories={pushCats} />
 
         <div className="px-4 pt-3 pb-24 space-y-4">
-          {!loading && !loadError && <FilterChips tabs={activeTabs} active={tab} counts={counts} onChange={setTab} label="Lọc thông báo" primary={["all", "unread"]} moreLabel="Loại thông báo" />}
           {!loading && loadError && <div role="alert" className="rounded-2xl border p-4 text-sm [background:var(--pf-surface)] [border-color:var(--pf-border)]"><p>Không tải được thông báo. Vui lòng thử lại.</p><button className="mt-2 min-h-11 font-semibold [color:var(--pf-primary-text)]" onClick={()=>void fetchNotifs()}>Thử lại</button></div>}
           {loading && <p className="text-center text-sm [color:var(--pf-color-muted)] py-8">Đang tải...</p>}
 

@@ -1,3 +1,4 @@
+import { PhoneToolbar } from '../../../components/mobile/PhoneToolbar'
 /**
  * GroupAssignment — Xếp bảng cho GROUP_STAGE. M2a: manual builder song song auto.
  *
@@ -153,6 +154,11 @@ export function GroupAssignment() {
   )
 
   const toolbar = (
+    <PhoneToolbar label="Công cụ chia bảng" tools={[
+      {key:'auto',label:'Tự động',icon:<Shuffle />,onClick:handleAutoGenerate,disabled:busy},
+      {key:'add',label:'Thêm bảng',icon:<Plus />,onClick:handleAddGroup},
+      ...(myGroups.length?[{key:'lock',label:'Khóa bảng',icon:<Lock />,onClick:handleLock,disabled:busy},{key:'schedule',label:'Lịch đấu',icon:<Calendar />,primary:true,onClick:handleCreateSchedule,disabled:busy}]:[]),
+    ]} fallback={
     <div className="pf-group-toolbar flex items-center gap-2 flex-wrap">
       <Button size="sm" variant="outline" onClick={handleAutoGenerate} disabled={busy}><Shuffle size={14} /> Chia Tự Động</Button>
       <Button size="sm" variant="outline" onClick={handleAddGroup}><Plus size={14} /> Thêm bảng</Button>
@@ -162,7 +168,7 @@ export function GroupAssignment() {
           <Button size="sm" onClick={handleCreateSchedule} disabled={busy}><Calendar size={14} /> Xem Lịch thi đấu</Button>
         </>
       )}
-    </div>
+    </div>} />
   )
 
   return (

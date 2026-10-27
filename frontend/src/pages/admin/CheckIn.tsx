@@ -1,4 +1,5 @@
 import { countSignal } from '../../lib/statusDesign'
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 /**
  * CheckIn (15) — Check-in nhanh một chạm. Chọn buổi (gần hôm nay), tick PRESENT, lưu.
  * Tái dụng endpoint CÓ SẴN: GET /attendance/:id/attendance, GET /attendance/:id/registrations,
@@ -152,16 +153,28 @@ export function CheckIn() {
   const toggleAllCheckin = () =>
     setPresent(allCheckedIn ? new Set() : new Set(rows.map((r) => r.memberId)))
 
+  const selectedSession = sessionOptions.find(s => s.id === sessionId)
+
   return (
     <PageShell>
       <PageHeader
         title="Check-in nhanh"
+        className="pf-phone-header"
         actions={
+          <PhoneToolbar label="Công cụ check-in" tools={[
+            {key:'session',label:'Chọn buổi',icon:<ClipboardCheck />,detail:selectedSession ? fmtSession(selectedSession.sessionDate,selectedSession.courtName,selectedSession.startTime) : undefined,disabled:!sessionOptions.length,
+              content:<select className="input-base" aria-label="Chọn buổi check-in" value={sessionId} onChange={e=>setSessionId(e.target.value)}>{sessionOptions.map(s=><option key={s.id} value={s.id}>{fmtSession(s.sessionDate,s.courtName,s.startTime)}</option>)}</select>},
+            ...(!isMember ? [
+              {key:'all',label:allCheckedIn?'Bỏ chọn':'Chọn hết',icon:<Check />,active:allCheckedIn,onClick:toggleAllCheckin,disabled:loading||error||saving||!rows.length},
+              {key:'save',label:saving?'Đang lưu':'Lưu',icon:<Save />,primary:true,onClick:()=>void save(),disabled:saving||loading||error||!sessionId||!rows.length},
+            ] : []),
+          ]} fallback={
           !isMember && sessionId && rows.length > 0 ? (
             <ActionButton icon={<Save size={16} />} onClick={save} disabled={saving}>
               {saving ? 'Đang lưu…' : 'Lưu điểm danh'}
             </ActionButton>
           ) : undefined
+          } />
         }
       />
 
@@ -174,7 +187,7 @@ export function CheckIn() {
       ) : (
         <div className="flex flex-col gap-5">
           {/* Chọn buổi — dropdown lọc (giống "Lọc theo kỳ" ở Điểm danh) */}
-          <div className="flex min-w-0 items-center gap-2">
+          <div className="pf-phone-hide flex min-w-0 items-center gap-2">
             <span className="text-xs [color:var(--pf-color-muted)] shrink-0">Chọn buổi:</span>
             <div className="relative flex min-w-0 flex-1 items-center sm:inline-flex sm:flex-none">
               <select
@@ -207,7 +220,7 @@ export function CheckIn() {
               </div>
 
               {!isMember && (
-                <div className="flex justify-end">
+                <div className="pf-phone-hide flex justify-end">
                   <button type="button" onClick={toggleAllCheckin}
                     className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold [color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)] transition-colors">
                     <Check size={13} />{allCheckedIn ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}

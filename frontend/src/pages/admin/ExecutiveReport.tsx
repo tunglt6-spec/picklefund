@@ -247,10 +247,39 @@ export function ExecutiveReport() {
       </div>
     )
 
+  const emailControls = (emailCfg && (
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border p-3.5 [border-color:var(--pf-border)]" style={{ background: 'var(--pf-surface)' }}>
+          <Mail size={16} className="[color:var(--pf-primary,#6D5DFB)]" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold [color:var(--pf-text)]">Tự gửi báo cáo qua email đầu mỗi tháng</p>
+            <p className="text-xs [color:var(--pf-color-muted)]">
+              Gửi cho admin CLB{emailCfg.recipients?.length ? `: ${emailCfg.recipients.filter((r: any) => !r.isPlaceholder).map((r: any) => r.email).join(', ') || '(chưa có email hợp lệ)'}` : ''}
+              {emailCfg.recipients?.some((r: any) => r.isPlaceholder) && ' · một số admin chưa đặt email thật'}
+              {!emailCfg.smtpReady && ' · ⚠️ server chưa cấu hình SMTP (chưa gửi được)'}
+              {emailCfg.lastSent && ` · gửi gần nhất: ${emailCfg.lastSent}`}
+            </p>
+          </div>
+          <button onClick={() => void testEmail()} disabled={emailBusy} className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium [border-color:var(--pf-border)] [color:var(--pf-text)] disabled:opacity-50">
+            <Send size={13} /> Gửi thử
+          </button>
+          <button
+            onClick={() => void toggleAutoEmail()}
+            disabled={emailBusy}
+            className="pf-email-toggle relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50"
+            style={{ background: emailCfg.enabled ? 'var(--pf-primary,#6D5DFB)' : 'var(--pf-border)' }}
+            role="switch" aria-checked={emailCfg.enabled} aria-label="Bật/tắt tự gửi email"
+          >
+            <span className="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all" style={{ left: emailCfg.enabled ? '22px' : '2px' }} />
+          </button>
+        </div>
+      )
+  )
+
   const periodPicker = (
     <PhoneToolbar label="Công cụ báo cáo điều hành" tools={[
       {key:'period',label:'Kỳ quỹ',icon:<PeriodIcon />,detail:periods.find(p=>p.id===periodId)?.name,content:<select className="input-base" aria-label="Chọn kỳ quỹ để xem báo cáo" value={periodId} onChange={e=>setPeriodId(e.target.value)}>{periods.map(p=><option key={p.id} value={p.id}>{p.name}{p.status==='active'?' (đang mở)':''}</option>)}</select>},
       ...(data?[{key:'section',label:'Mục',icon:<ListChecks />,content:(close:()=>void)=><select aria-label="Mục báo cáo" className="input-base" value="" onChange={e=>{const target=e.target.value;close();requestAnimationFrame(()=>document.getElementById(target)?.scrollIntoView({behavior:'smooth',block:'start'}))}}><option value="" disabled>Chọn phần báo cáo</option>{TOC_ITEMS.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</select>}]:[]),
+      ...(emailCfg?[{key:'email',label:'Email',icon:<Mail />,content:emailControls}]:[]),
       {key:'refresh',label:'Làm mới',icon:<RefreshCw />,disabled:loading,onClick:()=>{void load(periodId)}},
     ]} moreLabel="Xuất" more={data?<ExportActions compact onExcel={exportXlsx} onPdf={exportPdf} onImage={exportImage} disabled={exporting} mobileItems={[{key:'print',label:'In báo cáo',icon:<Printer size={16}/>,onClick:printReport,disabled:exporting}]} />:undefined} fallback={
     <div className="pf-report-controls">
@@ -311,32 +340,7 @@ export function ExecutiveReport() {
       {periodPicker}
 
       {/* Cài đặt tự-gửi email hằng tháng (ngoài vùng capture — không vào PDF/ảnh) */}
-      {emailCfg && (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl border p-3.5 [border-color:var(--pf-border)]" style={{ background: 'var(--pf-surface)' }}>
-          <Mail size={16} className="[color:var(--pf-primary,#6D5DFB)]" />
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold [color:var(--pf-text)]">Tự gửi báo cáo qua email đầu mỗi tháng</p>
-            <p className="text-xs [color:var(--pf-color-muted)]">
-              Gửi cho admin CLB{emailCfg.recipients?.length ? `: ${emailCfg.recipients.filter((r: any) => !r.isPlaceholder).map((r: any) => r.email).join(', ') || '(chưa có email hợp lệ)'}` : ''}
-              {emailCfg.recipients?.some((r: any) => r.isPlaceholder) && ' · một số admin chưa đặt email thật'}
-              {!emailCfg.smtpReady && ' · ⚠️ server chưa cấu hình SMTP (chưa gửi được)'}
-              {emailCfg.lastSent && ` · gửi gần nhất: ${emailCfg.lastSent}`}
-            </p>
-          </div>
-          <button onClick={() => void testEmail()} disabled={emailBusy} className="inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium [border-color:var(--pf-border)] [color:var(--pf-text)] disabled:opacity-50">
-            <Send size={13} /> Gửi thử
-          </button>
-          <button
-            onClick={() => void toggleAutoEmail()}
-            disabled={emailBusy}
-            className="relative h-6 w-11 shrink-0 rounded-full transition-colors disabled:opacity-50"
-            style={{ background: emailCfg.enabled ? 'var(--pf-primary,#6D5DFB)' : 'var(--pf-border)' }}
-            aria-label="Bật/tắt tự gửi email"
-          >
-            <span className="absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all" style={{ left: emailCfg.enabled ? '22px' : '2px' }} />
-          </button>
-        </div>
-      )}
+      <div className="hidden lg:block">{emailControls}</div>
 
       <div id={CAPTURE_ID} className="space-y-5">
         {/* ── AI Executive Summary (tải lười) ──────────────────────── */}

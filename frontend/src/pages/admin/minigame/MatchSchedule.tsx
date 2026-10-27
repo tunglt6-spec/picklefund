@@ -1,8 +1,10 @@
+import { PhoneToolbar } from '../../../components/mobile/PhoneToolbar'
+import { ExportActions } from '../../../components/shared/ExportActions'
 import { useState, useEffect, useRef } from 'react'
 import { useDialogA11y } from '../../../hooks/useDialogA11y'
 import { useNavigate, useParams } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { ArrowLeft, ClipboardEdit, Pencil, Trash2 } from '../../../components/icons/mobileLucide'
+import { Filter as FilterIcon, ArrowLeft, ClipboardEdit, Pencil, Trash2 } from '../../../components/icons/mobileLucide'
 import api from '../../../lib/api'
 import { PageHeader } from '../../../components/shared/PageHeader'
 import { ResponsiveTabs } from '../../../components/shared/ResponsiveTabs'
@@ -145,17 +147,11 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
             <p className="text-base font-bold [color:var(--pf-text)] truncate">Lịch thi đấu</p>
             <p className="text-xs [color:var(--pf-color-muted)] line-clamp-2 break-words">{minigameName} · {myMatches.length} trận · {myRounds.length} vòng</p>
           </div>
-          {myRounds.length > 0 && (
-            <ScheduleExportButtons onPng={doExportPng} onPdf={doExportPdf} ariaScope="lịch thi đấu" size="sm" />
-          )}
-          <button
-            onClick={() => setScoreMatch(myMatches.find(m => m.status === 'PENDING') ?? null)}
-            className="shrink-0 text-xs font-semibold text-white px-3 py-1.5 rounded-[10px]"
-            style={{ background: 'var(--pf-primary)' }}
-          >
-            Nhập KQ
-          </button>
         </div>
+        <div className="px-4 py-3"><PhoneToolbar label="Công cụ lịch thi đấu" fallback={null} tools={[
+          {key:'filter',label:'Lọc trận',icon:<FilterIcon />,active:filter!=='all',content:<select aria-label="Lọc trận đấu" className="input-base" value={filter} onChange={e=>setFilter(e.target.value)}>{tabs.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</select>},
+          {key:'score',label:'Nhập điểm',icon:<ClipboardEdit />,primary:true,disabled:!myMatches.some(m=>m.status==='PENDING'),onClick:()=>setScoreMatch(myMatches.find(m=>m.status==='PENDING')??null)},
+        ]} moreLabel="Xuất" more={myRounds.length?<ExportActions compact onImage={doExportPng} onPdf={doExportPdf}/>:undefined}/></div>
 
         {myRounds.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center px-4">
@@ -169,9 +165,6 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
           </div>
         ) : (
           <>
-            <div className="border-b border-[color:var(--pf-border)] px-4 py-2">
-              <ResponsiveTabs label="Lọc trận đấu" tabs={tabs.map(t=>({key:t.id,label:t.label}))} active={filter} onChange={setFilter} />
-            </div>
 
             <div id={MS_DOUBLES_ID} className="px-4 py-4 space-y-3">
               {filtered.length === 0 ? (
@@ -554,21 +547,11 @@ export function MatchSchedule() {
             <p className="text-base font-bold [color:var(--pf-text)] truncate">Lịch thi đấu</p>
             <p className="text-xs [color:var(--pf-color-muted)] line-clamp-2 break-words">{mg.name} · {myMatches.length} trận</p>
           </div>
-          {myMatches.length > 0 && (
-            <ScheduleExportButtons onPng={doExportPng} onPdf={doExportPdf} ariaScope="lịch thi đấu" size="sm" />
-          )}
-          <button
-            onClick={() => setScoreMatch(myMatches.find(m => m.status === 'PENDING') ?? null)}
-            className="shrink-0 text-xs font-semibold text-white px-3 py-1.5 rounded-[10px]"
-            style={{ background: 'var(--pf-primary)' }}
-          >
-            Nhập KQ
-          </button>
         </div>
-
-        <div className="border-b border-[color:var(--pf-border)] px-4 py-2">
-          <ResponsiveTabs label="Lọc trận đấu" tabs={mTabs.map(t=>({key:t.id,label:t.label}))} active={filter} onChange={setFilter} />
-        </div>
+        <div className="px-4 py-3"><PhoneToolbar label="Công cụ lịch vòng bảng" fallback={null} tools={[
+          {key:'filter',label:'Lọc trận',icon:<FilterIcon />,active:filter!=='all',content:<select aria-label="Lọc trận đấu" className="input-base" value={filter} onChange={e=>setFilter(e.target.value)}>{mTabs.map(t=><option key={t.id} value={t.id}>{t.label}</option>)}</select>},
+          {key:'score',label:'Nhập điểm',icon:<ClipboardEdit />,primary:true,disabled:!myMatches.some(m=>m.status==='PENDING'),onClick:()=>setScoreMatch(myMatches.find(m=>m.status==='PENDING')??null)},
+        ]} moreLabel="Xuất" more={myMatches.length?<ExportActions compact onImage={doExportPng} onPdf={doExportPdf}/>:undefined}/></div>
 
         <div id={MS_GROUP_ID} className="px-4 py-4 space-y-3">
           {mFiltered.length === 0 ? (

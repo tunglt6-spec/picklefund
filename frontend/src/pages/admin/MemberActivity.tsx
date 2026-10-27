@@ -1,3 +1,4 @@
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 import { FinancialDataState } from '../../components/shared/FinancialDataState'
 /**
  * MemberActivity (v2.1) — Lịch sử hoạt động Thành viên (Hướng A): hồ sơ hoạt động từng TV,
@@ -93,13 +94,15 @@ export function MemberActivity() {
 
   return (
     <PageShell>
-      <PageHeader title="Lịch sử hoạt động" actions={<ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} />} />
+      <PageHeader title="Lịch sử hoạt động" className="pf-phone-header" actions={<PhoneToolbar label="Công cụ lịch sử thành viên" tools={[
+        {key:'search',label:'Tìm',icon:<Search />,active:!!q,content:<input className="input-base" aria-label="Tìm thành viên trong lịch sử" value={q} onChange={e=>setQ(e.target.value)} placeholder="Tìm thành viên…"/>},
+      ]} moreLabel="Xuất" more={<ExportActions compact onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy}/>} fallback={<ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy}/>} />} />
       <FinancialDataState sources={[financeState]}>
 
       <div className="grid gap-5 lg:grid-cols-[320px_1fr]">
         {/* Danh sách thành viên */}
         <div className="pf-glass-strong overflow-hidden rounded-[16px]">
-          <div className="border-b border-[color:var(--pf-border)] p-3">
+          <div className="pf-phone-hide border-b border-[color:var(--pf-border)] p-3">
             <div className="relative">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Tìm thành viên..." className="input-base pl-9" />

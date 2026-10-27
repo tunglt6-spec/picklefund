@@ -4,6 +4,7 @@
  * RSVP TÁCH BIỆT điểm danh thực tế (không ảnh hưởng tính quỹ). V2.2 Clean Modern SaaS.
  */
 import { useSearchParams } from 'react-router-dom'
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CalendarPlus, Check, Users, Save, ChevronDown } from '../../components/icons/mobileLucide'
 import { Check as SelectionCheck } from 'lucide-react'
@@ -121,16 +122,28 @@ export function SessionRegistration() {
     }
   }
 
+  const selectedSession = upcoming.find(s => s.id === sessionId)
+
   return (
     <PageShell>
       <PageHeader
         title="Đăng ký buổi chơi"
+        className="pf-phone-header"
         actions={
+          <PhoneToolbar label="Công cụ đăng ký" tools={[
+            {key:'session',label:'Chọn buổi',icon:<CalendarPlus />,detail:selectedSession ? fmtSession(selectedSession.sessionDate,selectedSession.courtName,selectedSession.startTime) : undefined,disabled:!upcoming.length,
+              content:<select className="input-base" aria-label="Chọn buổi đăng ký" value={sessionId} onChange={e=>setSessionId(e.target.value)}>{upcoming.map(s=><option key={s.id} value={s.id}>{fmtSession(s.sessionDate,s.courtName,s.startTime)}</option>)}</select>},
+            ...(!isMember ? [
+              {key:'all',label:allSelected?'Bỏ chọn':'Chọn hết',icon:<Check />,active:allSelected,onClick:toggleAll,disabled:loading||error||saving||!rows.length},
+              {key:'save',label:saving?'Đang lưu':'Lưu',icon:<Save />,primary:true,onClick:()=>void save(),disabled:saving||loading||error||!sessionId||!rows.length},
+            ] : []),
+          ]} fallback={
           !isMember && sessionId && rows.length > 0 ? (
             <ActionButton icon={<Save size={16} />} onClick={save} disabled={saving}>
               {saving ? 'Đang lưu…' : 'Lưu đăng ký'}
             </ActionButton>
           ) : undefined
+          } />
         }
       />
 
@@ -143,7 +156,7 @@ export function SessionRegistration() {
       ) : (
         <div className="flex flex-col gap-5">
           {/* Chọn buổi — dropdown lọc (giống "Lọc theo kỳ" ở Điểm danh) */}
-          <div className="flex min-w-0 items-center gap-2">
+          <div className="pf-phone-hide flex min-w-0 items-center gap-2">
             <span className="text-xs [color:var(--pf-color-muted)] shrink-0">Chọn buổi:</span>
             <div className="relative flex min-w-0 flex-1 items-center sm:inline-flex sm:flex-none">
               <select
@@ -178,7 +191,7 @@ export function SessionRegistration() {
                 </div>
                 {!isMember && (
                   <button type="button" onClick={toggleAll}
-                    className="inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold [color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)] transition-colors">
+                    className="pf-phone-hide inline-flex min-h-9 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold [color:var(--pf-primary-text)] hover:[background:var(--pf-primary-soft)] transition-colors">
                     <Check size={13} />{allSelected ? 'Bỏ chọn tất cả' : 'Chọn tất cả'}
                   </button>
                 )}

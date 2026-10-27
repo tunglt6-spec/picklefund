@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 
-/** Match the phone toolbar CSS, including fractional widths near the Fold breakpoint. */
+/** Mobile toolbars cover phones and unfolded Fold; record grids keep their own breakpoints. */
 export function useNarrowPhone() {
-  const query = '(max-width: 599.98px)'
+  const query = '(max-width: 1023.98px)'
   const [phone, setPhone] = useState(() => typeof window !== 'undefined' && window.matchMedia(query).matches)
   useEffect(() => {
     const media = window.matchMedia(query)

@@ -4,8 +4,9 @@
  * xem organization-intelligence.service.ts. Lisa/Hermes CHƯA đọc (việc sau, nếu cần).
  */
 import { mobileText } from '../../../lib/mobileText'
+import { PhoneToolbar } from '../../../components/mobile/PhoneToolbar'
 import { useEffect, useState } from 'react'
-import { Plus, Pencil, Trash2, BookOpen } from '../../../components/icons/mobileLucide'
+import { Plus, Search, Filter, Pencil, Trash2, BookOpen } from '../../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
 import api from '../../../lib/api'
 import { useIsMobile } from '../../../hooks/useIsMobile'
@@ -169,13 +170,18 @@ export function ClubMemoryManager() {
     <PageShell maxWidth={1200}>
       <PageHeader
         title={mobileText('Club Memory', 'Bộ nhớ CLB')}
-        actions={
+        className="pf-phone-header"
+        actions={<PhoneToolbar label="Công cụ bộ nhớ CLB" tools={[
+          {key:'search',label:'Tìm',icon:<Search />,active:!!search,content:<input aria-label="Tìm tri thức" className="input-base" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Tiêu đề, nội dung, nhãn…"/>},
+          {key:'type',label:'Loại',icon:<Filter />,active:!!typeFilter,content:<select aria-label="Loại tri thức" className="input-base" value={typeFilter} onChange={e=>setTypeFilter(e.target.value as ''|MemoryType)}><option value="">Tất cả loại</option>{(Object.keys(TYPE_META) as MemoryType[]).map(t=><option key={t} value={t}>{TYPE_META[t].label}</option>)}</select>},
+          {key:'add',label:'Thêm',icon:<Plus />,primary:true,onClick:openCreate},
+        ]} fallback={
           <Button onClick={openCreate}><Plus size={14} />Thêm tri thức</Button>
-        }
+        } />}
       />
 
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap gap-2 items-center">
+        <div className="pf-phone-hide flex flex-wrap gap-2 items-center">
           <input
             value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Tìm theo tiêu đề, nội dung, nhãn..."

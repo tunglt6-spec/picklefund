@@ -1,4 +1,5 @@
 import { countSignal } from '../../lib/statusDesign'
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 import { MobileSummary } from '../../components/mobile/MobileSummary'
 /**
  * MemberScoring — Chấm điểm thành viên động (Phase 3 UI).
@@ -12,7 +13,7 @@ import { MobileSummary } from '../../components/mobile/MobileSummary'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
-import { Award, Lock, Plus, Trash2, TrendingUp, TrendingDown, Users, Star, Trophy, ListChecks } from '../../components/icons/mobileLucide'
+import { Award, CalendarDays, Lock, Plus, Trash2, TrendingUp, TrendingDown, Users, Star, Trophy, ListChecks } from '../../components/icons/mobileLucide'
 import api from '../../lib/api'
 import { useAuthStore } from '../../store/authStore'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
@@ -301,6 +302,10 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
   return (
     <div className="flex flex-col gap-5">
       {/* Bộ chọn tháng + actions */}
+      <PhoneToolbar label="Công cụ bảng điểm" tools={[
+        {key:'month',label:'Tháng',icon:<CalendarDays />,detail:monthLabel(month),content:<select className="input-base" aria-label="Tháng chấm điểm" value={month} onChange={e=>onMonthChange(e.target.value)}>{months.map(m=><option key={m} value={m}>{monthLabel(m)}</option>)}</select>},
+        ...(isAdmin&&!isMember?[{key:'finalize',label:'Chốt tháng',icon:<Lock />,primary:true,onClick:()=>setConfirmFinalize(true),disabled:busy||loading||error}]:[]),
+      ]} moreLabel="Xuất" more={canExport&&rows.length>0?<ExportActions compact onExcel={doExportExcel} onPdf={doExportPdf}/>:undefined} fallback={
       <div className="pf-toolbar flex flex-col gap-3 min-[600px]:flex-row min-[600px]:items-center min-[600px]:justify-between">
         <label className="flex items-center gap-2 text-sm font-medium [color:var(--pf-text)]">
           <span className="[color:var(--pf-color-muted)]">Tháng</span>
@@ -329,6 +334,7 @@ function ScoreboardTab({ month, months, onMonthChange, isAdmin, isMember }: Scor
           )}
         </div>
       </div>
+      } />
 
       {/* KPI */}
       <MobileSummary module="members" label="Thành viên được chấm điểm" tone={loading || error ? 'neutral' : 'success'} value={loading ? '…' : error ? '—' : stats.total} note={monthLabel(month)} items={[

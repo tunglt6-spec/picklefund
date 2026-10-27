@@ -1,3 +1,4 @@
+import { PhoneToolbar } from '../../../components/mobile/PhoneToolbar'
 /**
  * SchedulerPage — AI Operations Center › Scheduler (Pha 2 Hermes v2).
  * Read-only + run-now, NỐI endpoint sẵn có (KHÔNG backend mới):
@@ -169,8 +170,11 @@ export function SchedulerPage() {
     <PageShell>
       <PageHeader
         title={mobileText('Scheduler', 'Lịch tác vụ')}
-        actions={
-          <div className="flex items-center gap-2">
+        className="pf-phone-header"
+        actions={<PhoneToolbar label="Công cụ lịch tác vụ" tools={[
+          {key:'timer',label:status?.enabled?'Tắt timer':'Bật timer',icon:<Power />,active:status?.enabled,onClick:handleToggleTimer,disabled:toggling||loading},
+          ...(scheduled.length?[{key:'run',label:running?'Đang chạy':'Chạy ngay',icon:<Play />,primary:true,onClick:handleRunNow,disabled:running}]:[]),
+        ]} fallback={<div className="flex items-center gap-2">
             {/* Công tắc hệ thống (ảnh hưởng MỌI CLB) — mở cho CLUB_ADMIN theo yêu cầu. */}
             <ActionButton
               icon={<Power size={15} />}
@@ -186,7 +190,8 @@ export function SchedulerPage() {
               </ActionButton>
             )}
           </div>
-        }
+        } />}
+
       />
 
       {loading ? (

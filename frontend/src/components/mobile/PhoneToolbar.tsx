@@ -14,7 +14,7 @@ export interface PhoneTool {
   content?: ReactNode | ((close: () => void) => ReactNode)
 }
 
-/** Narrow-phone controls share one row. Wider mobile layouts render their existing toolbar. */
+/** Phone and Fold controls share a balanced row. Desktop renders the original controls. */
 export function PhoneToolbar({ tools, more, moreLabel = 'Tác vụ', fallback, label = 'Công cụ màn hình' }: {
   tools: PhoneTool[]
   more?: ReactNode
@@ -32,7 +32,7 @@ export function PhoneToolbar({ tools, more, moreLabel = 'Tác vụ', fallback, l
   const close = () => setOpened(null)
   return <>
     <div className="pf-phone-toolbar" role="toolbar" aria-label={label}
-      style={{ gridTemplateColumns: `repeat(${tools.length + (hasMore ? 1 : 0)}, minmax(0, 1fr))`, maxWidth: (tools.length + (hasMore ? 1 : 0)) * 78 - 6 }}>
+      style={{ gridTemplateColumns: `repeat(${tools.length + (hasMore ? 1 : 0)}, minmax(0, 1fr))` }}>
       {tools.map(tool => <button key={tool.key} type="button" disabled={tool.disabled}
         aria-label={tool.detail ? `${tool.label}: ${tool.detail}` : tool.label}
         aria-haspopup={tool.content ? 'dialog' : undefined}
