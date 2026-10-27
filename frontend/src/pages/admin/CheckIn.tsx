@@ -213,7 +213,7 @@ export function CheckIn() {
             <EmptyState icon={<Users size={24} />} title="Chưa có thành viên hoạt động" />
           ) : (
             <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-3 gap-3 sm:gap-4">
+              <div className="pf-mobile-kpi-grid grid grid-cols-3 gap-3 sm:gap-4">
                 <MetricCard compact accent="violet" icon={<UserCheck size={18} />} label="Đã đăng ký" value={registeredCount} />
                 <MetricCard compact accent="green" icon={<Check size={18} />} label="Đã check-in" value={present.size} />
                 <MetricCard compact accent="rose" icon={<Users size={18} />} label="Vắng" value={rows.length - present.size} signal={countSignal(rows.length - present.size, 'pending')} />

@@ -470,8 +470,8 @@ export function Reports() {
             {kpi('Tổng thu kỳ', kIncome, (isCompact ? 'Quỹ Chính' : 'Quỹ Chính (backend)'), 'green', <TrendingUp size={18} />, formatVND, 'income')}
             {kpi('Tổng chi kỳ', kExpense, (isCompact ? 'Quỹ Chính' : 'Quỹ Chính (backend)'), 'amber', <TrendingDown size={18} />, formatVND, 'expense')}
             {kpi('Số dư Quỹ Chính', kMainFund, '= Thu − Chi + chuyển kỳ', 'green', <Wallet size={18} />, formatVND, 'balance')}
-            <div className={moreKpi ? 'contents' : 'contents max-lg:hidden'}>
             {kpi('Quỹ Phụ', kMiniBalance, 'Độc lập Quỹ Chính', 'violet', <Gamepad2 size={18} />, formatVND, 'balance')}
+            <div className={moreKpi ? 'contents' : 'contents max-lg:hidden'}>
             {kpi('Số dư chuyển kỳ', kCarry, 'Từ kỳ trước', 'blue', <ArrowLeftRight size={18} />, formatVND, 'signed')}
             {kpi('Tổng lượt điểm danh', kAttendance, (isCompact ? 'Theo điểm danh kỳ này' : 'Backend summary'), 'teal', <Activity size={18} />, (v) => v.toLocaleString('vi-VN'))}
             {kpi('Chưa đóng quỹ', kUnpaid, periodName || 'Kỳ hiện tại', 'rose', <AlertCircle size={18} />, (v) => v.toLocaleString('vi-VN'))}

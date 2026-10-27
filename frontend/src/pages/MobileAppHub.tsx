@@ -65,7 +65,7 @@ export function MobileAppHub() {
 
   return (
     <div className="pf-app-directory mx-auto w-full max-w-2xl px-4 pb-4 pt-3">
-      <div className="flex items-center justify-between gap-3">
+      <div className="pf-app-directory-heading flex flex-col gap-3">
         <h1 className="text-[22px] font-[800] [color:var(--pf-text)]" style={{ letterSpacing: '-0.02em' }}>Ứng dụng</h1>
         <PhoneToolbar label="Công cụ ứng dụng" tools={[
           {key:'search',label:'Tìm',icon:<Search />,active:!!query,content:<HubSearch value={query} onChange={setQuery} />},

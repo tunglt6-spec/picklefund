@@ -594,7 +594,7 @@ function AiWorkspace() {
         <div className="space-y-5">
           {/* Vận hành = tập trung hàng đợi/live. "Tác vụ hôm nay" (executed) chỉ hiển thị ở tab
               Analytics để tránh trùng số giữa 2 tab. */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="pf-mobile-kpi-grid grid grid-cols-3 gap-3">
             <MetricCard icon={<PlayCircle size={18} />} accent="blue" label="Đang chạy" value={summary ? running : '—'} signal={summary ? countSignal(running,'healthy') : 'neutral'} />
             <MetricCard icon={<Clock size={18} />} accent="amber" label="Chờ duyệt" signal={countSignal(summary?.pendingApprovals, 'pending')} value={summary ? pending : '—'} />
             <MetricCard icon={<AlertTriangle size={18} />} accent="rose" label="Thất bại" signal={summary ? countSignal(failed, 'failure') : 'neutral'} value={summary ? failed : '—'} negative={failed > 0} />

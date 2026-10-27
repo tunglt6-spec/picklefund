@@ -414,7 +414,7 @@ export function Contributions() {
     const sortedMini = [...miniContribs].sort((a, b) => b.createdAt?.localeCompare(a.createdAt ?? '') ?? 0)
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-20 max-lg:static [background:var(--pf-surface)] backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 py-3 space-y-2">
+        <div className="pf-mobile-control-bar sticky top-0 z-20 max-lg:static [background:var(--pf-surface)] backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 py-3 space-y-2">
           <PhoneToolbar label="Công cụ thu quỹ" tools={[
             {key:'period',label:'Kỳ quỹ',icon:<Calendar />,detail:chungPeriods.find(p=>p.id===selectedPeriodId)?.name,content:<PeriodSelector periods={chungPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} label="Kỳ quỹ" />},
             {key:'fund',label:'Quỹ',icon:<Wallet />,detail:mobileTab==='COMMON'?'Quỹ Chính':'Quỹ Phụ',content:<select aria-label="Nguồn quỹ" className="input-base" value={mobileTab} onChange={e=>setMobileTab(e.target.value as FundSource)}><option value="COMMON">Quỹ Chính</option><option value="MINI">Quỹ Phụ</option></select>},

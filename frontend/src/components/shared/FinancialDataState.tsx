@@ -21,7 +21,7 @@ export function FinancialDataState({ sources, children }: { sources: FinancialSn
   const times = sources.map(s => s.updatedAt)
   const updatedAt = times.every((t): t is number => t != null) ? Math.min(...times) : null
   return <>
-    <div className="mb-3"><DataFreshness updatedAt={updatedAt} loading={sources.some(s => s.refreshing)} error={sources.some(s => s.error)} mode="poll" /></div>
+    <div className="pf-financial-freshness mb-3"><DataFreshness updatedAt={updatedAt} loading={sources.some(s => s.refreshing)} error={sources.some(s => s.error)} mode="poll" /></div>
     {children}
   </>
 }

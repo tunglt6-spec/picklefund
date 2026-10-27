@@ -612,7 +612,7 @@ export function FundPeriods() {
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
         {/* Thanh thao tác gọn: 1 nút "Tạo kỳ quỹ" + menu "Thao tác" (QR, nhập, xuất). Tên màn do header chức năng hiển thị. */}
-        <div className="px-4 py-3 lg:hidden"><PhoneToolbar label="Công cụ kỳ quỹ" tools={[
+        <div className="pf-mobile-control-bar px-4 py-3 lg:hidden"><PhoneToolbar label="Công cụ kỳ quỹ" tools={[
           {key:'search',label:'Tìm',icon:<Search />,active:!!search,content:<input aria-label="Tìm kỳ quỹ" className="input-base" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Tìm kỳ quỹ…" />},
           ...(!isMember?[{key:'add',label:'Tạo',icon:<Plus />,primary:true,content:(close:()=>void)=><>
             <button className="pf-mobile-chip" onClick={()=>{close();setFormChung({...emptyForm});setShowCreateChung(true)}}>Kỳ quỹ chính</button>
