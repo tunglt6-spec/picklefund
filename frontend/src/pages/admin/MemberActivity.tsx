@@ -101,7 +101,7 @@ export function MemberActivity() {
 
       <div className="pf-member-activity-layout grid gap-5 lg:grid-cols-[320px_1fr]">
         {/* Danh sách thành viên */}
-        <div className="pf-member-activity-list-shell pf-glass-strong overflow-hidden rounded-[16px]">
+        <div className={cn('pf-member-activity-list-shell overflow-hidden rounded-[16px]', !isCompact && 'pf-glass-strong')}>
           <div className="pf-phone-hide border-b border-[color:var(--pf-border)] p-3">
             <div className="relative">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
