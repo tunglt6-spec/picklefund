@@ -1941,3 +1941,20 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   .pf-financial-freshness { padding-inline: 16px; margin-block: 12px 0; }
   .pf-workspace-content .pf-financial-freshness { padding-inline: 0; }
 }
+
+/* Expense controls contain a summary in the same wrapper. Use an explicit gap:
+   space-y margins are overridden by the compact toolbar's own margin reset. */
+@media screen and (max-width: 1023.98px) {
+  .pf-mobile-tools { display: flex; flex-direction: column; gap: 16px; }
+  .pf-mobile-tools > * { margin-block: 0; }
+  .pf-member-activity-layout { margin-block-start: 12px; }
+  .pf-member-activity-list-shell { overflow: visible; border: 0 !important; border-radius: 0; background: transparent !important; box-shadow: none !important; backdrop-filter: none; }
+  .pf-member-activity-list { display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; gap: 12px; max-height: none; overflow: visible; }
+  .pf-member-activity-item { min-width: 0; min-height: 88px; padding: 14px; border: 1px solid var(--pf-border); border-radius: 16px; background: var(--pf-surface); box-shadow: 0 2px 8px #17386A04; }
+  .pf-member-activity-item > span:first-child { min-width: 0; }
+  .pf-member-activity-item .truncate { white-space: normal; overflow-wrap: anywhere; }
+}
+@media screen and (min-width: 600px) and (max-width: 1023.98px) {
+  .pf-member-activity-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pf-member-activity-item { flex-direction: column; align-items: flex-start; gap: 10px; }
+}
