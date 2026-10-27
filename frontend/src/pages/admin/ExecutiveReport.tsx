@@ -8,7 +8,7 @@ import {
   FileText, Sheet, Image as ImageIcon, Printer, Crown, ArrowUpRight, ArrowDownLeft,
   Fingerprint, LineChart, Mail, Send, Star, Flame, Moon, CheckCircle2,
 } from '../../components/icons/mobileLucide'
-import { ChartCard, MetricCard, ActionButton } from '../../components/shared'
+import { ChartCard, MetricCard, ActionButton, ExportActions } from '../../components/shared'
 import { useAuthStore } from '../../store/authStore'
 import { useBrandingStore } from '../../store/brandingStore'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -247,7 +247,7 @@ export function ExecutiveReport() {
     )
 
   const periodPicker = (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="pf-report-controls">
       <select
         value={periodId}
         onChange={(e) => setPeriodId(e.target.value)}
@@ -261,17 +261,23 @@ export function ExecutiveReport() {
           </option>
         ))}
       </select>
-      <ActionButton variant="ghost" icon={<RefreshCw size={15} className={loading ? 'animate-spin' : ''} />} onClick={() => void load(periodId)} disabled={loading}>
-        {loading ? 'Đang tải…' : 'Làm mới'}
+      <div className="flex items-center gap-2">
+      <ActionButton ariaLabel="Làm mới báo cáo" className="max-lg:min-w-11 max-lg:px-3" variant="ghost" icon={<RefreshCw size={15} className={loading ? 'animate-spin' : ''} />} onClick={() => void load(periodId)} disabled={loading}>
+        <span className="max-lg:hidden">{loading ? 'Đang tải…' : 'Làm mới'}</span>
       </ActionButton>
       {data && (
-        <div className="flex flex-wrap items-center gap-1.5">
+        <>
+        <div className="lg:hidden"><ExportActions onExcel={exportXlsx} onPdf={exportPdf} onImage={exportImage} disabled={exporting}
+          mobileItems={[{key:'print',label:'In báo cáo',icon:<Printer size={16} />,onClick:printReport,disabled:exporting}]} /></div>
+        <div className="hidden lg:flex flex-wrap items-center gap-1.5">
           <ActionButton variant="ghost" icon={<FileText size={15} />} onClick={() => void exportPdf()} disabled={exporting}>PDF</ActionButton>
           <ActionButton variant="ghost" icon={<Sheet size={15} />} onClick={() => void exportXlsx()} disabled={exporting}>Excel</ActionButton>
           <ActionButton variant="ghost" icon={<ImageIcon size={15} />} onClick={() => void exportImage()} disabled={exporting}>Ảnh</ActionButton>
           <ActionButton variant="ghost" icon={<Printer size={15} />} onClick={printReport}>In</ActionButton>
         </div>
+        </>
       )}
+      </div>
     </div>
   )
 
@@ -632,19 +638,23 @@ const TOC_ITEMS: { id: string; label: string }[] = [
 /** Mục lục báo cáo dài (mobile): chạm để nhảy tới phần; chỉ hiện các phần đang có trên trang. Không đưa vào ảnh/PDF xuất. */
 function ReportToc() {
   const [present, setPresent] = useState<string[]>([])
+  const [selected, setSelected] = useState('')
   useEffect(() => {
     const ids = TOC_ITEMS.filter((i) => document.getElementById(i.id)).map((i) => i.id)
     setPresent((prev) => (prev.join() === ids.join() ? prev : ids))
   })
   if (present.length < 2) return null
   return (
-    <nav aria-label="Mục lục báo cáo" data-html2canvas-ignore="true" className="flex flex-wrap gap-2 lg:hidden">
-      {TOC_ITEMS.filter((i) => present.includes(i.id)).map((i) => (
-        <button key={i.id} type="button" onClick={() => document.getElementById(i.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-          className="min-h-[44px] rounded-full border px-3.5 text-sm font-semibold [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary-text)]">
-          {i.label}
-        </button>
-      ))}
+    <nav aria-label="Mục lục báo cáo" data-html2canvas-ignore="true" className="lg:hidden">
+      <label className="pf-report-toc">
+        <span>Mục báo cáo</span>
+        <select aria-label="Mục báo cáo" value={present.includes(selected) ? selected : present[0]} onChange={e => {
+          setSelected(e.target.value)
+          document.getElementById(e.target.value)?.scrollIntoView({behavior:'smooth',block:'start'})
+        }}>
+          {TOC_ITEMS.filter(i => present.includes(i.id)).map(i => <option key={i.id} value={i.id}>{i.label}</option>)}
+        </select>
+      </label>
     </nav>
   )
 }

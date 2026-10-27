@@ -1874,3 +1874,21 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   .pf-ai-agent-stats[data-count="3"] > .pf-stat-cell:last-child > div:first-child { min-height: 26px; justify-content: center; text-align: center; }
   .pf-ai-agent-foot { grid-column: 1 / -1; grid-row: 3; font-size: 11px; }
 }
+
+/* Report controls use one context picker and one secondary action menu on mobile. */
+.pf-report-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+@media screen and (max-width: 1023px) {
+  .pf-report-header > div:last-child { width: 100%; }
+  .pf-report-controls { display: grid; grid-template-columns: minmax(0, 1fr); width: 100%; gap: 8px; }
+  .pf-report-controls > :first-child { min-width: 0; width: 100%; }
+  .pf-report-controls > div:first-child { border-radius: 12px; }
+  .pf-report-controls select { min-width: 0; max-width: 100%; min-height: 44px; }
+  .pf-report-controls > :not(:first-child) { justify-self: end; }
+  .pf-report-toc { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 12px; border: 1px solid var(--pf-border); border-radius: 12px; background: var(--pf-surface); }
+  .pf-report-toc > span { flex-shrink: 0; font-size: 12px; color: var(--pf-text-muted); }
+  .pf-report-toc select { flex: 1; min-width: 0; min-height: 44px; font-size: 14px; font-weight: 600; }
+  .pf-report-kpis > :nth-child(3) { grid-column: 1 / -1; }
+}
+@media screen and (min-width: 600px) and (max-width: 1023px) {
+  .pf-report-controls { grid-template-columns: minmax(0, 1fr) auto; }
+}

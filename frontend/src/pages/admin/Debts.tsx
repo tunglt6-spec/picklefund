@@ -189,7 +189,7 @@ export function Debts() {
 
           <div className="pf-glass rounded-[16px] p-4 sm:p-5">
             <div className="mb-3">
-              <ResponsiveTabs tabs={tabs} active={tab} onChange={(k) => setTab(k as 'all' | DebtStatus)} />
+              <ResponsiveTabs label="Tình trạng công nợ" tabs={tabs} active={tab} onChange={(k) => setTab(k as 'all' | DebtStatus)} />
             </div>
 
             {filtered.length === 0 ? (

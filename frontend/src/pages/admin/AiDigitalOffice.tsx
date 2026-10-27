@@ -470,7 +470,7 @@ function AiWorkspace() {
           title={currentLabel ?? 'AIDO'}
           parent="AIDO"
           onBack={() => setTab('menu')}
-          right={tab !== 'ops-center' ? (
+          right={!['ops-center', 'report'].includes(tab) ? (
             <button type="button" onClick={() => void load()} disabled={loading} aria-label="Làm mới"
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-primary-text)] disabled:opacity-50">
               <RefreshCw size={18} className={loading ? 'animate-spin' : ''} aria-hidden />

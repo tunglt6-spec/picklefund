@@ -405,15 +405,16 @@ export function Reports() {
   // MEMBER_VIEW chỉ XEM: không xuất bảng kê/infographic chứa tiền từng thành viên khác.
   const canExport = canExportOrgWideData(user?.role)
   const headerActions = (
-    <>
+    <div className="pf-report-controls">
       {periodSelect}
       {canExport && (
         <>
-          <ExportActions onExcel={doExportExcel} onPdf={doExportPDF} disabled={!officialReady || exporting} />
-          <ActionButton icon={<Sparkles size={15} />} onClick={openInfographic} disabled={!infographicReady} title={infographicReady ? 'Tạo Infographic' : EXPORT_HINT}>Infographic</ActionButton>
+          <ExportActions onExcel={doExportExcel} onPdf={doExportPDF} disabled={!officialReady || exporting}
+            mobileItems={[{key:'infographic',label:'Tạo Infographic',icon:<Sparkles size={16} />,onClick:openInfographic,disabled:!infographicReady}]} />
+          <ActionButton className="max-lg:hidden" icon={<Sparkles size={15} />} onClick={openInfographic} disabled={!infographicReady} title={infographicReady ? 'Tạo Infographic' : EXPORT_HINT}>Infographic</ActionButton>
         </>
       )}
-    </>
+    </div>
   )
 
   /* ── Member bill table columns ── */
@@ -437,6 +438,7 @@ export function Reports() {
     <PageShell>
       <PageHeader
         title="Báo cáo"
+        className="pf-report-header"
         actions={headerActions}
       />
 
@@ -458,7 +460,7 @@ export function Reports() {
       ) : (
         <>
           {/* ── Official KPI Summary (backend fundSummary = Source of Truth) ── */}
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 xl:grid-cols-4">
+          <div className="pf-report-kpis grid grid-cols-2 gap-4 lg:grid-cols-4 xl:grid-cols-4">
             {kpi('Tổng thu kỳ', kIncome, (isCompact ? 'Quỹ Chính' : 'Quỹ Chính (backend)'), 'green', <TrendingUp size={18} />, formatVND, 'income')}
             {kpi('Tổng chi kỳ', kExpense, (isCompact ? 'Quỹ Chính' : 'Quỹ Chính (backend)'), 'amber', <TrendingDown size={18} />, formatVND, 'expense')}
             {kpi('Số dư Quỹ Chính', kMainFund, '= Thu − Chi + chuyển kỳ', 'green', <Wallet size={18} />, formatVND, 'balance')}

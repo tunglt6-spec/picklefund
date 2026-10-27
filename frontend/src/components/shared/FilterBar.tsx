@@ -44,13 +44,13 @@ export function FilterBar({
       </div>
 
       {/* Desktop filters */}
-      {filters && <div className="hidden md:flex items-center gap-2">{filters}</div>}
+      {filters && <div className="hidden lg:flex items-center gap-2">{filters}</div>}
 
       {/* Mobile: nút mở filter drawer */}
       {onOpenFilters && (
         <button
           onClick={onOpenFilters}
-          className="md:hidden flex h-10 w-10 items-center justify-center rounded-full border [background:var(--pf-glass-bg-strong)] [color:var(--pf-color-muted)] border-[color:var(--pf-border)]"
+          className="lg:hidden flex h-10 w-10 items-center justify-center rounded-full border [background:var(--pf-glass-bg-strong)] [color:var(--pf-color-muted)] border-[color:var(--pf-border)]"
           aria-label="Bộ lọc"
         >
           <SlidersHorizontal size={16} />

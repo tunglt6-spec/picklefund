@@ -169,17 +169,8 @@ function DoublesSchedule({ minigameId, minigameName }: { minigameId: string; min
           </div>
         ) : (
           <>
-            <div className="flex gap-1.5 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-3 py-2 overflow-x-auto">
-              {tabs.map(t => (
-                <button key={t.id} onClick={() => setFilter(t.id)}
-                  className={cn(
-                    'shrink-0 text-xs font-medium px-2.5 py-1.5 rounded-[8px]',
-                    filter === t.id ? 'text-white' : '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]'
-                  )}
-                  style={filter === t.id ? { background: 'var(--pf-primary)' } : {}}>
-                  {t.label}
-                </button>
-              ))}
+            <div className="border-b border-[color:var(--pf-border)] px-4 py-2">
+              <ResponsiveTabs label="Lọc trận đấu" tabs={tabs.map(t=>({key:t.id,label:t.label}))} active={filter} onChange={setFilter} />
             </div>
 
             <div id={MS_DOUBLES_ID} className="px-4 py-4 space-y-3">
@@ -575,17 +566,8 @@ export function MatchSchedule() {
           </button>
         </div>
 
-        <div className="flex gap-1.5 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-3 py-2 overflow-x-auto">
-          {mTabs.map(t => (
-            <button key={t.id} onClick={() => setFilter(t.id)}
-              className={cn(
-                'shrink-0 text-xs font-medium px-2.5 py-1.5 rounded-[8px]',
-                filter === t.id ? 'text-white' : '[color:var(--pf-color-muted)] [background:var(--pf-surface-muted)]'
-              )}
-              style={filter === t.id ? { background: 'var(--pf-primary)' } : {}}>
-              {t.label}
-            </button>
-          ))}
+        <div className="border-b border-[color:var(--pf-border)] px-4 py-2">
+          <ResponsiveTabs label="Lọc trận đấu" tabs={mTabs.map(t=>({key:t.id,label:t.label}))} active={filter} onChange={setFilter} />
         </div>
 
         <div id={MS_GROUP_ID} className="px-4 py-4 space-y-3">

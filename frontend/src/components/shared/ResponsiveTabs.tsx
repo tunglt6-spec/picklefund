@@ -1,5 +1,5 @@
 /**
- * ResponsiveTabs (UDP-01) — tabs cuộn ngang trên mobile, active pill green.
+ * ResponsiveTabs — mobile dùng ô chọn khi có nhiều mục; desktop giữ thanh tab.
  */
 import { cn } from '../../lib/utils'
 
@@ -14,6 +14,7 @@ interface ResponsiveTabsProps {
   active: string
   onChange: (key: string) => void
   className?: string
+  label?: string
 }
 
 export function ResponsiveTabs({
@@ -21,6 +22,7 @@ export function ResponsiveTabs({
   active,
   onChange,
   className,
+  label = 'Bộ lọc',
 }: ResponsiveTabsProps) {
   // Mobile (<1024px): từ 3 mục trở lên dùng ô chọn gọn (không có hàng phải vuốt ngang); ≤3 mục chia đều bề ngang.
   const many = tabs.length >= 3
@@ -28,7 +30,7 @@ export function ResponsiveTabs({
     <>
     {many && (
       <select
-        aria-label="Bộ lọc"
+        aria-label={label}
         value={active}
         onChange={(e) => onChange(e.target.value)}
         className={cn('input-base w-full lg:hidden', className)}
@@ -40,6 +42,7 @@ export function ResponsiveTabs({
     )}
     <div
       role="tablist"
+      aria-label={label}
       className={cn(
         // Chuẩn v2.1 — tab NÚT TO; 1 hàng cuộn ngang (mobile vuốt, không xuống dòng).
         'pf-seg flex gap-2 overflow-x-auto no-scrollbar',

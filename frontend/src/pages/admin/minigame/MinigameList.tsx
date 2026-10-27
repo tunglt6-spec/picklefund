@@ -323,7 +323,7 @@ export function MinigameList() {
 
           {/* ── Mode Tabs ── */}
           <div className="mt-4">
-            <ResponsiveTabs tabs={MODE_TABS} active={modeTab} onChange={(k) => setModeTab(k as ModeTab)} />
+            <ResponsiveTabs label="Thể thức thi đấu" tabs={MODE_TABS} active={modeTab} onChange={(k) => setModeTab(k as ModeTab)} />
           </div>
 
           {/* ── Filter / Search ── */}
