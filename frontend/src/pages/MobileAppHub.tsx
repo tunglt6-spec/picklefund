@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { matchesMobileTile } from '../lib/mobileTileLabels'
 import { useModerationPending } from '../hooks/useModerationPending'
 import { Navigate } from 'react-router-dom'
-import { ArrowUpDown, Check } from '../components/icons/mobileLucide'
+import { ArrowUpDown, Check, Search } from '../components/icons/mobileLucide'
+import { PhoneToolbar } from '../components/mobile/PhoneToolbar'
 import { useNotifStore } from '../store/notifStore'
 import { homeByRole } from '../components/layout/navConfig'
 import { APP_GROUPS, type AppItem } from '../components/mobile/hubApps'
@@ -66,17 +67,21 @@ export function MobileAppHub() {
     <div className="pf-app-directory mx-auto w-full max-w-2xl px-4 pb-4 pt-3">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-[22px] font-[800] [color:var(--pf-text)]" style={{ letterSpacing: '-0.02em' }}>Ứng dụng</h1>
+        <PhoneToolbar label="Công cụ ứng dụng" tools={[
+          {key:'search',label:'Tìm',icon:<Search />,active:!!query,content:<HubSearch value={query} onChange={setQuery} />},
+          ...(!q?[{key:'sort',label:editing?'Xong':'Sắp xếp',icon:editing?<Check />:<ArrowUpDown />,active:editing,onClick:()=>setEditing(v=>!v)}]:[]),
+        ]} fallback={null} />
         {!q && (
           <button
             onClick={() => setEditing((v) => !v)}
-            className="flex min-h-[44px] items-center gap-1.5 px-1 text-sm font-semibold [color:var(--pf-primary-text)] active:opacity-70"
+            className="pf-phone-hide flex min-h-[44px] items-center gap-1.5 px-1 text-sm font-semibold [color:var(--pf-primary-text)] active:opacity-70"
           >
             {editing ? <Check size={16} aria-hidden /> : <ArrowUpDown size={16} aria-hidden />}
             {editing ? 'Xong' : 'Sắp xếp'}
           </button>
         )}
       </div>
-      <div className="mt-2"><HubSearch value={query} onChange={setQuery} /></div>
+      <div className="mt-2 pf-phone-hide"><HubSearch value={query} onChange={setQuery} /></div>
 
       {q ? (
         <>

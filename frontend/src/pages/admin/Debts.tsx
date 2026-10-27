@@ -11,7 +11,8 @@ import { countSignal } from '../../lib/statusDesign'
  * StatusBadge/EmptyState) — token màu, không hardcode brand.
  */
 import { useEffect, useMemo, useState } from 'react'
-import { Users, AlertCircle, Wallet } from '../../components/icons/mobileLucide'
+import { Users, AlertCircle, Wallet, Filter } from '../../components/icons/mobileLucide'
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 import { useExportRunner } from '../../hooks/useExportRunner'
 import api from '../../lib/api'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -172,7 +173,11 @@ export function Debts() {
       <PageHeader
         title="Công nợ cá nhân"
         subtitle={activePeriod ? `Kỳ ${activePeriod.name} · ${amount ? formatVND(amount) : 'chưa đặt mức'}/người` : 'Chưa có kỳ quỹ đang mở'}
-        actions={hasData && canExportOrgWideData(role) ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} /> : undefined}
+        className="pf-phone-header"
+        actions={<PhoneToolbar label="Công cụ công nợ" tools={[
+          {key:'status',label:'Lọc',icon:<Filter />,active:tab!=='all',content:<select className="input-base" aria-label="Tình trạng công nợ" value={tab} onChange={e=>setTab(e.target.value as 'all'|DebtStatus)}>{tabs.map(t=><option key={t.key} value={t.key}>{t.label}</option>)}</select>},
+        ]} moreLabel="Xuất" more={hasData&&canExportOrgWideData(role)?<ExportActions compact onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy}/>:undefined}
+          fallback={hasData&&canExportOrgWideData(role)?<ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy}/>:null} />}
       />
       <FinancialDataState sources={[financeState,...(needsSummary ? [{...summarySnapshot,reload:()=>setLiveTick(t=>t+1)}] : [])]}>
 
@@ -188,7 +193,7 @@ export function Debts() {
           </div>
 
           <div className="pf-glass rounded-[16px] p-4 sm:p-5">
-            <div className="mb-3">
+            <div className="mb-3 pf-phone-hide">
               <ResponsiveTabs label="Tình trạng công nợ" tabs={tabs} active={tab} onChange={(k) => setTab(k as 'all' | DebtStatus)} />
             </div>
 

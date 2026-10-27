@@ -5,6 +5,8 @@
 import type { ReactNode } from 'react'
 import { Search, SlidersHorizontal } from '../icons/mobileLucide'
 import { cn } from '../../lib/utils'
+import { useNarrowPhone } from '../../hooks/useNarrowPhone'
+import { PhoneToolbar } from '../mobile/PhoneToolbar'
 
 interface FilterBarProps {
   searchValue?: string
@@ -28,6 +30,12 @@ export function FilterBar({
   onOpenFilters,
   className,
 }: FilterBarProps) {
+  const phone = useNarrowPhone()
+  if (phone) return <PhoneToolbar label="Tìm kiếm và bộ lọc" fallback={null} tools={[
+    ...(onSearchChange ? [{key:'search',label:'Tìm',icon:<Search />,active:!!searchValue,content:<input aria-label={searchPlaceholder} value={searchValue ?? ''} onChange={e=>onSearchChange(e.target.value)} placeholder={searchPlaceholder} className="input-base" />}] : []),
+    ...((filters||onOpenFilters) ? [{key:'filter',label:'Lọc',icon:<SlidersHorizontal />,onClick:onOpenFilters,content:onOpenFilters?undefined:filters}] : []),
+    ...(trailing ? [{key:'other',label:'Hiển thị',icon:<SlidersHorizontal />,content:trailing}] : []),
+  ]} />
   return (
     <div className={cn('pf-toolbar flex items-center gap-2', className)}>
       <div className="relative flex-1 min-w-0">

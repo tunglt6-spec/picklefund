@@ -1,4 +1,5 @@
 import { mobilePeriodLabel } from '../../lib/mobilePresentation'
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 /**
  * UI-05 — Reports Center Enterprise Workspace (PickleFund v2.1)
  * Kế thừa UI-02 Dashboard 4.0 (Golden Reference). Tuân thủ UIP-05 (Reports Center Pattern)
@@ -405,6 +406,10 @@ export function Reports() {
   // MEMBER_VIEW chỉ XEM: không xuất bảng kê/infographic chứa tiền từng thành viên khác.
   const canExport = canExportOrgWideData(user?.role)
   const headerActions = (
+    <PhoneToolbar label="Công cụ báo cáo tài chính" tools={[
+      {key:'period',label:'Kỳ quỹ',icon:<Calendar />,detail:periodName,content:periodSelect},
+    ]} moreLabel="Xuất" more={canExport?<ExportActions compact onExcel={doExportExcel} onPdf={doExportPDF} disabled={!officialReady||exporting}
+      mobileItems={[{key:'infographic',label:'Tạo Infographic',icon:<Sparkles size={16}/>,onClick:openInfographic,disabled:!infographicReady}]} />:undefined} fallback={
     <div className="pf-report-controls">
       {periodSelect}
       {canExport && (
@@ -415,6 +420,7 @@ export function Reports() {
         </>
       )}
     </div>
+    } />
   )
 
   /* ── Member bill table columns ── */

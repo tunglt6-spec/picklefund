@@ -1,4 +1,5 @@
 import { MobileSummary } from '../../../components/mobile/MobileSummary'
+import { PhoneToolbar } from '../../../components/mobile/PhoneToolbar'
 import { ActionMenu } from '../../../components/shared/ActionMenu'
 import { tournamentSectionTarget, tournamentSectionLinks, type TournamentSection } from '../../../lib/tournamentNavigation'
 /**
@@ -16,7 +17,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDialogA11y } from '../../../hooks/useDialogA11y'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
-  Plus, Eye, Edit2, Trash2, Trophy, Users, Activity, CheckCircle2,
+  Plus, Search, Filter, Eye, Edit2, Trash2, Trophy, Users, Activity, CheckCircle2,
   PlayCircle, AlertCircle, RefreshCw, UserCheck, Check,
 } from '../../../components/icons/mobileLucide'
 import api from '../../../lib/api'
@@ -238,6 +239,12 @@ export function MinigameList() {
   )
 
   const headerActions = (
+    <PhoneToolbar label="Công cụ giải đấu" tools={[
+      {key:'search',label:'Tìm',icon:<Search />,active:!!search,content:<input aria-label="Tìm giải đấu" className="input-base" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Tìm giải đấu theo tên…" />},
+      {key:'mode',label:'Thể thức',icon:<Trophy />,active:modeTab!=='all',content:<select aria-label="Thể thức thi đấu" className="input-base" value={modeTab} onChange={e=>setModeTab(e.target.value as ModeTab)}>{MODE_TABS.map(t=><option key={t.key} value={t.key}>{t.label}</option>)}</select>},
+      {key:'filter',label:'Lọc',icon:<Filter />,active:statusFilter!=='all',onClick:()=>setShowFilterSheet(true)},
+      ...(canManage?[{key:'add',label:'Tạo giải',icon:<Plus />,primary:true,onClick:()=>navigate(`${tournamentBase}?tab=tournaments&create=1`)}]:[]),
+    ]} more={isClubAdmin?<ActionMenu iconOnly label="Thao tác giải đấu" items={[{key:'delegate',label:'Ủy quyền',onClick:()=>{void openDelegateModal()}}]} />:undefined} fallback={
     <div className="flex items-center gap-2">
       {isClubAdmin && (
         <ActionButton variant="secondary" icon={<UserCheck size={16} />} onClick={() => void openDelegateModal()}>Ủy quyền</ActionButton>
@@ -246,6 +253,7 @@ export function MinigameList() {
         <ActionButton icon={<Plus size={16} />} onClick={() => navigate(isMobile ? `${tournamentBase}?tab=tournaments&create=1` : '/thi-dau?tab=tournaments')}>{isMobile ? 'Tạo giải đấu' : 'Tạo minigame'}</ActionButton>
       )}
     </div>
+    } />
   )
 
   /* ── Progress bar (completion) ── */
@@ -292,6 +300,7 @@ export function MinigameList() {
     <PageShell>
       <PageHeader
         title="Giải đấu"
+        className="pf-phone-header"
         actions={headerActions}
       />
 
@@ -322,12 +331,12 @@ export function MinigameList() {
           </div>
 
           {/* ── Mode Tabs ── */}
-          <div className="mt-4">
+          <div className="mt-4 pf-phone-hide">
             <ResponsiveTabs label="Thể thức thi đấu" tabs={MODE_TABS} active={modeTab} onChange={(k) => setModeTab(k as ModeTab)} />
           </div>
 
           {/* ── Filter / Search ── */}
-          <div className="mt-3">
+          <div className="mt-3 pf-phone-hide">
             <FilterBar
               searchValue={search}
               onSearchChange={setSearch}

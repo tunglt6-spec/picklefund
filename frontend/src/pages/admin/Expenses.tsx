@@ -1,4 +1,5 @@
 import { MobileSummary } from '../../components/mobile/MobileSummary'
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 import { ActionMenu } from '../../components/shared/ActionMenu'
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { HuyLabel } from '../../components/ui/HuyLabel'
@@ -8,7 +9,7 @@ import { useDialogA11y } from '../../hooks/useDialogA11y'
 import { confirmDialog } from '../../components/ui/ConfirmHost'
 import { getBrandClubName } from '../../store/brandingStore'
 import {
-  Plus, Search, Filter, Eye, Trash2, Receipt,
+  Plus, Search, Filter, Eye, Trash2, Receipt, Calendar,
   CheckCircle, Clock, Pencil,
   FileText, X, ArrowLeft, Users, Wallet, DollarSign, Download, Tag, Paperclip,
   Landmark, Coffee, Check, FileDown,
@@ -831,6 +832,18 @@ export function Expenses() {
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
         <div className="pf-mobile-tools px-4 pt-3 pb-2 space-y-3">
+          <PhoneToolbar label="Công cụ chi phí" tools={[
+            {key:'period',label:'Kỳ quỹ',icon:<Calendar />,detail:allPeriods.find(p=>p.id===selectedPeriodId)?.name,content:<PeriodSelector periods={allPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />},
+            {key:'search',label:'Tìm',icon:<Search />,active:!!search,content:<input aria-label="Tìm khoản chi" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Tìm khoản chi…" className="input-base" />},
+            {key:'filter',label:'Lọc',icon:<Filter />,active:activeFilterCount>0||tab!=='all',onClick:()=>{
+              if(tab!=='all'){setFilterValues(v=>({...v,status:tab}));setTab('all')}
+              setShowFilter(true)
+            }},
+            ...(!isMember?[{key:'add',label:'Thêm',icon:<Plus />,primary:true,onClick:()=>setShowAdd(true)}]:[]),
+          ]} more={<ActionMenu iconOnly label="Thao tác chi phí" items={[
+            {key:'excel',label:'Xuất Excel',onClick:exportExcel,disabled:exporting},
+            {key:'pdf',label:'Xuất PDF',onClick:exportPDF,disabled:exporting},
+          ]}/>} fallback={<>
           <div className="flex items-center justify-between gap-3">
             <p className="min-w-0 flex-1 truncate text-xs [color:var(--pf-text-muted)]">{allPeriods.find(p => p.id === selectedPeriodId)?.name ?? activePeriod?.name}</p>
             <ActionMenu iconOnly label="Thao tác chi phí" items={[
@@ -852,6 +865,7 @@ export function Expenses() {
             {activeFilterCount > 0 && <button className="min-h-11 px-2 text-xs font-semibold [color:var(--pf-primary-text)]" onClick={() => setFilterValues({status:'all',rule:'all',from:'',to:''})}>Xóa bộ lọc</button>}
           </div>
           {activeFilterCount > 0 && <p role="status" className="text-xs [color:var(--pf-text-muted)]">{[filterValues.status !== 'all' ? EXPENSE_STATUS_LABEL[filterValues.status as ExpenseStatus] : '', filterValues.rule !== 'all' ? ruleLabels[filterValues.rule as AllocationRule] : '', filterValues.from ? `Từ ${formatDate(filterValues.from)}` : '', filterValues.to ? `Đến ${formatDate(filterValues.to)}` : ''].filter(Boolean).join(' · ')}</p>}
+          </>} />
           <MobileSummary module="finance" label="Chi đã duyệt" money={{value:expenseLoadState === 'loading' || (expenseLoadState === 'error' && !richExpenses.length) ? undefined : approvedAmt,kind:'expense'}} value={expenseLoadState === 'loading' ? '…' : expenseLoadState === 'error' && !richExpenses.length ? '—' : formatVND(approvedAmt)} note={expenseLoadState === 'loading' ? 'Đang tải…' : `${mobileFiltered.length} khoản đang hiển thị`} items={[
             {label:'Quỹ Chính',value:expenseLoadState === 'loading' ? '…' : formatVND(commonAmt),money:{value:expenseLoadState === 'loading' || (expenseLoadState === 'error' && !richExpenses.length) ? undefined : commonAmt,kind:'expense'}}, {label:'Quỹ Phụ',value:expenseLoadState === 'loading' ? '…' : formatVND(miniAmt),money:{value:expenseLoadState === 'loading' || (expenseLoadState === 'error' && !richExpenses.length) ? undefined : miniAmt,kind:'expense'}}, {label:'Chờ duyệt',value:expenseLoadState === 'loading' ? '…' : formatVND(pendingAmt),money:{value:expenseLoadState === 'loading' || (expenseLoadState === 'error' && !richExpenses.length) ? undefined : pendingAmt,kind:'pending'}},
           ]} />

@@ -2,6 +2,9 @@
  * ResponsiveTabs — mobile dùng ô chọn khi có nhiều mục; desktop giữ thanh tab.
  */
 import { cn } from '../../lib/utils'
+import { SlidersHorizontal } from '../icons/mobileLucide'
+import { useNarrowPhone } from '../../hooks/useNarrowPhone'
+import { PhoneToolbar } from '../mobile/PhoneToolbar'
 
 export interface TabItem {
   key: string
@@ -24,8 +27,13 @@ export function ResponsiveTabs({
   className,
   label = 'Bộ lọc',
 }: ResponsiveTabsProps) {
+  const phone = useNarrowPhone()
   // Mobile (<1024px): từ 3 mục trở lên dùng ô chọn gọn (không có hàng phải vuốt ngang); ≤3 mục chia đều bề ngang.
   const many = tabs.length >= 3
+  if (phone && many) return <PhoneToolbar label={label} fallback={null} tools={[
+    {key:'select',label:'Lọc',icon:<SlidersHorizontal />,detail:tabs.find(t=>t.key===active)?.label,active:active!==tabs[0]?.key,
+      content:<select aria-label={label} value={active} onChange={e=>onChange(e.target.value)} className="input-base">{tabs.map(t=><option key={t.key} value={t.key}>{t.label}{t.badge?` (${t.badge})`:''}</option>)}</select>},
+  ]} />
   return (
     <>
     {many && (

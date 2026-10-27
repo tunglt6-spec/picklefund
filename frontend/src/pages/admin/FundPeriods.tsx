@@ -18,6 +18,7 @@ import {
 } from '../../components/icons/mobileLucide'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { PageShell, PageHeader, DataTable, type Column } from '../../components/shared'
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 import { Button } from '../../components/ui/Button'
 import { Badge } from '../../components/ui/Badge'
 import { Modal } from '../../components/ui/Modal'
@@ -611,7 +612,18 @@ export function FundPeriods() {
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
         {/* Thanh thao tác gọn: 1 nút "Tạo kỳ quỹ" + menu "Thao tác" (QR, nhập, xuất). Tên màn do header chức năng hiển thị. */}
-        <div className="sticky top-0 z-20 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
+        <div className="px-4 py-3 min-[600px]:hidden"><PhoneToolbar label="Công cụ kỳ quỹ" tools={[
+          {key:'search',label:'Tìm',icon:<Search />,active:!!search,content:<input aria-label="Tìm kỳ quỹ" className="input-base" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Tìm kỳ quỹ…" />},
+          ...(!isMember?[{key:'add',label:'Tạo',icon:<Plus />,primary:true,content:(close:()=>void)=><>
+            <button className="pf-mobile-chip" onClick={()=>{close();setFormChung({...emptyForm});setShowCreateChung(true)}}>Kỳ quỹ chính</button>
+            <button className="pf-mobile-chip" onClick={()=>{close();setFormGame({...emptyForm});setShowCreateGame(true)}}>Kỳ quỹ phụ</button>
+          </>}]:[]),
+        ]} more={<ActionMenu iconOnly label="Thao tác kỳ quỹ" items={[
+          ...(bankInfo?[{key:'qr',label:'QR thanh toán',onClick:()=>setShowQrModal(true)}]:[]),
+          ...(!isMember?[{key:'imp',label:'Nhập Excel',onClick:()=>{resetImport();setShowImport(true)}},{key:'bulk',label:'Nhập dữ liệu CLB mới',onClick:()=>setShowBulkImport(true)}]:[]),
+          ...(filtered.length?[{key:'xlsx',label:'Xuất Excel',onClick:()=>{void doExportExcel()}},{key:'pdf',label:'Xuất PDF',onClick:()=>{void doExportPdf()}}]:[]),
+        ]}/>} fallback={null} /></div>
+        <div className="pf-phone-hide sticky top-0 z-20 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
           {embedded ? <span /> : <span className="text-lg font-[800] [color:var(--pf-text)]">Kỳ quỹ</span>}
           <div className="flex gap-2 items-center">
             <ActionMenu
@@ -686,7 +698,7 @@ export function FundPeriods() {
           )}
 
           {/* Search */}
-          <div className="relative">
+          <div className="relative pf-phone-hide">
             <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
             <input
               value={search}

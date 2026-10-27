@@ -19,7 +19,7 @@ function RLabel({ short }: { short: string }) {
 }
 
 export function ExportActions({
-  onExcel, onPdf, onImage, disabled: disabledProp, mobileItems = [],
+  onExcel, onPdf, onImage, disabled: disabledProp, mobileItems = [], compact,
 }: {
   onExcel?: () => void | Promise<unknown>
   onPdf?: () => void | Promise<unknown>
@@ -27,6 +27,7 @@ export function ExportActions({
   disabled?: boolean
   /** Additional mobile export formats; desktop owns its existing extra buttons. */
   mobileItems?: ActionMenuItem[]
+  compact?: boolean
 }) {
   // Handler trả Promise → khóa cả cụm nút tới khi xong (font/render mất vài giây, tránh bấm đúp
   // mở 2 hộp thoại lưu). Handler đồng bộ → không ảnh hưởng.
@@ -48,7 +49,7 @@ export function ExportActions({
   ]
   return (
     <div data-html2canvas-ignore="true">
-    <ActionMenu label="Xuất báo cáo" triggerIcon={<Download size={16} aria-hidden />} items={items} />
+    <ActionMenu label="Xuất báo cáo" iconOnly={compact} triggerIcon={<Download size={16} aria-hidden />} items={items} />
     <div className="hidden lg:flex flex-wrap items-center gap-2">
       {onImage && (
         <ActionButton variant="secondary" className="px-3 sm:px-4" icon={<ImageIcon size={16} />} onClick={wrap(onImage)} disabled={disabled} ariaLabel="Xuất ảnh">

@@ -5,6 +5,7 @@ import { HuyLabel } from '../../components/ui/HuyLabel'
 import { DateInput, TimeInput } from '../../components/ui/DateTimeFields'
 import { AmountHint } from '../../components/ui/AmountHint'
 import { Plus, CheckSquare, CalendarX, Clock, MapPin, Users, Edit2, Trash2, CalendarDays, UserCheck, TrendingUp } from '../../components/icons/mobileLucide'
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 import api from '../../lib/api'
 import { PageShell, PageHeader, MetricCard, EmptyState, StatusBadge, ActionButton, ExportActions, runExport } from '../../components/shared'
 import { ActionMenu } from '../../components/shared/ActionMenu'
@@ -324,7 +325,15 @@ export function Attendance() {
     <PageShell>
       <PageHeader
         title="Điểm danh"
+        className="pf-phone-header"
         actions={
+          <PhoneToolbar label="Công cụ điểm danh" tools={[
+            ...(allPeriods.length>1?[{key:'period',label:'Kỳ quỹ',icon:<CalendarDays />,detail:allPeriods.find(p=>p.id===selectedPeriodId)?.name,content:<PeriodSelector periods={allPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} label="Kỳ quỹ"/>}]:[]),
+            {key:'add',label:'Tạo buổi',icon:<Plus />,primary:true,onClick:()=>setShowCreate(true)},
+          ]} more={<ActionMenu iconOnly label="Thao tác điểm danh" items={[
+            ...(allPeriods.length>1&&sessions.length?[{key:'move',label:`Chuyển kỳ (${sessions.length} buổi)`,onClick:()=>setShowMovePeriod(true)}]:[]),
+            ...(exportSessions.length?[{key:'xlsx',label:'Xuất Excel',onClick:doExportExcel},{key:'pdf',label:'Xuất PDF',onClick:doExportPdf}]:[]),
+          ]}/>} fallback={
           <>
             {allPeriods.length > 1 && (
               <PeriodSelector periods={allPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} label="Kỳ quỹ" />
@@ -347,7 +356,7 @@ export function Attendance() {
                 { key: 'pdf', label: 'Xuất PDF', onClick: doExportPdf },
               ] : []),
             ]} />
-          </>
+          </> } />
         }
       />
 

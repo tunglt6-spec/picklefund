@@ -6,11 +6,12 @@
  * /attendance). KHÔNG mock dữ liệu; KPI tính từ dữ liệu thật. Mobile-first, không tràn ngang.
  */
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   ChevronLeft, ChevronRight, CalendarDays, Plus, UserCheck, CalendarPlus,
-  Users, ClipboardList, Gauge, Pencil, Copy, Trash2, Clock, MapPin, ArrowRight,
+  Users, Filter, ClipboardList, Gauge, Pencil, Copy, Trash2, Clock, MapPin, ArrowRight,
 } from '../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
 import { useClubDataStore } from '../../store/clubDataStore'
@@ -236,10 +237,20 @@ export function ScheduleCalendar() {
     <PageShell>
       <PageHeader
         title="Lịch sinh hoạt"
-        actions={(compact || !isMember) ? <>
+        className="pf-phone-header"
+        actions={<PhoneToolbar label="Công cụ lịch" tools={[
+          {key:'month',label:'Tháng',icon:<CalendarDays />,detail:`${MONTHS[month]} ${year}`,content:close=><>
+            <div className="flex items-center justify-between gap-2"><button className="pf-mobile-chip" aria-label="Tháng trước" onClick={prevMonth}><ChevronLeft size={18}/></button><strong>{MONTHS[month]} {year}</strong><button className="pf-mobile-chip" aria-label="Tháng sau" onClick={nextMonth}><ChevronRight size={18}/></button></div>
+            <button className="pf-mobile-chip" onClick={()=>{goToday();close()}}>Hôm nay</button>
+            <button className="pf-mobile-chip" onClick={()=>{setShowMonth(v=>!v);close()}}>{showMonth?'Xem lịch tuần':'Xem lịch tháng'}</button>
+          </>},
+          {key:'filter',label:'Lọc',icon:<Filter />,active:filter!==FILTERS[0]?.key,content:<select aria-label="Lọc loại sự kiện" className="input-base" value={filter} onChange={e=>setFilter(e.target.value as FilterKey)}>{FILTERS.map(f=><option key={f.key} value={f.key}>{f.label}</option>)}</select>},
+          {key:'stats',label:'Thống kê',icon:<Gauge />,onClick:()=>navigate(`${actBase}?tab=weekly`)},
+          ...(!isMember?[{key:'add',label:'Tạo buổi',icon:<Plus />,primary:true,onClick:()=>navigate('/hoat-dong?tab=attendance')}]:[]),
+        ]} fallback={(compact || !isMember) ? <>
           <button type="button" onClick={() => navigate(`${actBase}?tab=weekly`)} className="inline-flex min-h-[44px] items-center gap-1.5 rounded-xl border px-3.5 text-sm font-semibold [background:var(--pf-surface)] [border-color:var(--pf-border)] [color:var(--pf-text)] lg:hidden">Thống kê</button>
           {!isMember && <ActionButton icon={<Plus size={16} />} onClick={() => navigate('/hoat-dong?tab=attendance')}>Tạo buổi chơi</ActionButton>}
-        </> : undefined}
+        </> : undefined} />}
       />
 
       {sessions.length === 0 ? (
@@ -260,7 +271,7 @@ export function ScheduleCalendar() {
           </div>
 
           {/* Mobile: ô chọn gọn cho loại sự kiện (không có hàng phải vuốt ngang). */}
-          <label className="block lg:hidden">
+          <label className="block lg:hidden pf-phone-hide">
             <span className="sr-only">Loại sự kiện</span>
             <select value={filter} onChange={(e) => setFilter(e.target.value as FilterKey)} className="input-base w-full" aria-label="Lọc loại sự kiện">
               {FILTERS.map((f) => <option key={f.key} value={f.key}>{f.label}</option>)}
@@ -298,7 +309,7 @@ export function ScheduleCalendar() {
                 </button>) : <p className="py-3 text-sm [color:var(--pf-text-muted)]">Chưa có buổi sắp tới.</p>}
               </section>}
               {/* Month nav */}
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 pf-phone-hide">
                 <div className="flex items-center gap-2">
                   <button onClick={prevMonth} aria-label="Tháng trước" className="flex h-10 w-10 items-center justify-center rounded-full border [border-color:var(--pf-border)] [background:var(--pf-surface)] hover:[background:var(--pf-surface-muted)]">
                     <ChevronLeft size={18} />
@@ -315,7 +326,7 @@ export function ScheduleCalendar() {
               </div>
 
               {compact && <>
-                <button className="min-h-11 text-left text-sm font-semibold [color:var(--pf-primary-text)]" aria-expanded={showMonth} onClick={()=>setShowMonth(v=>!v)}>{showMonth ? 'Thu gọn lịch tháng' : 'Mở lịch tháng'}</button>
+                <button className="pf-phone-hide min-h-11 text-left text-sm font-semibold [color:var(--pf-primary-text)]" aria-expanded={showMonth} onClick={()=>setShowMonth(v=>!v)}>{showMonth ? 'Thu gọn lịch tháng' : 'Mở lịch tháng'}</button>
                 {!showMonth && <div className="pf-mobile-week" aria-label="Lịch tuần">{weekDays.map((d,i)=><button key={d.date} onClick={()=>selectDay(d.date)} aria-label={`Ngày ${d.date.split('-').reverse().join('/')}`} aria-pressed={selected===d.date}><span>{WEEKDAYS[i]}</span><strong>{d.day}</strong>{byDate[d.date]?.length ? <span aria-label="Có buổi chơi">•</span> : <span> </span>}</button>)}</div>}
               </>}
               {/* Lưới lịch */}

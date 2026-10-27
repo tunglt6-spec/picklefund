@@ -6,7 +6,8 @@
 import { mobileText } from '../../../lib/mobileText'
 import { DateInput } from '../../../components/ui/DateTimeFields'
 import { useCallback, useEffect, useState } from 'react'
-import { ScrollText, Search, ChevronLeft, ChevronRight } from '../../../components/icons/mobileLucide'
+import { ScrollText, Search, Filter, Calendar, ChevronLeft, ChevronRight } from '../../../components/icons/mobileLucide'
+import { PhoneToolbar } from '../../../components/mobile/PhoneToolbar'
 import api from '../../../lib/api'
 import { exportGenericExcel, exportGenericTablePDF } from '../../../lib/export'
 import { useExportRunner } from '../../../hooks/useExportRunner'
@@ -110,12 +111,22 @@ export function AuditLogViewer() {
     <PageShell>
       <PageHeader
         title={mobileText('Audit Logs', 'Nhật ký kiểm toán')}
-        actions={logs.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} /> : undefined}
+        className="pf-phone-header"
+        actions={<PhoneToolbar label="Công cụ nhật ký" tools={[
+          {key:'search',label:'Tìm',icon:<Search />,active:!!search,content:<input aria-label="Tìm nhật ký" className="input-base" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Người dùng, mô tả, tài nguyên…" />},
+          {key:'action',label:'Loại',icon:<Filter />,active:action!=='Tất cả',content:<select className="input-base" aria-label="Loại thao tác trong nhật ký" value={action} onChange={e=>setAction(e.target.value)}>{ACTION_OPTIONS.map(key=><option key={key} value={key}>{({CREATE:'Tạo mới',UPDATE:'Cập nhật',DELETE:'Xóa',EXPORT:'Xuất dữ liệu',LOCK:'Khóa'} as Record<string,string>)[key]??key}</option>)}</select>},
+          {key:'dates',label:'Ngày',icon:<Calendar />,active:!!from||!!to,content:<>
+            <label>Từ ngày<DateInput aria-label="Từ ngày" className="input-base" value={from} max={to||undefined} onChange={e=>setFrom(e.target.value)} /></label>
+            <label>Đến ngày<DateInput aria-label="Đến ngày" className="input-base" value={to} min={from||undefined} onChange={e=>setTo(e.target.value)} /></label>
+            {(from||to)&&<button className="pf-mobile-chip" onClick={()=>{setFrom('');setTo('')}}>Xóa lọc ngày</button>}
+          </>},
+        ]} moreLabel="Xuất" more={logs.length?<ExportActions compact onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy}/>:undefined}
+          fallback={logs.length>0?<ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy}/>:null} />}
       />
 
       <div className="flex flex-col gap-4">
         {/* Bộ lọc */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 pf-phone-hide">
           <div className="flex flex-col lg:flex-row gap-2">
             <div className="relative flex-1">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />

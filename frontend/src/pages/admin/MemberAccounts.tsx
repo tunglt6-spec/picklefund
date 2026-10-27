@@ -1,5 +1,6 @@
 import { countSignal } from '../../lib/statusDesign'
 import { MobileSummary } from '../../components/mobile/MobileSummary'
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 import { ActionMenu } from '../../components/shared/ActionMenu'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { useDialogA11y } from '../../hooks/useDialogA11y'
@@ -390,7 +391,11 @@ export function MemberAccounts() {
     return (
       <div className="pf-account-workspace min-h-full [background:var(--pf-bg)]">
         <div className="[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-4">
-          <div className="flex items-center justify-between mb-3">
+          <PhoneToolbar label="Công cụ tài khoản" tools={[
+            {key:'search',label:'Tìm',icon:<Search />,active:!!search,content:<input aria-label="Tìm tài khoản" className="input-base" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Tìm thành viên, username…" />},
+            {key:'add',label:'Tạo',icon:<UserPlus />,primary:true,onClick:()=>setShowSingle(true)},
+          ]} more={noAccountMembers.length?<ActionMenu iconOnly label="Thao tác tài khoản" items={[{key:'bulk',label:`Tạo hàng loạt (${noAccountMembers.length} thành viên)`,onClick:()=>setShowBulk(true)}]} />:undefined} fallback={null} />
+          <div className="flex items-center justify-between mb-3 pf-phone-hide">
             <div>
               {!embedded && <h1 className="text-base font-bold [color:var(--pf-text)]">Tài khoản thành viên</h1>}
               <p className="text-xs [color:var(--pf-color-muted)] mt-0.5">Tài khoản truy cập CLB</p>
@@ -407,7 +412,7 @@ export function MemberAccounts() {
             {label:'Chờ kích hoạt / đổi mật khẩu',value:loading ? '…' : accounts.filter(a=>['pending','must_change'].includes(getStatus(a))).length,tone:loading ? 'neutral' : countSignal(accounts.filter(a=>['pending','must_change'].includes(getStatus(a))).length,'pending')},
             {label:'Đã khóa',value:loading ? '…' : accounts.filter(a=>getStatus(a)==='locked').length,tone:loading ? 'neutral' : countSignal(accounts.filter(a=>getStatus(a)==='locked').length,'failure')},
           ]} />
-          <div className="relative">
+          <div className="relative pf-phone-hide">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
             <input value={search} onChange={e => setSearch(e.target.value)}
               placeholder="Tìm thành viên, username..."

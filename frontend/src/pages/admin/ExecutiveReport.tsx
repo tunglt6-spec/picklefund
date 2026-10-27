@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
 } from 'recharts'
 import {
   Users, UserCheck, CalendarDays, TrendingUp, TrendingDown, Wallet,
   Trophy, Bot, Sparkles, AlertTriangle, Info, ListChecks, RefreshCw,
-  FileText, Sheet, Image as ImageIcon, Printer, Crown, ArrowUpRight, ArrowDownLeft,
+  FileText, CalendarDays as PeriodIcon, Sheet, Image as ImageIcon, Printer, Crown, ArrowUpRight, ArrowDownLeft,
   Fingerprint, LineChart, Mail, Send, Star, Flame, Moon, CheckCircle2,
 } from '../../components/icons/mobileLucide'
 import { ChartCard, MetricCard, ActionButton, ExportActions } from '../../components/shared'
@@ -247,6 +248,11 @@ export function ExecutiveReport() {
     )
 
   const periodPicker = (
+    <PhoneToolbar label="Công cụ báo cáo điều hành" tools={[
+      {key:'period',label:'Kỳ quỹ',icon:<PeriodIcon />,detail:periods.find(p=>p.id===periodId)?.name,content:<select className="input-base" aria-label="Chọn kỳ quỹ để xem báo cáo" value={periodId} onChange={e=>setPeriodId(e.target.value)}>{periods.map(p=><option key={p.id} value={p.id}>{p.name}{p.status==='active'?' (đang mở)':''}</option>)}</select>},
+      ...(data?[{key:'section',label:'Mục',icon:<ListChecks />,content:(close:()=>void)=><select aria-label="Mục báo cáo" className="input-base" value="" onChange={e=>{const target=e.target.value;close();requestAnimationFrame(()=>document.getElementById(target)?.scrollIntoView({behavior:'smooth',block:'start'}))}}><option value="" disabled>Chọn phần báo cáo</option>{TOC_ITEMS.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</select>}]:[]),
+      {key:'refresh',label:'Làm mới',icon:<RefreshCw />,disabled:loading,onClick:()=>{void load(periodId)}},
+    ]} moreLabel="Xuất" more={data?<ExportActions compact onExcel={exportXlsx} onPdf={exportPdf} onImage={exportImage} disabled={exporting} mobileItems={[{key:'print',label:'In báo cáo',icon:<Printer size={16}/>,onClick:printReport,disabled:exporting}]} />:undefined} fallback={
     <div className="pf-report-controls">
       <select
         value={periodId}
@@ -279,6 +285,7 @@ export function ExecutiveReport() {
       )}
       </div>
     </div>
+    } />
   )
 
   if (loading && !data) return <div className="space-y-3">{periodPicker}<ReportSkeleton /></div>
@@ -645,7 +652,7 @@ function ReportToc() {
   })
   if (present.length < 2) return null
   return (
-    <nav aria-label="Mục lục báo cáo" data-html2canvas-ignore="true" className="lg:hidden">
+    <nav aria-label="Mục lục báo cáo" data-html2canvas-ignore="true" className="lg:hidden pf-phone-hide">
       <label className="pf-report-toc">
         <span>Mục báo cáo</span>
         <select aria-label="Mục báo cáo" value={present.includes(selected) ? selected : present[0]} onChange={e => {

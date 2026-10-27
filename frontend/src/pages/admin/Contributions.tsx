@@ -1,13 +1,14 @@
 import { FinancialDataState } from '../../components/shared/FinancialDataState'
 import { useLiveRefresh } from '../../hooks/useLiveRefresh'
 import { MobileSummary } from '../../components/mobile/MobileSummary'
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 import { ActionMenu } from '../../components/shared/ActionMenu'
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { HuyLabel } from '../../components/ui/HuyLabel'
 import { DateInput } from '../../components/ui/DateTimeFields'
 import { AmountHint } from '../../components/ui/AmountHint'
 import { getBrandClubName } from '../../store/brandingStore'
-import { Plus, CheckCircle, XCircle, DollarSign, Edit2, Trash2, FileText, FileSpreadsheet, Wallet } from '../../components/icons/mobileLucide'
+import { Plus, Calendar, CheckCircle, XCircle, DollarSign, Edit2, Trash2, FileText, FileSpreadsheet, Wallet } from '../../components/icons/mobileLucide'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -414,6 +415,14 @@ export function Contributions() {
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
         <div className="sticky top-0 z-20 max-lg:static [background:var(--pf-surface)] backdrop-blur-md border-b border-[color:var(--pf-border)] px-4 py-3 space-y-2">
+          <PhoneToolbar label="Công cụ thu quỹ" tools={[
+            {key:'period',label:'Kỳ quỹ',icon:<Calendar />,detail:chungPeriods.find(p=>p.id===selectedPeriodId)?.name,content:<PeriodSelector periods={chungPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} label="Kỳ quỹ" />},
+            {key:'fund',label:'Quỹ',icon:<Wallet />,detail:mobileTab==='COMMON'?'Quỹ Chính':'Quỹ Phụ',content:<select aria-label="Nguồn quỹ" className="input-base" value={mobileTab} onChange={e=>setMobileTab(e.target.value as FundSource)}><option value="COMMON">Quỹ Chính</option><option value="MINI">Quỹ Phụ</option></select>},
+            ...(!isMember?[{key:'add',label:'Thêm',icon:<Plus />,primary:true,onClick:openCreate}]:[]),
+          ]} more={<ActionMenu iconOnly label="Thao tác thu quỹ" items={contributions.length&&canExportOrgWideData(user?.role)?[
+            {key:'excel',label:'Xuất Excel',onClick:exportContribXlsx,disabled:exporting},
+            {key:'pdf',label:'Xuất PDF',onClick:exportContribPdf,disabled:exporting},
+          ]:[]}/>} fallback={<>
           <div className="flex items-center justify-between">
           <div>
             {!embedded && <h2 className="text-base font-[700] [color:var(--pf-text)]">Thu Quỹ</h2>}
@@ -430,6 +439,7 @@ export function Contributions() {
           </div>
           </div>
           <PeriodSelector periods={chungPeriods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} label="Kỳ quỹ" />
+          </>} />
         </div>
 
         <FinancialDataState sources={[{...scopedFinanceState,reload:reloadFinance}]}>
@@ -441,7 +451,7 @@ export function Contributions() {
         </div>
 
         {/* Mobile Fund Tabs */}
-        <div className="flex gap-1 [background:var(--pf-color-muted-soft)] rounded-[12px] p-1 mx-4 mt-2">
+        <div className="pf-phone-hide flex gap-1 [background:var(--pf-color-muted-soft)] rounded-[12px] p-1 mx-4 mt-2">
           <button
             onClick={() => setMobileTab('COMMON')}
             aria-pressed={mobileTab === 'COMMON'}

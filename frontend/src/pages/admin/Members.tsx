@@ -1,4 +1,5 @@
 import { countSignal } from '../../lib/statusDesign'
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 /**
  * UI-03 — Member Management Enterprise Workspace (PickleFund v2.1)
  * Kế thừa UI-02 Dashboard 4.0 (Golden Reference). Tuân thủ UIP-03 (Member Workspace
@@ -16,7 +17,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { getBrandClubName } from '../../store/brandingStore'
 import { useNavigate } from 'react-router-dom'
 import {
-  Plus, Users, UserCheck, UserMinus, Sparkles, X, Edit2, Trash2, Power,
+  Plus, Search, Filter, Users, UserCheck, UserMinus, Sparkles, X, Edit2, Trash2, Power,
   Phone, Mail, Calendar, Wallet, KeyRound,
   ClipboardList, Eye, CircleUserRound, AlertTriangle, RefreshCw,
 } from '../../components/icons/mobileLucide'
@@ -730,8 +731,17 @@ export function Members() {
     <PageShell>
       <PageHeader
         title="Thành viên"
-        actions={headerActions}
+        className="pf-phone-header-actions"
+        actions={<div className="contents pf-phone-hide">{headerActions}</div>}
       />
+      <PhoneToolbar label="Công cụ thành viên" tools={[
+        {key:'search',label:'Tìm',icon:<Search />,active:!!search,content:<input aria-label="Tìm thành viên" className="input-base" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Tên, số điện thoại, email…" />},
+        {key:'filter',label:'Lọc',icon:<Filter />,active:statusFilter!=='all',onClick:()=>setShowFilterSheet(true)},
+        {key:'add',label:'Thêm',icon:<Plus />,primary:true,onClick:openCreate},
+      ]} more={<ActionMenu iconOnly label="Thao tác thành viên" items={[
+        ...(canExport?[{key:'xlsx',label:'Xuất Excel',onClick:doExportExcel},{key:'pdf',label:'Xuất PDF',onClick:doExportPDF}]:[]),
+        {key:'acct',label:'Tạo tài khoản',onClick:()=>navigate('/member-accounts')},
+      ]}/>} fallback={null} />
 
       {loadState === 'loading' ? (
         /* ── Workspace Loading (shared LoadingState) ── */
@@ -780,7 +790,7 @@ export function Members() {
       </div>
 
       {/* ── Filter / Search ── */}
-      <div className="mt-4">
+      <div className="mt-4 pf-phone-hide">
         <FilterBar
           searchValue={search}
           onSearchChange={setSearch}
