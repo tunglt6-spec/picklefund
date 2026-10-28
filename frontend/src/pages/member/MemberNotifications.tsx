@@ -1,3 +1,5 @@
+import { useIsMobile } from '../../hooks/useIsMobile'
+import { NotificationDetail } from '../../components/mobile/NotificationDetail'
 import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, BellRing, DollarSign, Calendar, Users, AlertTriangle, Check, Brain, Zap, Settings, Inbox, Megaphone } from '../../components/icons/mobileLucide'
@@ -135,6 +137,8 @@ function FilterKpiList({ tab, counts, onChange }: {
 export function MemberNotifications() {
   const { user } = useAuthStore()
   const navigate = useNavigate()
+  const isMobile = useIsMobile(1024)
+  const [openedNotification, setOpenedNotification] = useState<HermesNotif | null>(null)
   const [notifs, setNotifs] = useState<HermesNotif[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -251,6 +255,7 @@ export function MemberNotifications() {
 
   const openNotif = (n: HermesNotif) => {
     if (n.status !== 'READ') handleRead(n.id)
+    if (isMobile) { setOpenedNotification(n); return }
     const link = n.metadata?.link
     if (link) navigate(link)
   }
@@ -258,7 +263,7 @@ export function MemberNotifications() {
   const renderCard = (n: HermesNotif) => {
     const isRead = n.status === 'READ'
     return (
-      <div key={n.id} onClick={() => openNotif(n)}
+      <div key={n.id} onClick={() => openNotif(n)} aria-haspopup={isMobile ? 'dialog' : undefined}
         role="button" tabIndex={0}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openNotif(n) } }}
         className={`pf-rowcard flex items-start gap-3 p-4 cursor-pointer active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary-text)]
@@ -269,7 +274,7 @@ export function MemberNotifications() {
             <p className={`text-sm font-semibold ${isRead ? '[color:var(--pf-color-muted)]' : '[color:var(--pf-text)]'}`}>{n.title}</p>
             {!isRead && <span className="h-2 w-2 shrink-0 rounded-full [background:var(--pf-primary)]" />}
           </div>
-          <p className="text-xs leading-relaxed [color:var(--pf-color-muted)]">{n.body}</p>
+          <p className="max-lg:line-clamp-3 text-xs leading-relaxed [color:var(--pf-color-muted)]">{n.body}</p>
           <p className="mt-1 text-xs [color:var(--pf-color-muted)]">{timeAgo(n.createdAt)}</p>
         </div>
       </div>
@@ -319,6 +324,8 @@ export function MemberNotifications() {
 
       />
 
+      <NotificationDetail notification={isMobile ? openedNotification : null} onClose={() => setOpenedNotification(null)}
+          onOpenRelated={openedNotification?.metadata?.link ? () => { const link = openedNotification.metadata?.link; setOpenedNotification(null); if (link) navigate(link) } : undefined} />
       <NotificationSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
       {loading ? (

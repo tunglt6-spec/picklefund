@@ -1,3 +1,4 @@
+import { NotificationDetail } from '../../components/mobile/NotificationDetail'
 import { useState, useEffect, useCallback, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Bell, BellRing, DollarSign, Calendar, Users, AlertTriangle, Check, Receipt, Brain, Zap, Inbox, Settings, Megaphone, UserPlus, ScrollText } from '../../components/icons/mobileLucide'
@@ -65,7 +66,7 @@ function NotifCard({ n, onOpen, mobile }: { n: HermesNotif; onOpen: (n: HermesNo
 
   if (mobile) {
     return (
-      <div onClick={() => onOpen(n)}
+      <div onClick={() => onOpen(n)} aria-haspopup="dialog"
         role="button" tabIndex={0}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(n) } }}
         className={`pf-rowcard flex items-start gap-3 p-4 cursor-pointer active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--pf-primary-text)]
@@ -219,6 +220,7 @@ export function Notifications() {
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
+  const [openedNotification, setOpenedNotification] = useState<HermesNotif | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [pushPerm, setPushPerm] = useState<NotificationPermission | 'unsupported'>('default')
   const [pushBusy, setPushBusy] = useState(false)
@@ -279,6 +281,7 @@ export function Notifications() {
 
   const handleOpen = (n: HermesNotif) => {
     if (n.status !== 'READ') handleRead(n.id)
+    if (isMobile) { setOpenedNotification(n); return }
     const link = n.metadata?.link
     if (link) navigate(link)
   }
@@ -353,6 +356,8 @@ export function Notifications() {
           <p className="mt-2 text-xs [color:var(--pf-text-muted)]">{loading?'Đang tải thông báo…':loadError?'Chưa cập nhật được thông báo':unreadCount>0?`${unreadCount} chưa đọc`:'Tất cả đã đọc'}</p>
         </div>
 
+        <NotificationDetail notification={openedNotification} onClose={() => setOpenedNotification(null)}
+          onOpenRelated={openedNotification?.metadata?.link ? () => { const link = openedNotification.metadata?.link; setOpenedNotification(null); if (link) navigate(link) } : undefined} />
         <NotificationSettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} categories={pushCats} />
 
         <div className="px-4 pt-3 pb-24 space-y-4">
