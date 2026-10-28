@@ -35,7 +35,7 @@ export function MobileHeader() {
   if (!user) return null
 
   const lisaRoute = LISA_ROUTES[user.role]
-  const isDetail = DETAIL_PATHS.some((re) => re.test(pathname))
+  const isDetail = pathname !== '/admin/ai-manager' && DETAIL_PATHS.some((re) => re.test(pathname))
   const circle =
     'relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full border [background:var(--pf-surface)] [border-color:var(--pf-border)] active:scale-95'
 

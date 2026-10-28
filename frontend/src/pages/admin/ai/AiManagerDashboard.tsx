@@ -1,5 +1,6 @@
 import { useIsMobile } from '../../../hooks/useIsMobile'
 import { WorkspaceMark } from '../../../components/mobile/WorkspaceMark'
+import { MobileFunctionHeader } from '../../../components/mobile/ModuleNav'
 import { useMemo, useState } from 'react'
 import { mobileText } from '../../../lib/mobileText'
 import { useNavigate } from 'react-router-dom'
@@ -531,9 +532,12 @@ export function AiManagerDashboard({ embedded = false }: { embedded?: boolean } 
 
   return (
     <div className="pf-ai-dashboard [background:var(--pf-bg)]">
+      {!embedded && (
+        <MobileFunctionHeader title="Trung tâm điều hành AI" parent="AIDO" module="ai" onBack={() => navigate('/aido')} />
+      )}
       {/* Header — KHÔNG bọc scroll riêng (tránh scroll lồng cắt chân khi nhúng tab AIDO) và
           KHÔNG sticky (thanh tab AIDO đã sticky top-0; 2 sticky sẽ chồng nhau). */}
-      <div className={`[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] py-4 ${embedded ? 'max-lg:hidden' : ''}`}>
+      <div className="hidden lg:block [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] py-4">
         <div className="pf-center-x w-full max-w-[1600px] px-4 sm:px-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3 min-w-0">
             <span className="hidden lg:flex h-10 w-10 shrink-0 items-center justify-center rounded-xl [background:var(--pf-primary-soft)]">
