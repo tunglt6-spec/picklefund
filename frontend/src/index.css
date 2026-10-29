@@ -1517,6 +1517,7 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   .pf-app-directory, .pf-module-directory, .pf-home-layout { max-width: 960px; }
   .pf-app-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 12px; margin-top: 10px; align-items: stretch; }
   .pf-app-groups > .pf-glass-group { margin-top: 0; }
+  .pf-app-groups > .pf-glass-group:only-child { grid-column: 1 / -1; }
   .pf-module-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 12px; align-items: stretch; }
   .pf-module-groups > .pf-glass-group { margin-top: 0; min-width: 0; }
   .pf-module-groups > .pf-glass-group:only-child { grid-column: 1 / -1; }
@@ -1524,6 +1525,7 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
   /* A single standalone menu uses bounded cells rather than filling the entire display. */
   .pf-glass-group .pf-function-grid { grid-template-columns: repeat(auto-fit, minmax(64px, 84px)); justify-content: start; }
   .pf-app-groups .pf-function-grid, .pf-module-groups:has(> .pf-glass-group ~ .pf-glass-group) .pf-function-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .pf-app-groups > .pf-glass-group:only-child .pf-function-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .pf-home-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 16px; align-items: start; }
   .pf-home-layout > header, .pf-home-wide { grid-column: 1 / -1; }
   .pf-home-section { min-width: 0; }
@@ -1914,6 +1916,8 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
 }
 @media screen and (min-width: 600px) and (max-width: 1023.98px) {
   .pf-phone-toolbar > button > span, .pf-phone-toolbar-more > span { font-size: 13px; line-height: 16px; }
+  .pf-app-directory .pf-app-directory-heading { flex-direction: row; align-items: center; justify-content: space-between; }
+  .pf-app-directory-heading > .pf-phone-toolbar { flex: 0 0 216px; width: 216px; }
 }
 
 /* Mobile vertical rhythm: toolbars and cards are distinct rows, never touching.
