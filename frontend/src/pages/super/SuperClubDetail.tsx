@@ -73,7 +73,7 @@ type Tab = 'members' | 'billing'
 export function SuperClubDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile(1024)
 
   const [club, setClub] = useState<ClubDetail | null>(null)
   const [members, setMembers] = useState<ClubMember[]>([])
