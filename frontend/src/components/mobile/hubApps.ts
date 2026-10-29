@@ -95,7 +95,6 @@ export const APP_GROUPS: Record<Role, AppGroup[]> = {
       { key: 'matchmaking', label: NAV_CATALOG['com.match'].label, to: '/community?tab=matchmaking', icon: NAV_CATALOG['com.match'].icon, module: NAV_CATALOG['com.match'].module },
     ] },
     { key: 'assistant', title: 'Trợ lý & thông báo', items: [
-      { key: 'office', label: 'Văn phòng AI', to: '/member/aido', icon: Cpu, module: 'ai' },
       { key: 'lisa', label: 'Lisa AI', to: '/member/lisa', icon: Sparkles, module: 'ai' },
       { key: 'notifications', label: 'Thông báo', to: '/member/notifications', icon: Bell, badge: true, module: 'system' },
     ] },
@@ -141,7 +140,7 @@ export const APPS: Record<Role, AppItem[]> = {
 /** Lối tắt quan trọng trên màn Tổng quan (chọn từ APPS theo key; thiếu key nào thì bỏ qua). Phần còn lại truy cập qua "Ứng dụng". */
 export const HOME_KEYS: Record<Role, string[]> = {
   CLUB_ADMIN: ['attendance', 'members', 'fund', 'debts', 'aido', 'lisa'],
-  MEMBER_VIEW: ['receipt', 'attend', 'fund', 'mydebts', 'office', 'lisa'],
+  MEMBER_VIEW: ['receipt', 'attend', 'fund', 'mydebts', 'lisa', 'notifications'],
   CLUB_TREASURER: ['income', 'expense', 'ledger', 'approve', 'reminders', 'lisa'],
   SUPER_ADMIN: ['clubs', 'users', 'payments', 'audit', 'settings', 'dashboard'],
 }

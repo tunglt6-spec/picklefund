@@ -59,7 +59,7 @@ test('retired mobile AIDO overview links reach the operating center without gran
     }
   }
   assert.equal(canonicalMobileRoute('MEMBER_VIEW', '/aido', '?tab=office'), null)
-  assert.equal(canonicalMobileRoute('MEMBER_VIEW', '/member/aido'), null)
+  assert.equal(canonicalMobileRoute('MEMBER_VIEW', '/member/aido'), '/ung-dung')
 })
 test('tournament actions follow the existing sport and format screens, with no repeated destination', () => {
   for (const [sport,formatType,participantType] of [

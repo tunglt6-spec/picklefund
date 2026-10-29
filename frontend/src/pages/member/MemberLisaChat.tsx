@@ -28,6 +28,7 @@ export function MemberLisaChat() {
   const { user } = useAuthStore()
   const navigate = useNavigate()
   const isMobile = useIsMobile(768) // khớp mốc `md` app shell → không lệch dải 640–767
+  const mobileLayout = useIsMobile(1024)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -203,7 +204,7 @@ export function MemberLisaChat() {
         {/* Header */}
         <div className="shrink-0 [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-3 py-3 flex items-center justify-between" style={{ paddingTop: 'max(0.75rem, env(safe-area-inset-top))' }}>
           <div className="flex items-center gap-1.5 min-w-0">
-            <button onClick={() => navigate('/member/aido')} aria-label="Quay lại Văn phòng AI" className="flex h-11 w-11 items-center justify-center -ml-1 [color:var(--pf-color-muted)] active:opacity-60">
+            <button onClick={() => navigate('/ung-dung')} aria-label="Quay lại Ứng dụng" className="flex h-11 w-11 items-center justify-center -ml-1 [color:var(--pf-color-muted)] active:opacity-60">
               <ArrowLeft size={20} />
             </button>
             <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm border-2 [border-color:var(--pf-surface)]">
@@ -241,7 +242,7 @@ export function MemberLisaChat() {
     <div className="pf-fill flex flex-col h-full [background:var(--pf-surface-muted)]">
       <div className="[background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <button onClick={() => navigate('/member/aido')} aria-label="Quay lại Văn phòng AI" className="p-1.5 -ml-1.5 rounded-lg [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)] hover:[background:var(--pf-surface-muted)]">
+            <button onClick={() => navigate(mobileLayout ? '/ung-dung' : '/member/aido')} aria-label={mobileLayout ? 'Quay lại Ứng dụng' : 'Quay lại Văn phòng AI'} className="p-1.5 -ml-1.5 rounded-lg [color:var(--pf-color-muted)] hover:[color:var(--pf-primary-text)] hover:[background:var(--pf-surface-muted)]">
             <ArrowLeft size={18} />
           </button>
           <div className="w-9 h-9 rounded-full overflow-hidden border-2 [border-color:var(--pf-primary-soft)] shadow-sm">

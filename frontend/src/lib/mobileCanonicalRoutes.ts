@@ -13,6 +13,7 @@ const admin: Record<string, string> = {
   '/admin/execution-log': '/admin/ai-log?tab=mitdac',
 }
 const member: Record<string, string> = {
+  '/member/aido': '/ung-dung',
   '/member/receipt': '/member/ca-nhan?tab=receipt', '/member/contributions': '/member/ca-nhan?tab=contrib',
   '/member/attendance': '/member/ca-nhan?tab=attend', '/debts': '/member/ca-nhan?tab=debts',
   '/fund-periods': '/member/tai-chinh?tab=periods', '/contributions': '/member/tai-chinh?tab=income',
