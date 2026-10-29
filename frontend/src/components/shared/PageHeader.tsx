@@ -13,6 +13,8 @@ import { cn } from '../../lib/utils'
 import { useEmbedded } from './ModuleTabs'
 import { useIsMobile } from '../../hooks/useIsMobile'
 import { WorkspaceMark } from '../mobile/WorkspaceMark'
+import { MobileFunctionHeader } from '../mobile/ModuleNav'
+import { useNavigate } from 'react-router-dom'
 
 interface PageHeaderProps {
   title: string
@@ -24,6 +26,8 @@ interface PageHeaderProps {
   className?: string
   /** Kiểu hiển thị: 'inline' (mặc định) hoặc 'bar' (app-bar viền dưới, tương thích cũ). */
   variant?: 'inline' | 'bar'
+  mobileBackTo?: string
+  mobileParent?: string
 }
 
 export function PageHeader({
@@ -33,11 +37,20 @@ export function PageHeader({
   actions,
   className,
   variant = 'inline',
+  mobileBackTo,
+  mobileParent = 'Hệ thống',
 }: PageHeaderProps) {
+  const navigate = useNavigate()
   const embedded = useEmbedded()
   // Mobile: bỏ emoji đầu tiêu đề (chuẩn Luxury SaaS dùng icon, không dùng emoji); desktop giữ nguyên.
   const isMobile = useIsMobile(1024)
   const shownTitle = isMobile ? title.replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u, '') : title
+
+  if (isMobile && mobileBackTo && !embedded) return <>
+    <MobileFunctionHeader title={shownTitle} parent={mobileParent} onBack={() => navigate(mobileBackTo)} />
+    {subtitle && <p className="mb-3 text-sm [color:var(--pf-color-muted)]">{subtitle}</p>}
+    {(actions || aside) && <div className="mb-4 flex min-w-0 flex-wrap items-center justify-end gap-2">{aside}{actions}</div>}
+  </>
 
   // ── Variant 'bar' — app-bar edge-to-edge (khớp layout/PageHeader cũ, zero render change) ──
   if (variant === 'bar') {

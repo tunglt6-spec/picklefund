@@ -1,3 +1,6 @@
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
+import { HubSearch } from '../../components/mobile/HubParts'
+import { Search, SlidersHorizontal } from '../../components/icons/mobileLucide'
 /**
  * AuditLogs (Super Admin) — nhật ký kiểm toán toàn hệ thống. Elite 2026: PageShell + PageHeader
  * + FilterBar + DataTable + StatusBadge + Loading/Empty states (design-system UDP-01).
@@ -112,7 +115,7 @@ export function AuditLogs() {
 
   return (
     <PageShell maxWidth={1760}>
-      <PageHeader
+      <PageHeader mobileBackTo="/ung-dung"
         title="Nhật ký kiểm toán"
         subtitle={`${rows.length} thao tác`}
         actions={rows.length > 0 ? <ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={busy} /> : undefined}
@@ -127,6 +130,11 @@ export function AuditLogs() {
         <MetricCard compact icon={<ShieldAlert size={16} />} label="Thao tác nhạy cảm" value={kRisk.toLocaleString('vi-VN')} sub="Xóa · khóa" tone={kRisk > 0 ? 'warning' : undefined} />
       </div>
 
+      <PhoneToolbar label="Công cụ nhật ký" tools={[
+        {key:'search',label:'Tìm',icon:<Search />,active:!!search,content:<HubSearch value={search} onChange={setSearch} placeholder="Tìm nhật ký…" ariaLabel="Tìm nhật ký" />},
+        {key:'action',label:'Hành động',icon:<SlidersHorizontal />,active:action!==ACTION_OPTIONS[0],content:<select aria-label="Lọc theo hành động" value={action} onChange={e=>setAction(e.target.value as typeof action)} className="input-base">{ACTION_OPTIONS.map(opt=><option key={opt} value={opt}>{opt}</option>)}</select>},
+        {key:'date',label:'Ngày',icon:<CalendarDays />,active:!!(from||to),content:<div className="grid gap-3"><label>Từ ngày<DateInput value={from} max={to||undefined} onChange={e=>setFrom(e.target.value)} aria-label="Từ ngày" className="input-base" /></label><label>Đến ngày<DateInput value={to} min={from||undefined} onChange={e=>setTo(e.target.value)} aria-label="Đến ngày" className="input-base" /></label><button type="button" onClick={()=>{setFrom('');setTo('')}} className="pf-mobile-chip">Xóa lọc ngày</button></div>},
+      ]} fallback={
       <div className="mb-4 flex flex-col gap-3">
         <FilterBar searchValue={search} onSearchChange={setSearch} searchPlaceholder="Tìm theo người dùng, mô tả, CLB…" />
         <div className="flex flex-wrap items-center gap-2">
@@ -156,6 +164,7 @@ export function AuditLogs() {
         {(from || to) && <button type="button" onClick={() => { setFrom(''); setTo('') }} className="text-xs font-semibold [color:var(--pf-primary-text)]">Xóa lọc ngày</button>}
         </div>
       </div>
+      } />
 
       <ChartCard title="Timeline" subtitle={`${rows.length} sự kiện`} className="pf-compact-card" bodyClassName="!p-0">
         {loading ? (

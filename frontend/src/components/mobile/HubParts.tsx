@@ -93,7 +93,7 @@ export function useHubData() {
 }
 
 /** Ô tìm kiếm CHỨC NĂNG toàn app (khác với ô tìm dữ liệu trong từng màn). */
-export function HubSearch({ value, onChange, placeholder = 'Tìm chức năng…' }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
+export function HubSearch({ value, onChange, placeholder = 'Tìm chức năng…', ariaLabel = 'Tìm chức năng trong toàn ứng dụng' }: { value: string; onChange: (v: string) => void; placeholder?: string; ariaLabel?: string }) {
   return (
     <label
       className="flex h-12 items-center gap-3 rounded-full border px-4 [background:var(--pf-surface)] [border-color:var(--pf-border)] focus-within:ring-2 focus-within:ring-[color:var(--pf-primary)]"
@@ -104,7 +104,7 @@ export function HubSearch({ value, onChange, placeholder = 'Tìm chức năng…
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        aria-label="Tìm chức năng trong toàn ứng dụng"
+        aria-label={ariaLabel}
         className="min-w-0 flex-1 bg-transparent text-base outline-none [color:var(--pf-text)] placeholder:[color:var(--pf-color-muted)]"
       />
       {value && (

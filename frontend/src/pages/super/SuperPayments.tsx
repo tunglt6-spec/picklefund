@@ -1,3 +1,6 @@
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
+import { HubSearch } from '../../components/mobile/HubParts'
+import { Search, SlidersHorizontal } from '../../components/icons/mobileLucide'
 /**
  * SuperPayments (Super Admin) — Thanh toán gói dịch vụ của các CLB: lịch sử (mọi cổng + ghi nhận thủ công),
  * tổng hợp doanh thu, ghi nhận gia hạn thủ công, hủy bản ghi nhập nhầm.
@@ -121,9 +124,9 @@ export function SuperPayments() {
 
   return (
     <PageShell maxWidth={1760}>
-      <PageHeader
+      <PageHeader mobileBackTo="/ung-dung"
         title="Thanh toán gói dịch vụ"
-        actions={<Button onClick={() => setOpen(true)}><Plus size={16} />Ghi nhận thanh toán</Button>}
+        actions={<Button className="max-lg:hidden" onClick={() => setOpen(true)}><Plus size={16} />Ghi nhận thanh toán</Button>}
       />
 
       <div className="pf-kpi-row mb-4" data-sa-look="ledger">
@@ -173,6 +176,11 @@ export function SuperPayments() {
         </div>
       )}
 
+      <PhoneToolbar label="Công cụ thanh toán" tools={[
+        {key:'search',label:'Tìm',icon:<Search />,active:!!search,content:<HubSearch value={search} onChange={setSearch} placeholder="Tìm giao dịch…" ariaLabel="Tìm giao dịch" />},
+        {key:'club',label:'CLB',icon:<SlidersHorizontal />,active:!!clubId,content:<select aria-label="Lọc theo CLB" value={clubId} onChange={e=>setClubId(e.target.value)} className="input-base"><option value="">Tất cả CLB</option>{clubs.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select>},
+        {key:'add',label:'Ghi nhận',icon:<Plus />,primary:true,onClick:()=>setOpen(true)},
+      ]} fallback={
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
         <FilterBar className="flex-1" searchValue={search} onSearchChange={setSearch} searchPlaceholder="Tìm CLB, mã giao dịch, ghi chú…" />
         <select value={clubId} onChange={(e) => setClubId(e.target.value)} aria-label="Lọc theo CLB"
@@ -181,6 +189,7 @@ export function SuperPayments() {
           {clubs.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </div>
+      } />
 
       <div className="pf-glass rounded-[16px] p-2">
         {loading ? <LoadingState variant="table" rows={6} />

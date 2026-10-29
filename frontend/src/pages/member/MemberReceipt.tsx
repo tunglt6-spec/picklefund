@@ -1,3 +1,7 @@
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
+import { MobileFunctionHeader } from '../../components/mobile/ModuleNav'
+import { useEmbedded } from '../../components/shared/ModuleTabs'
+import { useNavigate } from 'react-router-dom'
 import { useState, useEffect, useRef } from 'react'
 import { Receipt, DollarSign, Calendar, TrendingUp, ChevronDown, ChevronUp, Download, AlertCircle, QrCode, Share2, CheckCircle } from '../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
@@ -56,7 +60,9 @@ function buildQrUrl(bank: BankInfo, amount: number, addInfo: string) {
 }
 
 export function MemberReceipt() {
-  const isMobile = useIsMobile()
+  const embedded = useEmbedded()
+  const navigate = useNavigate()
+  const isMobile = useIsMobile(1024)
   const { user, accessToken } = useAuthStore()
   // Chỉ dùng dữ liệu self-scope từ JWT (/member/me/*) — không đọc store club-wide.
   const { finance, attendance } = useMemberPortal()
@@ -194,15 +200,10 @@ export function MemberReceipt() {
   if (isMobile) {
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-10 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between">
-          <div>
-            <div className="text-lg font-[800] [color:var(--pf-text)]">Phiếu Thu Cá Nhân</div>
-            <div className="text-xs [color:var(--pf-color-muted)]">{memberName}</div>
-          </div>
-          <button onClick={handleExport} disabled={exporting} className="flex items-center gap-1 text-xs font-[600] [color:var(--pf-primary-text)] active:opacity-70 disabled:opacity-50">
-            <Download size={13} />Xuất PDF
-          </button>
-        </div>
+        {!embedded && <MobileFunctionHeader title="Phiếu thu cá nhân" parent="Cá nhân" onBack={() => navigate('/ung-dung')} />}
+        <div className="px-4 pt-4"><PhoneToolbar label="Công cụ phiếu thu cá nhân" tools={[
+            {key:'export',label:'Xuất PDF',icon:<Download />,disabled:exporting,onClick:handleExport},
+         ]} fallback={null} /></div>
         <div ref={printRef} className="px-4 pt-4 pb-6 space-y-4">
           {/* KPIs */}
           <div className="grid grid-cols-3 gap-2">

@@ -1,3 +1,4 @@
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 /**
  * SuperDashboard — "Trung tâm điều hành PickleFund" (Command Center). MỘT màn cuộn dọc.
  * Elite 2026: hệ thẻ THỐNG NHẤT (một accent thương hiệu + độ sâu bằng tint/shadow, đều kích thước),
@@ -217,6 +218,12 @@ export function SuperDashboard() {
           <h1 className="hidden lg:block text-xl font-bold tracking-tight [color:var(--pf-text)] sm:text-2xl">Trung tâm điều hành PickleFund</h1>
           {refreshedAt && <p className="mt-1 inline-flex items-center gap-1 text-xs [color:var(--pf-color-muted)]"><Clock size={11} /> Cập nhật: {refreshedAt.toLocaleString('vi-VN')}</p>}
         </div>
+        <PhoneToolbar label="Công cụ điều hành hệ thống" tools={[
+          {key:'range',label:'Thời gian',icon:<Clock />,detail:rangeLabel,active:range!=='30d',content:<div className="grid gap-3"><select value={range} onChange={e=>setRange(e.target.value)} aria-label="Khoảng thời gian" className="input-base">{RANGES.map(r=><option key={r.key} value={r.key}>{r.label}</option>)}</select>{range==='custom'&&<><label>Từ ngày<DateInput value={from} max={to||undefined} onChange={e=>setFrom(e.target.value)} className="input-base" /></label><label>Đến ngày<DateInput value={to} min={from||undefined} onChange={e=>setTo(e.target.value)} className="input-base" /></label></>}</div>},
+          {key:'club',label:'CLB',icon:<Building2 />,active:!!clubId,content:<select value={clubId} onChange={e=>setClubId(e.target.value)} aria-label="Câu lạc bộ" className="input-base"><option value="">Tất cả CLB</option>{clubs.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select>},
+          {key:'refresh',label:'Làm mới',icon:<RefreshCw />,disabled:loading,onClick:load},
+          {key:'pdf',label:'Xuất PDF',icon:<FileDown />,disabled:!data||pdfLoading,onClick:doPdf},
+        ]} fallback={
         <div className="flex flex-wrap items-center gap-2">
           <select value={range} onChange={(e) => setRange(e.target.value)} aria-label="Khoảng thời gian"
             className="h-10 rounded-full border px-3 text-sm [background:var(--pf-surface)] [color:var(--pf-text)] border-[color:var(--pf-border)]">
@@ -240,6 +247,7 @@ export function SuperDashboard() {
             <FileDown size={15} /> {pdfLoading ? 'Đang tạo…' : 'Xuất PDF'}
           </button>
         </div>
+        } />
       </header>
 
       {error && !data ? (

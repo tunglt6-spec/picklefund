@@ -257,7 +257,7 @@ export function SuperSettings() {
 
   return (
     <PageShell maxWidth={1280}>
-      <PageHeader
+      <PageHeader mobileBackTo="/ung-dung"
         title="Cài đặt hệ thống"
         actions={
           <Button onClick={handleSave} disabled={saving}>

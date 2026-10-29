@@ -1,3 +1,6 @@
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
+import { HubSearch } from '../../components/mobile/HubParts'
+import { Search, SlidersHorizontal } from '../../components/icons/mobileLucide'
 /**
  * SuperUsers (Super Admin) — quản lý tài khoản toàn hệ thống. Elite 2026: PageShell + PageHeader
  * + MetricCard (thống kê vai trò) + FilterBar + DataTable + StatusBadge. Giữ nguyên logic khóa/mở
@@ -124,7 +127,7 @@ export function SuperUsers() {
 
   return (
     <PageShell maxWidth={1760}>
-      <PageHeader title="Quản lý người dùng" subtitle={`${(sum?.total ?? total).toLocaleString('vi-VN')} tài khoản toàn hệ thống`} />
+      <PageHeader mobileBackTo="/ung-dung" title="Quản lý người dùng" subtitle={`${(sum?.total ?? total).toLocaleString('vi-VN')} tài khoản toàn hệ thống`} />
 
       <div className="pf-kpi-row mb-4" data-sa-look="ledger">
         <MetricCard compact label="Tổng tài khoản" value={(sum?.total ?? 0).toLocaleString('vi-VN')} icon={<Users size={16} />} sub={`${sum?.clubs ?? 0} CLB`} />
@@ -135,6 +138,10 @@ export function SuperUsers() {
         <MetricCard compact label="Thành viên" value={by('MEMBER_VIEW')} icon={<Users size={16} />} />
       </div>
 
+      <PhoneToolbar label="Công cụ người dùng" tools={[
+        {key:'search',label:'Tìm',icon:<Search />,active:!!search,content:<HubSearch value={search} onChange={setSearch} placeholder="Tìm người dùng…" ariaLabel="Tìm người dùng" />},
+        {key:'role',label:'Vai trò',icon:<SlidersHorizontal />,active:roleFilter!=='all',content:<select aria-label="Lọc theo vai trò" value={roleFilter} onChange={e=>setRoleFilter(e.target.value as typeof roleFilter)} className="input-base">{roleOptions.map(opt=><option key={opt.value} value={opt.value}>{opt.label}</option>)}</select>},
+      ]} fallback={
       <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
         <FilterBar className="flex-1" searchValue={search} onSearchChange={setSearch} searchPlaceholder="Tìm theo tên, email, tài khoản…" />
         <select aria-label="Lọc theo vai trò" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value as typeof roleFilter)} className="input-base w-full lg:hidden">
@@ -155,6 +162,7 @@ export function SuperUsers() {
           ))}
         </div>
       </div>
+      } />
 
       <div className="pf-glass rounded-[16px] p-2">
         {loading ? (

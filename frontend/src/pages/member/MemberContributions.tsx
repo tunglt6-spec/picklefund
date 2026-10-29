@@ -1,7 +1,12 @@
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
+import { HubSearch } from '../../components/mobile/HubParts'
+import { MobileFunctionHeader } from '../../components/mobile/ModuleNav'
+import { useEmbedded } from '../../components/shared/ModuleTabs'
+import { useNavigate } from 'react-router-dom'
 import { countSignal } from '../../lib/statusDesign'
 import { useState, useEffect } from 'react'
 import { useIsMobile } from '../../hooks/useIsMobile'
-import { DollarSign, CheckCircle, Clock, Search, Receipt, ChevronDown, ChevronUp, FileSpreadsheet, FileText, Send } from '../../components/icons/mobileLucide'
+import { DollarSign, CheckCircle, Clock, Search, Receipt, ChevronDown, ChevronUp, FileText, Send } from '../../components/icons/mobileLucide'
 import { Badge } from '../../components/ui/Badge'
 import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, ExportActions, ErrorState, runExport, ActionButton, type Column } from '../../components/shared'
 import { ReportPaymentModal } from '../../components/member/ReportPaymentModal'
@@ -52,6 +57,8 @@ function paymentStatusMeta(s: string): { label: string; tone: 'warning' | 'succe
 }
 
 export function MemberContributions() {
+  const embedded = useEmbedded()
+  const navigate = useNavigate()
   const { user, accessToken } = useAuthStore()
   // Chỉ dùng dữ liệu self-scope từ JWT (/member/me/*) — không đọc store club-wide.
   const { finance, attendance, contributions } = useMemberPortal()
@@ -101,7 +108,7 @@ export function MemberContributions() {
   const confirmedCount = contributions.filter(c => c.isConfirmed).length
   const pendingCount = contributions.filter(c => !c.isConfirmed).length
 
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile(1024)
 
   // Mục "Khoản đã báo nộp" — đóng vòng lặp báo→duyệt→báo lại (dùng chung mobile + desktop).
   const reportedSection = loadError ? (
@@ -169,32 +176,14 @@ export function MemberContributions() {
   if (isMobile) {
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-10 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
-          <div className="min-w-0">
-            <div className="text-lg font-[800] [color:var(--pf-text)]">Lịch Sử Đóng Quỹ</div>
-            <div className="text-xs [color:var(--pf-color-muted)] truncate">{memberName}</div>
-          </div>
-          {filtered.length > 0 && (
-            <div className="flex items-center gap-1.5 shrink-0">
-              <button onClick={doExportExcel} disabled={exporting} aria-label="Xuất Excel"
-                className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:[background:var(--pf-border)]">
-                <FileSpreadsheet size={14} />Excel
-              </button>
-              <button onClick={doExportPdf} disabled={exporting} aria-label="Xuất PDF"
-                className="inline-flex h-11 items-center gap-1 rounded-[10px] px-2.5 text-xs font-semibold [background:var(--pf-color-muted-soft)] [color:var(--pf-color-muted)] active:[background:var(--pf-border)]">
-                <FileText size={14} />PDF
-              </button>
-            </div>
-          )}
-        </div>
+        {!embedded && <MobileFunctionHeader title="Lịch sử đóng quỹ" parent="Cá nhân" onBack={() => navigate('/ung-dung')} />}
+        <div className="px-4 pt-4"><PhoneToolbar label="Công cụ lịch sử đóng quỹ" tools={[
+            {key:'search',label:'Tìm',icon:<Search />,active:!!search,content:<HubSearch value={search} onChange={setSearch} placeholder="Tìm kỳ quỹ…" ariaLabel="Tìm kỳ quỹ" />},
+            {key:'export',label:'Xuất',icon:<FileText />,disabled:filtered.length===0||exporting,content:<ExportActions onExcel={doExportExcel} onPdf={doExportPdf} disabled={exporting} />},
+            {key:'report',label:'Báo nộp quỹ',icon:<Send />,primary:true,onClick:()=>setReportOpen(true)},
+         ]} fallback={null} /></div>
         <div className="px-4 pt-4 pb-6 space-y-4">
-          <button
-            onClick={() => setReportOpen(true)}
-            className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-[14px] text-base font-bold text-white active:scale-[0.98]"
-            style={{ background: 'var(--pf-primary)' }}
-          >
-            <Send size={17} /> Báo đã nộp quỹ
-          </button>
+
           {reportedSection}
           <div className="grid grid-cols-3 gap-2">
             {[
@@ -208,15 +197,11 @@ export function MemberContributions() {
               </div>
             ))}
           </div>
-          <div className="relative">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm theo kỳ quỹ..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] [background:var(--pf-surface)] border border-[color:var(--pf-border)] text-sm outline-none focus:[border-color:var(--pf-primary)]" />
-          </div>
+
           {filtered.length === 0 ? (
             <div className="text-center py-12 [color:var(--pf-color-muted)] text-sm">Chưa có khoản đóng quỹ nào</div>
           ) : (
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 min-[600px]:grid-cols-2 gap-3">
               {filtered.map(c => {
                 return (
                   <div key={c.id} className="pf-rowcard p-4">

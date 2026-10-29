@@ -1,5 +1,8 @@
+import { MobileFunctionHeader } from '../../components/mobile/ModuleNav'
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
+import { HubSearch } from '../../components/mobile/HubParts'
 import { useState, useEffect } from 'react'
-import { Plus, Search, Lock, Unlock, Eye, Pencil, Trash2, ShieldCheck, Building2, Activity, Users, Wallet, CreditCard, CalendarClock } from '../../components/icons/mobileLucide'
+import { Plus, Search, Lock, Unlock, Eye, FileDown, Pencil, Trash2, ShieldCheck, Building2, Activity, Users, Wallet, CreditCard, CalendarClock } from '../../components/icons/mobileLucide'
 import { useNavigate } from 'react-router-dom'
 import api from '../../lib/api'
 import { PageShell, PageHeader, StatusBadge, ExportActions, ErrorState, runExport, MetricCard } from '../../components/shared'
@@ -64,7 +67,7 @@ const inputCls = 'w-full rounded-lg border border-[color:var(--pf-border)] px-4 
 
 export function SuperClubs() {
   const navigate = useNavigate()
-  const isMobile = useIsMobile()
+  const isMobile = useIsMobile(1024)
   const [clubs, setClubs] = useState<Club[]>([])
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
@@ -472,37 +475,15 @@ export function SuperClubs() {
   if (isMobile) {
     return (
       <div className="min-h-dvh [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-10 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
-          <div>
-            <div className="font-bold [color:var(--pf-text)] text-base">Quản lý CLB</div>
-            <div className="text-xs [color:var(--pf-color-muted)]">{clubs.length} câu lạc bộ</div>
-          </div>
-          {exportButtons}
-          <button
-            onClick={() => setShowCreate(true)}
-            aria-label="Tạo CLB mới"
-            className="w-9 h-9 rounded-full flex items-center justify-center text-white"
-            style={{ background: 'var(--pf-primary)' }}
-          >
-            <Plus size={18} />
-          </button>
-        </div>
-
+        <MobileFunctionHeader title="Quản lý CLB" parent="Hệ thống" module="system" onBack={() => navigate('/ung-dung')} />
+        <div className="px-4 pt-4"><PhoneToolbar label="Công cụ câu lạc bộ" tools={[
+          {key:'search',label:'Tìm',icon:<Search />,active:!!search,content:<HubSearch value={search} onChange={setSearch} placeholder="Tìm câu lạc bộ…" ariaLabel="Tìm câu lạc bộ" />},
+          {key:'export',label:'Xuất',icon:<FileDown />,disabled:filtered.length===0,content:exportButtons},
+          {key:'create',label:'Tạo CLB',icon:<Plus />,primary:true,onClick:()=>setShowCreate(true)},
+          {key:'onboarding',label:'Onboarding',icon:<Building2 />,onClick:()=>navigate('/onboarding')},
+        ]} fallback={null} /></div>
         <div className="px-4 pt-3">{kpiRow}</div>
-        <div className="px-4 py-3">
-          <div className="relative">
-            <Search size={15} className="absolute left-3 top-2.5 [color:var(--pf-color-muted)]" />
-            <input
-              type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Tìm tên hoặc mã CLB..."
-              className="input-base pl-9"
-            />
-          </div>
-        </div>
-
-        <div className="px-4 pb-6 space-y-3">
+        <div className="px-4 py-4 grid grid-cols-1 min-[600px]:grid-cols-2 gap-3">
           {clubsError && clubs.length === 0 && <ErrorState onRetry={loadClubs} />}
           {filtered.length === 0 && !clubsError && (
             <div className="text-center py-12 [color:var(--pf-color-muted)] text-sm">Không tìm thấy CLB nào</div>
@@ -516,7 +497,7 @@ export function SuperClubs() {
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold [color:var(--pf-text)] break-words">{club.name}</div>
-                  <div className="text-xs [color:var(--pf-color-muted)] mt-0.5">{club.code}{club.contactEmail ? ` · ${club.contactEmail}` : ''}</div>
+                  <div className="break-all text-xs [color:var(--pf-color-muted)] mt-0.5">{club.code}{club.contactEmail ? ` · ${club.contactEmail}` : ''}</div>
                 </div>
                 <StatusBadge tone={club.status === 'active' ? 'success' : 'warning'} dot>
                   {club.status === 'active' ? 'Hoạt động' : 'Bị khóa'}
@@ -564,7 +545,7 @@ export function SuperClubs() {
 
   return (
     <PageShell maxWidth={1760}>
-      <PageHeader
+      <PageHeader mobileBackTo="/ung-dung"
         title="Quản lý CLB"
         subtitle={`${clubs.length} câu lạc bộ trong hệ thống`}
         actions={

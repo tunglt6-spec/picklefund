@@ -1,6 +1,11 @@
+import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
+import { HubSearch } from '../../components/mobile/HubParts'
+import { MobileFunctionHeader } from '../../components/mobile/ModuleNav'
+import { useEmbedded } from '../../components/shared/ModuleTabs'
+import { useNavigate } from 'react-router-dom'
 import { countSignal } from '../../lib/statusDesign'
 import { useState } from 'react'
-import { CheckCircle, Clock, MapPin, Search, UserPlus, UserCheck, TrendingUp } from '../../components/icons/mobileLucide'
+import { CheckCircle, Clock, MapPin, Search, UserPlus, UserCheck, TrendingUp, FileDown } from '../../components/icons/mobileLucide'
 import toast from 'react-hot-toast'
 import { Badge } from '../../components/ui/Badge'
 import { PageShell, PageHeader, MetricCard, ChartCard, DataTable, StatusBadge, ExportActions, runExport, type Column } from '../../components/shared'
@@ -11,7 +16,9 @@ import api from '../../lib/api'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
 
 export function MemberAttendance() {
-  const isMobile = useIsMobile()
+  const embedded = useEmbedded()
+  const navigate = useNavigate()
+  const isMobile = useIsMobile(1024)
   const { attendance, finance, reload } = useMemberPortal()
   const [busyId, setBusyId] = useState<string | null>(null)
 
@@ -95,13 +102,11 @@ export function MemberAttendance() {
   if (isMobile) {
     return (
       <div className="min-h-full [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-10 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center justify-between gap-2">
-          <div className="min-w-0">
-            <div className="text-lg font-[800] [color:var(--pf-text)]">Lịch Tham Gia</div>
-            {activePeriod && <div className="text-xs [color:var(--pf-color-muted)] truncate">{activePeriod.name} · {myMember?.fullName ?? 'Thành viên'}</div>}
-          </div>
-          {exportButtons}
-        </div>
+        {!embedded && <MobileFunctionHeader title="Lịch tham gia" parent="Cá nhân" onBack={() => navigate('/ung-dung')} />}
+        <div className="px-4 pt-4"><PhoneToolbar label="Công cụ lịch tham gia" tools={[
+            {key:'search',label:'Tìm',icon:<Search />,active:!!search,content:<HubSearch value={search} onChange={setSearch} placeholder="Tìm ngày hoặc sân…" ariaLabel="Tìm ngày hoặc sân" />},
+            {key:'export',label:'Xuất',icon:<FileDown />,disabled:exportSessions.length===0,content:exportButtons},
+         ]} fallback={null} /></div>
         <div className="px-4 pt-4 pb-6 space-y-4">
           {/* KPIs */}
           <div className="grid grid-cols-3 gap-2">
@@ -125,11 +130,7 @@ export function MemberAttendance() {
             <span className="text-base font-[800] [color:var(--pf-green)]">{courtCostText}</span>
           </div>
           {/* Search */}
-          <div className="relative">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 [color:var(--pf-color-muted)]" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Tìm theo ngày hoặc sân..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-[12px] [background:var(--pf-surface)] border border-[color:var(--pf-border)] text-sm outline-none focus:[border-color:var(--pf-primary)]" />
-          </div>
+
           {/* Rate bar */}
           {completedSessions.length > 0 && (
             <div className="pf-glass rounded-xl p-3">
@@ -146,7 +147,7 @@ export function MemberAttendance() {
           {filtered.length === 0 ? (
             <div className="text-center py-12 [color:var(--pf-color-muted)] text-sm">Chưa có buổi tập nào</div>
           ) : (
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 min-[600px]:grid-cols-2 gap-3">
               {[...filtered].reverse().map((s) => {
                 const present = s.status === 'completed' ? attended.has(s.id) : null
                 return (
