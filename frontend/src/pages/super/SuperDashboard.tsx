@@ -7,7 +7,8 @@
 import { DateInput } from '../../components/ui/DateTimeFields'
 import { noticeDialog } from '../../components/ui/ConfirmHost'
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { MobileFunctionHeader } from '../../components/mobile/ModuleNav'
 import {
   Building2, Activity, Lock, Users, LogIn, UserCheck, Wallet, TrendingUp, CreditCard,
   Cpu, Bot, Server, RefreshCw, AlertTriangle, Trophy, Bell, Database, Gauge, Sparkles,
@@ -98,6 +99,7 @@ const CHART_TOOLTIP = {
 }
 
 export function SuperDashboard() {
+  const navigate = useNavigate()
   const [range, setRange] = useState('30d')
   const [from, setFrom] = useState('')
   const [to, setTo] = useState('')
@@ -207,10 +209,12 @@ export function SuperDashboard() {
   const rangeLabel = RANGES.find((r) => r.key === range)?.label ?? ''
 
   return (
+    <>
+    <MobileFunctionHeader title="Trung tâm điều hành PickleFund" parent="Hệ thống" module="system" onBack={() => navigate('/ung-dung')} />
     <PageShell maxWidth={1760}>
       <header className="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight [color:var(--pf-text)] sm:text-2xl">Trung tâm điều hành PickleFund</h1>
+          <h1 className="hidden lg:block text-xl font-bold tracking-tight [color:var(--pf-text)] sm:text-2xl">Trung tâm điều hành PickleFund</h1>
           {refreshedAt && <p className="mt-1 inline-flex items-center gap-1 text-xs [color:var(--pf-color-muted)]"><Clock size={11} /> Cập nhật: {refreshedAt.toLocaleString('vi-VN')}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -254,6 +258,7 @@ export function SuperDashboard() {
         </div>
       ) : null}
     </PageShell>
+    </>
   )
 }
 

@@ -14,6 +14,8 @@ import api from '../../lib/api'
 import { PageShell, PageHeader, ActionButton } from '../../components/shared'
 import { OfficeBanner } from '../../components/aido/OfficeBanner'
 import { visibleInterval } from '../../lib/visibleInterval'
+import { useNavigate } from 'react-router-dom'
+import { MobileFunctionHeader } from '../../components/mobile/ModuleNav'
 
 /** Kết quả công việc trong ngày của từng agent — cùng shape với admin AIDO. */
 interface AgentResults {
@@ -32,6 +34,7 @@ const fmtLatency = (ms?: number) =>
   typeof ms === 'number' && ms > 0 ? (ms >= 1000 ? `${(ms / 1000).toFixed(1)}s` : `${Math.round(ms)}ms`) : '—'
 
 export function MemberOffice() {
+  const navigate = useNavigate()
   const [results, setResults] = useState<AgentResults | null>(null)
   const [updatedAt, setUpdatedAt] = useState<Date | null>(null)
   const [error, setError] = useState(false)
@@ -111,7 +114,10 @@ export function MemberOffice() {
   ]
 
   return (
+    <>
+    <MobileFunctionHeader title="Văn phòng AI" parent="Ứng dụng" module="ai" onBack={() => navigate('/ung-dung')} />
     <PageShell maxWidth={1760}>
+      <div className="hidden lg:block">
       <PageHeader
         title="Văn phòng AI"
         actions={
@@ -135,6 +141,13 @@ export function MemberOffice() {
           </div>
         }
       />
+      </div>
+      <div className="mb-4 flex justify-end lg:hidden">
+        <ActionButton variant="ghost" icon={<RefreshCw size={15} className={refreshing ? 'animate-spin' : ''} />} disabled={refreshing}
+          onClick={() => { setRefreshing(true); void load().finally(() => setRefreshing(false)) }}>
+          {refreshing ? 'Đang tải…' : 'Làm mới'}
+        </ActionButton>
+      </div>
 
       <div className="space-y-5">
         <OfficeBanner
@@ -210,5 +223,6 @@ export function MemberOffice() {
 
       </div>
     </PageShell>
+    </>
   )
 }

@@ -9,6 +9,7 @@ import { PageShell, PageHeader, StatusBadge } from '../../components/shared'
 import { Button } from '../../components/ui/Button'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { useIsMobile } from '../../hooks/useIsMobile'
+import { MobileFunctionHeader } from '../../components/mobile/ModuleNav'
 import toast from 'react-hot-toast'
 import { TableCardsWrap } from '../../components/shared/TableCardsWrap'
 
@@ -363,18 +364,11 @@ export function SuperClubDetail() {
   if (isMobile) {
     return (
       <div className="min-h-dvh [background:var(--pf-bg)]">
-        <div className="sticky top-0 z-10 max-lg:static [background:var(--pf-surface)] border-b border-[color:var(--pf-border)] px-4 py-3 flex items-center gap-3">
-          <button onClick={() => navigate('/super/clubs')} className="p-1.5 rounded-lg [color:var(--pf-color-muted)] hover:[background:var(--pf-color-muted-soft)]">
-            <ArrowLeft size={18} />
-          </button>
-          <div className="flex-1 min-w-0">
-            <div className="font-bold [color:var(--pf-text)] text-base truncate">{club.name}</div>
-            <div className="text-xs [color:var(--pf-color-muted)]">{club.code}</div>
-          </div>
+        <MobileFunctionHeader title={club.name} parent={`Quản lý CLB · ${club.code}`} module="system" onBack={() => navigate('/super/clubs')} right={
           <StatusBadge tone={club.status === 'active' ? 'success' : 'warning'} dot>
             {club.status === 'active' ? 'Hoạt động' : 'Bị khóa'}
           </StatusBadge>
-        </div>
+        } />
 
         <div className="px-4 py-4 space-y-4">
           <div className="[background:var(--pf-surface)] rounded-[16px] border border-[color:var(--pf-border)] p-4 space-y-3">
