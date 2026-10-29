@@ -852,6 +852,8 @@ input[type='datetime-local']::-webkit-date-and-time-value, input[type='month']::
 .pf-kpi-row { display: grid; gap: 10px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
 @media (min-width: 640px) { .pf-kpi-row { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 640px) and (max-width: 767px) { .pf-kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Super Admin: keep summary cards balanced on unfolded phones (avoid 3 + 1). */
+@media (min-width: 640px) and (max-width: 1023.98px) { .pf-kpi-row[data-sa-look] { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 /* ≥1024px: MỘT DÒNG, các thẻ bằng nhau theo số thẻ */
 @media (min-width: 1024px) { .pf-kpi-row { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); } }
 .pf-kpi-row .pf-stat-card { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 10px; row-gap: 1px; align-items: center; padding: 10px 14px; border-radius: 16px; }
