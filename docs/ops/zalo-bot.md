@@ -6,7 +6,7 @@ Each club registers its own Bot Creator bot at Settings → Zalo. Only CLUB_ADMI
 
 1. Paste the Bot Creator token in the password field. Never post it to a group or commit it.
 2. Register the bot. `getMe.can_join_groups` must be true and webhook verification must succeed. Zalo group support is Beta; without the capability the app cannot deliver to a group.
-3. Add the bot to the club group. Generate a pairing code in the app, send the exact `/ketnoi CODE` command in that group within ten minutes, refresh the app, and confirm the displayed group ID.
+3. Add the bot to the club group. Generate a pairing code in the app, mention the bot using the Zalo @ selector and append `/ketnoi CODE` in that group within ten minutes, refresh the app, and confirm the displayed group ID.
 4. Send a nonfinancial test message. Select content, enable automatic delivery, and save. Reports can be previewed before manual sending.
 
 Automatic delivery includes club event reminders/member joins, daily financial totals at 08:00 Asia/Ho_Chi_Minh, and financial-total changes checked each minute. Personal reminders and moderation reports are excluded. Financial totals use FinancialCalculatorService and prior-period carry forward; the independent mini fund is not added to club assets. No active common period means no report.

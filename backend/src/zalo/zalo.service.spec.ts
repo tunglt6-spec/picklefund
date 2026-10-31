@@ -71,6 +71,14 @@ describe('Zalo club integration', () => {
     await svc.webhook(clubId, secret, { event_name: 'message.text.received', message: { from: { is_bot: true }, text: pair.command, chat: { id: 'group-b', chat_type: 'GROUP' } } });
     expect(connection().pendingChat).toBeUndefined();
   });
+  it('pairs a group command prefixed with a bot mention and consumes the code once', async () => {
+    const secret = await paired(); const pair = await svc.pair(clubId);
+    const message = { from: { is_bot: false }, text: `@Bot PickleFund ${pair.command}`, chat: { id: 'group-b', chat_type: 'GROUP' } };
+    await svc.webhook(clubId, secret, { event_name: 'message.text.received', message });
+    expect(connection().pendingChat.id).toBe('group-b');
+    await svc.webhook(clubId, secret, { event_name: 'message.text.received', message: { ...message, chat: { id: 'group-c', chat_type: 'GROUP' } } });
+    expect(connection().pendingChat.id).toBe('group-b');
+  });
   it('pair codes expire; successful pair requires explicit admin confirmation and stays disabled', async () => {
     const secret = await paired(); const pair = await svc.pair(clubId); setConnection({ pairExpires: Date.now() - 1 });
     await svc.webhook(clubId, secret, { event_name: 'message.text.received', message: { text: pair.command, chat: { id: 'group-b', chat_type: 'GROUP' } } });

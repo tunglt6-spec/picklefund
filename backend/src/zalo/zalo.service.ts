@@ -123,7 +123,9 @@ export class ZaloService {
     const data = body as any; const m = data?.message;
     // Verification pings and unrelated messages are acknowledged without persisting group content.
     if (data?.event_name !== 'message.text.received' || !c.canJoinGroups || m?.from?.is_bot === true || m?.chat?.chat_type !== 'GROUP') return;
-    const code = typeof m?.text === 'string' ? m.text.trim().match(/^\/ketnoi\s+([A-F0-9]{16})$/i)?.[1]?.toUpperCase() : null;
+    // Group messages may prefix the command with an @mention of the bot.
+    // The single-use secret must still be the final argument in the message.
+    const code = typeof m?.text === 'string' ? m.text.trim().match(/(?:^|\s)\/ketnoi\s+([A-F0-9]{16})$/i)?.[1]?.toUpperCase() : null;
     if (!code || !c.pairHash || (c.pairExpires ?? 0) < Date.now() || !same(hash(code), c.pairHash)) return;
     const id = String(m.chat.id ?? ''); if (!/^[A-Za-z0-9_.:-]{1,150}$/.test(id)) return;
     c.pendingChat = { id, name: String(m.chat.title || m.chat.display_name || `Nhóm ${id}`).slice(0,150) };
