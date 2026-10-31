@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import { join } from 'path';
 import { AppModule } from './app.module';
 import { getMissingRequiredEnv } from './common/env-validation';
+import { applicationCors } from './common/cors-options';
 import type { Request, Response } from 'express';
 
 // Lưới an toàn tầng process: floating promise bị reject mà không .catch() sẽ làm Node
@@ -52,15 +53,7 @@ async function bootstrap() {
     .split(',')
     .map((o) => o.trim());
 
-  app.enableCors({
-    origin: (origin, cb) => {
-      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
-      cb(new Error('Not allowed by CORS'));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  });
+  app.enableCors(applicationCors(allowedOrigins));
 
   app.useGlobalPipes(
     new ValidationPipe({
