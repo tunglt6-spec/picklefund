@@ -30,7 +30,7 @@ export class SystemSettingsService {
       for (const row of rows) map[row.key.slice(prefix.length)] = row.value;
       return map;
     }
-    const rows = await this.prisma.systemSetting.findMany();
+    const rows = await this.prisma.systemSetting.findMany({ where: { NOT: { key: { startsWith: 'zalo_' } } } });
     const map: Record<string, string> = { ...DEFAULTS };
     for (const row of rows) map[row.key] = row.value;
     return map;

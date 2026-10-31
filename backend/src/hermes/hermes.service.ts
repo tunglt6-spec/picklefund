@@ -1,4 +1,5 @@
-import { Injectable, Logger, NotFoundException, OnModuleDestroy } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, OnModuleDestroy, Optional } from '@nestjs/common';
+import { ZaloService } from '../zalo/zalo.service';
 import { createHash } from 'crypto';
 import Redis from 'ioredis';
 import { ConfigService } from '@nestjs/config';
@@ -114,6 +115,7 @@ export class HermesService implements OnModuleDestroy {
     private email: EmailService,
     private config: ConfigService,
     private push: PushService,
+    @Optional() private zalo?: ZaloService,
   ) {}
 
   // ─── Main entry point ────────────────────────────────────────────────────────
@@ -223,9 +225,8 @@ ${event.body}`,
       if (!sent) await this.releaseClubTelegram(tgKey);
     }
 
-    this.logger.log(
-      `[Hermes] dispatched ${dispatched}/${recipients.length} recipients for ${event.eventType}`,
-    );
+    try { await this.zalo?.notify(event); } catch { this.logger.warn('Không xếp được thông báo Zalo; các kênh khác vẫn giữ nguyên.'); }
+    this.logger.log(`[Hermes] dispatched ${dispatched}/${recipients.length} recipients for ${event.eventType}`);
     return { dispatched };
   }
 

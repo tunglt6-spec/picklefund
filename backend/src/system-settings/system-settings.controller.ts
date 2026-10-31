@@ -22,6 +22,7 @@ export class SystemSettingsController {
     const entries = Object.entries(body);
     if (entries.length > 50) throw new BadRequestException('Tối đa 50 cài đặt mỗi lần');
     for (const [key, value] of entries) {
+      if (key.startsWith('zalo_')) throw new BadRequestException('Cấu hình Zalo chỉ được cập nhật qua mục Zalo.');
       if (typeof key !== 'string' || key.length > 100) throw new BadRequestException(`Key không hợp lệ: ${key}`);
       if (typeof value !== 'string' || value.length > 1000) throw new BadRequestException(`Giá trị quá dài cho key: ${key}`);
     }

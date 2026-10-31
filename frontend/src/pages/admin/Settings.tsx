@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard, Send, Zap, Palette, Smartphone, Mail, Check, X, AlertTriangle } from '../../components/icons/mobileLucide'
+import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard, Send, MessageCircle, Zap, Palette, Smartphone, Mail, Check, X, AlertTriangle } from '../../components/icons/mobileLucide'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -13,11 +13,12 @@ import toast from 'react-hot-toast'
 import type { LucideIcon } from '../../components/icons/mobileLucide'
 import { ModuleTabs, useEmbedded } from '../../components/shared'
 import { VietQrImage } from '../../components/ui/VietQrImage'
+import { ZaloTab } from './ZaloTab'
 
-type Tab = 'club' | 'branding' | 'account' | 'notifications' | 'payment' | 'telegram' | 'billing'
+type Tab = 'club' | 'branding' | 'account' | 'notifications' | 'payment' | 'telegram' | 'zalo' | 'billing'
 
 const MOBILE_ICONS: Record<Tab, LucideIcon> = {
-  club: Building2, branding: Palette, account: User, notifications: Bell, payment: CreditCard, telegram: Send, billing: Zap,
+  club: Building2, branding: Palette, account: User, notifications: Bell, payment: CreditCard, telegram: Send, zalo: MessageCircle, billing: Zap,
 }
 
 /** Nhãn ô/tiêu đề trên mobile (khi khác nhãn tab desktop). */
@@ -30,6 +31,7 @@ const ALL_TABS: { id: Tab; label: string; icon: React.ReactNode; superAdminOnly?
   { id: 'notifications', label: 'Thông báo',     icon: <Bell size={16} /> },
   { id: 'payment',       label: 'Thanh toán',    icon: <CreditCard size={16} /> },
   { id: 'telegram',      label: 'Telegram',      icon: <Send size={16} /> },
+  { id: 'zalo',          label: 'Zalo',          icon: <MessageCircle size={16} /> },
   { id: 'billing',       label: 'Billing',       icon: <Zap size={16} />, superAdminOnly: true },
 ]
 
@@ -1161,7 +1163,7 @@ export function Settings() {
   const { user } = useAuthStore()
   const clubId = user?.clubId ?? ''
   const isSuperAdmin = user?.role === 'SUPER_ADMIN'
-  const tabs = ALL_TABS.filter(t => !t.superAdminOnly || isSuperAdmin)
+  const tabs = ALL_TABS.filter(t => (!t.superAdminOnly || isSuperAdmin) && (t.id !== 'zalo' || isSuperAdmin || user?.role === 'CLUB_ADMIN'))
   const [activeTab, setActiveTab] = useState<Tab>('club')
   // Mobile/Fold gập (<1024px): lưới icon chọn mục (cùng hệ thống trang Ứng dụng) → màn mục có header gọn.
   const isMobile = useIsMobile(1024)
@@ -1176,6 +1178,7 @@ export function Settings() {
         {id === 'notifications' && <NotificationsTab clubId={clubId} />}
         {id === 'payment'       && <PaymentTab />}
         {id === 'telegram'      && <TelegramTab />}
+        {id === 'zalo'          && <ZaloTab />}
         {id === 'billing'       && <BillingTab />}
       </div>
     )
@@ -1221,6 +1224,7 @@ export function Settings() {
         {activeTab === 'notifications' && <NotificationsTab clubId={clubId} />}
         {activeTab === 'payment'       && <PaymentTab />}
         {activeTab === 'telegram'      && <TelegramTab />}
+        {activeTab === 'zalo'          && <ZaloTab />}
         {activeTab === 'billing'       && <BillingTab />}
       </div>
     </div>
