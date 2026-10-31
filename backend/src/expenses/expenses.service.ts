@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import {
   Injectable,
   NotFoundException,
@@ -101,30 +102,30 @@ export class ExpensesService {
    * Chống nhiễm chéo tenant: FK từ body (fundPeriodId/attendanceSessionId/categoryId/relatedMinigameId)
    * BẮT BUỘC thuộc cùng clubId người gọi trước khi gán.
    */
-  private async assertFkOwnership(clubId: string, dto: Partial<CreateExpenseDto>) {
+  private async assertFkOwnership(clubId: string, dto: Partial<CreateExpenseDto>, db: Prisma.TransactionClient = this.prisma) {
     if (dto.fundPeriodId) {
-      const p = await this.prisma.fundPeriod.findFirst({
+      const p = await db.fundPeriod.findFirst({
         where: { id: dto.fundPeriodId, clubId },
         select: { id: true },
       });
       if (!p) throw new BadRequestException('Kỳ quỹ không thuộc CLB này');
     }
     if (dto.attendanceSessionId) {
-      const s = await this.prisma.attendanceSession.findFirst({
+      const s = await db.attendanceSession.findFirst({
         where: { id: dto.attendanceSessionId, clubId },
         select: { id: true },
       });
       if (!s) throw new BadRequestException('Buổi chơi không thuộc CLB này');
     }
     if (dto.categoryId) {
-      const c = await this.prisma.expenseCategory.findFirst({
+      const c = await db.expenseCategory.findFirst({
         where: { id: dto.categoryId, clubId },
         select: { id: true },
       });
       if (!c) throw new BadRequestException('Danh mục không thuộc CLB này');
     }
     if (dto.relatedMinigameId) {
-      const g = await this.prisma.minigame.findFirst({
+      const g = await db.minigame.findFirst({
         where: { id: dto.relatedMinigameId, clubId },
         select: { id: true },
       });
@@ -132,7 +133,7 @@ export class ExpensesService {
     }
   }
 
-  async create(clubId: string, userId: string, dto: CreateExpenseDto) {
+  async create(clubId: string, userId: string, dto: CreateExpenseDto, tx?: Prisma.TransactionClient) {
     const fundSource: FundSource = dto.fundSource ?? 'COMMON';
 
     if (!dto.amount || isNaN(Number(dto.amount)) || Number(dto.amount) <= 0) {
@@ -151,9 +152,9 @@ export class ExpensesService {
         throw new BadRequestException('miniExpenseType bắt buộc cho Quỹ Mini');
     }
 
-    await this.assertFkOwnership(clubId, dto);
+    await this.assertFkOwnership(clubId, dto, tx ?? this.prisma);
 
-    const expense = await this.prisma.livingExpense.create({
+    const expense = await (tx ?? this.prisma).livingExpense.create({
       data: {
         clubId,
         createdById: userId,
@@ -189,9 +190,9 @@ export class ExpensesService {
           : {}),
       },
     });
-    await this.calculator.invalidateClosingBalances(clubId);
+    if (!tx) await this.calculator.invalidateClosingBalances(clubId);
     // Epic 7: phát event SAU khi commit — fire-and-forget.
-    this.events.publish({
+    if (!tx) this.events.publish({
       clubId,
       userId,
       triggerType: 'EXPENSE_RECORDED',

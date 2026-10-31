@@ -1,0 +1,63 @@
+// Runs only against a newly created, disposable database. Never accepts a production DB name.
+const fs=require('fs');const path=require('path');const {execFileSync}=require('child_process');const assert=require('assert/strict');
+const root=path.resolve(__dirname,'..');
+const dbName='pf_zalo_intake_test_'+Date.now();
+if(!/^pf_zalo_intake_test_\d+$/.test(dbName))throw Error('Unsafe database name');
+const AdminClient=require('@prisma/client').PrismaClient;
+const admin=new AdminClient();let p;
+(async()=>{
+ const original=process.env.DATABASE_URL;if(!original)throw Error('No database connection');
+ const url=new URL(original);url.pathname='/'+dbName;const testUrl=url.toString();
+ await admin.$executeRawUnsafe(`CREATE DATABASE "${dbName}"`);
+ try {
+  const full=fs.readFileSync(path.join(root,'prisma/schema.prisma'),'utf8');
+  const base=full.slice(0,full.indexOf('model ZaloIdentity'));
+  fs.writeFileSync(path.join(root,'prisma/intake-base.prisma'),base);
+  const isolated=full.replace('provider = "prisma-client-js"','provider = "prisma-client-js"\n  output = "./intake-generated"');
+  fs.writeFileSync(path.join(root,'prisma/intake-test.prisma'),isolated);
+  const cli='/app/node_modules/prisma/build/index.js';const env={...process.env,DATABASE_URL:testUrl};
+  execFileSync(process.execPath,[cli,'generate','--schema',path.join(root,'prisma/intake-test.prisma')],{cwd:root,env,stdio:'pipe'});
+  execFileSync(process.execPath,[cli,'db','push','--skip-generate','--schema',path.join(root,'prisma/intake-base.prisma')],{cwd:root,env,stdio:'pipe'});
+  const TestClient=require(path.join(root,'prisma/intake-generated')).PrismaClient;p=new TestClient({datasources:{db:{url:testUrl}}});
+  for(const sql of fs.readFileSync(path.join(root,'prisma/migrations/20261031160000_zalo_finance_intake/migration.sql'),'utf8').split(';').filter(s=>s.trim()))await p.$executeRawUnsafe(sql);
+  const {ZaloIntakeService}=require(path.join(root,'dist/zalo/zalo-intake.service'));
+  const {ContributionsService}=require(path.join(root,'dist/contributions/contributions.service'));
+  const {ExpensesService}=require(path.join(root,'dist/expenses/expenses.service'));
+  let published=0;const events={publish:()=>published++};const calculator={invalidateClosingBalances:async()=>{}};
+  const expenses=new ExpensesService(p,events,calculator),contributions=new ContributionsService(p,events,calculator);
+  const svc=new ZaloIntakeService(p,contributions,expenses,calculator,events);
+  const club=await p.club.create({data:{name:'Isolated test only',code:'ISOLATED'}});
+  const u=await p.user.create({data:{clubId:club.id,username:'isolated_admin',email:'isolated@example.invalid',passwordHash:'not-a-login',role:'CLUB_ADMIN'}});
+  const member=await p.member.create({data:{clubId:club.id,fullName:'Test Member',joinDate:new Date('2026-10-01')}});
+  const period=await p.fundPeriod.create({data:{clubId:club.id,name:'Test period',startDate:new Date('2026-10-01'),endDate:new Date('2026-10-31'),status:'active',contributionAmount:100000,createdById:u.id}});
+  const actor={userId:u.id,clubId:club.id,role:u.role};const c={version:'isolated-v1',chatId:'isolated-group',webhookReady:true,intakeEnabled:true};
+  await p.systemSetting.create({data:{key:'zalo_connection_'+club.id,value:JSON.stringify(c)}});
+  const code=await svc.linkCode(actor);
+  await svc.receive(club.id,c,{from:{id:'isolated-zalo',display_name:'Test Zalo'},chat:{id:'private',chat_type:'PRIVATE'},text:code.command});
+  assert.equal(await p.zaloIdentity.count(),0);await svc.confirmLink(actor);assert.equal((await svc.state(actor)).linked,true);
+  const msg={from:{id:'isolated-zalo'},chat:{id:c.chatId,chat_type:'GROUP'},message_id:'income-1',text:'/thu 100000 | Test Member | quỹ chính | 31/10/2026'};
+  await Promise.all([svc.receive(club.id,c,msg),svc.receive(club.id,c,msg)]);assert.equal(await p.zaloFinanceDraft.count(),1);assert.equal(await p.fundContribution.count(),0);
+  const income=await p.zaloFinanceDraft.findFirst();
+  const outcomes=await Promise.allSettled([svc.decide(actor,income.id,false,{...income.payload,memberId:member.id,fundPeriodId:period.id}),svc.decide(actor,income.id,false,{...income.payload,memberId:member.id,fundPeriodId:period.id})]);
+  assert.equal(outcomes.filter(r=>r.status==='fulfilled').length,1);assert.equal(await p.fundContribution.count(),1);assert.equal((await p.fundContribution.findFirst()).isConfirmed,false);
+  await svc.receive(club.id,c,{...msg,message_id:'expense-1',text:'/chi 450000 | Tiền sân | quỹ chính | 31/10/2026'});
+  const expense=await p.zaloFinanceDraft.findFirst({where:{messageId:'expense-1'}});
+  const failing=new ZaloIntakeService(p,contributions,{create:async(...args)=>{await expenses.create(...args);throw Error('forced rollback')}},calculator,events);
+  const patch={...expense.payload,fundPeriodId:period.id,costType:'COURT',allocationRule:'EQUAL'};
+  await assert.rejects(()=>failing.decide(actor,expense.id,false,patch));assert.equal(await p.livingExpense.count(),0);assert.equal((await p.zaloFinanceDraft.findUnique({where:{id:expense.id}})).status,'PENDING');assert.equal(published,0);
+  await svc.decide(actor,expense.id,false,patch);assert.equal(await p.livingExpense.count(),1);assert.equal((await p.livingExpense.findFirst()).status,'pending');assert.equal(published,1);
+  await p.user.update({where:{id:u.id},data:{role:'MEMBER_VIEW'}});await assert.rejects(()=>svc.linkCode(actor));await p.user.update({where:{id:u.id},data:{role:'CLUB_ADMIN'}});
+  await svc.unlink(actor);assert.equal((await svc.state(actor)).linked,false);
+  process.env.DATABASE_URL=testUrl;
+  const {Module}=require('@nestjs/common');const {ConfigModule}=require('@nestjs/config');const {NestFactory}=require('@nestjs/core');
+  const {PrismaModule}=require(path.join(root,'dist/prisma/prisma.module'));const {ZaloModule}=require(path.join(root,'dist/zalo/zalo.module'));
+  class SmokeRoot{};Module({imports:[ConfigModule.forRoot({isGlobal:true,ignoreEnvFile:true}),PrismaModule,ZaloModule]})(SmokeRoot);
+  const context=await NestFactory.createApplicationContext(SmokeRoot,{logger:false,abortOnError:false});await context.close();
+  process.env.DATABASE_URL=original;
+  console.log('PASS: Nest dependency graph.');
+  console.log('PASS: actual migration, two-step identity, parallel webhook dedupe, parallel recording exactly once, rollback without partial write, pending financial status, role revocation, unlink.');
+ }finally{
+  if(p)await p.$disconnect();await admin.$executeRawUnsafe(`DROP DATABASE "${dbName}" WITH (FORCE)`);
+  console.log('Disposable test database removed.');
+ }
+})().catch(e=>{console.error(e.message?.replace(/postgres(?:ql)?:\/\/\S+/g,'[connection]'));process.exitCode=1}).finally(()=>admin.$disconnect());

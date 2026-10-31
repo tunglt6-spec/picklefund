@@ -13,6 +13,7 @@ import toast from 'react-hot-toast'
 import type { LucideIcon } from '../../components/icons/mobileLucide'
 import { ModuleTabs, useEmbedded } from '../../components/shared'
 import { VietQrImage } from '../../components/ui/VietQrImage'
+import { ZaloIntakePanel } from './ZaloIntakePanel'
 import { ZaloTab } from './ZaloTab'
 import { ZaloIcon } from '../../components/icons/ZaloIcon'
 
@@ -1175,7 +1176,7 @@ export function Settings() {
       <div className="px-4 py-4 space-y-4">
         {id === 'club'          && <ClubInfoTab clubId={clubId} />}
         {id === 'branding'      && <BrandingTab />}
-        {id === 'account'       && <AccountTab />}
+        {id === 'account'       && <><ZaloIntakePanel /><AccountTab /></>}
         {id === 'notifications' && <NotificationsTab clubId={clubId} />}
         {id === 'payment'       && <PaymentTab />}
         {id === 'telegram'      && <TelegramTab />}
@@ -1221,7 +1222,7 @@ export function Settings() {
 
         {activeTab === 'club'          && <ClubInfoTab clubId={clubId} />}
         {activeTab === 'branding'      && <BrandingTab />}
-        {activeTab === 'account'       && <AccountTab />}
+        {activeTab === 'account'       && <><ZaloIntakePanel /><AccountTab /></>}
         {activeTab === 'notifications' && <NotificationsTab clubId={clubId} />}
         {activeTab === 'payment'       && <PaymentTab />}
         {activeTab === 'telegram'      && <TelegramTab />}

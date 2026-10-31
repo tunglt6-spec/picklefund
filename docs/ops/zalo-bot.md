@@ -25,3 +25,20 @@ Financial reports use `sendPhoto`: a PNG containing the club logo (or bundled Pi
 - Real delivery requires an actual group-capable bot and an administrator-confirmed destination. Automated tests mock all Zalo API calls and do not send messages.
 
 Official references: [getMe](https://docs.zaloplatforms.com/docs/BOT/apis/getMe), [setWebhook](https://docs.zaloplatforms.com/docs/BOT/apis/setWebhook), [webhook events](https://docs.zaloplatforms.com/docs/BOT/webhook), [sendMessage](https://docs.zaloplatforms.com/docs/BOT/apis/sendMessage).
+
+
+## Finance intake (phase 1)
+
+The administrator enables **Nhập thu/chi qua bot** at Settings → Zalo. It is off by default. CLUB_ADMIN and CLUB_TREASURER can open **Nhập liệu Zalo** under Settings → Personal account (also visible on the admin Zalo screen). A Super Admin account is not a financial actor; use the club's authorized account.
+
+1. Create a personal link code, open a private conversation with the club bot and send `/lienket CODE` within ten minutes.
+2. Refresh the panel, inspect the candidate Zalo display name and explicitly confirm in the authenticated app. Codes posted in a group are refused; no identity is created from the private command alone. One Zalo identity cannot impersonate multiple app users in the same club/bot version.
+3. Send `@Bot /thu 300000 | Exact member name | quỹ chính | DD/MM/YYYY` or `@Bot /chi 450000 | Description | quỹ chính | DD/MM/YYYY`, substituting the actual date. `quỹ phụ` is also supported. VND integer values or dot-separated thousands only; no natural-language/AI parsing in phase 1.
+4. Open the returned authenticated link, review/edit amount, description, date, fund, active period, member, and expense allocation. Ambiguous names/periods stay unresolved. Court fees always allocate equally under the existing business rule.
+5. Confirm **Ghi chờ duyệt** in the app. Income remains unconfirmed and expenses remain pending. Existing financial approval screens handle actual confirmation/approval. This action never initiates a bank transfer.
+
+Draft creation never writes financial records. PostgreSQL uniqueness on club/bot/group/message prevents webhook retry duplicates. Recording uses a conditional claim and the existing ContributionsService/ExpensesService inside the same transaction as the draft and audit log; failures roll back the entire write. Balance caches are cleared transactionally; domain events publish after commit. Current role, active account, identity, group/bot version, period status/date and member ownership are checked again when recording. Treasurers see/process their own drafts; club admins may review the club's drafts. Member and Super Admin roles cannot use intake endpoints.
+
+Personal link codes expire after ten minutes and are stored hashed. Drafts expire after 24 hours; each sender may have at most 20 unexpired pending drafts. Unlinking revokes the identity and rejects that user's pending drafts without changing posted records. Bot replacement/group replacement invalidates previous links/drafts by version/group scope. Ordinary chat is not retained. Weekly report settings remain unchanged.
+
+`backend/scripts/zalo-intake-smoke.cjs` creates a new `pf_zalo_intake_test_<timestamp>` database, applies the migration against the previous schema and verifies concurrent webhook/recording deduplication, atomic rollback, role revocation and pending financial statuses using actual PostgreSQL. It drops only that disposable database in `finally`; no production rows are used.

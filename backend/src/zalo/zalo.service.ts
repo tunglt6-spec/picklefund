@@ -1,4 +1,5 @@
-import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException, Optional } from '@nestjs/common';
+import { ZaloIntakeService } from './zalo-intake.service';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from 'crypto';
@@ -15,7 +16,7 @@ interface Connection {
   chatId?: string; chatName?: string; pendingChat?: { id: string; name: string };
   pairHash?: string; pairExpires?: number; baseline?: string;
   lastSentAt?: string; lastError?: string;
-  reportTime?: string; financialIntervalMinutes?: number; weeklyReport?: boolean; reportWeekday?: number; scheduleVersion?: number;
+  reportTime?: string; financialIntervalMinutes?: number; weeklyReport?: boolean; reportWeekday?: number; scheduleVersion?: number; intakeEnabled?: boolean;
 }
 interface Job {
   clubId: string; version: string; chatId: string; text: string;
@@ -41,7 +42,7 @@ export class ZaloService {
   private readonly logger = new Logger(ZaloService.name);
   private working = false;
   private scanning = false;
-  constructor(private readonly prisma: PrismaService, private readonly config: ConfigService, private readonly calculator: FinancialCalculatorService) {}
+  constructor(private readonly prisma: PrismaService, private readonly config: ConfigService, private readonly calculator: FinancialCalculatorService, @Optional() private readonly intake?: ZaloIntakeService) {}
 
   club(id: string | null | undefined): string {
     if (!id || !/^[a-zA-Z0-9-]{1,50}$/.test(id)) throw new BadRequestException('Chọn tài khoản quản trị của CLB cần kết nối Zalo.');
@@ -80,7 +81,7 @@ export class ZaloService {
     if (!c) return { configured: false };
     // Never return the encrypted token, webhook secret, pairing hash or queued payload to a client.
     return { configured: true, botName: c.botName, canJoinGroups: c.canJoinGroups, webhookReady: c.webhookReady,
-      enabled: c.enabled, financialChanges: c.financialChanges, announcements: c.announcements, dailyReport: c.dailyReport,
+      intakeEnabled: !!c.intakeEnabled, enabled: c.enabled, financialChanges: c.financialChanges, announcements: c.announcements, dailyReport: c.dailyReport,
       chatId: c.chatId ?? null, chatName: c.chatName ?? null, pendingChat: c.pendingChat ?? null,
       reportTime: c.reportTime ?? '08:00', weeklyReport: !!c.weeklyReport, reportWeekday: c.reportWeekday ?? 0,
       lastSentAt: c.lastSentAt ?? null, lastError: c.lastError ?? null };
@@ -134,7 +135,19 @@ export class ZaloService {
     if (!c || !secret || !same(secret, this.secret(clubId, c.version))) throw new ForbiddenException('Webhook không hợp lệ');
     const data = body as any; const m = data?.message;
     // Verification pings and unrelated messages are acknowledged without persisting group content.
-    if (data?.event_name !== 'message.text.received' || !c.canJoinGroups || m?.from?.is_bot === true || m?.chat?.chat_type !== 'GROUP') return;
+    if (data?.event_name !== 'message.text.received' || !c.canJoinGroups || m?.from?.is_bot === true) return;
+    if (this.intake && c.intakeEnabled && (m?.chat?.id === c.chatId || (m?.chat?.chat_type === 'PRIVATE' && /(?:^|\s)\/lienket\s/i.test(m?.text ?? ''))) && typeof m?.text === 'string' && /(?:^|\s)\/(thu|chi|lienket)\s/i.test(m.text)) {
+      let reply: string | null;
+      try { reply = await this.intake.receive(clubId, c, m); }
+      catch(e) {
+        if (e instanceof BadRequestException) reply = e.message;
+        else if (e instanceof ForbiddenException) reply = 'Tài khoản không còn quyền nhập liệu. Kiểm tra quyền trong app.';
+        else throw e;
+      }
+      if(reply) await this.call(this.unseal(c.token), 'sendMessage', {chat_id:m.chat.id,text:reply.slice(0,1900)});
+      return;
+    }
+    if (m?.chat?.chat_type !== 'GROUP') return;
     // Group messages may prefix the command with an @mention of the bot.
     // The single-use secret must still be the final argument in the message.
     const code = typeof m?.text === 'string' ? m.text.trim().match(/(?:^|\s)\/ketnoi\s+([A-F0-9]{16})$/i)?.[1]?.toUpperCase() : null;
@@ -149,11 +162,11 @@ export class ZaloService {
     c.chatId = c.pendingChat.id; c.chatName = c.pendingChat.name; c.enabled = false; delete c.pendingChat; delete c.baseline;
     await this.save(clubId, c); return this.status(clubId);
   }
-  async preferences(clubId: string, patch: Partial<Pick<Connection, 'enabled' | 'financialChanges' | 'announcements' | 'dailyReport' | 'reportTime' | 'financialIntervalMinutes' | 'weeklyReport' | 'reportWeekday'>>) {
+  async preferences(clubId: string, patch: Partial<Pick<Connection, 'enabled' | 'financialChanges' | 'announcements' | 'dailyReport' | 'reportTime' | 'financialIntervalMinutes' | 'weeklyReport' | 'reportWeekday' | 'intakeEnabled'>>) {
     if (patch.reportTime !== undefined && !/^([01]\d|2[0-3]):[0-5]\d$/.test(patch.reportTime)) throw new BadRequestException('Giờ báo cáo phải có dạng HH:mm.');
     if (patch.financialIntervalMinutes !== undefined && ![1,5,15,30,60].includes(patch.financialIntervalMinutes)) throw new BadRequestException('Tần suất biến động không hợp lệ.');
     const c = await this.required(clubId);
-    if (patch.enabled && (!c.chatId || !c.canJoinGroups || !c.webhookReady)) throw new BadRequestException('Kết nối và xác nhận nhóm trước khi bật tự động.');
+    if ((patch.enabled || patch.intakeEnabled) && (!c.chatId || !c.canJoinGroups || !c.webhookReady)) throw new BadRequestException('Kết nối và xác nhận nhóm trước khi bật tự động.');
     if (patch.reportWeekday !== undefined && (!Number.isInteger(patch.reportWeekday) || patch.reportWeekday < 0 || patch.reportWeekday > 6)) throw new BadRequestException('Ngày báo cáo không hợp lệ.');
     Object.assign(c, patch);
     c.financialChanges = false; c.dailyReport = false;

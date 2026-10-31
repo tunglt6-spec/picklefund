@@ -1568,3 +1568,54 @@ model PushSubscription {
   @@index([userId])
   @@map("push_subscriptions")
 }
+
+
+model ZaloIdentity {
+  id String @id @default(uuid())
+  clubId String
+  userId String
+  botVersion String
+  chatId String
+  zaloUserId String
+  displayName String
+  createdAt DateTime @default(now())
+  @@unique([clubId, userId])
+  @@unique([clubId, botVersion, zaloUserId])
+  @@map("zalo_identities")
+}
+
+model ZaloLinkChallenge {
+  id String @id @default(uuid())
+  clubId String
+  userId String
+  botVersion String
+  chatId String
+  codeHash String @unique
+  expiresAt DateTime
+  candidateId String?
+  candidateName String?
+  @@unique([clubId, userId])
+  @@map("zalo_link_challenges")
+}
+
+model ZaloFinanceDraft {
+  id String @id @default(uuid())
+  clubId String
+  botVersion String
+  chatId String
+  messageId String
+  senderUserId String
+  senderZaloId String
+  kind String
+  payload Json
+  status String @default("PENDING")
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  approvedBy String?
+  approvedAt DateTime?
+  recordId String?
+  @@unique([clubId, botVersion, chatId, messageId])
+  @@index([clubId, status, createdAt])
+  @@map("zalo_finance_drafts")
+}

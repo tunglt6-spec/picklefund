@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import {
   Injectable,
   NotFoundException,
@@ -111,23 +112,24 @@ export class ContributionsService {
   private async assertFkOwnership(
     clubId: string,
     dto: Partial<CreateContributionDto>,
+    db: Prisma.TransactionClient = this.prisma,
   ) {
     if (dto.memberId) {
-      const m = await this.prisma.member.findFirst({
+      const m = await db.member.findFirst({
         where: { id: dto.memberId, clubId },
         select: { id: true },
       });
       if (!m) throw new BadRequestException('Thành viên không thuộc CLB này');
     }
     if (dto.fundPeriodId) {
-      const p = await this.prisma.fundPeriod.findFirst({
+      const p = await db.fundPeriod.findFirst({
         where: { id: dto.fundPeriodId, clubId },
         select: { id: true },
       });
       if (!p) throw new BadRequestException('Kỳ quỹ không thuộc CLB này');
     }
     if (dto.relatedMinigameId) {
-      const g = await this.prisma.minigame.findFirst({
+      const g = await db.minigame.findFirst({
         where: { id: dto.relatedMinigameId, clubId },
         select: { id: true },
       });
@@ -135,7 +137,7 @@ export class ContributionsService {
     }
   }
 
-  async create(clubId: string, userId: string, dto: CreateContributionDto) {
+  async create(clubId: string, userId: string, dto: CreateContributionDto, tx?: Prisma.TransactionClient) {
     const fundSource: FundSource = dto.fundSource ?? 'COMMON';
 
     if (!dto.amount || isNaN(Number(dto.amount)) || Number(dto.amount) <= 0) {
@@ -154,9 +156,9 @@ export class ContributionsService {
         throw new BadRequestException('miniIncomeType bắt buộc cho Quỹ Mini');
     }
 
-    await this.assertFkOwnership(clubId, dto);
+    await this.assertFkOwnership(clubId, dto, tx ?? this.prisma);
 
-    const created = await this.prisma.fundContribution.create({
+    const created = await (tx ?? this.prisma).fundContribution.create({
       data: {
         clubId,
         createdById: userId,
@@ -177,7 +179,7 @@ export class ContributionsService {
           : {}),
       },
     });
-    await this.calculator.invalidateClosingBalances(clubId);
+    if (!tx) await this.calculator.invalidateClosingBalances(clubId);
     return created;
   }
 
