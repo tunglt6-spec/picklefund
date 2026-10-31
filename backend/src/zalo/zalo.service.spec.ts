@@ -134,13 +134,12 @@ describe('Zalo club integration', () => {
     const text='💚'.repeat(2200)+'\nBáo cáo'; const chunks=splitZaloText(text);
     expect(chunks.join('')).toBe(text);expect(chunks.every(c=>c.length<=2000&&!/[\uD800-\uDBFF]$/.test(c))).toBe(true);
   });
-  it('takes an immediate baseline on activation and queues only a subsequent financial change', async () => {
-    await paired(); await svc.preferences(clubId,{enabled:true});
-    expect(connection().baseline).toBeTruthy();
+  it('never queues per-change reports, including writes from a stale client', async () => {
+    await paired(); await svc.preferences(clubId,{enabled:true, financialChanges:true, dailyReport:true, weeklyReport:false});
     calculator.calculate.mockResolvedValue({commonFund:{totalIncome:1100000,totalExpense:600000},clubAssets:{balance:450000},miniFund:{balance:100000},carryForward:{balance:-50000}});
     await svc.monitor(); await svc.monitor();
-    const jobs=[...rows.values()].filter(r=>r.key.startsWith('zalo_job_'));
-    expect(jobs).toHaveLength(1); expect(JSON.parse(jobs[0].value).text).toContain('BIẾN ĐỘNG QUỸ');
+    expect(connection().financialChanges).toBe(false); expect(connection().dailyReport).toBe(false);
+    expect([...rows.keys()].filter(k=>k.startsWith('zalo_job_'))).toHaveLength(0);
   });
   it('does not leak group configuration after disconnect and rejects old webhook secrets', async () => {
     const secret=await paired(); await svc.disconnect(clubId);
@@ -149,14 +148,14 @@ describe('Zalo club integration', () => {
   });
   it('validates schedule values and preserves the default schedule for existing connections', async () => {
     await paired();
-    expect(await svc.status(clubId)).toEqual(expect.objectContaining({ reportTime:'08:00', financialIntervalMinutes:1 }));
+    expect(await svc.status(clubId)).toEqual(expect.objectContaining({ reportTime:'08:00', weeklyReport:true, reportWeekday:0 }));
     await expect(svc.preferences(clubId,{reportTime:'24:01'})).rejects.toThrow();
     await expect(svc.preferences(clubId,{financialIntervalMinutes:3})).rejects.toThrow();
-    await svc.preferences(clubId,{reportTime:'17:37',financialIntervalMinutes:15});
-    expect(await svc.status(clubId)).toEqual(expect.objectContaining({reportTime:'17:37',financialIntervalMinutes:15}));
+    await svc.preferences(clubId,{reportTime:'17:37',reportWeekday:6});
+    expect(await svc.status(clubId)).toEqual(expect.objectContaining({reportTime:'17:37',reportWeekday:6}));
   });
-  it('sends one daily report at the configured Vietnam minute, independently of the change interval', async () => {
-    await paired(); await svc.preferences(clubId,{enabled:true,dailyReport:true,financialChanges:false,reportTime:'17:37',financialIntervalMinutes:60});
+  it('sends only one weekly digest on the configured Vietnam weekday and minute', async () => {
+    await paired(); await svc.preferences(clubId,{enabled:true,weeklyReport:true,reportWeekday:6,reportTime:'17:37'});
     jest.useFakeTimers();
     try {
       jest.setSystemTime(new Date('2026-10-31T10:36:00Z')); await svc.monitor();
@@ -164,7 +163,7 @@ describe('Zalo club integration', () => {
       jest.setSystemTime(new Date('2026-10-31T10:37:00Z')); await svc.monitor(); await svc.monitor();
       const jobs=[...rows.values()].filter(r=>r.key.startsWith('zalo_job_'));
       expect(jobs).toHaveLength(1); expect(JSON.parse(jobs[0].value).report.clubName).toBe('CLB thử nghiệm');
-      jest.setSystemTime(new Date('2026-10-31T10:38:00Z')); await svc.monitor();
+      jest.setSystemTime(new Date('2026-11-01T10:37:00Z')); await svc.monitor();
       expect([...rows.keys()].filter(k=>k.startsWith('zalo_job_'))).toHaveLength(1);
     } finally { jest.useRealTimers(); }
   });
@@ -180,6 +179,28 @@ describe('Zalo club integration', () => {
     const row=rows.get(`zalo_image_${id}`); const data=JSON.parse(row.value);data.expires=0;row.value=JSON.stringify(data);
     await expect(svc.reportImage(id)).rejects.toThrow();
     expect(renderHtmlToPng).toHaveBeenCalled();
+  });
+  it('keeps delivered images accessible to late group readers while preview images expire', async () => {
+    await paired(); await svc.requestReport(clubId);
+    const delivery=JSON.parse(fetchMock.mock.calls.find(c=>String(c[0]).endsWith('/sendPhoto'))![1]!.body as string).photo;
+    const deliveredId=delivery.split('/').pop().replace('.png','');
+    const preview=await svc.preview(clubId); const previewId=preview.imageUrl.split('/').pop()!.replace('.png','');
+    const now=Date.now(); jest.useFakeTimers();
+    try {
+      jest.setSystemTime(now+11*60_000); await svc.monitor();
+      expect((await svc.reportImage(deliveredId)).toString()).toBe('png-preview');
+      await expect(svc.reportImage(previewId)).rejects.toThrow();
+      jest.setSystemTime(now+89*86400000);
+      expect((await svc.reportImage(deliveredId)).toString()).toBe('png-preview');
+      jest.setSystemTime(now+91*86400000); await expect(svc.reportImage(deliveredId)).rejects.toThrow();
+    } finally { jest.useRealTimers(); }
+  });
+  it('migrates legacy daily subscriptions to weekly without allowing queued minute reports', async () => {
+    await paired(); setConnection({weeklyReport:undefined,reportWeekday:undefined,dailyReport:true,financialChanges:true,enabled:true});
+    expect(await svc.status(clubId)).toEqual(expect.objectContaining({weeklyReport:true,reportWeekday:0,dailyReport:false,financialChanges:false}));
+    const r=await svc.report(clubId); const c=connection();
+    rows.set('zalo_job_legacy',{key:'zalo_job_legacy',value:JSON.stringify({clubId,version:c.version,chatId:c.chatId,text:r.text,report:r.report,status:'pending',due:0,attempts:0})});
+    fetchMock.mockClear(); await svc.flush(); expect(fetchMock).not.toHaveBeenCalled();
   });
   it('revokes image URLs when the bot is disconnected', async () => {
     await paired(); const preview=await svc.preview(clubId);

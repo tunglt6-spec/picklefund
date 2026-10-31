@@ -75,6 +75,7 @@ const labels: Record<string, PlayfulIconName> = {
   "Thương hiệu": "brand",
   "Thanh toán": "payment-settings",
   "Telegram": "telegram",
+  "Zalo": "zalo",
   "Bảo mật": "security",
   "Đăng xuất": "logout",
   "Tìm kiếm": "search",

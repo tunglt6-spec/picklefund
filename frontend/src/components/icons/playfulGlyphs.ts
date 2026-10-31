@@ -1,5 +1,9 @@
 // Original THE PING Playful Precision artwork. Generated from the reviewed SVG pack.
 export const playfulGlyphs = {
+  "zalo": {
+    "body": '<path d="M7 5h18a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H13l-7 4v-5a3 3 0 0 1-2-3V8a3 3 0 0 1 3-3Z" fill="{s}"/><path d="M11 11h11L11 20h11" fill="none"/>',
+    "label": "Zalo", "color": "#2563EB", "soft": "#E6EEFF"
+  },
   "home": {
     "body": "<path d=\"M3 14L16 3l13 11M6 12v16h20V12\" fill=\"{s}\"/><rect x=\"12\" y=\"18\" width=\"8\" height=\"10\" rx=\"1\" fill=\"{a}\"/>",
     "label": "Tổng quan",

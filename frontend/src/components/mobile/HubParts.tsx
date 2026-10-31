@@ -195,7 +195,7 @@ export function TileGrid({
               >
                 {mobileIcons && playfulName
                   ? <PlayfulIcon name={playfulName} size={40} variant="on-color" strokeWidth={1.8} aria-hidden />
-                  : <Icon size={a.key === 'zalo' ? 40 : 28} strokeWidth={1.9} aria-hidden />}
+                  : <Icon size={28} strokeWidth={1.9} aria-hidden />}
                 {count > 0 && (
                   <span className="pf-tile-badge absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--pf-color-danger)] px-1 text-xs font-bold text-white">
                     {count > 9 ? '9+' : count}

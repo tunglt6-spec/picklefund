@@ -12,6 +12,8 @@ class PreferencesDto {
   @IsOptional() @IsBoolean() financialChanges?: boolean;
   @IsOptional() @IsBoolean() announcements?: boolean;
   @IsOptional() @IsBoolean() dailyReport?: boolean;
+  @IsOptional() @IsBoolean() weeklyReport?: boolean;
+  @IsOptional() @IsInt() @IsIn([0,1,2,3,4,5,6]) reportWeekday?: number;
   @IsOptional() @IsString() @Matches(/^([01]\d|2[0-3]):[0-5]\d$/) reportTime?: string;
   @IsOptional() @IsInt() @IsIn([1,5,15,30,60]) financialIntervalMinutes?: number;
 }
@@ -42,7 +44,7 @@ export class ZaloController {
   @Get('report-preview') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   async preview(@CurrentUser() user: JwtUser) { return ok(await this.zalo.preview(this.zalo.club(user.clubId))); }
 
-  /** Short-lived, unguessable capability URL for Zalo's image fetcher. */
+  /** Revocable, unguessable capability URL for Zalo's image fetcher. */
   @Public() @Get('report-image/:id.png')
   async image(@Param('id') id: string, @Res({ passthrough: true }) res: Response) {
     const png = await this.zalo.reportImage(id);

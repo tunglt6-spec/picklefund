@@ -2,6 +2,7 @@ import type { PlayfulIconName } from './playfulGlyphs'
 
 /** Solid glass artwork. Tokens are resolved locally by PlayfulIcon; no remote assets. */
 export const glassGlyphs: Record<PlayfulIconName, string> = {
+  "zalo": '<path d="M7 5h18a3 3 0 0 1 3 3v15a3 3 0 0 1-3 3H13l-7 4v-5a3 3 0 0 1-2-3V8a3 3 0 0 1 3-3Z" fill="{white}" stroke="none"/><path d="M11 11h11L11 20h11" fill="none" stroke="{ink}" stroke-width="2.5"/>',
   "home": "<path d=\"M2 15L16 3l14 12-3 3-2-2v12H7V16l-2 2Z\" fill=\"{white}\" stroke=\"none\" stroke-width=\"2\"/><rect x=\"13\" y=\"20\" width=\"6\" height=\"9\" rx=\"1\" fill=\"{ink}\" stroke=\"none\"/>",
   "members": "<circle cx=\"24\" cy=\"12\" r=\"3\" fill=\"{accent}\" stroke=\"none\"/><path d=\"M22 18a6 6 0 0 1 8 6v2h-7v-3a11 11 0 0 0-1-5Z\" fill=\"{accent}\" stroke=\"none\" stroke-width=\"2\"/><circle cx=\"13\" cy=\"10\" r=\"4\" fill=\"{white}\" stroke=\"none\"/><path d=\"M5 26v-3a8 8 0 0 1 16 0v3Z\" fill=\"{white}\" stroke=\"none\" stroke-width=\"2\"/>",
   "nav-community": "<circle cx=\"24\" cy=\"12\" r=\"3\" fill=\"{accent}\" stroke=\"none\"/><path d=\"M22 18a6 6 0 0 1 8 6v2h-7v-3a11 11 0 0 0-1-5Z\" fill=\"{accent}\" stroke=\"none\" stroke-width=\"2\"/><circle cx=\"13\" cy=\"10\" r=\"4\" fill=\"{white}\" stroke=\"none\"/><path d=\"M5 26v-3a8 8 0 0 1 16 0v3Z\" fill=\"{white}\" stroke=\"none\" stroke-width=\"2\"/>",

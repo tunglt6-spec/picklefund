@@ -15,12 +15,12 @@ interface Connection {
   chatId?: string; chatName?: string; pendingChat?: { id: string; name: string };
   pairHash?: string; pairExpires?: number; baseline?: string;
   lastSentAt?: string; lastError?: string;
-  reportTime?: string; financialIntervalMinutes?: number;
+  reportTime?: string; financialIntervalMinutes?: number; weeklyReport?: boolean; reportWeekday?: number; scheduleVersion?: number;
 }
 interface Job {
   clubId: string; version: string; chatId: string; text: string;
   status: 'pending' | 'sending' | 'sent' | 'failed'; attempts: number; due: number;
-  report?: ZaloFinancialReport;
+  report?: ZaloFinancialReport; kind?: 'weekly' | 'event';
 }
 const PREFIX = 'zalo_connection_';
 const JOB = 'zalo_job_';
@@ -61,7 +61,13 @@ export class ZaloService {
   private secret(clubId: string, version: string) { return createHmac('sha256', this.key()).update(`${clubId}:${version}`).digest('hex'); }
   private async read(clubId: string): Promise<Connection | null> {
     const row = await this.prisma.systemSetting.findUnique({ where: { key: PREFIX + this.club(clubId) } });
-    return row ? JSON.parse(row.value) : null;
+    if (!row) return null;
+    return this.weeklyConnection(JSON.parse(row.value));
+  }
+  private weeklyConnection(c: Connection): Connection {
+    // Convert legacy minute/daily subscriptions to one weekly digest, preserving the chosen hour.
+    return { ...c, weeklyReport: c.weeklyReport ?? (c.dailyReport || c.financialChanges),
+      reportWeekday: c.reportWeekday ?? 0, financialChanges: false, dailyReport: false, scheduleVersion: 2 };
   }
   private async save(clubId: string, data: Connection) {
     await this.prisma.systemSetting.upsert({ where: { key: PREFIX + clubId }, create: { key: PREFIX + clubId, value: JSON.stringify(data) }, update: { value: JSON.stringify(data) } });
@@ -76,7 +82,7 @@ export class ZaloService {
     return { configured: true, botName: c.botName, canJoinGroups: c.canJoinGroups, webhookReady: c.webhookReady,
       enabled: c.enabled, financialChanges: c.financialChanges, announcements: c.announcements, dailyReport: c.dailyReport,
       chatId: c.chatId ?? null, chatName: c.chatName ?? null, pendingChat: c.pendingChat ?? null,
-      reportTime: c.reportTime ?? '08:00', financialIntervalMinutes: c.financialIntervalMinutes ?? 1,
+      reportTime: c.reportTime ?? '08:00', weeklyReport: !!c.weeklyReport, reportWeekday: c.reportWeekday ?? 0,
       lastSentAt: c.lastSentAt ?? null, lastError: c.lastError ?? null };
   }
   private async call(token: string, method: string, payload: object): Promise<any> {
@@ -105,7 +111,7 @@ export class ZaloService {
     const url = new URL(origin);
     if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) throw new BadRequestException('Máy chủ chưa cấu hình địa chỉ HTTPS cho Zalo.');
     const c: Connection = { version: randomUUID(), token: this.seal(token), botId: String(bot.id), botName: String(bot.account_name || 'Zalo Bot'),
-      canJoinGroups: bot.can_join_groups === true, webhookReady: false, enabled: false, financialChanges: true, announcements: true, dailyReport: false };
+      canJoinGroups: bot.can_join_groups === true, webhookReady: false, enabled: false, financialChanges: false, announcements: true, dailyReport: false, weeklyReport: true, reportWeekday: 0, scheduleVersion: 2 };
     // Save first: Zalo verifies our public callback synchronously during setWebhook.
     await this.save(clubId, c);
     try {
@@ -143,16 +149,16 @@ export class ZaloService {
     c.chatId = c.pendingChat.id; c.chatName = c.pendingChat.name; c.enabled = false; delete c.pendingChat; delete c.baseline;
     await this.save(clubId, c); return this.status(clubId);
   }
-  async preferences(clubId: string, patch: Partial<Pick<Connection, 'enabled' | 'financialChanges' | 'announcements' | 'dailyReport' | 'reportTime' | 'financialIntervalMinutes'>>) {
+  async preferences(clubId: string, patch: Partial<Pick<Connection, 'enabled' | 'financialChanges' | 'announcements' | 'dailyReport' | 'reportTime' | 'financialIntervalMinutes' | 'weeklyReport' | 'reportWeekday'>>) {
     if (patch.reportTime !== undefined && !/^([01]\d|2[0-3]):[0-5]\d$/.test(patch.reportTime)) throw new BadRequestException('Giờ báo cáo phải có dạng HH:mm.');
     if (patch.financialIntervalMinutes !== undefined && ![1,5,15,30,60].includes(patch.financialIntervalMinutes)) throw new BadRequestException('Tần suất biến động không hợp lệ.');
     const c = await this.required(clubId);
     if (patch.enabled && (!c.chatId || !c.canJoinGroups || !c.webhookReady)) throw new BadRequestException('Kết nối và xác nhận nhóm trước khi bật tự động.');
-    const wasMonitoring = c.enabled && c.financialChanges;
+    if (patch.reportWeekday !== undefined && (!Number.isInteger(patch.reportWeekday) || patch.reportWeekday < 0 || patch.reportWeekday > 6)) throw new BadRequestException('Ngày báo cáo không hợp lệ.');
     Object.assign(c, patch);
-    if (c.enabled && c.financialChanges && !wasMonitoring) {
-      try { c.baseline = (await this.report(clubId)).fingerprint; } catch { delete c.baseline; }
-    }
+    c.financialChanges = false; c.dailyReport = false;
+    // Stale clients cannot re-enable minute/daily financial dispatch.
+    c.scheduleVersion = 2;
     await this.save(clubId, c); return this.status(clubId);
   }
   async disconnect(clubId: string) {
@@ -166,7 +172,7 @@ export class ZaloService {
     if (report) {
       const photo = await this.createReportImage(report, clubId, c.version);
       await this.call(this.unseal(c.token), 'sendPhoto', { chat_id: c.chatId, photo,
-        caption: `${text.startsWith('BIẾN ĐỘNG QUỸ') ? 'BIẾN ĐỘNG QUỸ · ' : ''}Báo cáo thu – chi và số dư quỹ\n${report.clubName} · ${report.periodName}\nChi tiết: https://picklefund.vn/tai-chinh?tab=reports` });
+        caption: zaloReportText(report).slice(0, 1900) });
     } else for (const chunk of splitZaloText(text)) await this.call(this.unseal(c.token), 'sendMessage', { chat_id: c.chatId, text: chunk });
     // Patch only delivery metadata, never overwrite concurrently edited preferences/group.
     const current = await this.read(clubId);
@@ -178,7 +184,7 @@ export class ZaloService {
   }
   private async enqueue(clubId: string, c: Connection, text: string, id: string, report?: ZaloFinancialReport) {
     if (!c.chatId) return;
-    const job: Job = { clubId, version: c.version, chatId: c.chatId, text, report, status: 'pending', attempts: 0, due: Date.now() };
+    const job: Job = { kind: report ? 'weekly' : 'event', clubId, version: c.version, chatId: c.chatId, text, report, status: 'pending', attempts: 0, due: Date.now() };
     await this.prisma.systemSetting.upsert({ where: { key: JOB + hash(`${clubId}:${c.version}:${c.chatId}:${id}`) },
       create: { key: JOB + hash(`${clubId}:${c.version}:${c.chatId}:${id}`), value: JSON.stringify(job) }, update: {} });
   }
@@ -203,12 +209,12 @@ export class ZaloService {
       logo: (await readZaloLogo(branding?.logoUrl || club?.logoUrl)) ?? await defaultZaloLogo() };
     return { fingerprint: hash(JSON.stringify(stats)), text: zaloReportText(report), report };
   }
-  private async createReportImage(report: ZaloFinancialReport, clubId: string, version: string): Promise<string> {
+  private async createReportImage(report: ZaloFinancialReport, clubId: string, version: string, preview = false): Promise<string> {
     const png = await renderHtmlToPng(zaloReportHtml(report));
     if (!png || png.length > 5_000_000) throw new BadRequestException('Chưa tạo được ảnh báo cáo. Vui lòng thử lại.');
     const id = randomBytes(24).toString('hex');
     await this.prisma.systemSetting.upsert({ where: { key: IMAGE + id }, update: {}, create: { key: IMAGE + id,
-      value: JSON.stringify({ clubId, version, expires: Date.now()+10*60_000, image: png.toString('base64') }) } });
+      value: JSON.stringify({ clubId, version, expires: Date.now() + (preview ? 10*60_000 : 90*86400000), purpose: preview ? 'preview' : 'delivery', image: png.toString('base64') }) } });
     return `${(this.config.get<string>('ZALO_PUBLIC_ORIGIN') || 'https://picklefund.vn').replace(/\/$/,'')}/api/zalo/report-image/${id}.png`;
   }
   async reportImage(id: string): Promise<Buffer> {
@@ -221,7 +227,7 @@ export class ZaloService {
   }
   async preview(clubId: string) {
     const c = await this.required(clubId); const r = await this.report(clubId);
-    return { text: r.text, imageUrl: await this.createReportImage(r.report, clubId, c.version) };
+    return { text: r.text, imageUrl: await this.createReportImage(r.report, clubId, c.version, true) };
   }
   private async summary(id: string, clubId: string, depth = 0): Promise<Awaited<ReturnType<FinancialCalculatorService['calculate']>>> {
     if (depth > 120) throw new BadRequestException('Chuỗi chuyển kỳ quá dài; cần kiểm tra lại kỳ quỹ.');
@@ -244,7 +250,7 @@ export class ZaloService {
         const j = JSON.parse(row.value) as Job;
         if (j.due > Date.now()) continue;
         const c = await this.read(j.clubId);
-        if (!c?.enabled || c.version !== j.version || c.chatId !== j.chatId) { j.status = 'failed'; await this.prisma.systemSetting.update({ where: { key: row.key }, data: { value: JSON.stringify(j) } }); continue; }
+        if (!c?.enabled || c.version !== j.version || c.chatId !== j.chatId || (j.report && (j.kind !== 'weekly' || !c.weeklyReport)) || (!j.report && !c.announcements)) { j.status = 'failed'; await this.prisma.systemSetting.update({ where: { key: row.key }, data: { value: JSON.stringify(j) } }); continue; }
         j.status = 'sending'; j.attempts++; j.due = Date.now() + 120000;
         const claimed = await this.prisma.systemSetting.updateMany({ where: { key: row.key, value: row.value }, data: { value: JSON.stringify(j) } });
         if (!claimed.count) continue;
@@ -266,24 +272,28 @@ export class ZaloService {
       const rows = await this.prisma.systemSetting.findMany({ where: { key: { startsWith: PREFIX } } });
       const now = new Date(); const time = new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Asia/Ho_Chi_Minh' }).format(now);
       const day = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'Asia/Ho_Chi_Minh' }).format(now);
+      const weekday = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].indexOf(new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: 'Asia/Ho_Chi_Minh' }).format(now));
+      const weekStart = new Date(`${day}T00:00:00Z`);
+      weekStart.setUTCDate(weekStart.getUTCDate() - (weekday + 6) % 7);
+      const weekKey = weekStart.toISOString().slice(0,10);
       for (const row of rows) {
-        const c = JSON.parse(row.value) as Connection;
-        if (!c.enabled || !c.chatId || (!c.financialChanges && !c.dailyReport)) continue;
-        const dailyDue = c.dailyReport && time === (c.reportTime ?? '08:00');
-        const changeDue = c.financialChanges && Math.floor(now.getTime()/60_000) % (c.financialIntervalMinutes ?? 1) === 0;
-        if (!dailyDue && !changeDue) continue;
+        const c = this.weeklyConnection(JSON.parse(row.value) as Connection);
+        // Persist the migration with CAS without overwriting concurrent settings edits.
+        if (JSON.stringify(c) !== row.value) await this.prisma.systemSetting.updateMany({ where: { key: row.key, value: row.value }, data: { value: JSON.stringify(c) } });
+        if (!c.enabled || !c.chatId || !c.weeklyReport || weekday !== c.reportWeekday || time !== (c.reportTime ?? '08:00')) continue;
         const clubId = row.key.slice(PREFIX.length);
         try {
           const r = await this.report(clubId);
-          if (dailyDue) await this.enqueue(clubId, c, r.text, `daily:${day}`, r.report);
-          if (changeDue && c.baseline && c.baseline !== r.fingerprint) await this.enqueue(clubId, c, `BIẾN ĐỘNG QUỸ\n${r.text}`, `change:${r.fingerprint}:${row.updatedAt.getTime()}`, r.report);
-          // CAS avoids overwriting a disconnect, group replacement or preferences edited during calculation.
-          if (changeDue) c.baseline = r.fingerprint;
-          await this.prisma.systemSetting.updateMany({ where: { key: row.key, value: row.value }, data: { value: JSON.stringify(c) } });
+          // Week key is stable across scans, restarts and day/time changes within the same week.
+          await this.enqueue(clubId, c, r.text, `weekly:${weekKey}`, r.report);
         } catch { /* no active period / data unavailable: do not send guessed numbers */ }
       }
       await this.prisma.systemSetting.deleteMany({ where: { key: { startsWith: JOB }, updatedAt: { lt: new Date(Date.now() - 7*86400000) } } });
-      await this.prisma.systemSetting.deleteMany({ where: { key: { startsWith: IMAGE }, updatedAt: { lt: new Date(Date.now() - 10*60000) } } });
+      const images = await this.prisma.systemSetting.findMany({ where: { key: { startsWith: IMAGE } } });
+      for (const image of images) {
+        const expiry = JSON.parse(image.value).expires;
+        if (typeof expiry === 'number' && expiry < Date.now()) await this.prisma.systemSetting.deleteMany({ where: { key: image.key, value: image.value } });
+      }
     } finally { this.scanning = false; }
   }
 }
