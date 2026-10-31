@@ -10,6 +10,7 @@ import { exportReceiptPDF } from '../../lib/export'
 import { ReportPaymentModal } from '../../components/member/ReportPaymentModal'
 import toast from 'react-hot-toast'
 import { useBrandingStore } from '../../store/brandingStore'
+import { ZaloMemberLink } from '../admin/ZaloMemberLink'
 
 export function MemberDashboard() {
   const { user } = useAuthStore()
@@ -266,7 +267,8 @@ export function MemberDashboard() {
             )}
           </div>
         )}
-        <ReportPaymentModal open={reportOpen} onClose={() => setReportOpen(false)} onReported={reload} />
+        <ZaloMemberLink />
+      <ReportPaymentModal open={reportOpen} onClose={() => setReportOpen(false)} onReported={reload} />
       </div>
     )
   }
@@ -405,6 +407,7 @@ export function MemberDashboard() {
           </ChartCard>
         </div>
       )}
+      <ZaloMemberLink />
       <ReportPaymentModal open={reportOpen} onClose={() => setReportOpen(false)} onReported={reload} />
     </PageShell>
   )

@@ -12,11 +12,12 @@ import { FinancialCalculatorService } from '../financial/financial-calculator.se
 import { HermesEventPublisher } from '../workflows/hermes-event.publisher';
 import { IntakePayload, parseIntake } from './zalo-intake.parser';
 import type { JwtUser } from '../common/decorators';
-import type { Prisma } from '@prisma/client';
+import type { Prisma, Role } from '@prisma/client';
 interface BotConnection {
   version: string;
   chatId?: string;
   intakeEnabled?: boolean;
+  commandsEnabled?: boolean;
   webhookReady: boolean;
 }
 const digest = (s: string) => createHash('sha256').update(s).digest('hex');
@@ -33,13 +34,14 @@ export class ZaloIntakeService {
   private async actor(
     user: Pick<JwtUser, 'userId' | 'clubId'>,
     db: Prisma.TransactionClient = this.prisma,
+    roles: Role[] = ['CLUB_ADMIN', 'CLUB_TREASURER'],
   ) {
     const u = await db.user.findFirst({
       where: {
         id: user.userId,
         clubId: user.clubId ?? '__none__',
         isActive: true,
-        role: { in: ['CLUB_ADMIN', 'CLUB_TREASURER'] },
+        role: { in: roles },
       },
     });
     if (!u?.clubId)
@@ -56,14 +58,14 @@ export class ZaloIntakeService {
       where: { key: 'zalo_connection_' + clubId },
     });
     const c = row ? JSON.parse(row.value) : null;
-    if (!c?.chatId || !c.webhookReady || !c.intakeEnabled)
+    if (!c?.chatId || !c.webhookReady || !(c.intakeEnabled || c.commandsEnabled))
       throw new BadRequestException(
-        'Quản trị CLB cần bật nhập liệu Zalo và xác nhận nhóm trước.',
+        'Quản trị CLB cần bật nhập liệu hoặc lệnh Zalo và xác nhận nhóm trước.',
       );
     return c;
   }
-  async state(user: JwtUser) {
-    const u = await this.actor(user);
+  async state(user: JwtUser, roles?: Role[]) {
+    const u = await this.actor(user, this.prisma, roles);
     const row = await this.prisma.systemSetting.findUnique({
       where: { key: 'zalo_connection_' + u.clubId },
     });
@@ -76,6 +78,7 @@ export class ZaloIntakeService {
     });
     return {
       enabled: !!c?.intakeEnabled,
+      commandsEnabled: !!c?.commandsEnabled,
       linked:
         !!identity &&
         identity.botVersion === c?.version &&
@@ -91,8 +94,8 @@ export class ZaloIntakeService {
           : null,
     };
   }
-  async linkCode(user: JwtUser) {
-    const u = await this.actor(user);
+  async linkCode(user: JwtUser, roles?: Role[]) {
+    const u = await this.actor(user, this.prisma, roles);
     const c = await this.connection(u.clubId!);
     const code = randomBytes(8).toString('hex').toUpperCase();
     const data = {
@@ -112,10 +115,10 @@ export class ZaloIntakeService {
     });
     return { command: '/lienket ' + code, expiresAt: data.expiresAt };
   }
-  async confirmLink(user: JwtUser) {
+  async confirmLink(user: JwtUser, roles?: Role[]) {
     try {
       await this.prisma.$transaction(async (tx) => {
-        const u = await this.actor(user, tx);
+        const u = await this.actor(user, tx, roles);
         const c = await this.connection(u.clubId!, tx);
         const q = await tx.zaloLinkChallenge.findUnique({
           where: { clubId_userId: { clubId: u.clubId!, userId: u.id } },
@@ -164,10 +167,10 @@ export class ZaloIntakeService {
         );
       throw e;
     }
-    return this.state(user);
+    return this.state(user, roles);
   }
-  async unlink(user: JwtUser) {
-    const u = await this.actor(user);
+  async unlink(user: JwtUser, roles?: Role[]) {
+    const u = await this.actor(user, this.prisma, roles);
     await this.prisma.$transaction(async (tx) => {
       await tx.zaloIdentity.deleteMany({
         where: { clubId: u.clubId!, userId: u.id },
@@ -188,7 +191,7 @@ export class ZaloIntakeService {
         },
       });
     });
-    return this.state(user);
+    return this.state(user, roles);
   }
   async receive(
     clubId: string,

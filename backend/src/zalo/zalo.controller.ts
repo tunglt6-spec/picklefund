@@ -9,6 +9,9 @@ import { ZaloService } from './zalo.service';
 class BotDto { @IsString() @MaxLength(512) token: string; }
 class PreferencesDto {
   @IsOptional() @IsBoolean() intakeEnabled?: boolean;
+  @IsOptional() @IsBoolean() commandsEnabled?: boolean;
+  @IsOptional() @IsBoolean() paymentReminders?: boolean;
+  @IsOptional() @IsBoolean() resultImages?: boolean;
   @IsOptional() @IsBoolean() enabled?: boolean;
   @IsOptional() @IsBoolean() financialChanges?: boolean;
   @IsOptional() @IsBoolean() announcements?: boolean;

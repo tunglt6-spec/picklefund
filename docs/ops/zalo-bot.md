@@ -42,3 +42,12 @@ Draft creation never writes financial records. PostgreSQL uniqueness on club/bot
 Personal link codes expire after ten minutes and are stored hashed. Drafts expire after 24 hours; each sender may have at most 20 unexpired pending drafts. Unlinking revokes the identity and rejects that user's pending drafts without changing posted records. Bot replacement/group replacement invalidates previous links/drafts by version/group scope. Ordinary chat is not retained. Weekly report settings remain unchanged.
 
 `backend/scripts/zalo-intake-smoke.cjs` creates a new `pf_zalo_intake_test_<timestamp>` database, applies the migration against the previous schema and verifies concurrent webhook/recording deduplication, atomic rollback, role revocation and pending financial statuses using actual PostgreSQL. It drops only that disposable database in `finally`; no production rows are used.
+
+## Group commands, reminders and result images (v2)
+All are opt-in per club in Settings → Zalo (default off) and require a confirmed group.
+
+- `commandsEnabled` — read-only lookups in the linked group: `/quy`, `/congno` (aggregate only in the group; names only in a private chat to a linked admin/treasurer), `/lich`, `/bxh`, `/help`. Personal commands for members linked via app → "Liên kết Zalo" (`/member/me/zalo/*`): `/dangky [n]`, `/huy [n]`, `/diemdanh`, `/no`. Writes go through the same guards as the member portal and are audit-logged ("Thực hiện qua bot Zalo"). 15 s throttle per chat+command. Private chats from unlinked users are ignored.
+- `paymentReminders` — daily 09:00 (VN) private message to linked members who have not paid the active common period when due date is ≤3 days away or overdue; max 1 message per member per 3 days, max 50 per run. [Unverified] assumes Zalo private `chat_id` equals the user id; if a user never messaged the bot the send fails and is skipped.
+- `resultImages` — when a minigame becomes COMPLETED (endedAt ≤2 days), a standings PNG is queued once (`zalo_mgsent_*` key) and sent as a photo job.
+- Health: `failStreak`/`lastErrorAt` count consecutive failed outbox deliveries; the Zalo screen shows a warning at ≥3 and resets on the next success.
+- `/thu` and `/chi` also accept natural Vietnamese (`/thu Nguyễn Văn A đóng 300k hôm qua`, `/chi tiền sân 600.000 01/01`); they still create a draft only (never write the ledger directly). The pipe syntax keeps working.

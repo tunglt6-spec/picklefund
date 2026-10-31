@@ -9,7 +9,7 @@ import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 import { RefreshCw, Send, FileText, Link, Save } from '../../components/icons/mobileLucide'
 
 interface ZaloStatus {
-  configured: boolean; intakeEnabled?: boolean; botName?: string; canJoinGroups?: boolean; webhookReady?: boolean;
+  configured: boolean; intakeEnabled?: boolean; commandsEnabled?: boolean; paymentReminders?: boolean; resultImages?: boolean; failStreak?: number; lastErrorAt?: string | null; botName?: string; canJoinGroups?: boolean; webhookReady?: boolean;
   enabled?: boolean; financialChanges?: boolean; announcements?: boolean; dailyReport?: boolean;
   reportTime?: string; weeklyReport?: boolean; reportWeekday?: number;
   chatId?: string | null; chatName?: string | null; pendingChat?: { id: string; name: string } | null;
@@ -36,7 +36,7 @@ export function ZaloTab() {
   })
   const save = () => action(async () => {
     if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(status?.reportTime ?? '08:00')) { toast.error('Chọn giờ báo cáo hợp lệ'); return }
-    setStatus((await api.post('/zalo/preferences', { enabled: !!status?.enabled, intakeEnabled: !!status?.intakeEnabled, announcements: !!status?.announcements, weeklyReport: !!status?.weeklyReport, reportWeekday: status?.reportWeekday ?? 0, reportTime: status?.reportTime ?? '08:00' })).data.data)
+    setStatus((await api.post('/zalo/preferences', { enabled: !!status?.enabled, intakeEnabled: !!status?.intakeEnabled, commandsEnabled: !!status?.commandsEnabled, paymentReminders: !!status?.paymentReminders, resultImages: !!status?.resultImages, announcements: !!status?.announcements, weeklyReport: !!status?.weeklyReport, reportWeekday: status?.reportWeekday ?? 0, reportTime: status?.reportTime ?? '08:00' })).data.data)
     toast.success('Đã lưu lựa chọn gửi Zalo')
   })
   const test = () => action(async () => { await api.post('/zalo/test'); toast.success('Đã gửi tin kiểm tra vào nhóm đã xác nhận') })
@@ -76,7 +76,7 @@ export function ZaloTab() {
     </section>}
     {status?.configured && <section className="pf-glass rounded-2xl p-4 space-y-3">
       <h3 className="font-bold">Nội dung gửi vào nhóm</h3>
-      {([['enabled','Bật gửi tự động'],['announcements','Lịch hoạt động và thành viên mới'],['intakeEnabled','Nhập thu/chi qua bot (cần liên kết tài khoản)'],['weeklyReport','Báo cáo tài chính hằng tuần']] as const).map(([key,label]) => <label key={key} className="flex min-h-11 items-center justify-between gap-3 border-b py-2 text-sm"><span>{label}</span><input type="checkbox" checked={!!status[key]} disabled={busy || !status.chatId} onChange={e=>setStatus({...status,[key]:e.target.checked})} className="h-5 w-5 shrink-0" /></label>)}
+      {([['enabled','Bật gửi tự động'],['announcements','Lịch hoạt động và thành viên mới'],['intakeEnabled','Nhập thu/chi qua bot (cần liên kết tài khoản)'],['commandsEnabled','Tra cứu & lệnh trong nhóm: /quy /congno /lich /bxh /dangky /huy /diemdanh'],['paymentReminders','Nhắc đóng quỹ riêng từng thành viên đã liên kết (9:00, khi gần/quá hạn)'],['resultImages','Tự gửi ảnh bảng xếp hạng khi giải kết thúc'],['weeklyReport','Báo cáo tài chính hằng tuần']] as const).map(([key,label]) => <label key={key} className="flex min-h-11 items-center justify-between gap-3 border-b py-2 text-sm"><span>{label}</span><input type="checkbox" checked={!!status[key]} disabled={busy || !status.chatId} onChange={e=>setStatus({...status,[key]:e.target.checked})} className="h-5 w-5 shrink-0" /></label>)}
       <div className="grid grid-cols-1 gap-3 min-[600px]:grid-cols-2">
         <label className="block min-w-0 text-sm font-semibold" htmlFor="zalo-report-time">Giờ gửi báo cáo
           <input id="zalo-report-time" type="time" step={60} value={status.reportTime ?? '08:00'} disabled={busy || !status.chatId || !status.weeklyReport} onChange={e=>setStatus({...status,reportTime:e.target.value})} onInput={e=>{const value=e.currentTarget.value;setStatus(previous=>previous?{...previous,reportTime:value}:previous)}} className="input-base mt-2 w-full min-w-0" />
@@ -90,6 +90,7 @@ export function ZaloTab() {
       <p className="text-xs [color:var(--pf-color-muted)]">Giờ Việt Nam (UTC+7) · Bấm Lưu để áp dụng. Báo cáo tài chính chỉ gửi một lần mỗi tuần vào ngày, giờ đã chọn. Lịch hoạt động và thành viên mới gửi theo sự kiện.</p>
       <p className="text-xs [color:var(--pf-color-muted)]">Chỉ gửi số liệu tổng hợp của CLB. Tin nhắn nhắc nợ cá nhân, trao đổi riêng và báo cáo kiểm duyệt không chuyển vào nhóm. Không gửi riêng từng biến động quỹ để tránh làm phiền nhóm.</p>
       {status.lastSentAt && <p className="text-sm">Gửi thành công gần nhất: {new Date(status.lastSentAt).toLocaleString('vi-VN')}</p>}
+      {(status.failStreak ?? 0) >= 3 && <p role="alert" className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800"><b>Cảnh báo:</b> bot đã gửi lỗi {status.failStreak} lần liên tiếp{status.lastErrorAt ? ` (gần nhất ${new Date(status.lastErrorAt).toLocaleString('vi-VN')})` : ''}. Kiểm tra token, quyền bot trong nhóm hoặc đăng ký lại bot.</p>}
       {status.lastError && <p role="alert" className="text-sm text-red-700">{status.lastError}</p>}
       <Button variant="outline" disabled={busy} onClick={()=>setDisconnect(true)}>Ngắt kết nối Zalo</Button>
     </section>}

@@ -1,5 +1,7 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException, Optional } from '@nestjs/common';
 import { ZaloIntakeService } from './zalo-intake.service';
+import { ZaloCommandService, vnToday } from './zalo-commands.service';
+import { zaloStandingsHtml, zaloStandingsText } from './zalo-standings';
 import { ConfigService } from '@nestjs/config';
 import { Cron } from '@nestjs/schedule';
 import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from 'crypto';
@@ -17,11 +19,12 @@ interface Connection {
   pairHash?: string; pairExpires?: number; baseline?: string;
   lastSentAt?: string; lastError?: string;
   reportTime?: string; financialIntervalMinutes?: number; weeklyReport?: boolean; reportWeekday?: number; scheduleVersion?: number; intakeEnabled?: boolean;
+  commandsEnabled?: boolean; paymentReminders?: boolean; resultImages?: boolean; failStreak?: number; lastErrorAt?: string;
 }
 interface Job {
   clubId: string; version: string; chatId: string; text: string;
   status: 'pending' | 'sending' | 'sent' | 'failed'; attempts: number; due: number;
-  report?: ZaloFinancialReport; kind?: 'weekly' | 'event';
+  report?: ZaloFinancialReport; kind?: 'weekly' | 'event' | 'result'; photo?: string;
 }
 const PREFIX = 'zalo_connection_';
 const JOB = 'zalo_job_';
@@ -42,7 +45,7 @@ export class ZaloService {
   private readonly logger = new Logger(ZaloService.name);
   private working = false;
   private scanning = false;
-  constructor(private readonly prisma: PrismaService, private readonly config: ConfigService, private readonly calculator: FinancialCalculatorService, @Optional() private readonly intake?: ZaloIntakeService) {}
+  constructor(private readonly prisma: PrismaService, private readonly config: ConfigService, private readonly calculator: FinancialCalculatorService, @Optional() private readonly intake?: ZaloIntakeService, @Optional() private readonly commands?: ZaloCommandService) {}
 
   club(id: string | null | undefined): string {
     if (!id || !/^[a-zA-Z0-9-]{1,50}$/.test(id)) throw new BadRequestException('Chọn tài khoản quản trị của CLB cần kết nối Zalo.');
@@ -81,7 +84,8 @@ export class ZaloService {
     if (!c) return { configured: false };
     // Never return the encrypted token, webhook secret, pairing hash or queued payload to a client.
     return { configured: true, botName: c.botName, canJoinGroups: c.canJoinGroups, webhookReady: c.webhookReady,
-      intakeEnabled: !!c.intakeEnabled, enabled: c.enabled, financialChanges: c.financialChanges, announcements: c.announcements, dailyReport: c.dailyReport,
+      intakeEnabled: !!c.intakeEnabled, commandsEnabled: !!c.commandsEnabled, paymentReminders: !!c.paymentReminders, resultImages: !!c.resultImages,
+      failStreak: c.failStreak ?? 0, lastErrorAt: c.lastErrorAt ?? null, enabled: c.enabled, financialChanges: c.financialChanges, announcements: c.announcements, dailyReport: c.dailyReport,
       chatId: c.chatId ?? null, chatName: c.chatName ?? null, pendingChat: c.pendingChat ?? null,
       reportTime: c.reportTime ?? '08:00', weeklyReport: !!c.weeklyReport, reportWeekday: c.reportWeekday ?? 0,
       lastSentAt: c.lastSentAt ?? null, lastError: c.lastError ?? null };
@@ -136,9 +140,14 @@ export class ZaloService {
     const data = body as any; const m = data?.message;
     // Verification pings and unrelated messages are acknowledged without persisting group content.
     if (data?.event_name !== 'message.text.received' || !c.canJoinGroups || m?.from?.is_bot === true) return;
-    if (this.intake && c.intakeEnabled && (m?.chat?.id === c.chatId || (m?.chat?.chat_type === 'PRIVATE' && /(?:^|\s)\/lienket\s/i.test(m?.text ?? ''))) && typeof m?.text === 'string' && /(?:^|\s)\/(thu|chi|lienket)\s/i.test(m.text)) {
+    const text: string = typeof m?.text === 'string' ? m.text : '';
+    const intakeOn = !!c.intakeEnabled;
+    const linkOn = intakeOn || !!c.commandsEnabled;
+    const isLink = /(?:^|\s)\/lienket\s/i.test(text);
+    const isMoney = /(?:^|\s)\/(thu|chi)\s/i.test(text);
+    if (this.intake && text && ((isMoney && intakeOn && m?.chat?.id === c.chatId) || (isLink && linkOn && m?.chat?.chat_type === 'PRIVATE'))) {
       let reply: string | null;
-      try { reply = await this.intake.receive(clubId, c, m); }
+      try { reply = await this.intake.receive(clubId, { ...c, intakeEnabled: linkOn }, m); }
       catch(e) {
         if (e instanceof BadRequestException) reply = e.message;
         else if (e instanceof ForbiddenException) reply = 'Tài khoản không còn quyền nhập liệu. Kiểm tra quyền trong app.';
@@ -146,6 +155,10 @@ export class ZaloService {
       }
       if(reply) await this.call(this.unseal(c.token), 'sendMessage', {chat_id:m.chat.id,text:reply.slice(0,1900)});
       return;
+    }
+    if (this.commands && c.commandsEnabled && text) {
+      const reply = await this.commands.handle(clubId, c, m, () => this.report(clubId));
+      if (reply) { await this.call(this.unseal(c.token), 'sendMessage', { chat_id: m.chat.id, text: reply.slice(0, 1900) }); return; }
     }
     if (m?.chat?.chat_type !== 'GROUP') return;
     // Group messages may prefix the command with an @mention of the bot.
@@ -162,11 +175,11 @@ export class ZaloService {
     c.chatId = c.pendingChat.id; c.chatName = c.pendingChat.name; c.enabled = false; delete c.pendingChat; delete c.baseline;
     await this.save(clubId, c); return this.status(clubId);
   }
-  async preferences(clubId: string, patch: Partial<Pick<Connection, 'enabled' | 'financialChanges' | 'announcements' | 'dailyReport' | 'reportTime' | 'financialIntervalMinutes' | 'weeklyReport' | 'reportWeekday' | 'intakeEnabled'>>) {
+  async preferences(clubId: string, patch: Partial<Pick<Connection, 'enabled' | 'financialChanges' | 'announcements' | 'dailyReport' | 'reportTime' | 'financialIntervalMinutes' | 'weeklyReport' | 'reportWeekday' | 'intakeEnabled' | 'commandsEnabled' | 'paymentReminders' | 'resultImages'>>) {
     if (patch.reportTime !== undefined && !/^([01]\d|2[0-3]):[0-5]\d$/.test(patch.reportTime)) throw new BadRequestException('Giờ báo cáo phải có dạng HH:mm.');
     if (patch.financialIntervalMinutes !== undefined && ![1,5,15,30,60].includes(patch.financialIntervalMinutes)) throw new BadRequestException('Tần suất biến động không hợp lệ.');
     const c = await this.required(clubId);
-    if ((patch.enabled || patch.intakeEnabled) && (!c.chatId || !c.canJoinGroups || !c.webhookReady)) throw new BadRequestException('Kết nối và xác nhận nhóm trước khi bật tự động.');
+    if ((patch.enabled || patch.intakeEnabled || patch.commandsEnabled || patch.paymentReminders || patch.resultImages) && (!c.chatId || !c.canJoinGroups || !c.webhookReady)) throw new BadRequestException('Kết nối và xác nhận nhóm trước khi bật tự động.');
     if (patch.reportWeekday !== undefined && (!Number.isInteger(patch.reportWeekday) || patch.reportWeekday < 0 || patch.reportWeekday > 6)) throw new BadRequestException('Ngày báo cáo không hợp lệ.');
     Object.assign(c, patch);
     c.financialChanges = false; c.dailyReport = false;
@@ -180,24 +193,26 @@ export class ZaloService {
     await this.prisma.systemSetting.deleteMany({ where: { key: PREFIX + clubId } });
     if (c) { try { await this.call(this.unseal(c.token), 'deleteWebhook', {}); } catch { /* local connection already disabled */ } }
   }
-  private async send(clubId: string, c: Connection, text: string, report?: ZaloFinancialReport) {
+  private async send(clubId: string, c: Connection, text: string, report?: ZaloFinancialReport, photo?: string) {
     if (!c.chatId || !c.canJoinGroups || !c.webhookReady) throw new BadRequestException('Nhóm Zalo chưa sẵn sàng.');
-    if (report) {
-      const photo = await this.createReportImage(report, clubId, c.version);
-      await this.call(this.unseal(c.token), 'sendPhoto', { chat_id: c.chatId, photo,
+    if (photo) {
+      await this.call(this.unseal(c.token), 'sendPhoto', { chat_id: c.chatId, photo, caption: text.slice(0, 1900) });
+    } else if (report) {
+      const url = await this.createReportImage(report, clubId, c.version);
+      await this.call(this.unseal(c.token), 'sendPhoto', { chat_id: c.chatId, photo: url,
         caption: zaloReportText(report).slice(0, 1900) });
     } else for (const chunk of splitZaloText(text)) await this.call(this.unseal(c.token), 'sendMessage', { chat_id: c.chatId, text: chunk });
     // Patch only delivery metadata, never overwrite concurrently edited preferences/group.
     const current = await this.read(clubId);
-    if (current?.version === c.version && current.chatId === c.chatId) { current.lastSentAt = new Date().toISOString(); delete current.lastError; await this.save(clubId, current); }
+    if (current?.version === c.version && current.chatId === c.chatId) { current.lastSentAt = new Date().toISOString(); delete current.lastError; delete current.lastErrorAt; current.failStreak = 0; await this.save(clubId, current); }
   }
   async test(clubId: string) {
     await this.send(clubId, await this.required(clubId), 'PickleFund: Kết nối nhóm Zalo của CLB thành công. Đây là tin kiểm tra, không chứa dữ liệu tài chính.');
     return { sent: true };
   }
-  private async enqueue(clubId: string, c: Connection, text: string, id: string, report?: ZaloFinancialReport) {
+  private async enqueue(clubId: string, c: Connection, text: string, id: string, report?: ZaloFinancialReport, photo?: string) {
     if (!c.chatId) return;
-    const job: Job = { kind: report ? 'weekly' : 'event', clubId, version: c.version, chatId: c.chatId, text, report, status: 'pending', attempts: 0, due: Date.now() };
+    const job: Job = { kind: photo ? 'result' : report ? 'weekly' : 'event', photo, clubId, version: c.version, chatId: c.chatId, text, report, status: 'pending', attempts: 0, due: Date.now() };
     await this.prisma.systemSetting.upsert({ where: { key: JOB + hash(`${clubId}:${c.version}:${c.chatId}:${id}`) },
       create: { key: JOB + hash(`${clubId}:${c.version}:${c.chatId}:${id}`), value: JSON.stringify(job) }, update: {} });
   }
@@ -222,8 +237,11 @@ export class ZaloService {
       logo: (await readZaloLogo(branding?.logoUrl || club?.logoUrl)) ?? await defaultZaloLogo() };
     return { fingerprint: hash(JSON.stringify(stats)), text: zaloReportText(report), report };
   }
-  private async createReportImage(report: ZaloFinancialReport, clubId: string, version: string, preview = false): Promise<string> {
-    const png = await renderHtmlToPng(zaloReportHtml(report));
+  private createReportImage(report: ZaloFinancialReport, clubId: string, version: string, preview = false): Promise<string> {
+    return this.createPngCapability(zaloReportHtml(report), clubId, version, preview);
+  }
+  private async createPngCapability(html: string, clubId: string, version: string, preview = false): Promise<string> {
+    const png = await renderHtmlToPng(html);
     if (!png || png.length > 5_000_000) throw new BadRequestException('Chưa tạo được ảnh báo cáo. Vui lòng thử lại.');
     const id = randomBytes(24).toString('hex');
     await this.prisma.systemSetting.upsert({ where: { key: IMAGE + id }, update: {}, create: { key: IMAGE + id,
@@ -254,6 +272,49 @@ export class ZaloService {
     const c = await this.required(clubId); const r = await this.report(clubId);
     await this.send(clubId, c, r.text, r.report); return { sent: true };
   }
+  /** Giải vừa kết thúc (≤2 ngày) → ảnh BXH gửi vào nhóm đúng 1 lần (khóa theo giải). */
+  private async announceResults(clubId: string, c: Connection) {
+    if (!this.commands) return;
+    const since = new Date(Date.now() - 2 * 86400000);
+    const done = await this.prisma.minigame.findMany({ where: { clubId, status: 'COMPLETED', endedAt: { gte: since } }, select: { id: true }, take: 3 });
+    for (const g of done) {
+      const key = `zalo_mgsent_${clubId}_${g.id}`;
+      if (await this.prisma.systemSetting.findUnique({ where: { key } })) continue;
+      const view = await this.commands.standingsView(clubId, g.id);
+      if (!view?.rows.length) continue;
+      const photo = await this.createPngCapability(zaloStandingsHtml(view), clubId, c.version);
+      await this.enqueue(clubId, c, zaloStandingsText(view), `result:${g.id}`, undefined, photo);
+      await this.prisma.systemSetting.upsert({ where: { key }, create: { key, value: new Date().toISOString() }, update: {} });
+    }
+  }
+  /** Nhắc riêng từng thành viên đã liên kết Zalo mà chưa đóng quỹ kỳ đang mở, khi còn ≤3 ngày hoặc quá hạn; mỗi người tối đa 1 tin/3 ngày. */
+  async remindPayments(clubId: string, c: Connection): Promise<number> {
+    if (!this.commands || !c.chatId) return 0;
+    const period = await this.prisma.fundPeriod.findFirst({ where: { clubId, type: 'chung', status: 'active' }, orderBy: { startDate: 'desc' } });
+    if (!period?.dueDate) return 0;
+    const days = Math.round((period.dueDate.getTime() - vnToday().getTime()) / 86400000);
+    if (days > 3) return 0;
+    const { unpaid, waitingIds } = await this.commands.unpaidMembers(clubId, period.id);
+    const targets = unpaid.filter((u) => !waitingIds.has(u.id));
+    if (!targets.length) return 0;
+    const members = await this.prisma.member.findMany({ where: { id: { in: targets.map((t) => t.id) }, clubId, userId: { not: null } }, select: { id: true, userId: true, fullName: true } });
+    const identities = await this.prisma.zaloIdentity.findMany({ where: { clubId, botVersion: c.version, chatId: c.chatId, userId: { in: members.map((x) => x.userId as string) } } });
+    const token = this.unseal(c.token); const each = Number(period.contributionAmount);
+    const when = days < 0 ? `đã quá hạn ${-days} ngày` : days === 0 ? 'hạn là hôm nay' : `còn ${days} ngày`;
+    let sent = 0;
+    for (const idn of identities.slice(0, 50)) {
+      const mem = members.find((x) => x.userId === idn.userId); if (!mem) continue;
+      const key = `zalo_remind_${clubId}_${mem.id}`;
+      const prev = await this.prisma.systemSetting.findUnique({ where: { key } });
+      if (prev && Date.now() - Date.parse(prev.value) < 3 * 86400000 - 3600000) continue;
+      try {
+        await this.call(token, 'sendMessage', { chat_id: idn.zaloUserId, text: `Nhắc đóng quỹ — kỳ ${period.name}: ${mem.fullName} chưa đóng ${Math.round(each).toLocaleString('vi-VN')} đ (${when}). Nộp xong báo nộp trong app: https://picklefund.vn/member/tai-chinh` });
+        await this.prisma.systemSetting.upsert({ where: { key }, create: { key, value: new Date().toISOString() }, update: { value: new Date().toISOString() } });
+        sent++;
+      } catch { /* người dùng chưa nhắn bot / chặn bot: bỏ qua, thử lại kỳ nhắc sau */ }
+    }
+    return sent;
+  }
   @Cron('*/10 * * * * *')
   async flush() {
     if (this.working) return; this.working = true;
@@ -263,15 +324,15 @@ export class ZaloService {
         const j = JSON.parse(row.value) as Job;
         if (j.due > Date.now()) continue;
         const c = await this.read(j.clubId);
-        if (!c?.enabled || c.version !== j.version || c.chatId !== j.chatId || (j.report && (j.kind !== 'weekly' || !c.weeklyReport)) || (!j.report && !c.announcements)) { j.status = 'failed'; await this.prisma.systemSetting.update({ where: { key: row.key }, data: { value: JSON.stringify(j) } }); continue; }
+        if (!c?.enabled || c.version !== j.version || c.chatId !== j.chatId || (j.report && (j.kind !== 'weekly' || !c.weeklyReport)) || (j.kind === 'result' && !c.resultImages) || (!j.report && j.kind !== 'result' && !c.announcements)) { j.status = 'failed'; await this.prisma.systemSetting.update({ where: { key: row.key }, data: { value: JSON.stringify(j) } }); continue; }
         j.status = 'sending'; j.attempts++; j.due = Date.now() + 120000;
         const claimed = await this.prisma.systemSetting.updateMany({ where: { key: row.key, value: row.value }, data: { value: JSON.stringify(j) } });
         if (!claimed.count) continue;
-        try { await this.send(j.clubId, c, j.text, j.report); j.status = 'sent'; }
+        try { await this.send(j.clubId, c, j.text, j.report, j.photo); j.status = 'sent'; }
         catch (e) {
           j.status = j.attempts >= 3 ? 'failed' : 'pending'; j.due = Date.now() + j.attempts * 60_000;
           const current = await this.read(j.clubId);
-          if (current?.version === j.version) { current.lastError = (e as Error).message; await this.save(j.clubId, current); }
+          if (current?.version === j.version) { current.lastError = (e as Error).message; current.lastErrorAt = new Date().toISOString(); current.failStreak = (current.failStreak ?? 0) + 1; await this.save(j.clubId, current); }
         }
         await this.prisma.systemSetting.update({ where: { key: row.key }, data: { value: JSON.stringify(j) } });
       }
@@ -293,8 +354,13 @@ export class ZaloService {
         const c = this.weeklyConnection(JSON.parse(row.value) as Connection);
         // Persist the migration with CAS without overwriting concurrent settings edits.
         if (JSON.stringify(c) !== row.value) await this.prisma.systemSetting.updateMany({ where: { key: row.key, value: row.value }, data: { value: JSON.stringify(c) } });
+        const clubIdAll = row.key.slice(PREFIX.length);
+        if (c.enabled && c.chatId && c.canJoinGroups && c.webhookReady) {
+          if (c.resultImages && now.getMinutes() % 5 === 0) await this.announceResults(clubIdAll, c).catch(() => this.logger.warn('Không gửi được ảnh kết quả giải.'));
+          if (c.paymentReminders && time === '09:00') await this.remindPayments(clubIdAll, c).catch(() => this.logger.warn('Không gửi được nhắc đóng quỹ.'));
+        }
         if (!c.enabled || !c.chatId || !c.weeklyReport || weekday !== c.reportWeekday || time !== (c.reportTime ?? '08:00')) continue;
-        const clubId = row.key.slice(PREFIX.length);
+        const clubId = clubIdAll;
         try {
           const r = await this.report(clubId);
           // Week key is stable across scans, restarts and day/time changes within the same week.
