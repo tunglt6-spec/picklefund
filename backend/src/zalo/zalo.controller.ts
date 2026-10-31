@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Headers, HttpCode, Param, Post } from '@nestjs/common';
-import { IsBoolean, IsOptional, IsString, MaxLength } from 'class-validator';
+import { Body, Controller, Get, Headers, HttpCode, Param, Post, Res, StreamableFile } from '@nestjs/common';
+import type { Response } from 'express';
+import { IsBoolean, IsOptional, IsString, MaxLength, Matches, IsInt, IsIn } from 'class-validator';
 import { CurrentUser, Public, Roles } from '../common/decorators';
 import type { JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
@@ -11,6 +12,8 @@ class PreferencesDto {
   @IsOptional() @IsBoolean() financialChanges?: boolean;
   @IsOptional() @IsBoolean() announcements?: boolean;
   @IsOptional() @IsBoolean() dailyReport?: boolean;
+  @IsOptional() @IsString() @Matches(/^([01]\d|2[0-3]):[0-5]\d$/) reportTime?: string;
+  @IsOptional() @IsInt() @IsIn([1,5,15,30,60]) financialIntervalMinutes?: number;
 }
 
 @Controller('zalo')
@@ -37,7 +40,16 @@ export class ZaloController {
   }
 
   @Get('report-preview') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
-  async preview(@CurrentUser() user: JwtUser) { return ok(await this.zalo.report(this.zalo.club(user.clubId))); }
+  async preview(@CurrentUser() user: JwtUser) { return ok(await this.zalo.preview(this.zalo.club(user.clubId))); }
+
+  /** Short-lived, unguessable capability URL for Zalo's image fetcher. */
+  @Public() @Get('report-image/:id.png')
+  async image(@Param('id') id: string, @Res({ passthrough: true }) res: Response) {
+    const png = await this.zalo.reportImage(id);
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.setHeader('Referrer-Policy', 'no-referrer');
+    return new StreamableFile(png, { type: 'image/png' });
+  }
 
   @Post('report') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   async report(@CurrentUser() user: JwtUser) { return ok(await this.zalo.requestReport(this.zalo.club(user.clubId))); }

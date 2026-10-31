@@ -146,6 +146,7 @@ async function renderOnce(
   html: string,
   opts: RenderOpts | undefined,
   renderTimeoutMs: number,
+  image = false,
 ): Promise<Buffer> {
   const puppeteer = await loadPuppeteer();
   let browser: Browser | null = null;
@@ -164,7 +165,17 @@ async function renderOnce(
     const b = browser;
     const work = (async () => {
       const page = await b.newPage();
+      if (image) {
+        await page.setViewport({ width: 960, height: 1200, deviceScaleFactor: 1.5 });
+        await page.setJavaScriptEnabled(false);
+        await page.setRequestInterception(true);
+        page.on('request', request => { void (request.url().startsWith('data:') || request.url() === 'about:blank' ? request.continue() : request.abort()); });
+      }
       await page.setContent(html, { waitUntil: 'load', timeout: renderTimeoutMs });
+      if (image) {
+        await page.evaluate(() => document.fonts.ready);
+        return Buffer.from(await page.screenshot({ type: 'png', fullPage: true }));
+      }
       const useHF = !!(opts?.headerTemplate || opts?.footerTemplate);
       const pdf = await page.pdf({
         format: 'A4',
@@ -193,6 +204,18 @@ async function renderOnce(
     if (timer) clearTimeout(timer);
     if (browser) await closeBrowser(browser);
   }
+}
+
+/** Shares the bounded Chromium queue with PDF exports; no remote resources or scripts. */
+export async function renderHtmlToPng(html: string): Promise<Buffer | null> {
+  const executablePath = chromePath();
+  if (!executablePath) return null;
+  let release: (() => void) | null = null;
+  try {
+    release = await getLimiter().acquire();
+    return await renderOnce(executablePath, html, undefined, 30000, true);
+  } catch { logger.warn('Không tạo được ảnh báo cáo Zalo.'); return null; }
+  finally { release?.(); }
 }
 
 /**

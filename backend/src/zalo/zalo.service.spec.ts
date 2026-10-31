@@ -3,6 +3,8 @@ import { ZaloService, splitZaloText } from './zalo.service';
 import { ZaloController } from './zalo.controller';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Reflector } from '@nestjs/core';
+import { renderHtmlToPng } from '../executive-report/render-pdf';
+jest.mock('../executive-report/render-pdf', () => ({ renderHtmlToPng: jest.fn(async () => Buffer.from('png-preview')) }));
 
 describe('Zalo club integration', () => {
   let svc: ZaloService; let rows: Map<string, any>; let fetchMock: jest.SpyInstance;
@@ -144,6 +146,45 @@ describe('Zalo club integration', () => {
     const secret=await paired(); await svc.disconnect(clubId);
     expect(await svc.status(clubId)).toEqual({configured:false});
     await expect(svc.webhook(clubId,secret,{})).rejects.toThrow();
+  });
+  it('validates schedule values and preserves the default schedule for existing connections', async () => {
+    await paired();
+    expect(await svc.status(clubId)).toEqual(expect.objectContaining({ reportTime:'08:00', financialIntervalMinutes:1 }));
+    await expect(svc.preferences(clubId,{reportTime:'24:01'})).rejects.toThrow();
+    await expect(svc.preferences(clubId,{financialIntervalMinutes:3})).rejects.toThrow();
+    await svc.preferences(clubId,{reportTime:'17:37',financialIntervalMinutes:15});
+    expect(await svc.status(clubId)).toEqual(expect.objectContaining({reportTime:'17:37',financialIntervalMinutes:15}));
+  });
+  it('sends one daily report at the configured Vietnam minute, independently of the change interval', async () => {
+    await paired(); await svc.preferences(clubId,{enabled:true,dailyReport:true,financialChanges:false,reportTime:'17:37',financialIntervalMinutes:60});
+    jest.useFakeTimers();
+    try {
+      jest.setSystemTime(new Date('2026-10-31T10:36:00Z')); await svc.monitor();
+      expect([...rows.keys()].filter(k=>k.startsWith('zalo_job_'))).toHaveLength(0);
+      jest.setSystemTime(new Date('2026-10-31T10:37:00Z')); await svc.monitor(); await svc.monitor();
+      const jobs=[...rows.values()].filter(r=>r.key.startsWith('zalo_job_'));
+      expect(jobs).toHaveLength(1); expect(JSON.parse(jobs[0].value).report.clubName).toBe('CLB thử nghiệm');
+      jest.setSystemTime(new Date('2026-10-31T10:38:00Z')); await svc.monitor();
+      expect([...rows.keys()].filter(k=>k.startsWith('zalo_job_'))).toHaveLength(1);
+    } finally { jest.useRealTimers(); }
+  });
+  it('sends branded report images through sendPhoto with expiring, unguessable access', async () => {
+    await paired(); fetchMock.mockClear();
+    await svc.requestReport(clubId);
+    expect(String(fetchMock.mock.calls[0][0])).toMatch(/\/sendPhoto$/);
+    const body=JSON.parse(fetchMock.mock.calls[0][1]!.body as string);
+    expect(body.chat_id).toBe('group-a'); expect(body.photo).toMatch(/\/api\/zalo\/report-image\/[a-f0-9]{48}\.png$/);
+    const id=body.photo.split('/').pop().replace('.png','');
+    expect((await svc.reportImage(id)).toString()).toBe('png-preview');
+    await expect(svc.reportImage('guess')).rejects.toThrow();
+    const row=rows.get(`zalo_image_${id}`); const data=JSON.parse(row.value);data.expires=0;row.value=JSON.stringify(data);
+    await expect(svc.reportImage(id)).rejects.toThrow();
+    expect(renderHtmlToPng).toHaveBeenCalled();
+  });
+  it('revokes image URLs when the bot is disconnected', async () => {
+    await paired(); const preview=await svc.preview(clubId);
+    const id=preview.imageUrl.split('/').pop()!.replace('.png','');
+    await svc.disconnect(clubId); await expect(svc.reportImage(id)).rejects.toThrow();
   });
   it('admin controllers reject member and treasurer roles', () => {
     const guard=new RolesGuard(new Reflector());

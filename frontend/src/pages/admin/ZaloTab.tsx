@@ -10,6 +10,7 @@ import { RefreshCw, Send, FileText, Link, Save } from '../../components/icons/mo
 interface ZaloStatus {
   configured: boolean; botName?: string; canJoinGroups?: boolean; webhookReady?: boolean;
   enabled?: boolean; financialChanges?: boolean; announcements?: boolean; dailyReport?: boolean;
+  reportTime?: string; financialIntervalMinutes?: number;
   chatId?: string | null; chatName?: string | null; pendingChat?: { id: string; name: string } | null;
   lastSentAt?: string | null; lastError?: string | null;
 }
@@ -20,6 +21,8 @@ export function ZaloTab() {
   const [busy, setBusy] = useState(false)
   const [pair, setPair] = useState<{ command: string; expiresAt: string } | null>(null)
   const [preview, setPreview] = useState('')
+  const [previewImage, setPreviewImage] = useState('')
+  const [previewFailed, setPreviewFailed] = useState(false)
   const [disconnect, setDisconnect] = useState(false)
   const [sendReport, setSendReport] = useState(false)
   const error = (e: any) => toast.error(e?.response?.data?.message ?? 'Không kết nối được Zalo. Thử lại sau.')
@@ -31,11 +34,12 @@ export function ZaloTab() {
     setToken(''); setPair(null); toast.success('Đã kiểm tra bot. Xem trạng thái quyền nhóm và webhook bên dưới.')
   })
   const save = () => action(async () => {
-    setStatus((await api.post('/zalo/preferences', { enabled: !!status?.enabled, financialChanges: !!status?.financialChanges, announcements: !!status?.announcements, dailyReport: !!status?.dailyReport })).data.data)
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(status?.reportTime ?? '08:00')) { toast.error('Chọn giờ báo cáo hợp lệ'); return }
+    setStatus((await api.post('/zalo/preferences', { enabled: !!status?.enabled, financialChanges: !!status?.financialChanges, announcements: !!status?.announcements, dailyReport: !!status?.dailyReport, reportTime: status?.reportTime ?? '08:00', financialIntervalMinutes: status?.financialIntervalMinutes ?? 1 })).data.data)
     toast.success('Đã lưu lựa chọn gửi Zalo')
   })
   const test = () => action(async () => { await api.post('/zalo/test'); toast.success('Đã gửi tin kiểm tra vào nhóm đã xác nhận') })
-  const showPreview = async () => { try { setPreview((await api.get('/zalo/report-preview')).data.data.text) } catch (e) { error(e) } }
+  const showPreview = async () => { setPreviewFailed(false); setPreviewImage(''); try { const data = (await api.get('/zalo/report-preview')).data.data; setPreview(data.text); setPreviewImage(data.imageUrl) } catch (e) { setPreviewFailed(true); error(e) } }
   const tools = [
     { key: 'refresh', label: 'Làm mới', icon: <RefreshCw />, disabled: busy, onClick: reload },
     { key: 'test', label: 'Gửi thử', icon: <Send />, disabled: busy || !status?.chatId, onClick: test },
@@ -46,7 +50,7 @@ export function ZaloTab() {
     <PhoneToolbar label="Công cụ Zalo" tools={tools} fallback={<div className="flex flex-wrap gap-2">{tools.map(t => <Button key={t.key} disabled={t.disabled} onClick={t.onClick}>{t.icon}{t.label}</Button>)}</div>} />
     <section className="pf-glass rounded-2xl p-4 space-y-3">
       <h3 className="text-base font-bold">Zalo Bot của CLB</h3>
-      <p className="text-sm [color:var(--pf-color-muted)]">Nhận thông báo CLB, báo cáo tài chính lúc 08:00 và biến động quỹ trong nhóm Zalo đã xác nhận. Mỗi CLB dùng một bot riêng.</p>
+      <p className="text-sm [color:var(--pf-color-muted)]">Nhận thông báo CLB, báo cáo tài chính có logo và biến động quỹ trong nhóm Zalo đã xác nhận. Chủ động chọn giờ gửi theo giờ Việt Nam.</p>
       {!status ? <p role={loadFailed ? 'alert' : 'status'}>{loadFailed ? 'Không tải được kết nối. Bấm Làm mới để thử lại.' : 'Đang tải kết nối…'}</p> : <>
         <div className="flex flex-wrap gap-2 text-sm">
           <span className="rounded-lg px-2 py-1 [background:var(--pf-surface-muted)]">{status.configured ? status.botName : 'Chưa đăng ký bot'}</span>
@@ -71,7 +75,18 @@ export function ZaloTab() {
     </section>}
     {status?.configured && <section className="pf-glass rounded-2xl p-4 space-y-3">
       <h3 className="font-bold">Nội dung gửi vào nhóm</h3>
-      {([['enabled','Bật gửi tự động'],['announcements','Lịch hoạt động và thành viên mới'],['financialChanges','Biến động thu, chi, số dư quỹ (kiểm tra mỗi phút)'],['dailyReport','Báo cáo tài chính hằng ngày lúc 08:00 (giờ Việt Nam)']] as const).map(([key,label]) => <label key={key} className="flex min-h-11 items-center justify-between gap-3 border-b py-2 text-sm"><span>{label}</span><input type="checkbox" checked={!!status[key]} disabled={busy || !status.chatId} onChange={e=>setStatus({...status,[key]:e.target.checked})} className="h-5 w-5 shrink-0" /></label>)}
+      {([['enabled','Bật gửi tự động'],['announcements','Lịch hoạt động và thành viên mới'],['financialChanges','Thông báo biến động thu, chi, số dư quỹ'],['dailyReport','Báo cáo tài chính hằng ngày']] as const).map(([key,label]) => <label key={key} className="flex min-h-11 items-center justify-between gap-3 border-b py-2 text-sm"><span>{label}</span><input type="checkbox" checked={!!status[key]} disabled={busy || !status.chatId} onChange={e=>setStatus({...status,[key]:e.target.checked})} className="h-5 w-5 shrink-0" /></label>)}
+      <div className="grid grid-cols-1 gap-3 min-[600px]:grid-cols-2">
+        <label className="block min-w-0 text-sm font-semibold" htmlFor="zalo-report-time">Giờ gửi báo cáo mỗi ngày
+          <input id="zalo-report-time" type="time" step={60} value={status.reportTime ?? '08:00'} disabled={busy || !status.chatId || !status.dailyReport} onChange={e=>setStatus({...status,reportTime:e.target.value})} onInput={e=>{const value=e.currentTarget.value;setStatus(previous=>previous?{...previous,reportTime:value}:previous)}} className="input-base mt-2 w-full min-w-0" />
+        </label>
+        <label className="block min-w-0 text-sm font-semibold" htmlFor="zalo-financial-interval">Tần suất kiểm tra biến động
+          <select id="zalo-financial-interval" className="input-base mt-2 w-full" value={status.financialIntervalMinutes ?? 1} disabled={busy || !status.chatId || !status.financialChanges} onChange={e=>setStatus({...status,financialIntervalMinutes:Number(e.target.value)})}>
+            {[1,5,15,30,60].map(n=><option key={n} value={n}>Mỗi {n} phút</option>)}
+          </select>
+        </label>
+      </div>
+      <p className="text-xs [color:var(--pf-color-muted)]">Giờ Việt Nam (UTC+7) · Bấm Lưu để áp dụng. Biến động chỉ gửi khi số liệu thay đổi; lịch hoạt động và thành viên mới gửi theo sự kiện.</p>
       <p className="text-xs [color:var(--pf-color-muted)]">Chỉ gửi số liệu tổng hợp của CLB. Tin nhắn nhắc nợ cá nhân, trao đổi riêng và báo cáo kiểm duyệt không chuyển vào nhóm. Khi bật lần đầu, hệ thống ghi nhận mốc quỹ hiện tại; những thay đổi sau đó mới được gửi.</p>
       {status.lastSentAt && <p className="text-sm">Gửi thành công gần nhất: {new Date(status.lastSentAt).toLocaleString('vi-VN')}</p>}
       {status.lastError && <p role="alert" className="text-sm text-red-700">{status.lastError}</p>}
@@ -79,7 +94,8 @@ export function ZaloTab() {
     </section>}
     <ConfirmDialog open={disconnect} title="Ngắt kết nối Zalo?" message="Dừng gửi tự động và gỡ token bot khỏi CLB. Muốn dùng lại cần đăng ký và xác nhận nhóm lại." confirmLabel="Ngắt kết nối" onCancel={()=>setDisconnect(false)} onConfirm={()=>action(async()=>{await api.post('/zalo/disconnect');setDisconnect(false);setPair(null);setStatus({configured:false})})} />
     <Modal open={sendReport} title="Báo cáo tài chính gửi vào nhóm" subtitle={status?.chatName ?? undefined} onClose={()=>{setSendReport(false);setPreview('')}} footer={<Button disabled={busy || !preview} onClick={()=>action(async()=>{await api.post('/zalo/report');setSendReport(false);setPreview('');toast.success('Đã gửi báo cáo tài chính')})}>Gửi vào nhóm đã xác nhận</Button>}>
-      <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">{preview || 'Đang tải nội dung báo cáo…'}</p>
+      {previewImage ? <img src={previewImage} referrerPolicy="no-referrer" alt="Báo cáo thu chi và số dư quỹ của CLB, có logo và bảng đối chiếu" className="h-auto w-full rounded-xl" onError={()=>{setPreviewImage('');setPreviewFailed(true)}} /> : <p className="text-sm" role={previewFailed?'alert':'status'}>{previewFailed?'Không tạo được bản xem trước. Đóng và mở lại để thử.':'Đang tạo ảnh báo cáo…'}</p>}
+      {preview && <details className="mt-3 text-sm"><summary className="cursor-pointer font-semibold">Đọc nội dung dạng chữ</summary><p className="mt-2 whitespace-pre-wrap break-words leading-relaxed">{preview}</p></details>}
     </Modal>
   </div>
 }

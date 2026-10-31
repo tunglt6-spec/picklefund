@@ -9,7 +9,9 @@ Each club registers its own Bot Creator bot at Settings → Zalo. Only CLUB_ADMI
 3. Add the bot to the club group. Generate a pairing code in the app, mention the bot using the Zalo @ selector and append `/ketnoi CODE` in that group within ten minutes, refresh the app, and confirm the displayed group ID.
 4. Send a nonfinancial test message. Select content, enable automatic delivery, and save. Reports can be previewed before manual sending.
 
-Automatic delivery includes club event reminders/member joins, daily financial totals at 08:00 Asia/Ho_Chi_Minh, and financial-total changes checked each minute. Personal reminders and moderation reports are excluded. Financial totals use FinancialCalculatorService and prior-period carry forward; the independent mini fund is not added to club assets. No active common period means no report.
+Automatic delivery includes club event reminders/member joins, daily financial totals at a configurable HH:mm in Asia/Ho_Chi_Minh (default 08:00), and financial-total changes checked every 1/5/15/30/60 minutes (default 1). Daily reports are queued once per local day at the chosen minute; changing the time after that day's report was queued does not send it twice. Event notifications remain immediate. Personal reminders and moderation reports are excluded. Financial totals use FinancialCalculatorService and prior-period carry forward; the independent mini fund is not added to club assets. No active common period means no report.
+
+Financial reports use `sendPhoto`: a PNG containing the club logo (or bundled PickleFund logo), reporting period, main-fund reconciliation, independent mini fund, and creation time. Preview includes the same image plus accessible plain text. A render failure is reported/retried instead of silently sending an unbranded report.
 
 ## Operations
 
@@ -18,6 +20,8 @@ Automatic delivery includes club event reminders/member joins, daily financial t
 - Tokens are AES-256-GCM encrypted using a key derived from JWT_SECRET. Rotating JWT_SECRET requires registering connected bots again. Preserve the secret in backups; never expose the reserved `zalo_` SystemSetting rows through generic settings APIs.
 - Persistent outbox retries up to three attempts; delivery is at least once, so an ambiguous network timeout can duplicate a message. Jobs expire after seven days. Disabled, replaced or disconnected connections invalidate queued jobs.
 - Status exposes the latest successful send and sanitized failure. Disconnect removes the local token immediately and attempts to remove the remote webhook.
+- Report image URLs contain 192 bits of random capability, expire after ten minutes, send no-store/referrer headers and are revoked on bot replacement/disconnect. Images are removed by the monitor after expiration. Keep these URLs private. Zalo needs an HTTPS image URL to fetch a photo; no permanent public upload is created.
+- Logo files are read only from the local upload directory or validated image data URIs. HTML is escaped; PNG rendering disables scripts and external requests and shares the existing bounded PDF render queue. Vietnamese fonts are embedded.
 - Real delivery requires an actual group-capable bot and an administrator-confirmed destination. Automated tests mock all Zalo API calls and do not send messages.
 
 Official references: [getMe](https://docs.zaloplatforms.com/docs/BOT/apis/getMe), [setWebhook](https://docs.zaloplatforms.com/docs/BOT/apis/setWebhook), [webhook events](https://docs.zaloplatforms.com/docs/BOT/webhook), [sendMessage](https://docs.zaloplatforms.com/docs/BOT/apis/sendMessage).

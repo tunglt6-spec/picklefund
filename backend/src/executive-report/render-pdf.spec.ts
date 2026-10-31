@@ -1,6 +1,6 @@
 const mockClose = jest.fn();
 const mockLaunch = jest.fn();
-import { RenderLimiter, PdfBusyError, renderHtmlToPdf, __resetRenderLimiterForTest, __setPuppeteerLoaderForTest } from './render-pdf';
+import { RenderLimiter, PdfBusyError, renderHtmlToPdf, renderHtmlToPng, __resetRenderLimiterForTest, __setPuppeteerLoaderForTest } from './render-pdf';
 
 const tick = (ms = 0) => new Promise((r) => setTimeout(r, ms));
 
@@ -82,6 +82,16 @@ describe('renderHtmlToPdf', () => {
     const out = await renderHtmlToPdf('<p>x</p>');
     expect(out).toEqual(Buffer.from([1, 2, 3]));
     expect(mockClose).toHaveBeenCalledTimes(1);
+  });
+  it('PNG output disables scripts and remote requests, renders fonts and closes Chromium', async () => {
+    let handler: any;
+    const page={setViewport:jest.fn(),setJavaScriptEnabled:jest.fn(),setRequestInterception:jest.fn(),on:jest.fn((_,fn)=>handler=fn),setContent:jest.fn(),evaluate:jest.fn(),screenshot:jest.fn(async()=>new Uint8Array([137,80,78,71]))};
+    mockLaunch.mockResolvedValue({newPage:async()=>page,close:mockClose,process:()=>null});mockClose.mockResolvedValue(undefined);
+    expect(await renderHtmlToPng('<p>Báo cáo</p>')).toEqual(Buffer.from([137,80,78,71]));
+    expect(page.setJavaScriptEnabled).toHaveBeenCalledWith(false);
+    expect(page.screenshot).toHaveBeenCalledWith({type:'png',fullPage:true});
+    const request={url:()=> 'https://internal.invalid',abort:jest.fn(),continue:jest.fn()};handler(request);
+    expect(request.abort).toHaveBeenCalled();expect(mockClose).toHaveBeenCalledTimes(1);
   });
 
   it('lỗi giữa chừng → null và VẪN đóng browser (không rò process)', async () => {

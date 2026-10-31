@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard, Send, MessageCircle, Zap, Palette, Smartphone, Mail, Check, X, AlertTriangle } from '../../components/icons/mobileLucide'
+import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard, Send, Zap, Palette, Smartphone, Mail, Check, X, AlertTriangle } from '../../components/icons/mobileLucide'
 import api from '../../lib/api'
 import { PageHeader } from '../../components/shared/PageHeader'
 import { Button } from '../../components/ui/Button'
@@ -14,11 +14,12 @@ import type { LucideIcon } from '../../components/icons/mobileLucide'
 import { ModuleTabs, useEmbedded } from '../../components/shared'
 import { VietQrImage } from '../../components/ui/VietQrImage'
 import { ZaloTab } from './ZaloTab'
+import { ZaloIcon } from '../../components/icons/ZaloIcon'
 
 type Tab = 'club' | 'branding' | 'account' | 'notifications' | 'payment' | 'telegram' | 'zalo' | 'billing'
 
 const MOBILE_ICONS: Record<Tab, LucideIcon> = {
-  club: Building2, branding: Palette, account: User, notifications: Bell, payment: CreditCard, telegram: Send, zalo: MessageCircle, billing: Zap,
+  club: Building2, branding: Palette, account: User, notifications: Bell, payment: CreditCard, telegram: Send, zalo: ZaloIcon, billing: Zap,
 }
 
 /** Nhãn ô/tiêu đề trên mobile (khi khác nhãn tab desktop). */
@@ -31,7 +32,7 @@ const ALL_TABS: { id: Tab; label: string; icon: React.ReactNode; superAdminOnly?
   { id: 'notifications', label: 'Thông báo',     icon: <Bell size={16} /> },
   { id: 'payment',       label: 'Thanh toán',    icon: <CreditCard size={16} /> },
   { id: 'telegram',      label: 'Telegram',      icon: <Send size={16} /> },
-  { id: 'zalo',          label: 'Zalo',          icon: <MessageCircle size={16} /> },
+  { id: 'zalo',          label: 'Zalo',          icon: <ZaloIcon size={16} /> },
   { id: 'billing',       label: 'Billing',       icon: <Zap size={16} />, superAdminOnly: true },
 ]
 
