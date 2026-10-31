@@ -4,6 +4,7 @@ import api from '../../lib/api'
 import { Button } from '../../components/ui/Button'
 import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { Modal } from '../../components/ui/Modal'
+import { Link as RouterLink } from 'react-router-dom'
 import { PhoneToolbar } from '../../components/mobile/PhoneToolbar'
 import { RefreshCw, Send, FileText, Link, Save } from '../../components/icons/mobileLucide'
 
@@ -93,7 +94,7 @@ export function ZaloTab() {
       {status.lastError && <p role="alert" className="text-sm text-red-700">{status.lastError}</p>}
       <Button variant="outline" disabled={busy} onClick={()=>setDisconnect(true)}>Ngắt kết nối Zalo</Button>
     </section>}
-    {status?.intakeEnabled && <p className="text-sm">Phiếu thu/chi từ Zalo xử lý tại <a className="font-semibold underline" href="/tai-chinh?tab=payments">Tài chính → Xác nhận thu/chi từ Zalo</a>.</p>}
+    {status?.intakeEnabled && <p className="text-sm">Phiếu thu/chi từ Zalo xử lý tại <RouterLink className="inline-flex font-semibold underline max-lg:min-h-11 max-lg:items-center" to="/tai-chinh?tab=payments">Tài chính → Xác nhận thu/chi từ Zalo</RouterLink>.</p>}
     <ConfirmDialog open={disconnect} title="Ngắt kết nối Zalo?" message="Dừng gửi tự động và gỡ token bot khỏi CLB. Muốn dùng lại cần đăng ký và xác nhận nhóm lại." confirmLabel="Ngắt kết nối" onCancel={()=>setDisconnect(false)} onConfirm={()=>action(async()=>{await api.post('/zalo/disconnect');setDisconnect(false);setPair(null);setStatus({configured:false})})} />
     <Modal open={sendReport} title="Báo cáo tài chính gửi vào nhóm" subtitle={status?.chatName ?? undefined} onClose={()=>{setSendReport(false);setPreview('')}} footer={<Button disabled={busy || !preview} onClick={()=>action(async()=>{await api.post('/zalo/report');setSendReport(false);setPreview('');toast.success('Đã gửi báo cáo tài chính')})}>Gửi vào nhóm đã xác nhận</Button>}>
       {previewImage ? <img src={previewImage} referrerPolicy="no-referrer" alt="Báo cáo thu chi và số dư quỹ của CLB, có logo và bảng đối chiếu" className="h-auto w-full rounded-xl" onError={()=>{setPreviewImage('');setPreviewFailed(true)}} /> : <p className="text-sm" role={previewFailed?'alert':'status'}>{previewFailed?'Không tạo được bản xem trước. Đóng và mở lại để thử.':'Đang tạo ảnh báo cáo…'}</p>}

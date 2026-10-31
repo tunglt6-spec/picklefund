@@ -87,6 +87,8 @@ export function ZaloIntakePanel() {
     }
   };
   if (!allowed) return null;
+  // Chưa bật nhập thu/chi qua bot: không hiện khung rỗng (bật tại Cài đặt → Zalo).
+  if (state && !state.enabled) return null;
   const requested = new URLSearchParams(window.location.search).get(
     "zaloDraft",
   );
@@ -108,7 +110,7 @@ export function ZaloIntakePanel() {
     setForm((f) => (f ? { ...f, ...patch } : f));
   return (
     <section
-      className="pf-glass rounded-2xl p-4 space-y-4"
+      className="pf-glass rounded-2xl p-4 space-y-4 scroll-mt-20"
       id="zalo-drafts" aria-label="Phiếu thu/chi từ Zalo"
     >
       <div className="flex items-center justify-between gap-3">
@@ -117,6 +119,9 @@ export function ZaloIntakePanel() {
           Làm mới
         </Button>
       </div>
+      {failed && state && (
+        <p role="alert" className="text-sm text-red-700">Làm mới thất bại, dữ liệu bên dưới có thể đã cũ. Bấm Làm mới để thử lại.</p>
+      )}
       {!state ? (
         <p role={failed ? "alert" : "status"}>
           {failed
@@ -135,7 +140,7 @@ export function ZaloIntakePanel() {
             </p>
           )}
           <details className="text-sm">
-            <summary className="cursor-pointer font-semibold">
+            <summary className="cursor-pointer font-semibold max-lg:flex max-lg:min-h-11 max-lg:items-center">
               Cách nhập lệnh thu/chi
             </summary>
             <div className="mt-2 space-y-2">
@@ -154,7 +159,7 @@ export function ZaloIntakePanel() {
             </div>
           </details>
           <div className="flex items-center justify-between gap-3">
-            <h4 className="font-semibold">Phiếu từ Zalo</h4>
+            <h4 className="font-semibold">Danh sách phiếu</h4>
             <Button variant="outline" onClick={() => setHistory(!history)}>
               {history ? "Chỉ phiếu chờ" : "Xem lịch sử"}
             </Button>
@@ -167,7 +172,7 @@ export function ZaloIntakePanel() {
           )}
           {!displayed.length ? (
             <p className="text-sm">
-              Chưa có phiếu {history ? "" : "chờ kiểm tra"}.
+              {history ? "Chưa có phiếu." : "Chưa có phiếu chờ kiểm tra."}
             </p>
           ) : (
             <div className="grid grid-cols-1 min-[600px]:grid-cols-2 gap-3">

@@ -30,16 +30,16 @@ const U = '(?![\\p{L}\\d])';
 /** Số tiền viết tự nhiên: 300k, 300.000, 300 nghìn, 1tr, 1,5tr, 1tr5, 2 triệu. */
 export function parseVnAmount(src: string): { amount: number; raw: string } | null {
   const s = src.toLowerCase();
-  let m = s.match(new RegExp(`(\\d+)\\s*(?:tr|triệu|trieu|m)\\s*(\\d{1,3})${U}`, 'u'));
+  let m = s.match(new RegExp(`(\\d+)\\s*(?:tr|triệu|trieu)\\s*(\\d{1,3})${U}`, 'u'));
   if (m) {
     const frac = Number(m[2]) * (m[2].length === 1 ? 100_000 : m[2].length === 2 ? 10_000 : 1_000);
     return { amount: Number(m[1]) * 1_000_000 + frac, raw: m[0] };
   }
-  m = s.match(new RegExp(`(\\d+(?:[.,]\\d+)?)\\s*(?:tr|triệu|trieu|m)${U}`, 'u'));
+  m = s.match(new RegExp(`(\\d+(?:[.,]\\d+)?)(?:\\s*(?:tr|triệu|trieu)|m)${U}`, 'u'));
   if (m) return { amount: Math.round(Number(m[1].replace(',', '.')) * 1_000_000), raw: m[0] };
   m = s.match(new RegExp(`(\\d+(?:[.,]\\d+)?)\\s*(?:k|nghìn|nghin|ngàn|ngan)${U}`, 'u'));
   if (m) return { amount: Math.round(Number(m[1].replace(',', '.')) * 1_000), raw: m[0] };
-  m = s.match(new RegExp(`(\\d{1,3}(?:[.,]\\d{3})+|\\d{4,})\\s*(?:đ|vnd|vnđ|d)?${U}`, 'u'));
+  m = s.match(new RegExp(`(?<![\\p{L}\\d.,])(\\d{1,3}(?:[.,]\\d{3})+|\\d{4,})\\s*(?:đ|vnd|vnđ|d)?${U}`, 'u'));
   if (m) return { amount: Number(m[1].replace(/[.,]/g, '')), raw: m[0] };
   return null;
 }
@@ -75,15 +75,13 @@ function parseNatural(
   const mini = /(?:^|\s)(?:quỹ phụ|quy phu|quỹ mini|quy mini)(?=\s)/iu;
   const fundSource: 'COMMON' | 'MINI' = mini.test(rest) ? 'MINI' : 'COMMON';
   rest = rest.replace(mini, ' ').replace(/(?:^|\s)(?:quỹ chính|quy chinh)(?=\s)/iu, ' ');
-  const fillers =
-    kind === 'INCOME'
-      ? /(?:^|\s)(?:đóng|dong|nộp|nop|quỹ|quy|tiền|tien|của|cua|cho|ngày|ngay|vào|vao|đã|da|thu)(?=\s)/giu
-      : /(?:^|\s)(?:ngày|ngay|vào|vao|chi)(?=\s)/giu;
-  const description = rest
-    .replace(fillers, ' ')
-    .replace(/[:;,]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  // Chỉ bỏ từ nối ở ĐẦU/CUỐI cụm và chỉ dạng có dấu: "Thu Hà", "Lê Văn Quy", "Nguyễn Thị Dong" giữ nguyên.
+  const lead = new Set(kind === 'INCOME' ? ['đóng', 'nộp', 'đã', 'tiền', 'quỹ', 'của', 'cho', 'vào', 'ngày'] : ['ngày', 'vào']);
+  const trail = new Set(kind === 'INCOME' ? ['đóng', 'nộp', 'đã', 'tiền', 'quỹ', 'vào', 'ngày'] : ['ngày', 'vào']);
+  const tokens = rest.replace(/[:;,]+/g, ' ').split(/\s+/).filter(Boolean);
+  while (tokens.length > 1 && lead.has(tokens[0].toLowerCase())) tokens.shift();
+  while (tokens.length > 1 && trail.has(tokens[tokens.length - 1].toLowerCase())) tokens.pop();
+  const description = tokens.join(' ').trim();
   if (!description)
     throw new BadRequestException(
       kind === 'INCOME' ? 'Thiếu tên thành viên.' : 'Thiếu nội dung khoản chi.',

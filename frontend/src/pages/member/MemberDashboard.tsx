@@ -267,8 +267,8 @@ export function MemberDashboard() {
             )}
           </div>
         )}
-        <ZaloMemberLink />
-      <ReportPaymentModal open={reportOpen} onClose={() => setReportOpen(false)} onReported={reload} />
+        <div className="px-4 pt-3 pb-4"><ZaloMemberLink /></div>
+        <ReportPaymentModal open={reportOpen} onClose={() => setReportOpen(false)} onReported={reload} />
       </div>
     )
   }

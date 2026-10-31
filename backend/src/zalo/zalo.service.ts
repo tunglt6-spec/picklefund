@@ -24,7 +24,7 @@ interface Connection {
 interface Job {
   clubId: string; version: string; chatId: string; text: string;
   status: 'pending' | 'sending' | 'sent' | 'failed'; attempts: number; due: number;
-  report?: ZaloFinancialReport; kind?: 'weekly' | 'event' | 'result'; photo?: string;
+  report?: ZaloFinancialReport; kind?: 'weekly' | 'event' | 'result'; photo?: string; mg?: string;
 }
 const PREFIX = 'zalo_connection_';
 const JOB = 'zalo_job_';
@@ -210,9 +210,9 @@ export class ZaloService {
     await this.send(clubId, await this.required(clubId), 'PickleFund: Kết nối nhóm Zalo của CLB thành công. Đây là tin kiểm tra, không chứa dữ liệu tài chính.');
     return { sent: true };
   }
-  private async enqueue(clubId: string, c: Connection, text: string, id: string, report?: ZaloFinancialReport, photo?: string) {
+  private async enqueue(clubId: string, c: Connection, text: string, id: string, report?: ZaloFinancialReport, photo?: string, mg?: string) {
     if (!c.chatId) return;
-    const job: Job = { kind: photo ? 'result' : report ? 'weekly' : 'event', photo, clubId, version: c.version, chatId: c.chatId, text, report, status: 'pending', attempts: 0, due: Date.now() };
+    const job: Job = { kind: photo ? 'result' : report ? 'weekly' : 'event', photo, mg, clubId, version: c.version, chatId: c.chatId, text, report, status: 'pending', attempts: 0, due: Date.now() };
     await this.prisma.systemSetting.upsert({ where: { key: JOB + hash(`${clubId}:${c.version}:${c.chatId}:${id}`) },
       create: { key: JOB + hash(`${clubId}:${c.version}:${c.chatId}:${id}`), value: JSON.stringify(job) }, update: {} });
   }
@@ -283,7 +283,7 @@ export class ZaloService {
       const view = await this.commands.standingsView(clubId, g.id);
       if (!view?.rows.length) continue;
       const photo = await this.createPngCapability(zaloStandingsHtml(view), clubId, c.version);
-      await this.enqueue(clubId, c, zaloStandingsText(view), `result:${g.id}`, undefined, photo);
+      await this.enqueue(clubId, c, zaloStandingsText(view), `result:${g.id}`, undefined, photo, g.id);
       await this.prisma.systemSetting.upsert({ where: { key }, create: { key, value: new Date().toISOString() }, update: {} });
     }
   }
@@ -333,6 +333,11 @@ export class ZaloService {
           j.status = j.attempts >= 3 ? 'failed' : 'pending'; j.due = Date.now() + j.attempts * 60_000;
           const current = await this.read(j.clubId);
           if (current?.version === j.version) { current.lastError = (e as Error).message; current.lastErrorAt = new Date().toISOString(); current.failStreak = (current.failStreak ?? 0) + 1; await this.save(j.clubId, current); }
+        }
+        // Ảnh kết quả gửi lỗi hẳn: bỏ khóa đã-gửi và job để lượt quét sau (≤2 ngày) dựng lại, thay vì mất vĩnh viễn.
+        if (j.status === 'failed' && j.kind === 'result' && j.mg) {
+          await this.prisma.systemSetting.deleteMany({ where: { key: { in: [row.key, `zalo_mgsent_${j.clubId}_${j.mg}`] } } });
+          continue;
         }
         await this.prisma.systemSetting.update({ where: { key: row.key }, data: { value: JSON.stringify(j) } });
       }

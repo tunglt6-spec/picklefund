@@ -67,7 +67,7 @@ export class ZaloCommandService {
       : null;
     // Chat riêng chỉ dành cho người đã liên kết (không để người lạ đọc số liệu CLB qua tin nhắn riêng).
     if (inPrivate && !identity) return null;
-    if (inGroup && !this.allowed(clubId, cmd.name, String(m.chat.id))) return null;
+    if (!this.allowed(clubId, cmd.name, String(m.chat.id), sender)) return null;
     try {
       return await this.run(clubId, c, cmd, inGroup, identity, report);
     } catch (e) {
@@ -76,8 +76,10 @@ export class ZaloCommandService {
     }
   }
 
-  private allowed(clubId: string, name: string, chat: string): boolean {
-    const key = `${clubId}:${chat}:${name}`;
+  /** Lệnh tra cứu: throttle chung theo nhóm; lệnh theo cá nhân/ghi: throttle theo người gửi (không chặn người khác). */
+  private allowed(clubId: string, name: string, chat: string, sender: string): boolean {
+    const personal = ['dangky', 'huy', 'diemdanh', 'no'].includes(name);
+    const key = `${clubId}:${chat}:${name}${personal ? ':' + sender : ''}`;
     const now = Date.now();
     if (now - (this.last.get(key) ?? 0) < THROTTLE_MS) return false;
     this.last.set(key, now);
@@ -106,7 +108,9 @@ export class ZaloCommandService {
       case 'bxh':
         return this.standings(clubId);
       case 'no':
-        return this.myDebt(clubId, identity);
+        return inGroup
+          ? 'Khoản nợ cá nhân không hiển thị trong nhóm. Nhắn riêng cho bot /no để xem.'
+          : this.myDebt(clubId, identity);
       case 'dangky':
       case 'huy':
         return this.register(clubId, cmd, identity);
@@ -271,7 +275,7 @@ export class ZaloCommandService {
       updatedAt: new Date().toISOString(),
       logo: null as string | null,
     };
-    if (mg.scoringModel === 'LEADERBOARD') return { ...base, rows: [] };
+    if (mg.scoringModel === 'LEADERBOARD') return { ...base, leaderboard: true, rows: [] };
     if (mg.format === 'RANDOM_DOUBLES') {
       const matches = await this.prisma.minigameMatch.findMany({
         where: { minigameId: mg.id, status: 'COMPLETED' },
@@ -309,7 +313,7 @@ export class ZaloCommandService {
   private async standings(clubId: string): Promise<string> {
     const v = await this.standingsView(clubId);
     if (!v) return 'Chưa có giải đấu nào đang diễn ra.';
-    if (!v.rows.length && /LEADERBOARD|GOLF|RUNNING/.test(v.subtitle))
+    if (v.leaderboard)
       return `${v.title}: giải tính theo bảng điểm, xem chi tiết trong app.`;
     return zaloStandingsText(v);
   }

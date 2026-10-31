@@ -75,6 +75,17 @@ describe('parseIntake tự nhiên', () => {
     expect(() => parseIntake('/thu Nguyễn Văn A')).toThrow(BadRequestException);
     expect(() => parseIntake('/thu 300k')).toThrow(BadRequestException);
   });
+  it.each([
+    ['/thu Thu Hà đóng 300k', 'Thu Hà'],
+    ['/thu Lê Văn Quy 300k', 'Lê Văn Quy'],
+    ['/thu Nguyễn Thị Dong 300k', 'Nguyễn Thị Dong'],
+    ['/thu Đào Thị Cho 300k', 'Đào Thị Cho'],
+    ['/thu của Nam đóng 300k', 'Nam'],
+  ])('giữ nguyên tên: %s', (t, name) => expect(parseIntake(t)!.payload.description).toBe(name));
+  it('số tiền mơ hồ bị từ chối thay vì đoán sai', () => {
+    expect(() => parseIntake('/thu An 3tr4567')).toThrow(BadRequestException);
+    expect(parseIntake('/chi mua 5 m vai 100k')!.payload.amount).toBe(100000);
+  });
   it('cú pháp cũ vẫn chạy', () => {
     expect(parseIntake('/thu 450000 | A | quỹ chính | 01/01/2026')!.payload.amount).toBe(450000);
   });
@@ -156,6 +167,17 @@ describe('ZaloCommandService', () => {
     expect(await svc.handle('c', conn, msg('/dangky'), report)).toContain('Đã đăng ký');
     expect(prisma.sessionRegistration.upsert).toHaveBeenCalled();
     expect(prisma.auditLog.create).toHaveBeenCalled();
+  });
+  it('/no trong nhóm không lộ khoản nợ cá nhân', async () => {
+    const { svc } = mk({ identity: { userId: 'u', zaloUserId: 'u1' }, member: { id: 'm2', fullName: 'Bình' } });
+    const t = (await svc.handle('c', conn, msg('/no'), report))!;
+    expect(t).toContain('Nhắn riêng');
+    expect(t).not.toContain('Bình');
+  });
+  it('throttle lệnh cá nhân theo người gửi, không chặn người khác', async () => {
+    const { svc } = mk();
+    await svc.handle('c', conn, msg('/dangky', 'GROUP', 'u1'), report);
+    expect(await svc.handle('c', conn, msg('/dangky', 'GROUP', 'u2'), report)).not.toBeNull();
   });
   it('throttle 15s theo lệnh', async () => {
     const { svc } = mk();

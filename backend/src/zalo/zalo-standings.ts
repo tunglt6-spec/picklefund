@@ -13,6 +13,8 @@ export interface StandingsView {
   /** Mô tả ngắn: bộ môn / trạng thái giải. */
   subtitle: string;
   rows: StandingRow[];
+  /** Giải tính theo bảng điểm (golf/chạy…): không có BXH dạng thắng/thua. */
+  leaderboard?: boolean;
   updatedAt: string;
   logo: string | null;
 }

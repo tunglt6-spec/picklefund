@@ -167,7 +167,7 @@ export function PaymentApprovals() {
                 </div>
                 <div className="text-right">
                   <div className="text-lg font-extrabold [color:var(--pf-primary-text)]">{formatVND(Number(p.amount))}</div>
-                  {p.reportedByMember && <StatusBadge tone="info">Member báo</StatusBadge>}
+                  {p.reportedByMember && <StatusBadge tone="info">Thành viên báo</StatusBadge>}
                 </div>
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
