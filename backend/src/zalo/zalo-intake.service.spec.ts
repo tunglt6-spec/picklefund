@@ -254,6 +254,10 @@ describe('Zalo financial intake boundaries', () => {
     expect(expenses.create).not.toHaveBeenCalled();
     expect(contributions.create).not.toHaveBeenCalled();
   });
+  it('rejects malformed edited descriptions rather than skipping date validation', async () => {
+    await expect(svc.decide(actor, 'draft', false, {...payload, fundSource: 'MINI', description: 'Nước\nngọt', date: '2099-01-01'})).rejects.toThrow();
+    expect(expenses.create).not.toHaveBeenCalled();
+  });
   it('does not run post-commit effects on transaction failure', async () => {
     expenses.create.mockRejectedValue(new Error('write failed'));
     await expect(svc.decide(actor, 'draft', false, payload)).rejects.toThrow(

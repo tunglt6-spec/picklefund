@@ -410,9 +410,10 @@ Mở và kiểm tra: https://picklefund.vn/he-thong?tab=settings&view=account&za
       }
       if (!patch) throw new BadRequestException('Thiếu thông tin kiểm tra.');
       // Parser validates amount/date/fund again; no arbitrary command or model output reaches writes.
-      parseIntake(
+      const validated = parseIntake(
         `/${d.kind === 'INCOME' ? 'thu' : 'chi'} ${patch.amount} | ${patch.description} | ${patch.fundSource === 'COMMON' ? 'quỹ chính' : 'quỹ phụ'} | ${patch.date.slice(8, 10)}/${patch.date.slice(5, 7)}/${patch.date.slice(0, 4)}`,
       );
+      if (!validated) throw new BadRequestException('Nội dung phiếu không hợp lệ.');
       if (patch.fundSource === 'COMMON') {
         const period = await tx.fundPeriod.findFirst({
           where: {
