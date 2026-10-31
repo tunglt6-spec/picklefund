@@ -43,7 +43,7 @@ const treasurerNav: NavItem[] = [
   { label: 'Tổng quan', icon: <LayoutDashboard size={18} />, to: '/treasurer/dashboard', desc: 'Số dư & sổ quỹ tổng hợp' },
   { label: 'Sổ quỹ',   icon: <ListOrdered size={18} />,     to: '/treasurer/so-quy',   desc: 'Nhập thu · Nhập chi · Sổ quỹ' },
   { label: 'Chấm điểm', icon: <Award size={18} />,           to: '/scoring',            desc: 'Chấm điểm thành viên' },
-  { label: 'Xác nhận nộp quỹ', icon: <BadgeCheck size={18} />, to: '/payments',        desc: 'Duyệt khoản thành viên báo đã nộp' },
+  { label: 'Xác nhận thu/chi từ Zalo', icon: <BadgeCheck size={18} />, to: '/payments',        desc: 'Duyệt khoản báo nộp quỹ và phiếu thu/chi từ Zalo' },
   { label: 'Nhắc nhở',  icon: <Bell size={18} />,           to: '/treasurer/reminders', desc: 'Nhắc đóng quỹ & thông báo' },
 ]
 

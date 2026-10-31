@@ -14,5 +14,5 @@ test('short captions preserve descriptive and visible search terms, including un
 test('unmapped captions remain meaningful instead of automatic truncation', () => {
   assert.equal(mobileTileLabel('Lịch & Kết quả'), 'Lịch & Kết quả')
   assert.equal(mobileTileLabel('Danh sách thành viên'), 'Thành viên')
-  assert.equal(mobileTileLabel('Xác nhận nộp quỹ'), 'Xác nhận')
+  assert.equal(mobileTileLabel('Xác nhận thu/chi từ Zalo'), 'Thu/chi Zalo')
 })

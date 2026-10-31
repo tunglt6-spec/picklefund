@@ -7,7 +7,7 @@ const SHORT_LABELS: Record<string, string> = {
   'Quy tắc chấm điểm': 'Quy tắc',
   'Vai trò & phân quyền': 'Phân quyền',
   'Lịch sử hoạt động': 'Lịch sử',
-  'Xác nhận nộp quỹ': 'Xác nhận',
+  'Xác nhận thu/chi từ Zalo': 'Thu/chi Zalo',
   'Hoạt động tuần': 'Theo tuần',
   'Tổng quan thi đấu': 'Tổng quan',
   'Tổng quan cá nhân': 'Tổng quan',

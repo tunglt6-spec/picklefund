@@ -39,19 +39,13 @@ export function ZaloIntakePanel() {
   const [state, setState] = useState<IntakeState | null>(null),
     [busy, setBusy] = useState(false),
     [failed, setFailed] = useState(false);
-  const [code, setCode] = useState<{
-    command: string;
-    expiresAt: string;
-  } | null>(null);
   const [drafts, setDrafts] = useState<Draft[]>([]),
     [members, setMembers] = useState<{ id: string; fullName: string }[]>([]),
     [periods, setPeriods] = useState<{ id: string; name: string }[]>([]);
   const [edit, setEdit] = useState<Draft | null>(null),
     [form, setForm] = useState<Payload | null>(null),
     [history, setHistory] = useState(false);
-  const [confirmLink, setConfirmLink] = useState(false),
-    [unlink, setUnlink] = useState(false),
-    [record, setRecord] = useState(false),
+  const [record, setRecord] = useState(false),
     [reject, setReject] = useState(false);
   const error = (e: any) =>
     toast.error(
@@ -77,6 +71,10 @@ export function ZaloIntakePanel() {
   useEffect(() => {
     if (allowed) void load();
   }, [allowed]);
+  useEffect(() => {
+    if (state?.enabled && new URLSearchParams(window.location.search).get("zaloDraft"))
+      document.getElementById("zalo-drafts")?.scrollIntoView({ block: "start" });
+  }, [state?.enabled, drafts.length]);
   const action = async (fn: () => Promise<void>) => {
     if (busy) return;
     setBusy(true);
@@ -111,10 +109,10 @@ export function ZaloIntakePanel() {
   return (
     <section
       className="pf-glass rounded-2xl p-4 space-y-4"
-      aria-label="Nhập liệu Zalo"
+      id="zalo-drafts" aria-label="Phiếu thu/chi từ Zalo"
     >
       <div className="flex items-center justify-between gap-3">
-        <h3 className="font-bold">Nhập liệu Zalo</h3>
+        <h3 className="font-bold">Phiếu thu/chi từ Zalo</h3>
         <Button variant="outline" disabled={busy} onClick={() => action(load)}>
           Làm mới
         </Button>
@@ -125,69 +123,16 @@ export function ZaloIntakePanel() {
             ? "Không tải được dữ liệu. Bấm Làm mới để thử lại."
             : "Đang tải…"}
         </p>
-      ) : !state.enabled ? (
-        <p className="text-sm">
-          Quản trị CLB cần bật “Nhập thu/chi qua bot” tại Cài đặt → Zalo trước.
-        </p>
-      ) : (
+      ) : !state.enabled ? null : (
         <>
           <p className="text-sm">
             Bot chỉ tạo phiếu chờ kiểm tra. Khoản thu cần xác nhận và khoản chi
             cần duyệt theo quy trình của app.
           </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-semibold">
-              {state.linked
-                ? `Đã liên kết: ${state.displayName}`
-                : "Chưa liên kết tài khoản Zalo"}
-            </span>
-            <Button
-              variant="outline"
-              disabled={busy}
-              onClick={() =>
-                action(async () => {
-                  setCode((await api.post("/zalo/intake/link-code")).data.data);
-                  toast.success("Đã tạo mã liên kết cá nhân");
-                })
-              }
-            >
-              {state.linked ? "Liên kết lại" : "Tạo mã liên kết"}
-            </Button>
-            {state.linked && (
-              <Button
-                variant="outline"
-                disabled={busy}
-                onClick={() => setUnlink(true)}
-              >
-                Hủy liên kết
-              </Button>
-            )}
-          </div>
-          {code && (
-            <div className="rounded-xl border border-[color:var(--pf-border)] p-3 text-sm space-y-2">
-              <p>
-                Mở trò chuyện riêng với bot của CLB rồi gửi (không đăng mã vào
-                nhóm):
-              </p>
-              <code className="block select-all break-all font-semibold">
-                {code.command}
-              </code>
-              <p>
-                Hết hạn {new Date(code.expiresAt).toLocaleTimeString("vi-VN")}.
-                Sau khi gửi, bấm Làm mới và xác nhận đúng tài khoản bên dưới.
-              </p>
-            </div>
-          )}
-          {state.candidate && (
-            <div className="rounded-xl border border-[color:var(--pf-border)] p-3 space-y-2">
-              <p className="text-sm">
-                Tài khoản vừa gửi mã: <strong>{state.candidate}</strong>. Chỉ
-                xác nhận nếu đây là Zalo của anh/chị.
-              </p>
-              <Button disabled={busy} onClick={() => setConfirmLink(true)}>
-                Xác nhận tài khoản Zalo của tôi
-              </Button>
-            </div>
+          {!state.linked && (
+            <p role="status" className="text-sm">
+              Bạn chưa liên kết tài khoản Zalo — liên kết tại Cài đặt → Tài khoản cá nhân → Liên kết Zalo để tạo phiếu bằng bot.
+            </p>
           )}
           <details className="text-sm">
             <summary className="cursor-pointer font-semibold">
@@ -198,6 +143,7 @@ export function ZaloIntakePanel() {
               <code className="block break-words">
                 /thu 300000 | Tên thành viên | quỹ chính | DD/MM/YYYY
               </code>
+              <p>Hoặc viết tự nhiên: <code>/thu Nguyễn Văn A đóng 300k hôm qua</code>, <code>/chi tiền sân 450.000</code>.</p>
               <code className="block break-words">
                 /chi 450000 | Tiền sân | quỹ chính | DD/MM/YYYY
               </code>
@@ -282,38 +228,6 @@ export function ZaloIntakePanel() {
           )}
         </>
       )}
-      <ConfirmDialog
-        variant="warning"
-        open={confirmLink}
-        title="Liên kết tài khoản Zalo?"
-        message={`Tài khoản “${state?.candidate}” sẽ được gửi lệnh tạo phiếu thu/chi bằng quyền tài khoản PickleFund của anh/chị. Phiếu vẫn phải kiểm tra trong app.`}
-        confirmLabel="Xác nhận liên kết"
-        onCancel={() => setConfirmLink(false)}
-        onConfirm={() =>
-          action(async () => {
-            await api.post("/zalo/intake/confirm-link");
-            setConfirmLink(false);
-            setCode(null);
-            await load();
-            toast.success("Đã liên kết tài khoản Zalo");
-          })
-        }
-      />
-      <ConfirmDialog
-        open={unlink}
-        title="Hủy liên kết Zalo?"
-        message="Dừng quyền gửi lệnh của Zalo này và bỏ các phiếu cá nhân chưa xử lý. Các khoản đã ghi được giữ nguyên."
-        confirmLabel="Hủy liên kết"
-        onCancel={() => setUnlink(false)}
-        onConfirm={() =>
-          action(async () => {
-            await api.post("/zalo/intake/unlink");
-            setUnlink(false);
-            setCode(null);
-            await load();
-          })
-        }
-      />
       <Modal
         open={!!edit && !record && !reject}
         title={

@@ -105,7 +105,7 @@ export const APP_GROUPS: Record<Role, AppGroup[]> = {
       { key: 'income', label: 'Nhập thu', to: '/treasurer/so-quy?tab=income', icon: ArrowDownCircle, module: 'finance' },
       { key: 'expense', label: 'Nhập chi', to: '/treasurer/so-quy?tab=expense', icon: ArrowUpCircle, module: 'finance' },
       { key: 'ledger', label: 'Sổ quỹ', to: '/treasurer/so-quy?tab=ledger', icon: ListOrdered, module: 'finance' },
-      { key: 'approve', label: 'Xác nhận nộp quỹ', to: '/payments', icon: BadgeCheck, module: 'finance' },
+      { key: 'approve', label: 'Xác nhận thu/chi từ Zalo', to: '/payments', icon: BadgeCheck, module: 'finance' },
       { key: 'reminders', label: 'Nhắc nhở', to: '/treasurer/reminders', icon: BellRing, module: 'finance' },
     ] },
     { key: 'members', title: 'Thành viên', items: [

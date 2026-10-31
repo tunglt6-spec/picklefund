@@ -1,18 +1,15 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
-import { useAuthStore } from '../../store/authStore'
 import { Button } from '../../components/ui/Button'
 
 type LinkState = { enabled: boolean; commandsEnabled?: boolean; linked: boolean; displayName?: string; candidate?: string | null }
 
 /**
  * Liên kết tài khoản với Zalo để dùng lệnh /dangky /huy /diemdanh /no của bot.
- * Quản trị/thủ quỹ đã có luồng liên kết trong "Nhập liệu Zalo" khi bật nhập thu/chi nên thẻ này tự ẩn ở trường hợp đó.
+ * Dùng chung cho thành viên, quản trị và thủ quỹ (liên kết cũng cho phép tạo phiếu thu/chi nếu có quyền).
  */
 export function ZaloMemberLink() {
-  const user = useAuthStore((s) => s.user)
-  const staff = user?.role === 'CLUB_ADMIN' || user?.role === 'CLUB_TREASURER'
   const [state, setState] = useState<LinkState | null>(null)
   const [code, setCode] = useState<{ command: string; expiresAt: string } | null>(null)
   const [busy, setBusy] = useState(false)
@@ -26,12 +23,11 @@ export function ZaloMemberLink() {
     setBusy(true)
     try { await fn() } catch (e) { fail(e) } finally { setBusy(false) }
   }
-  if (!state || !state.commandsEnabled) return null
-  if (staff && state.enabled) return null
+  if (!state || !(state.commandsEnabled || state.enabled)) return null
   return (
     <section className="pf-glass rounded-2xl p-4 space-y-3" aria-label="Liên kết Zalo">
       <h3 className="font-bold">Liên kết Zalo</h3>
-      <p className="text-sm">Sau khi liên kết, bạn nhắn bot trong nhóm hoặc chat riêng: /dangky, /huy, /diemdanh, /no. Gõ /help để xem đủ lệnh.</p>
+      <p className="text-sm">Sau khi liên kết, bạn nhắn bot trong nhóm hoặc chat riêng: /dangky, /huy, /diemdanh, /no (quản trị/thủ quỹ còn tạo được phiếu /thu, /chi). Gõ /help để xem đủ lệnh.</p>
       {state.linked ? (
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-sm font-semibold">Đã liên kết{state.displayName ? `: ${state.displayName}` : ''}</span>

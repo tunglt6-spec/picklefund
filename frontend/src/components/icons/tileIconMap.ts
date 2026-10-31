@@ -21,7 +21,7 @@ const labels: Record<string, PlayfulIconName> = {
   "Chi phí": "expense",
   "Công nợ": "debt",
   "Báo cáo tài chính": "finance-report",
-  "Xác nhận nộp quỹ": "payment-approval",
+  "Xác nhận thu/chi từ Zalo": "payment-approval",
   "Ví quỹ": "wallet",
   "Phiếu thu": "receipt",
   "Ngân hàng": "bank",

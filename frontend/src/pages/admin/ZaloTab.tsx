@@ -1,4 +1,3 @@
-import { ZaloIntakePanel } from './ZaloIntakePanel'
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import api from '../../lib/api'
@@ -94,7 +93,7 @@ export function ZaloTab() {
       {status.lastError && <p role="alert" className="text-sm text-red-700">{status.lastError}</p>}
       <Button variant="outline" disabled={busy} onClick={()=>setDisconnect(true)}>Ngắt kết nối Zalo</Button>
     </section>}
-    <ZaloIntakePanel key={String(status?.intakeEnabled)} />
+    {status?.intakeEnabled && <p className="text-sm">Phiếu thu/chi từ Zalo xử lý tại <a className="font-semibold underline" href="/tai-chinh?tab=payments">Tài chính → Xác nhận thu/chi từ Zalo</a>.</p>}
     <ConfirmDialog open={disconnect} title="Ngắt kết nối Zalo?" message="Dừng gửi tự động và gỡ token bot khỏi CLB. Muốn dùng lại cần đăng ký và xác nhận nhóm lại." confirmLabel="Ngắt kết nối" onCancel={()=>setDisconnect(false)} onConfirm={()=>action(async()=>{await api.post('/zalo/disconnect');setDisconnect(false);setPair(null);setStatus({configured:false})})} />
     <Modal open={sendReport} title="Báo cáo tài chính gửi vào nhóm" subtitle={status?.chatName ?? undefined} onClose={()=>{setSendReport(false);setPreview('')}} footer={<Button disabled={busy || !preview} onClick={()=>action(async()=>{await api.post('/zalo/report');setSendReport(false);setPreview('');toast.success('Đã gửi báo cáo tài chính')})}>Gửi vào nhóm đã xác nhận</Button>}>
       {previewImage ? <img src={previewImage} referrerPolicy="no-referrer" alt="Báo cáo thu chi và số dư quỹ của CLB, có logo và bảng đối chiếu" className="h-auto w-full rounded-xl" onError={()=>{setPreviewImage('');setPreviewFailed(true)}} /> : <p className="text-sm" role={previewFailed?'alert':'status'}>{previewFailed?'Không tạo được bản xem trước. Đóng và mở lại để thử.':'Đang tạo ảnh báo cáo…'}</p>}

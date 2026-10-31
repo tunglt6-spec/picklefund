@@ -1,3 +1,4 @@
+import { Navigate } from 'react-router-dom'
 import { useState, useEffect, useCallback } from 'react'
 import { Building2, User, Bell, Save, Eye, EyeOff, CheckCircle, CreditCard, Send, Zap, Palette, Smartphone, Mail, Check, X, AlertTriangle } from '../../components/icons/mobileLucide'
 import api from '../../lib/api'
@@ -13,7 +14,6 @@ import toast from 'react-hot-toast'
 import type { LucideIcon } from '../../components/icons/mobileLucide'
 import { ModuleTabs, useEmbedded } from '../../components/shared'
 import { VietQrImage } from '../../components/ui/VietQrImage'
-import { ZaloIntakePanel } from './ZaloIntakePanel'
 import { ZaloMemberLink } from './ZaloMemberLink'
 import { ZaloTab } from './ZaloTab'
 import { ZaloIcon } from '../../components/icons/ZaloIcon'
@@ -1163,6 +1163,12 @@ function BillingTab() {
 
 // ─── Main ────────────────────────────────────────────────────
 export function Settings() {
+  // Link cũ trong tin nhắn bot (…&zaloDraft=ID) → màn mới Tài chính → Xác nhận thu/chi từ Zalo.
+  const oldDraft = new URLSearchParams(window.location.search).get('zaloDraft')
+  if (oldDraft && /^[A-Za-z0-9-]{1,64}$/.test(oldDraft)) return <Navigate to={`/tai-chinh?tab=payments&zaloDraft=${oldDraft}`} replace />
+  return <SettingsScreen />
+}
+function SettingsScreen() {
   const { user } = useAuthStore()
   const clubId = user?.clubId ?? ''
   const isSuperAdmin = user?.role === 'SUPER_ADMIN'
@@ -1177,7 +1183,7 @@ export function Settings() {
       <div className="px-4 py-4 space-y-4">
         {id === 'club'          && <ClubInfoTab clubId={clubId} />}
         {id === 'branding'      && <BrandingTab />}
-        {id === 'account'       && <><ZaloIntakePanel /><ZaloMemberLink /><AccountTab /></>}
+        {id === 'account'       && <><ZaloMemberLink /><AccountTab /></>}
         {id === 'notifications' && <NotificationsTab clubId={clubId} />}
         {id === 'payment'       && <PaymentTab />}
         {id === 'telegram'      && <TelegramTab />}
@@ -1223,7 +1229,7 @@ export function Settings() {
 
         {activeTab === 'club'          && <ClubInfoTab clubId={clubId} />}
         {activeTab === 'branding'      && <BrandingTab />}
-        {activeTab === 'account'       && <><ZaloIntakePanel /><ZaloMemberLink /><AccountTab /></>}
+        {activeTab === 'account'       && <><ZaloMemberLink /><AccountTab /></>}
         {activeTab === 'notifications' && <NotificationsTab clubId={clubId} />}
         {activeTab === 'payment'       && <PaymentTab />}
         {activeTab === 'telegram'      && <TelegramTab />}

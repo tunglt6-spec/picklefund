@@ -23,7 +23,7 @@ export const NAV_CATALOG = {
   'fin.expense': { label: 'Chi phí', icon: ArrowUpCircle, module: 'finance' },
   'fin.debts': { label: 'Công nợ', icon: HandCoins, module: 'finance' },
   'fin.reports': { label: 'Báo cáo', icon: BarChart3, module: 'finance' },
-  'fin.payments': { label: 'Xác nhận nộp quỹ', icon: BadgeCheck, module: 'finance' },
+  'fin.payments': { label: 'Xác nhận thu/chi từ Zalo', icon: BadgeCheck, module: 'finance' },
   'act.schedule': { label: 'Lịch', icon: CalendarDays, module: 'activity' },
   'act.registration': { label: 'Đăng ký', icon: CalendarPlus, module: 'activity' },
   'act.checkin': { label: 'Check-in', icon: LogIn, module: 'activity' },

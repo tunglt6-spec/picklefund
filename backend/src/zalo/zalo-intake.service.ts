@@ -312,7 +312,7 @@ export class ZaloIntakeService {
         },
       });
       return `Đã tạo phiếu ${parsed.kind === 'INCOME' ? 'thu' : 'chi'} chờ kiểm tra: ${payload.amount.toLocaleString('vi-VN')} đ. Chưa ghi vào sổ quỹ.
-Mở và kiểm tra: https://picklefund.vn/he-thong?tab=settings&view=account&zaloDraft=${draft.id}`;
+Mở và kiểm tra: https://picklefund.vn/tai-chinh?tab=payments&zaloDraft=${draft.id}`;
     } catch (e) {
       if ((e as any).code === 'P2002') return null;
       throw e;

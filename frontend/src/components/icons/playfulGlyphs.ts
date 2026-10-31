@@ -120,7 +120,7 @@ export const playfulGlyphs = {
   },
   "payment-approval": {
     "body": "<rect x=\"4\" y=\"9\" width=\"24\" height=\"18\" rx=\"4\" fill=\"{s}\"/><path d=\"M6 10V8a3 3 0 0 1 3-3h15v4\" fill=\"none\"/><rect x=\"20\" y=\"15\" width=\"8\" height=\"7\" rx=\"2\" fill=\"{a}\"/><circle cx=\"23.5\" cy=\"18.5\" r=\"0.6\" fill=\"{p}\" stroke=\"none\"/><circle cx=\"24\" cy=\"24\" r=\"5\" fill=\"{s}\"/><path d=\"M21 24l2 2 4-5\" fill=\"none\"/>",
-    "label": "Xác nhận nộp quỹ",
+    "label": "Xác nhận thu/chi từ Zalo",
     "color": "#078666",
     "soft": "#D9F5EB"
   },

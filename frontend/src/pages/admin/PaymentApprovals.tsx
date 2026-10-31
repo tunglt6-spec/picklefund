@@ -9,6 +9,7 @@ import { Modal } from '../../components/ui/Modal'
 import api from '../../lib/api'
 import { formatVND, formatDate } from '../../lib/utils'
 import { exportGenericExcel, exportGenericTablePDF } from '../../lib/export'
+import { ZaloIntakePanel } from './ZaloIntakePanel'
 
 interface PaymentRow {
   id: string
@@ -119,7 +120,7 @@ export function PaymentApprovals() {
   return (
     <PageShell maxWidth={1760}>
       <PageHeader
-        title="Xác nhận nộp quỹ"
+        title="Xác nhận thu/chi từ Zalo"
         className="pf-phone-header"
         actions={rows.length > 0 ? <PhoneToolbar label="Công cụ xác nhận quỹ" tools={[]} moreLabel="Xuất" more={<ExportActions compact onExcel={doExportExcel} onPdf={doExportPdf}/>} fallback={<ExportActions onExcel={doExportExcel} onPdf={doExportPdf}/>} /> : undefined}
       />
@@ -181,6 +182,8 @@ export function PaymentApprovals() {
           ))}
         </div>
       )}
+
+      <div className="mt-4"><ZaloIntakePanel /></div>
 
       <Modal
         open={!!recheck}

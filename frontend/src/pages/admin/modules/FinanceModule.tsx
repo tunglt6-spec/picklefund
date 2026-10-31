@@ -21,7 +21,7 @@ export function FinanceModule() {
         { key: 'expense', ...nav('fin.expense'), label: 'Chi', element: <Expenses /> },
         { key: 'debts', ...nav('fin.debts'), label: 'Công nợ', element: <Debts /> },
         { key: 'reports', ...nav('fin.reports'), label: 'Báo cáo', element: <Reports /> },
-        { key: 'payments', ...nav('fin.payments'), label: 'Xác nhận nộp quỹ', element: <PaymentApprovals /> },
+        { key: 'payments', ...nav('fin.payments'), label: 'Xác nhận thu/chi từ Zalo', element: <PaymentApprovals /> },
       ]}
     />
   )
