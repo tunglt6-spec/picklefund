@@ -444,6 +444,13 @@ export class ZaloCommandService {
     if (n < 1 || n > list.length)
       return `Hôm nay có ${list.length} buổi, chọn số từ 1 đến ${list.length}.`;
     const s = list[n - 1];
+    const existing = await this.prisma.attendanceRecord.findUnique({
+      where: {
+        attendanceSessionId_memberId: { attendanceSessionId: s.id, memberId: member.id },
+      },
+    });
+    if (existing?.status === 'PRESENT')
+      return `${member.fullName} đã được điểm danh buổi này rồi (${s.startTime ?? ''}${s.courtName ? ` · ${s.courtName}` : ''}).`;
     await this.prisma.attendanceRecord.upsert({
       where: {
         attendanceSessionId_memberId: { attendanceSessionId: s.id, memberId: member.id },

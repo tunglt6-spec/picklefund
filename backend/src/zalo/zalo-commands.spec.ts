@@ -128,6 +128,7 @@ describe('ZaloCommandService', () => {
       },
       fundContribution: { findMany: jest.fn().mockResolvedValue([{ memberId: 'm1', isConfirmed: true }]) },
       attendanceSession: { findMany: jest.fn().mockResolvedValue(over.sessions ?? []) },
+      attendanceRecord: { findUnique: jest.fn().mockResolvedValue(over.record ?? null), upsert: jest.fn() },
       sessionRegistration: { upsert: jest.fn(), deleteMany: jest.fn(), count: jest.fn().mockResolvedValue(1) },
       auditLog: { create: jest.fn() },
       user: {
@@ -187,6 +188,18 @@ describe('ZaloCommandService', () => {
     expect(prisma.sessionRegistration.upsert).toHaveBeenCalled();
     expect(prisma.auditLog.create).toHaveBeenCalled();
     expect(prisma.notification.createMany).toHaveBeenCalled();
+  });
+  it('/diemdanh lần 2 không ghi đè, không ghi audit lặp', async () => {
+    const s = { id: 's1', startTime: '08:00', courtName: 'Sân A' };
+    const { svc, prisma } = mk({
+      identity: { userId: 'u', zaloUserId: 'u1' },
+      member: { id: 'm1', fullName: 'An' },
+      sessions: [s],
+      record: { status: 'PRESENT' },
+    });
+    expect(await svc.handle('c', conn, msg('/diemdanh', 'PRIVATE', 'u1'), report)).toContain('đã được điểm danh');
+    expect(prisma.attendanceRecord.upsert).not.toHaveBeenCalled();
+    expect(prisma.auditLog.create).not.toHaveBeenCalled();
   });
   it('/no trong nhóm không lộ khoản nợ cá nhân', async () => {
     const { svc } = mk({ identity: { userId: 'u', zaloUserId: 'u1' }, member: { id: 'm2', fullName: 'Bình' } });

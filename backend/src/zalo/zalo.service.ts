@@ -44,6 +44,7 @@ export function splitZaloText(text: string): string[] {
 export class ZaloService {
   private readonly logger = new Logger(ZaloService.name);
   private working = false;
+  private readonly seenMessages = new Set<string>();
   private scanning = false;
   constructor(private readonly prisma: PrismaService, private readonly config: ConfigService, private readonly calculator: FinancialCalculatorService, @Optional() private readonly intake?: ZaloIntakeService, @Optional() private readonly commands?: ZaloCommandService) {}
 
@@ -140,6 +141,13 @@ export class ZaloService {
     const data = body as any; const m = data?.message;
     // Verification pings and unrelated messages are acknowledged without persisting group content.
     if (data?.event_name !== 'message.text.received' || !c.canJoinGroups || m?.from?.is_bot === true) return;
+    // Zalo có thể gửi lại cùng một tin khi webhook phản hồi chậm: bỏ bản trùng (bộ nhớ tiến trình, giữ 500 tin gần nhất).
+    if (m?.message_id != null) {
+      const dedupeKey = `${clubId}:${String(m.message_id)}`;
+      if (this.seenMessages.has(dedupeKey)) return;
+      this.seenMessages.add(dedupeKey);
+      if (this.seenMessages.size > 500) this.seenMessages.delete(this.seenMessages.values().next().value as string);
+    }
     const text: string = typeof m?.text === 'string' ? m.text : '';
     const intakeOn = !!c.intakeEnabled;
     const linkOn = intakeOn || !!c.commandsEnabled;
@@ -304,7 +312,7 @@ export class ZaloService {
     let sent = 0;
     for (const idn of identities.slice(0, 50)) {
       const mem = members.find((x) => x.userId === idn.userId); if (!mem) continue;
-      const key = `zalo_remind_${clubId}_${mem.id}`;
+      const key = `zalo_remind_${clubId}_${period.id}_${mem.id}`;
       const prev = await this.prisma.systemSetting.findUnique({ where: { key } });
       if (prev && Date.now() - Date.parse(prev.value) < 3 * 86400000 - 3600000) continue;
       try {
