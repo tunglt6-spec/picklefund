@@ -63,7 +63,13 @@ function parseNatural(
     const build = (yy: number) =>
       `${yy}-${abs[2].padStart(2, '0')}-${abs[1].padStart(2, '0')}`;
     iso = build(y);
-    if (!abs[3] && iso > vnDay()) iso = build(--y);
+    // Không ghi năm: chỉ lùi về năm trước khi ngày đó mới qua gần đây (vd 25/12 gõ vào đầu tháng 1);
+    // ngày còn xa phía trước bị finalize() từ chối thay vì đoán sai.
+    if (!abs[3] && iso > vnDay()) {
+      const prev = build(y - 1);
+      const gap = (Date.parse(vnDay() + 'T00:00:00Z') - Date.parse(prev + 'T00:00:00Z')) / 86_400_000;
+      if (gap >= 0 && gap <= 60) iso = prev;
+    }
     rest = rest.replace(abs[0], ' ');
   }
   const money = parseVnAmount(rest);
@@ -71,6 +77,9 @@ function parseNatural(
     throw new BadRequestException(
       'Chưa hiểu số tiền. Viết rõ như 300k, 300.000, 1tr5 hoặc 2 triệu.',
     );
+  const at = rest.toLowerCase().indexOf(money.raw);
+  if (at > 0 && /(?:^|\s)(?:-|−|âm)\s*$/iu.test(rest.slice(0, at)))
+    throw new BadRequestException('Số tiền không được âm. Nhập số dương, ví dụ 300k.');
   rest = rest.replace(new RegExp(money.raw.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'), ' ');
   const mini = /(?:^|\s)(?:quỹ phụ|quy phu|quỹ mini|quy mini)(?=\s)/iu;
   const fundSource: 'COMMON' | 'MINI' = mini.test(rest) ? 'MINI' : 'COMMON';

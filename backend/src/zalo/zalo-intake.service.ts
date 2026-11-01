@@ -169,6 +169,26 @@ export class ZaloIntakeService {
     }
     return this.state(user, roles);
   }
+  /** "Không phải tôi": hủy yêu cầu liên kết (mã bị dùng bởi Zalo lạ) — xóa luôn mã để Zalo đó không xác nhận lại được. */
+  async rejectLink(user: JwtUser, roles?: Role[]) {
+    const u = await this.actor(user, this.prisma, roles);
+    await this.prisma.$transaction(async (tx) => {
+      const { count } = await tx.zaloLinkChallenge.deleteMany({
+        where: { clubId: u.clubId!, userId: u.id, candidateId: { not: null } },
+      });
+      if (count)
+        await tx.auditLog.create({
+          data: {
+            clubId: u.clubId,
+            userId: u.id,
+            action: 'ZALO_LINK_REJECT',
+            resource: 'ZaloLinkChallenge',
+            detail: 'Từ chối yêu cầu liên kết từ Zalo lạ',
+          },
+        });
+    });
+    return this.state(user, roles);
+  }
   async unlink(user: JwtUser, roles?: Role[]) {
     const u = await this.actor(user, this.prisma, roles);
     await this.prisma.$transaction(async (tx) => {

@@ -19,6 +19,9 @@ export class ZaloMemberController {
   @Post('confirm-link') async confirm(@CurrentUser() u: JwtUser) {
     return ok(await this.intake.confirmLink(u, ANY));
   }
+  @Post('reject-link') async reject(@CurrentUser() u: JwtUser) {
+    return ok(await this.intake.rejectLink(u, ANY));
+  }
   @Post('unlink') async unlink(@CurrentUser() u: JwtUser) {
     return ok(await this.intake.unlink(u, ANY));
   }

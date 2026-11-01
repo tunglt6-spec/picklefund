@@ -1163,7 +1163,7 @@ function BillingTab() {
 
 // ─── Main ────────────────────────────────────────────────────
 export function Settings() {
-  // Link cũ trong tin nhắn bot (…&zaloDraft=ID) → màn mới Tài chính → Xác nhận thu/chi từ Zalo.
+  // Link cũ trong tin nhắn bot (…&zaloDraft=ID) → màn mới Tài chính → Xác nhận thu/chi.
   const oldDraft = new URLSearchParams(window.location.search).get('zaloDraft')
   if (oldDraft && /^[A-Za-z0-9-]{1,64}$/.test(oldDraft)) return <Navigate to={`/tai-chinh?tab=payments&zaloDraft=${oldDraft}`} replace />
   return <SettingsScreen />

@@ -38,7 +38,7 @@ const ALIAS: Record<string, ZaloCommandName> = {
 export function parseZaloCommand(text: string): ZaloCommand | null {
   const match = text
     .trim()
-    .match(/(?:^|\s)\/([a-z]{2,12})(?:\s+(\d{1,2}))?$/i);
+    .match(/(?:^|\s)\/([a-z]{2,12})(?:\s+(\d{1,4}))?$/i);
   if (!match) return null;
   const name = ALIAS[match[1].toLowerCase()];
   if (!name) return null;

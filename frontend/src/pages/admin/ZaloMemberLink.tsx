@@ -36,12 +36,20 @@ export function ZaloMemberLink() {
       ) : state.candidate ? (
         <div className="space-y-2">
           <p className="text-sm">Zalo “{state.candidate}” vừa gửi mã. Đúng là bạn?</p>
-          <Button disabled={busy} onClick={() => run(async () => { setState((await api.post('/member/me/zalo/confirm-link')).data.data); setCode(null); toast.success('Đã liên kết Zalo') })}>Xác nhận liên kết</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button disabled={busy} onClick={() => run(async () => { setState((await api.post('/member/me/zalo/confirm-link')).data.data); setCode(null); toast.success('Đã liên kết Zalo') })}>Xác nhận liên kết</Button>
+            <Button variant="outline" disabled={busy} onClick={() => run(async () => { setState((await api.post('/member/me/zalo/reject-link')).data.data); setCode(null); toast.success('Đã từ chối yêu cầu liên kết') })}>Không phải tôi</Button>
+          </div>
         </div>
       ) : (
         <div className="space-y-2">
           <Button disabled={busy} onClick={() => run(async () => { setCode((await api.post('/member/me/zalo/link-code')).data.data) })}>Tạo mã liên kết</Button>
-          {code && <p className="text-sm">Nhắn <b>riêng</b> cho bot (không đăng trong nhóm): <code className="break-all">{code.command}</code> — hiệu lực 10 phút. Rồi bấm Làm mới.</p>}
+          {code && (
+            <div className="space-y-2">
+              <p className="text-sm">Nhắn <b>riêng</b> cho bot (không đăng trong nhóm): <code className="break-all">{code.command}</code> — hiệu lực 10 phút. Rồi bấm Làm mới.</p>
+              <Button variant="outline" onClick={() => { navigator.clipboard?.writeText(code.command).then(() => toast.success('Đã sao chép lệnh'), () => toast.error('Không sao chép được, hãy chép thủ công')) }}>Sao chép lệnh</Button>
+            </div>
+          )}
           <Button variant="outline" disabled={busy} onClick={() => run(load)}>Làm mới</Button>
         </div>
       )}

@@ -9,6 +9,7 @@ describe('parseZaloCommand', () => {
     expect(parseZaloCommand('@Bot /quy')).toEqual({ name: 'quy', index: undefined });
     expect(parseZaloCommand('/dangky 2')).toEqual({ name: 'dangky', index: 2 });
     expect(parseZaloCommand('/HuyDangKy')).toEqual({ name: 'huy', index: undefined });
+    expect(parseZaloCommand('/dangky 100')).toEqual({ name: 'dangky', index: 100 });
   });
   it('bỏ qua chat thường và lệnh không nằm cuối', () => {
     expect(parseZaloCommand('hôm nay /quy nhé các bạn')).toBeNull();
@@ -86,6 +87,20 @@ describe('parseIntake tự nhiên', () => {
     expect(() => parseIntake('/thu An 3tr4567')).toThrow(BadRequestException);
     expect(parseIntake('/chi mua 5 m vai 100k')!.payload.amount).toBe(100000);
   });
+  it('số âm bị từ chối', () => {
+    expect(() => parseIntake('/thu An -300k')).toThrow(BadRequestException);
+    expect(() => parseIntake('/chi sân âm 300k')).toThrow(BadRequestException);
+  });
+  it('ngày không năm: gần quá khứ lùi năm, ngày tương lai xa bị từ chối', () => {
+    jest.useFakeTimers().setSystemTime(new Date('2026-01-02T05:00:00Z'));
+    try {
+      expect(parseIntake('/chi sân 300k 25/12')!.payload.date).toBe('2025-12-25');
+      expect(() => parseIntake('/chi sân 300k 15/05')).toThrow(BadRequestException);
+      expect(() => parseIntake('/chi sân 300k 05/01')).toThrow(BadRequestException);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
   it('cú pháp cũ vẫn chạy', () => {
     expect(parseIntake('/thu 450000 | A | quỹ chính | 01/01/2026')!.payload.amount).toBe(450000);
   });
@@ -115,7 +130,11 @@ describe('ZaloCommandService', () => {
       attendanceSession: { findMany: jest.fn().mockResolvedValue(over.sessions ?? []) },
       sessionRegistration: { upsert: jest.fn(), deleteMany: jest.fn(), count: jest.fn().mockResolvedValue(1) },
       auditLog: { create: jest.fn() },
-      user: { findUnique: jest.fn().mockResolvedValue({ role: over.role ?? 'MEMBER_VIEW', isActive: true }) },
+      user: {
+        findUnique: jest.fn().mockResolvedValue({ role: over.role ?? 'MEMBER_VIEW', isActive: true }),
+        findMany: jest.fn().mockResolvedValue([{ id: 'admin1' }]),
+      },
+      notification: { createMany: jest.fn() },
     };
     return { prisma, svc: new ZaloCommandService(prisma) };
   };
@@ -167,6 +186,7 @@ describe('ZaloCommandService', () => {
     expect(await svc.handle('c', conn, msg('/dangky'), report)).toContain('Đã đăng ký');
     expect(prisma.sessionRegistration.upsert).toHaveBeenCalled();
     expect(prisma.auditLog.create).toHaveBeenCalled();
+    expect(prisma.notification.createMany).toHaveBeenCalled();
   });
   it('/no trong nhóm không lộ khoản nợ cá nhân', async () => {
     const { svc } = mk({ identity: { userId: 'u', zaloUserId: 'u1' }, member: { id: 'm2', fullName: 'Bình' } });

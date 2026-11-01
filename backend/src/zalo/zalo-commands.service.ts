@@ -386,10 +386,46 @@ export class ZaloCommandService {
         detail: 'Thực hiện qua bot Zalo',
       },
     });
+    if (reg) await this.notifyAdmins(clubId, member.fullName, s);
     const count = await this.prisma.sessionRegistration.count({
       where: { attendanceSessionId: s.id },
     });
     return `${reg ? 'Đã đăng ký' : 'Đã hủy đăng ký'} cho ${member.fullName}: ${this.sessionLine({ ...s, _count: undefined }, n - 1).replace(/^\d+\.\s*/, '')}. Hiện có ${count} người đăng ký.`;
+  }
+
+  /**
+   * Giống thông báo `session_registered` của cổng thành viên (ưu tiên LOW → chỉ trong app).
+   * Ghi thẳng bảng thông báo để không tạo vòng phụ thuộc ZaloModule ↔ HermesModule. Lỗi không làm hỏng lệnh.
+   */
+  private async notifyAdmins(
+    clubId: string,
+    fullName: string,
+    s: { id: string; sessionDate: Date; startTime?: string | null; courtName?: string | null },
+  ) {
+    try {
+      const admins = await this.prisma.user.findMany({
+        where: { clubId, role: 'CLUB_ADMIN', isActive: true },
+        select: { id: true },
+      });
+      if (!admins.length) return;
+      const when = `${dmy(s.sessionDate)}${s.startTime ? ` ${s.startTime}` : ''}`;
+      await this.prisma.notification.createMany({
+        data: admins.map((a) => ({
+          userId: a.id,
+          clubId,
+          eventType: 'session_registered',
+          priority: 'LOW' as const,
+          channel: 'IN_APP' as const,
+          title: 'Có thành viên đăng ký buổi chơi',
+          body: `${fullName} đã đăng ký tham gia buổi chơi ${when}${s.courtName ? ` — ${s.courtName}` : ''} (qua bot Zalo).`,
+          metadata: { link: '/session-registration', sessionId: s.id },
+          status: 'SENT' as const,
+          sentAt: new Date(),
+        })),
+      });
+    } catch {
+      /* thông báo là phụ, bỏ qua */
+    }
   }
 
   private async checkin(

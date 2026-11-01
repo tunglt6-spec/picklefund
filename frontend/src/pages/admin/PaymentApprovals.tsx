@@ -120,7 +120,7 @@ export function PaymentApprovals() {
   return (
     <PageShell maxWidth={1760}>
       <PageHeader
-        title="Xác nhận thu/chi từ Zalo"
+        title="Xác nhận thu/chi"
         className="pf-phone-header"
         actions={rows.length > 0 ? <PhoneToolbar label="Công cụ xác nhận quỹ" tools={[]} moreLabel="Xuất" more={<ExportActions compact onExcel={doExportExcel} onPdf={doExportPdf}/>} fallback={<ExportActions onExcel={doExportExcel} onPdf={doExportPdf}/>} /> : undefined}
       />
