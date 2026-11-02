@@ -309,17 +309,21 @@ export class ZaloService {
     const identities = await this.prisma.zaloIdentity.findMany({ where: { clubId, botVersion: c.version, chatId: c.chatId, userId: { in: members.map((x) => x.userId as string) } } });
     const token = this.unseal(c.token); const each = Number(period.contributionAmount);
     const when = days < 0 ? `đã quá hạn ${-days} ngày` : days === 0 ? 'hạn là hôm nay' : `còn ${days} ngày`;
-    let sent = 0;
-    for (const idn of identities.slice(0, 50)) {
+    let sent = 0; let attempts = 0;
+    // Giới hạn 50 tin/lượt chỉ tính người THỰC SỰ được gửi; người vừa được nhắc không chiếm suất (tránh CLB >50 người bị bỏ sót).
+    for (const idn of identities) {
+      if (attempts >= 50) break;
       const mem = members.find((x) => x.userId === idn.userId); if (!mem) continue;
       const key = `zalo_remind_${clubId}_${period.id}_${mem.id}`;
       const prev = await this.prisma.systemSetting.findUnique({ where: { key } });
       if (prev && Date.now() - Date.parse(prev.value) < 3 * 86400000 - 3600000) continue;
+      attempts++;
+      const mark = () => this.prisma.systemSetting.upsert({ where: { key }, create: { key, value: new Date().toISOString() }, update: { value: new Date().toISOString() } });
       try {
         await this.call(token, 'sendMessage', { chat_id: idn.zaloUserId, text: `Nhắc đóng quỹ — kỳ ${period.name}: ${mem.fullName} chưa đóng ${Math.round(each).toLocaleString('vi-VN')} đ (${when}). Nộp xong báo nộp trong app: https://picklefund.vn/member/tai-chinh` });
-        await this.prisma.systemSetting.upsert({ where: { key }, create: { key, value: new Date().toISOString() }, update: { value: new Date().toISOString() } });
+        await mark();
         sent++;
-      } catch { /* người dùng chưa nhắn bot / chặn bot: bỏ qua, thử lại kỳ nhắc sau */ }
+      } catch { await mark().catch(() => undefined); /* chưa nhắn bot / chặn bot: ghi mốc để không chiếm suất mỗi ngày, thử lại sau 3 ngày */ }
     }
     return sent;
   }

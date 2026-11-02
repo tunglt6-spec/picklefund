@@ -51,3 +51,11 @@ All are opt-in per club in Settings → Zalo (default off) and require a confirm
 - `resultImages` — when a minigame becomes COMPLETED (endedAt ≤2 days), a standings PNG is queued once (`zalo_mgsent_*` key) and sent as a photo job.
 - Health: `failStreak`/`lastErrorAt` count consecutive failed outbox deliveries; the Zalo screen shows a warning at ≥3 and resets on the next success.
 - `/thu` and `/chi` also accept natural Vietnamese (`/thu Nguyễn Văn A đóng 300k hôm qua`, `/chi tiền sân 600.000 01/01`); they still create a draft only (never write the ledger directly). The pipe syntax keeps working.
+
+### Updates 2026-11-02
+- Link flow: the app can reject a link request ("Không phải tôi", `POST /member/me/zalo/reject-link` or `/zalo/intake/reject-link`); the challenge and code are deleted and audit-logged as `ZALO_LINK_REJECT`.
+- `/dangky [n]` accepts up to 4 digits; an out-of-range number returns the session list. A registration via the bot also creates an in-app `session_registered` notification for club admins (written directly to avoid a ZaloModule↔HermesModule cycle). `/diemdanh` twice is idempotent (no overwrite, no duplicate audit).
+- Natural `/thu` `/chi`: negative amounts are rejected; a date without a year is moved to the previous year only if that date is ≤60 days ago, otherwise it is rejected as a future date.
+- Reminders: the dedupe key includes the period id; the 50-message cap counts only members actually attempted; a failed delivery also records the mark so it is retried after 3 days instead of consuming the cap every day.
+- Webhook: duplicate deliveries with the same `message_id` are dropped (in-memory, last 500 per process). [Unverified] the field name is assumed from the Zalo message shape.
+- Finance → "Xác nhận thu/chi" lists member payment confirmations and the Zalo drafts panel ("Phiếu thu/chi từ Zalo").

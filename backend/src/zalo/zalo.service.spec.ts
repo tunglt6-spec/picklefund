@@ -215,4 +215,19 @@ describe('Zalo club integration', () => {
       expect(guard.canActivate(context('CLUB_ADMIN'))).toBe(true);
     }
   });
+  it('reminders: the 50 cap counts only attempted people, so already-reminded members do not starve the rest', async () => {
+    await paired(); const c = await (svc as any).read(clubId);
+    const N = 60; const ids = Array.from({ length: N }, (_, i) => i);
+    const today = new Date(new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' }).format(new Date()) + 'T00:00:00Z');
+    prisma.fundPeriod.findFirst = jest.fn(async () => ({ id: 'p1', name: 'K1', dueDate: today, contributionAmount: 100000 }));
+    prisma.member = { findMany: jest.fn(async () => ids.map(i => ({ id: 'm' + i, userId: 'u' + i, fullName: 'TV ' + i }))) };
+    prisma.zaloIdentity = { findMany: jest.fn(async () => ids.map(i => ({ userId: 'u' + i, zaloUserId: 'z' + i }))) };
+    const commands: any = { unpaidMembers: jest.fn(async () => ({ unpaid: ids.map(i => ({ id: 'm' + i })), waitingIds: new Set() })) };
+    const s2 = new ZaloService(prisma, new ConfigService({ JWT_SECRET: 'test-encryption-secret' }), calculator, undefined, commands);
+    for (let i = 0; i < 50; i++) rows.set(`zalo_remind_${clubId}_p1_m${i}`, { key: `zalo_remind_${clubId}_p1_m${i}`, value: new Date().toISOString() });
+    fetchMock.mockClear();
+    const sent = await s2.remindPayments(clubId, c);
+    expect(sent).toBe(10);
+    expect(fetchMock.mock.calls.filter(x => String(x[0]).endsWith('/sendMessage')).length).toBe(10);
+  });
 });
