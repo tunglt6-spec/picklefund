@@ -112,7 +112,6 @@ export function Reports() {
   // Báo cáo luôn tổng hợp cả hai quỹ (lọc Quỹ Chính/Quỹ Phụ có sẵn ở các màn Kỳ quỹ/Thu/Chi) — không còn bộ lọc nguồn quỹ ở đây.
   const fundFilter: 'ALL' | FundSource = 'ALL'
   const [showInfographic, setShowInfographic] = useState(false)
-  const [reportType, setReportType] = useState<'full' | 'financial'>('full')
   // fundSummary = backend Source of Truth (raw response.data.data)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [fundSummary, setFundSummary] = useState<any>(null)
@@ -338,8 +337,8 @@ export function Reports() {
   }
   const EXPORT_FAILED = 'Không thể xuất báo cáo. Vui lòng thử lại.'
   // PHẠM VI export: đúng KỲ đang chọn, KPI chính thức từ backend (Quỹ Chính + Quỹ Phụ) — KHÔNG phụ thuộc
-  // bộ lọc quỹ/tab trên màn (chúng chỉ lọc biểu đồ); `reportType` quyết định có kèm bảng kê thành viên.
-  const scopeNote = () => `Kỳ ${periodName} · ${reportType === 'financial' ? 'tổng quan tài chính' : 'đầy đủ kèm bảng kê'}`
+  // bộ lọc quỹ/tab trên màn (chúng chỉ lọc biểu đồ); file luôn kèm bảng kê thành viên.
+  const scopeNote = () => `Kỳ ${periodName} · đầy đủ kèm bảng kê`
   const missingExpenseNote = ' Lưu ý: không tải được danh sách khoản chi nên file THIẾU trang "Khoản chi".'
   const doExportPDF = async () => {
     if (exporting) return
@@ -348,7 +347,7 @@ export function Reports() {
     try {
       // exportReportsPDF trả Promise → await để bắt lỗi; chỉ báo success sau khi file xong.
       const { rows: expenseRows, failed } = await buildExpenseRows()
-      const saved = await exportReportsPDF(buildExportSummary(), reportType === 'financial' ? [] : billRowsForExport(), expenseRows)
+      const saved = await exportReportsPDF(buildExportSummary(), billRowsForExport(), expenseRows)
       if (failed) toast.error(`Đã xuất PDF (${scopeNote()}).${missingExpenseNote}`, { duration: 7000 })
       else if (saved !== false) toast.success(`Đã xuất PDF · ${scopeNote()}`)
     } catch (e) {
@@ -364,7 +363,7 @@ export function Reports() {
     setExporting(true)
     try {
       const { rows: expenseRows, failed } = await buildExpenseRows()
-      await exportReportsExcel(buildExportSummary(), reportType === 'financial' ? [] : memberBillRows.map(r => ({
+      await exportReportsExcel(buildExportSummary(), memberBillRows.map(r => ({
         name: r.memberName, attended: r.attendedSessions, paid: r.contributionPaid ? 'Đã đóng' : 'Chưa đóng', cost: r.totalCost, balance: r.balance,
       })), expenseRows)
       if (failed) toast.error(`Đã xuất Excel (${scopeNote()}).${missingExpenseNote}`, { duration: 7000 })
@@ -602,21 +601,6 @@ export function Reports() {
             </div>
           )}
 
-          {/* ── Loại báo cáo khi xuất (nút Xuất Excel/PDF/Infographic nằm ở hàng tiêu đề) ── */}
-          {canExport && (
-            <div className="pf-glass mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[16px] px-5 py-4">
-              <p className="text-sm font-semibold [color:var(--pf-text)]">Loại báo cáo khi xuất</p>
-              <div className="flex items-center gap-1 rounded-full border p-1 [background:var(--pf-surface)] border-[color:var(--pf-border)]" role="radiogroup" aria-label="Loại báo cáo">
-                {([['full', 'Đầy đủ (kèm bảng kê)'], ['financial', 'Tổng quan tài chính']] as ['full' | 'financial', string][]).map(([v, l]) => (
-                  <button key={v} type="button" role="radio" aria-checked={reportType === v} onClick={() => setReportType(v)}
-                    className="rounded-full px-3 py-1.5 text-xs font-semibold transition-colors"
-                    style={reportType === v ? { background: 'var(--pf-primary)', color: 'var(--pf-primary-on)' } : { color: 'var(--pf-color-muted)' }}>
-                    {l}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
         </>
       )}
 
