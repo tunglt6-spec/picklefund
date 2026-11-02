@@ -84,7 +84,7 @@ describe('PaymentService', () => {
       mockPrisma.fundContribution.updateMany.mockResolvedValue({ count: 1 });
 
       const result = await service.confirm('pay-1', 'admin-1', 'club-1');
-      expect(result.status).toBe('CONFIRMED');
+      expect(result?.status).toBe('CONFIRMED');
     });
 
     it('conditional write chống double-credit: updateMany count=0 (thua race) → Forbidden, KHÔNG tạo contribution', async () => {

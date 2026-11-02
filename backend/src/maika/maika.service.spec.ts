@@ -14,6 +14,7 @@ describe('MaikaService — anomaly tài chính (Quỹ Chính vs Quỹ Phụ)', (
     { get: () => undefined } as never,
     null as never,
     null as never,
+    null as never,
   );
   const compute = (
     snap: Pick<
@@ -136,6 +137,7 @@ describe('MaikaService.getClubSnapshot — kỳ đang mở + canonical clubAsset
     { get: () => undefined } as never,
     null as never,
     fundPeriods as never,
+    null as never,
   );
 
   it('commonBalance/miniBalance theo kỳ; clubAssets/unpaidCount từ canonical summary', async () => {

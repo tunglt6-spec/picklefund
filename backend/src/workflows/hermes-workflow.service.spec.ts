@@ -691,7 +691,7 @@ describe('HermesWorkflowService', () => {
       aiActions.create.mockResolvedValueOnce({ skipped: 'SKIPPED_DUPLICATE', dedupKey: 'x', existingActionId: 'a0' });
       const run = await service.testTrigger('rf', 'club-1', ACTOR, { balanceNegative: true, dedupScope: 'fund' });
       expect(run).toMatchObject({ status: 'COMPLETED' });
-      const res = (run.resultJson ?? {}) as { skippedActionCount?: number; createdActionIds?: string[] };
+      const res = ((run as { resultJson?: unknown }).resultJson ?? {}) as { skippedActionCount?: number; createdActionIds?: string[] };
       expect(res.skippedActionCount).toBe(1);
       expect(res.createdActionIds).toEqual([]);
     });
@@ -702,7 +702,7 @@ describe('HermesWorkflowService', () => {
       const run = await service.testTrigger('rf', 'club-1', ACTOR, { balanceNegative: false, dedupScope: 'fund' });
       expect(aiActions.resolveByDedupKey).toHaveBeenCalledWith('club-1', 'FUND_BALANCE_RISK:fund');
       expect(aiActions.create).not.toHaveBeenCalled();
-      const res = (run.resultJson ?? {}) as { autoResolvedCount?: number };
+      const res = ((run as { resultJson?: unknown }).resultJson ?? {}) as { autoResolvedCount?: number };
       expect(res.autoResolvedCount).toBe(2);
     });
   });
