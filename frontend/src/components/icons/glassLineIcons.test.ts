@@ -5,7 +5,7 @@ import { glassLineColor, glassLineMarkup, glassLineSvg } from './glassLineIcons'
 
 const names = Object.keys(playfulGlyphs) as PlayfulIconName[]
 test('every app icon has self-contained light and dark SVG artwork', () => {
-  assert.equal(names.length, 93)
+  assert.equal(names.length, 94)
   for (const name of names) for (const dark of [false, true]) {
     const svg = glassLineSvg(name, dark)
     assert.ok(svg.startsWith('<svg '))
