@@ -134,13 +134,16 @@ test('Excel wrapper trả Promise và lỗi được throw ra caller (không nu�
   const prevDoc = g.document
   g.document = undefined // node: không có DOM → bước tải file phải ném lỗi
   try {
-    for (const p of [
-      exportGenericExcel('F', 'S', ['A'], [['x']]),
-      exportLedgerExcel('K', []),
-      exportContribExcel('K', []),
-      exportMembersExcel('C', []),
-      exportReportsExcel({ periodName: 'K', clubName: 'C', totalIncome: 0, totalExpense: 0, balance: 0, memberCount: 0, sessionCount: 0, confirmedCount: 0 }, []),
-    ]) {
+    // Tạo từng Promise ngay trước khi await: tạo hết một lượt rồi mới await khiến các Promise sau reject khi chưa có handler (Node 20 báo unhandledRejection và 'document' bị khôi phục quá sớm).
+    const runs: Array<() => Promise<unknown>> = [
+      () => exportGenericExcel('F', 'S', ['A'], [['x']]),
+      () => exportLedgerExcel('K', []),
+      () => exportContribExcel('K', []),
+      () => exportMembersExcel('C', []),
+      () => exportReportsExcel({ periodName: 'K', clubName: 'C', totalIncome: 0, totalExpense: 0, balance: 0, memberCount: 0, sessionCount: 0, confirmedCount: 0 }, []),
+    ]
+    for (const run of runs) {
+      const p = run()
       assert.ok(p instanceof Promise)
       await assert.rejects(p)
     }
