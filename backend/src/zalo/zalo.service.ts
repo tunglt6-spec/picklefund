@@ -136,7 +136,10 @@ export class ZaloService {
     try {
       const result = await this.call(this.unseal(c.token), 'setWebhook', { url: `${url.origin}/api/zalo/webhook/${clubId}`, secret_token: this.secret(clubId, c.version) });
       c.webhookReady = result?.verification?.ok === true;
-      c.lastError = c.webhookReady ? undefined : 'Webhook chưa xác minh thành công. Kiểm tra HTTPS rồi đăng ký lại bot.';
+      // Chi tiết xác minh do Zalo trả về (không chứa token/secret) giúp biết Zalo không gọi tới được hay nhận phản hồi sai.
+      const detail = JSON.stringify(result?.verification ?? null).replace(/[^\p{L}\p{N}\s:{}\[\],."_-]/gu, '').slice(0, 160);
+      c.lastError = c.webhookReady ? undefined : `Webhook chưa xác minh thành công (Zalo trả: ${detail}). Kiểm tra HTTPS rồi đăng ký lại bot.`;
+      if (!c.webhookReady) this.logger.warn(`Zalo webhook verification failed: ${detail}`);
     } catch (e) { c.webhookReady = false; c.lastError = (e as Error).message; }
     await this.save(clubId, c); return this.status(clubId);
   }
