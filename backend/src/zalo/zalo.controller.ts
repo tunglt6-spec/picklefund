@@ -34,6 +34,9 @@ export class ZaloController {
     return ok(await this.zalo.register(this.zalo.club(user.clubId), body.token));
   }
 
+  @Post('webhook-verify') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  async verifyWebhook(@CurrentUser() user: JwtUser) { return ok(await this.zalo.reverifyWebhook(this.zalo.club(user.clubId))); }
+
   @Post('pair') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   async pair(@CurrentUser() user: JwtUser) { return ok(await this.zalo.pair(this.zalo.club(user.clubId))); }
 

@@ -127,6 +127,19 @@ export class ZaloService {
     } catch (e) { c.lastError = (e as Error).message; }
     await this.save(clubId, c); return this.status(clubId);
   }
+  /** Xác minh lại webhook bằng token đã lưu (không cần nhập lại token): dùng khi lần đăng ký trước hỏng do mạng/máy chủ tạm ngưng. */
+  async reverifyWebhook(clubId: string) {
+    const c = await this.required(clubId);
+    const origin = this.config.get<string>('ZALO_PUBLIC_ORIGIN') || 'https://picklefund.vn';
+    const url = new URL(origin);
+    if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) throw new BadRequestException('Máy chủ chưa cấu hình địa chỉ HTTPS cho Zalo.');
+    try {
+      const result = await this.call(this.unseal(c.token), 'setWebhook', { url: `${url.origin}/api/zalo/webhook/${clubId}`, secret_token: this.secret(clubId, c.version) });
+      c.webhookReady = result?.verification?.ok === true;
+      c.lastError = c.webhookReady ? undefined : 'Webhook chưa xác minh thành công. Kiểm tra HTTPS rồi đăng ký lại bot.';
+    } catch (e) { c.webhookReady = false; c.lastError = (e as Error).message; }
+    await this.save(clubId, c); return this.status(clubId);
+  }
   async pair(clubId: string) {
     const c = await this.required(clubId);
     if (!c.canJoinGroups) throw new BadRequestException('Zalo chưa cấp quyền tham gia nhóm cho bot này (nhóm đang Beta).');

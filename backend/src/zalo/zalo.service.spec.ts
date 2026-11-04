@@ -207,9 +207,24 @@ describe('Zalo club integration', () => {
     const id=preview.imageUrl.split('/').pop()!.replace('.png','');
     await svc.disconnect(clubId); await expect(svc.reportImage(id)).rejects.toThrow();
   });
+  it('reverifyWebhook re-runs setWebhook with the stored token and recovers a failed verification', async () => {
+    await paired();
+    setConnection({ webhookReady: false, lastError: 'Webhook chưa xác minh thành công. Kiểm tra HTTPS rồi đăng ký lại bot.' });
+    fetchMock.mockClear();
+    const status = await svc.reverifyWebhook(clubId);
+    expect(fetchMock.mock.calls.some(c => String(c[0]).endsWith('/setWebhook'))).toBe(true);
+    expect(status.webhookReady).toBe(true); expect(status.lastError).toBeNull();
+  });
+  it('reverifyWebhook keeps the flag false and records the error when verification still fails', async () => {
+    await paired(); setConnection({ webhookReady: true });
+    fetchMock.mockImplementation(async (url: any) => response(String(url).endsWith('/setWebhook') ? { verification: { ok: false } } : {}) as any);
+    const status = await svc.reverifyWebhook(clubId);
+    expect(status.webhookReady).toBe(false); expect(status.lastError).toContain('Webhook chưa xác minh');
+    expect(JSON.stringify([...rows.values()])).not.toContain(token);
+  });
   it('admin controllers reject member and treasurer roles', () => {
     const guard=new RolesGuard(new Reflector());
-    for(const method of ['status','bot','pair','confirm','preferences','preview','report','test','disconnect']) {
+    for(const method of ['status','bot','verifyWebhook','pair','confirm','preferences','preview','report','test','disconnect']) {
       const context=(role:string)=>({getHandler:()=>ZaloController.prototype[method],getClass:()=>ZaloController,switchToHttp:()=>({getRequest:()=>({user:{role}})})}) as any;
       expect(()=>guard.canActivate(context('MEMBER_VIEW'))).toThrow();expect(()=>guard.canActivate(context('CLUB_TREASURER'))).toThrow();
       expect(guard.canActivate(context('CLUB_ADMIN'))).toBe(true);
