@@ -59,3 +59,8 @@ All are opt-in per club in Settings → Zalo (default off) and require a confirm
 - Reminders: the dedupe key includes the period id; the 50-message cap counts only members actually attempted; a failed delivery also records the mark so it is retried after 3 days instead of consuming the cap every day.
 - Webhook: duplicate deliveries with the same `message_id` are dropped (in-memory, last 500 per process). [Unverified] the field name is assumed from the Zalo message shape.
 - Finance → "Xác nhận thu/chi" lists member payment confirmations and the Zalo drafts panel ("Phiếu thu/chi từ Zalo").
+
+## Updates 2026-11-06 — AI Action đã duyệt → nhóm Zalo
+- `HermesActionExecutor.fanOut` nhận thêm `zaloGroupBody`; khi action có ít nhất 1 job gửi mới và có `zaloGroupBody`, đăng vào nhóm Zalo qua `ZaloService.notifyAction(clubId, actionId, title, body)` (lấy bằng `ModuleRef` để tránh vòng import module). Idempotent theo `actionId`; tuân theo cờ `enabled` + `announcements` của kết nối Zalo.
+- Đăng vào nhóm (hướng thành viên): `EVENT_REMINDER`, `LOW_SESSION_REGISTRATION`, `DEBT_ESCALATION`, `PAYMENT_DUE_REMINDER`, `REPORT_DISPATCH` (nội dung nhóm trung tính, không tên/số tiền cá nhân).
+- KHÔNG đăng vào nhóm (nội bộ quản trị, vẫn gửi Telegram/in-app): `MISSING_FINANCE_DOCUMENT`, `ATTENDANCE_NOT_CLOSED`, `FUND_BALANCE_RISK`, `SESSION_CAPACITY_RISK`, `LOW_MEMBER_ATTENDANCE`, `APPROVAL_OVERDUE`, `MATCH_RESULT_MISSING`, `WEEKLY_CLUB_HEALTH_REPORT`, Maika Daily Brief.

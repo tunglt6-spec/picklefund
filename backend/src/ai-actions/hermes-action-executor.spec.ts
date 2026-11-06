@@ -194,6 +194,54 @@ describe('HermesActionExecutor', () => {
     expect(res.message).toContain('[IN_APP:2]');
   });
 
+  describe('đăng vào nhóm Zalo', () => {
+    const notifyAction = jest.fn().mockResolvedValue(undefined);
+    const withZalo = () => {
+      const moduleRef = { get: jest.fn().mockReturnValue({ notifyAction }) };
+      return new HermesActionExecutor(prisma, notifications, config, moduleRef as never);
+    };
+    beforeEach(() => notifyAction.mockClear());
+
+    it('EVENT_REMINDER (hướng thành viên) → đăng nhóm Zalo đúng 1 lần theo actionId', async () => {
+      attendanceSessionFindFirst.mockResolvedValue({
+        sessionDate: new Date('2026-08-01T00:00:00.000Z'),
+        startTime: '19:00',
+        endTime: '21:00',
+        courtName: 'Sân A',
+      });
+      memberFindMany.mockResolvedValue([mkMember('m1', 'u1', 'e1@x.vn')]);
+      await withZalo().execute(baseAction({ actionType: 'workflow:EVENT_REMINDER' }));
+      expect(notifyAction).toHaveBeenCalledTimes(1);
+      expect(notifyAction).toHaveBeenCalledWith('club-1', 'a1', expect.stringContaining('Nhắc buổi tập'), expect.stringContaining('Sắp có buổi tập'));
+    });
+
+    it('DEBT_ESCALATION → nội dung nhóm trung tính, không tên thành viên', async () => {
+      fundPeriodFindFirst.mockResolvedValue({ id: 'p1', name: 'Kỳ 1' });
+      memberFindMany.mockResolvedValue([mkMember('m1', 'u1', 'm1@real.vn')]);
+      fundContributionFindMany.mockResolvedValue([]);
+      await withZalo().execute(baseAction());
+      const body = notifyAction.mock.calls[0][3] as string;
+      expect(body).toContain('Thành viên chưa hoàn tất');
+      expect(body).not.toContain('Bạn chưa');
+    });
+
+    it('action nội bộ quản trị (thiếu chứng từ) KHÔNG đăng vào nhóm', async () => {
+      (prisma as any).livingExpense = { count: jest.fn().mockResolvedValue(31) };
+      userFindMany.mockResolvedValue([{ id: 'ad1', email: 'ad@x.vn' }]);
+      await withZalo().execute(baseAction({ actionType: 'workflow:MISSING_FINANCE_DOCUMENT' }));
+      expect(notifyAction).not.toHaveBeenCalled();
+    });
+
+    it('không có job gửi mới (chạy lại / trùng) → không đăng nhóm', async () => {
+      dispatch.mockResolvedValue({ status: 'READY', duplicate: true });
+      fundPeriodFindFirst.mockResolvedValue({ id: 'p1', name: 'Kỳ 1' });
+      memberFindMany.mockResolvedValue([mkMember('m1', 'u1', 'm1@real.vn')]);
+      fundContributionFindMany.mockResolvedValue([]);
+      await withZalo().execute(baseAction());
+      expect(notifyAction).not.toHaveBeenCalled();
+    });
+  });
+
   it('EVENT_REMINDER: không có buổi tập sắp tới → không gửi', async () => {
     attendanceSessionFindFirst.mockResolvedValue(null);
     const res = await executor.execute(

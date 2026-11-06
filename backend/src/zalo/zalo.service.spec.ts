@@ -107,6 +107,20 @@ describe('Zalo club integration', () => {
     expect([...rows.keys()].filter(k=>k.startsWith('zalo_job_'))).toHaveLength(1);
     expect(fetchMock).not.toHaveBeenCalled(); await svc.flush(); expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+  it('đăng thông báo AI Action đã duyệt vào nhóm, idempotent theo actionId', async () => {
+    await paired(); await svc.preferences(clubId, { enabled: true }); fetchMock.mockClear();
+    await svc.notifyAction(clubId, 'act-1', 'Buổi ít người đăng ký', 'Đăng ký sớm nhé');
+    await svc.notifyAction(clubId, 'act-1', 'Buổi ít người đăng ký', 'Đăng ký sớm nhé');
+    expect([...rows.keys()].filter(k => k.startsWith('zalo_job_'))).toHaveLength(1);
+    await svc.flush(); expect(fetchMock).toHaveBeenCalledTimes(1);
+    await svc.notifyAction(clubId, 'act-2', 'Nhắc khác', 'x');
+    expect([...rows.keys()].filter(k => k.startsWith('zalo_job_'))).toHaveLength(2);
+  });
+  it('không đăng AI Action khi tắt gửi tự động vào nhóm', async () => {
+    await paired(); await svc.preferences(clubId, { enabled: false });
+    await svc.notifyAction(clubId, 'act-1', 'T', 'B');
+    expect([...rows.keys()].filter(k => k.startsWith('zalo_job_'))).toHaveLength(0);
+  });
   it('drops queued messages when group is replaced or automatic delivery disabled', async () => {
     await paired(); await svc.preferences(clubId, { enabled: true });
     await svc.notify({ clubId, eventType:'event_reminder', title:'Lịch', body:'19:30' });

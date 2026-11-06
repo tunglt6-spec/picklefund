@@ -248,6 +248,16 @@ export class ZaloService {
     const club = await this.prisma.club.findUnique({ where: { id: event.clubId }, select: { name: true } });
     await this.enqueue(event.clubId, c, `${club?.name ?? 'CLB'} — ${event.title}\n${event.body}`, `event:${hash(`${event.eventType}:${event.title}:${event.body}`)}:${Math.floor(Date.now()/120000)}`);
   }
+  /**
+   * Thông báo từ AI Action ĐÃ DUYỆT (Mít Đặc) → nhóm Zalo. Idempotent theo `actionId`
+   * (duyệt/chạy lại cùng action không gửi trùng). Chỉ nhận nội dung trung tính, không tên/số tiền cá nhân.
+   */
+  async notifyAction(clubId: string, actionId: string, title: string, body: string) {
+    const c = await this.read(clubId);
+    if (!c?.enabled || !c.announcements) return;
+    const club = await this.prisma.club.findUnique({ where: { id: clubId }, select: { name: true } });
+    await this.enqueue(clubId, c, `${club?.name ?? 'CLB'} — ${title}\n${body}`, `action:${actionId}`);
+  }
   async report(clubId: string) {
     const club = await this.prisma.club.findUnique({ where: { id: clubId }, select: { name: true, logoUrl: true, settings: true } });
     const period = await this.prisma.fundPeriod.findFirst({ where: { clubId, type: 'chung', status: 'active' }, orderBy: { startDate: 'desc' } });

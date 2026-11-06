@@ -1,5 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Optional } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
+import { ZaloService } from '../zalo/zalo.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationRuntimeService } from '../notification-runtime/notification-runtime.service';
 import type { ActionExecutor, ExecutableAction } from './action-executor';
@@ -43,6 +45,7 @@ export class HermesActionExecutor implements ActionExecutor {
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationRuntimeService,
     private readonly config: ConfigService,
+    @Optional() private readonly moduleRef?: ModuleRef,
   ) {}
 
   execute(action: ExecutableAction): Promise<Record<string, unknown>> {
@@ -118,6 +121,8 @@ export class HermesActionExecutor implements ActionExecutor {
     body: string,
     channels: string[],
     eventType?: string,
+    /** Có giá trị → đăng thêm vào NHÓM Zalo của CLB (nội dung trung tính cho cả nhóm). Bỏ trống = không đăng. */
+    zaloGroupBody?: string,
   ): Promise<Record<string, number>> {
     const counts: Record<string, number> = {};
     for (const channel of channels) {
@@ -168,8 +173,30 @@ export class HermesActionExecutor implements ActionExecutor {
           `[MitDat] Telegram CLB ${clubId} lỗi (bỏ qua): ${err?.message ?? err}`,
         ),
       );
+      // Zalo = kênh CẤP CLB (nhóm thành viên). Chỉ các action hướng tới thành viên truyền zaloGroupBody;
+      // việc nội bộ của quản trị (chứng từ, chốt điểm danh, quỹ âm…) KHÔNG đăng vào nhóm.
+      if (zaloGroupBody) {
+        await this.notifyZaloGroup(clubId, actionId, title, zaloGroupBody);
+      }
     }
     return counts;
+  }
+
+  /** Đăng vào nhóm Zalo qua ZaloService (lấy lười bằng ModuleRef để tránh vòng import module). Best-effort. */
+  private async notifyZaloGroup(
+    clubId: string,
+    actionId: string,
+    title: string,
+    body: string,
+  ): Promise<void> {
+    try {
+      const zalo = this.moduleRef?.get(ZaloService, { strict: false });
+      await zalo?.notifyAction(clubId, actionId, title, body);
+    } catch (err: any) {
+      this.logger.warn(
+        `[MitDat] Zalo CLB ${clubId} lỗi (bỏ qua): ${err?.message ?? err}`,
+      );
+    }
   }
 
   /** Chat Telegram LIÊN KẾT của CLB (khóa-theo-CLB telegram_club_chat_<clubId>=chatId). */
@@ -381,6 +408,7 @@ export class HermesActionExecutor implements ActionExecutor {
       body,
       channels,
       this.categoryEventType(action.actionType),
+      `Thành viên chưa hoàn tất đóng quỹ kỳ "${period.name}" vui lòng đóng sớm trong app nhé.`,
     );
 
     this.logger.log(
@@ -438,6 +466,7 @@ export class HermesActionExecutor implements ActionExecutor {
       body,
       channels,
       this.categoryEventType(action.actionType),
+      body,
     );
 
     this.logger.log(
@@ -481,6 +510,7 @@ export class HermesActionExecutor implements ActionExecutor {
       body,
       channels,
       this.categoryEventType(action.actionType),
+      `Kỳ "${period.name}" đã chốt. Mỗi thành viên xem phiếu thu/quyết toán của mình trong app.`,
     );
 
     this.logger.log(
@@ -592,6 +622,7 @@ export class HermesActionExecutor implements ActionExecutor {
       body,
       channels,
       this.categoryEventType(action.actionType),
+      `Sắp đến hạn đóng quỹ kỳ "${period.name}" (${this.fmtDate(period.endDate)}). Thành viên chưa đóng vui lòng đóng trước hạn nhé.`,
     );
     this.logger.log(
       `PAYMENT_DUE_REMINDER ${action.id}: unpaid=${recipients.length} counts=${this.countsStr(counts)}`,
@@ -689,6 +720,7 @@ export class HermesActionExecutor implements ActionExecutor {
       body,
       channels,
       this.categoryEventType(action.actionType),
+      body,
     );
     this.logger.log(
       `LOW_SESSION_REGISTRATION ${action.id}: notReg=${recipients.length} date=${dateStr} counts=${this.countsStr(counts)}`,
