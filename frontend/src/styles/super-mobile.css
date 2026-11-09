@@ -108,19 +108,26 @@
   }
   [data-super-workspace] .sa-detail-members > div > div:last-child { flex-wrap: wrap; }
   [data-super-workspace] .sa-detail-members .truncate { white-space: normal; overflow-wrap: anywhere; }
+  [data-super-workspace] .sa-settings-sections {
+    display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px;
+  }
+  [data-super-workspace] .sa-settings-sections > * { margin: 0; min-width: 0; }
+  [data-super-workspace] .sa-settings-sections .grid { grid-template-columns: minmax(0, 1fr); }
+  [data-super-workspace] .sa-settings-sections .max-w-md { max-width: none; }
   [data-super-workspace] .sa-settings-sections > div > div { padding: 14px; }
   [data-super-workspace] .sa-settings-sections > .sa-build-info {
-    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px; padding: 14px; border-radius: 14px;
+    display: grid; grid-template-columns: minmax(0, 1fr);
+    gap: 0; padding: 4px 14px; border-radius: 14px;
     background: transparent; border: 1px solid var(--pf-border);
   }
   [data-super-workspace] .sa-settings-sections > .sa-build-info > div {
-    display: flex; flex-direction: column; justify-content: flex-start;
-    gap: 5px; min-width: 0; margin: 0; padding: 0;
-    font-size: 12px; line-height: 18px;
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 16px; min-width: 0; margin: 0; padding: 10px 0;
+    font-size: 13px; line-height: 20px;
   }
+  [data-super-workspace] .sa-build-info > div + div { border-top: 1px solid var(--pf-border); }
   [data-super-workspace] .sa-build-info > div > span:last-child {
-    font-size: 11px; line-height: 18px; white-space: nowrap;
+    font-size: 13px; line-height: 20px; overflow-wrap: anywhere;
     font-variant-numeric: tabular-nums;
   }
   [data-super-workspace] .sa-setting-toggle-row { gap: 12px; }
@@ -162,13 +169,6 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   [data-super-workspace] .pf-phone-toolbar > button { flex-direction: row; gap: 7px; min-height: 44px; }
-  [data-super-workspace] .sa-settings-sections {
-    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px; align-items: start;
-  }
-  [data-super-workspace] .sa-settings-sections > * { margin: 0; min-width: 0; }
-  [data-super-workspace] .sa-bank-fields { grid-template-columns: minmax(0, 1fr); }
-  [data-super-workspace] .sa-settings-sections > :last-child { grid-column: 1 / -1; }
   [data-super-workspace] .sa-payment-pending { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   [data-super-workspace] .sa-payment-pending > li { margin: 0; grid-template-columns: minmax(0, 1fr); }
   [data-super-workspace] .sa-payment-pending > li > div:last-child { margin-top: auto; }
