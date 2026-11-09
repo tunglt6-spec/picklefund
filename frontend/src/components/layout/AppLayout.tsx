@@ -7,6 +7,7 @@ import { DesktopHeader } from './DesktopHeader'
 import { MobileBottomNav, BOTTOM_NAV_HEIGHT } from './MobileBottomNav'
 import { LISA_ROUTES } from './navConfig'
 import { UserGuideModal } from '../help/UserGuideModal'
+import { PwaInstallModal } from '../help/PwaInstallModal'
 import { PushEnableBanner } from '../member/PushEnableBanner'
 import { useApiSync } from '../../hooks/useApiSync'
 import { useMinigameSync } from '../../hooks/useMinigameSync'
@@ -113,6 +114,8 @@ export function AppLayout() {
 
       {/* Tài liệu Hướng dẫn — render 1 lần, điều khiển qua guideStore (nút header + auto-open) */}
       <UserGuideModal open={guideOpen} onClose={closeGuide} />
+      {/* Hướng dẫn cài app ra màn hình chính (PWA) — điều khiển qua pwaInstallStore */}
+      <PwaInstallModal />
     </div>
     </MobileIconThemeContext.Provider>
     </MobileIconContext.Provider>

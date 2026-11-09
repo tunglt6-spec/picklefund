@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react'
-import { LogOut, User, LayoutGrid, BookOpen, Moon, Sun } from '../icons/mobileLucide'
+import { LogOut, User, LayoutGrid, BookOpen, Moon, Sun, Download } from '../icons/mobileLucide'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useGuideStore } from '../../store/guideStore'
+import { usePwaInstallStore } from '../../store/pwaInstallStore'
 import { useThemeStore } from '../../store/themeStore'
 import { APPS_ROUTE } from './navConfig'
 
@@ -27,6 +28,8 @@ export function AvatarMenu({ size = 44, rounded = 'rounded-xl', background = 'va
   const navigate = useNavigate()
   const openGuide = useGuideStore((s) => s.openGuide)
   const { theme, setTheme } = useThemeStore()
+  const pwaInstalled = usePwaInstallStore((s) => s.installed)
+  const openInstall = usePwaInstallStore((s) => s.openInstall)
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const btnRef = useRef<HTMLButtonElement>(null)
@@ -100,6 +103,12 @@ export function AvatarMenu({ size = 44, rounded = 'rounded-xl', background = 'va
                 <BookOpen size={16} className="[color:var(--pf-primary-text)]" />
                 Hướng dẫn sử dụng
               </button>
+              {!pwaInstalled && (
+                <button onClick={() => { setOpen(false); openInstall() }} className={`${ITEM} [color:var(--pf-text)]`}>
+                  <Download size={16} className="[color:var(--pf-primary-text)]" />
+                  Cài đặt PWA
+                </button>
+              )}
               <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className={`${ITEM} [color:var(--pf-text)]`}>
                 {theme === 'dark'
                   ? <Sun size={16} className="[color:var(--pf-primary-text)]" />

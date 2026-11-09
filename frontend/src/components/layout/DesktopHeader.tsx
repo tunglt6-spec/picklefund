@@ -4,12 +4,13 @@
  * AppLayout để MỌI màn đều có, đồng nhất. Ẩn trên mobile (đã có MobileHeader).
  */
 import { useState, useRef, useEffect } from 'react'
-import { Search, Bell, Maximize2, Minimize2, LogOut, User, ChevronDown, Zap, BookOpen } from '../icons/mobileLucide'
+import { Search, Bell, Maximize2, Minimize2, LogOut, User, ChevronDown, Zap, BookOpen, Download } from '../icons/mobileLucide'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../../store/authStore'
 import { useClubDataStore } from '../../store/clubDataStore'
 import { useNotifStore } from '../../store/notifStore'
 import { useGuideStore } from '../../store/guideStore'
+import { usePwaInstallStore } from '../../store/pwaInstallStore'
 import { cn } from '../../lib/utils'
 import { ThemeToggle } from '../shared/ThemeToggle'
 
@@ -42,6 +43,8 @@ export function DesktopHeader() {
   const [open, setOpen] = useState(false)
   const [isFull, setIsFull] = useState(false)
   const openGuide = useGuideStore((s) => s.openGuide)
+  const pwaInstalled = usePwaInstallStore((s) => s.installed)
+  const openInstall = usePwaInstallStore((s) => s.openInstall)
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -83,6 +86,17 @@ export function DesktopHeader() {
       >
         <BookOpen size={15} /> <span className="hidden lg:inline">Hướng dẫn</span>
       </button>
+      {/* Cài đặt PWA — khách mới cài PickleFund ra màn hình chính điện thoại; ẩn khi app đã chạy dạng đã cài */}
+      {!pwaInstalled && (
+        <button
+          onClick={openInstall}
+          className="mr-1 flex h-9 [@media(pointer:coarse)]:h-11 items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-white transition-transform active:scale-95"
+          style={{ background: 'var(--pf-grad-brand)', boxShadow: '0 6px 16px -8px rgba(109,93,251,0.7)' }}
+          title="Cài đặt PWA ra màn hình chính" aria-label="Cài đặt PWA ra màn hình chính"
+        >
+          <Download size={15} /> <span className="hidden lg:inline">Cài đặt PWA</span>
+        </button>
+      )}
       {user.role === 'CLUB_ADMIN' && (
         <button
           onClick={() => navigate('/he-thong?tab=billing')}
