@@ -168,7 +168,7 @@ export function SuperClubDetail() {
   }
 
   const tabBar = (
-    <div className="flex gap-1 border-b border-[color:var(--pf-border)] mb-4">
+    <div className="sa-detail-tabs flex gap-1 border-b border-[color:var(--pf-border)] mb-4">
       {([
         { key: 'members', label: 'Thành viên', icon: <Users size={14} /> },
         { key: 'billing', label: 'Gói dịch vụ', icon: <CreditCard size={14} /> },
@@ -176,6 +176,7 @@ export function SuperClubDetail() {
         <button
           key={t.key}
           onClick={() => setTab(t.key)}
+          aria-pressed={tab === t.key}
           className={`flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${
             tab === t.key
               ? '[border-color:var(--pf-primary)] [color:var(--pf-primary-text)]'
@@ -193,7 +194,7 @@ export function SuperClubDetail() {
       {members.length === 0 ? (
         <div className="text-center py-8 [color:var(--pf-color-muted)] text-sm">Chưa có thành viên</div>
       ) : (
-        <div className="space-y-2">
+        <div className="sa-detail-members space-y-2">
           {members.map(m => (
             <div key={m.id} className="flex items-center justify-between gap-3 py-2 border-b border-[color:var(--pf-border)] last:border-0">
               <div className="min-w-0 flex-1">
@@ -363,7 +364,7 @@ export function SuperClubDetail() {
 
   if (isMobile) {
     return (
-      <div className="min-h-dvh [background:var(--pf-bg)]">
+      <div className="sa-club-detail min-h-dvh [background:var(--pf-bg)]">
         <MobileFunctionHeader title={club.name} parent={`Quản lý CLB · ${club.code}`} module="system" onBack={() => navigate('/super/clubs')} right={
           <StatusBadge tone={club.status === 'active' ? 'success' : 'warning'} dot>
             {club.status === 'active' ? 'Hoạt động' : 'Bị khóa'}

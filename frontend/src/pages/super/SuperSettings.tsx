@@ -266,7 +266,7 @@ export function SuperSettings() {
         }
       />
 
-      <div className="space-y-5">
+      <div className="sa-settings-sections space-y-5">
         <Section icon={<Globe size={14} className="[color:var(--pf-primary-text)]" />} title="Thông tin hệ thống">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <S id="siteName" label="Tên nền tảng" value={settings.siteName} onChange={v => setSettings(p => ({ ...p, siteName: v }))} />
@@ -324,7 +324,7 @@ export function SuperSettings() {
                 <option value="QUARTER">Chỉ mỗi quý</option>
               </select>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="sa-bank-fields grid grid-cols-1 sm:grid-cols-3 gap-4">
               <S id="bankCode" label="Mã ngân hàng nhận" value={settings.bankCode} onChange={v => setSettings(p => ({ ...p, bankCode: v }))} placeholder="VD: TPB, VCB, MB" />
               <S id="bankAcc" label="Số tài khoản" value={settings.bankAccount} onChange={v => setSettings(p => ({ ...p, bankAccount: v }))} />
               <S id="bankName" label="Chủ tài khoản" value={settings.bankName} onChange={v => setSettings(p => ({ ...p, bankName: v }))} placeholder="TÊN KHÔNG DẤU" />

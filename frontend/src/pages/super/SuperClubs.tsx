@@ -15,6 +15,7 @@ import { useIsMobile } from '../../hooks/useIsMobile'
 import type { Club, ServicePlan } from '../../types'
 import toast from 'react-hot-toast'
 import { TableCardsWrap } from '../../components/shared/TableCardsWrap'
+import { ActionMenu } from '../../components/shared/ActionMenu'
 
 const PLAN_LABEL: Record<ServicePlan, string> = {
   STARTER: 'Starter',
@@ -72,6 +73,7 @@ export function SuperClubs() {
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [payClub, setPayClub] = useState<Club | null>(null)
+  const [planClub, setPlanClub] = useState<Club | null>(null)
   const [form, setForm] = useState({
     name: '', code: '', address: '', contactEmail: '', contactPhone: '',
     adminUsername: '', adminEmail: '', adminPassword: '',
@@ -238,7 +240,7 @@ export function SuperClubs() {
     <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Tạo CLB mới" size="lg">
       <form onSubmit={handleCreate} className="space-y-5">
         <div className="grid grid-cols-2 gap-4 max-[480px]:grid-cols-1">
-          <div className="col-span-2">
+          <div className="col-span-2 max-[480px]:col-span-1">
             <label htmlFor="sc-name" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên CLB *</label>
             <input id="sc-name" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className={inputCls} />
           </div>
@@ -251,11 +253,11 @@ export function SuperClubs() {
             <label htmlFor="sc-phone" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Điện thoại</label>
             <input id="sc-phone" value={form.contactPhone} onChange={e => setForm({ ...form, contactPhone: e.target.value })} className={inputCls} />
           </div>
-          <div className="col-span-2">
+          <div className="col-span-2 max-[480px]:col-span-1">
             <label htmlFor="sc-email" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Email liên hệ</label>
             <input id="sc-email" type="email" value={form.contactEmail} onChange={e => setForm({ ...form, contactEmail: e.target.value })} className={inputCls} />
           </div>
-          <div className="col-span-2">
+          <div className="col-span-2 max-[480px]:col-span-1">
             <label htmlFor="sc-address" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Địa chỉ sân</label>
             <input id="sc-address" value={form.address} onChange={e => setForm({ ...form, address: e.target.value })} className={inputCls} />
           </div>
@@ -278,7 +280,7 @@ export function SuperClubs() {
                 onChange={e => setForm({ ...form, adminPassword: e.target.value })}
                 placeholder="Tối thiểu 6 ký tự" className={inputCls} />
             </div>
-            <div className="col-span-2">
+            <div className="col-span-2 max-[480px]:col-span-1">
               <label htmlFor="sc-admin-email" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Email cá nhân admin *</label>
               <input id="sc-admin-email" required type="email" value={form.adminEmail}
                 onChange={e => setForm({ ...form, adminEmail: e.target.value.trim() })}
@@ -299,7 +301,7 @@ export function SuperClubs() {
     <Modal open={!!editClub} onClose={() => setEditClub(null)} title={`Sửa: ${editClub?.name ?? ''}`} size="lg">
       <form onSubmit={handleEdit} className="space-y-5">
         <div className="grid grid-cols-2 gap-4 max-[480px]:grid-cols-1">
-          <div className="col-span-2">
+          <div className="col-span-2 max-[480px]:col-span-1">
             <label htmlFor="f-SuperClubs-1" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Tên CLB *</label>
             <input id="f-SuperClubs-1" required value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} className={inputCls} />
           </div>
@@ -311,7 +313,7 @@ export function SuperClubs() {
             <label htmlFor="f-SuperClubs-3" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Email liên hệ</label>
             <input id="f-SuperClubs-3" type="email" value={editForm.contactEmail} onChange={e => setEditForm({ ...editForm, contactEmail: e.target.value })} className={inputCls} />
           </div>
-          <div className="col-span-2">
+          <div className="col-span-2 max-[480px]:col-span-1">
             <label htmlFor="f-SuperClubs-4" className="block text-sm font-medium [color:var(--pf-text)] mb-1.5">Địa chỉ sân</label>
             <input id="f-SuperClubs-4" value={editForm.address} onChange={e => setEditForm({ ...editForm, address: e.target.value })} className={inputCls} />
           </div>
@@ -474,63 +476,51 @@ export function SuperClubs() {
 
   if (isMobile) {
     return (
-      <div className="min-h-dvh [background:var(--pf-bg)]">
+      <div className="sa-clubs-page min-h-dvh [background:var(--pf-bg)]">
         <MobileFunctionHeader title="Quản lý CLB" parent="Hệ thống" module="system" onBack={() => navigate('/ung-dung')} />
-        <div className="px-4 pt-4"><PhoneToolbar label="Công cụ câu lạc bộ" tools={[
+        <div className="sa-club-tools px-4 pt-4"><PhoneToolbar label="Công cụ câu lạc bộ" tools={[
           {key:'search',label:'Tìm',icon:<Search />,active:!!search,content:<HubSearch value={search} onChange={setSearch} placeholder="Tìm câu lạc bộ…" ariaLabel="Tìm câu lạc bộ" />},
           {key:'export',label:'Xuất',icon:<FileDown />,disabled:filtered.length===0,content:exportButtons},
           {key:'create',label:'Tạo CLB',icon:<Plus />,primary:true,onClick:()=>setShowCreate(true)},
-          {key:'onboarding',label:'Onboarding',icon:<Building2 />,onClick:()=>navigate('/onboarding')},
+          {key:'onboarding',label:'Thiết lập',icon:<Building2 />,onClick:()=>navigate('/onboarding')},
         ]} fallback={null} /></div>
         <div className="px-4 pt-3">{kpiRow}</div>
-        <div className="px-4 py-4 grid grid-cols-1 min-[600px]:grid-cols-2 gap-3">
+        <div className="sa-club-grid px-4 py-4 grid grid-cols-1 min-[600px]:grid-cols-2 gap-3">
           {clubsError && clubs.length === 0 && <ErrorState onRetry={loadClubs} />}
           {filtered.length === 0 && !clubsError && (
             <div className="text-center py-12 [color:var(--pf-color-muted)] text-sm">Không tìm thấy CLB nào</div>
           )}
           {filtered.map(club => (
-            <div
+            <article
               key={club.id}
-              className="pf-rowcard p-4"
-              onClick={() => navigate(`/super/clubs/${club.id}`)}
+              className="pf-rowcard sa-club-card p-4"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold [color:var(--pf-text)] break-words">{club.name}</div>
+                  <button className="sa-club-title font-semibold [color:var(--pf-text)] break-words" onClick={() => navigate(`/super/clubs/${club.id}`)}>{club.name}</button>
                   <div className="break-all text-xs [color:var(--pf-color-muted)] mt-0.5">{club.code}{club.contactEmail ? ` · ${club.contactEmail}` : ''}</div>
                 </div>
                 <StatusBadge tone={club.status === 'active' ? 'success' : 'warning'} dot>
                   {club.status === 'active' ? 'Hoạt động' : 'Bị khóa'}
                 </StatusBadge>
               </div>
-              <div className="flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-[color:var(--pf-border)]">
+              <div className="sa-club-meta flex flex-wrap items-center gap-2 mt-3 pt-3 border-t border-[color:var(--pf-border)]">
                 <div className="text-xs [color:var(--pf-color-muted)]"><span className="font-semibold [color:var(--pf-text)]">{club._count?.members ?? 0}</span> TV</div>
                 <div className="text-xs [color:var(--pf-color-muted)]"><span className="font-semibold [color:var(--pf-text)]">{club._count?.fundPeriods ?? 0}</span> kỳ</div>
-                <PlanSelect club={club} onClick={e => e.stopPropagation()} onChange={(p) => setPendingAction({ club, kind: 'plan', nextPlan: p })} />
-                <div className="flex items-center gap-2 ml-auto">
-                  <button onClick={e => { e.stopPropagation(); setPayClub(club) }} aria-label="Gia hạn gói" className="p-2 rounded-lg [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)]">
-                    <CreditCard size={14} />
-                  </button>
-                  <button onClick={e => { e.stopPropagation(); openEdit(club) }} aria-label="Sửa CLB" className="p-2 rounded-lg [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)]">
-                    <Pencil size={14} />
-                  </button>
-                  <button onClick={e => { e.stopPropagation(); openRoles(club) }} aria-label="Phân quyền CLB" className="p-2 rounded-lg [color:var(--pf-primary-text)] [background:var(--pf-primary-soft)]">
-                    <ShieldCheck size={14} />
-                  </button>
-                  <button
-                    onClick={e => { e.stopPropagation(); setPendingAction({ club, kind: 'status' }) }}
-                    aria-label={club.status === 'active' ? 'Tạm khóa CLB' : 'Mở khóa CLB'}
-                    className="p-2 rounded-lg"
-                    style={{ background: club.status === 'active' ? 'var(--pf-color-warning-soft)' : 'var(--pf-color-success-soft)', color: club.status === 'active' ? 'var(--pf-color-warning)' : 'var(--pf-color-success)' }}
-                  >
-                    {club.status === 'active' ? <Lock size={14} /> : <Unlock size={14} />}
-                  </button>
-                  <button onClick={e => { e.stopPropagation(); setDeleteClub(club) }} aria-label="Xóa CLB" className="p-2 rounded-lg" style={{ background: 'var(--pf-color-danger-soft)', color: 'var(--pf-color-danger)' }}>
-                    <Trash2 size={14} />
-                  </button>
-                </div>
+                <span className="sa-club-plan">{PLAN_LABEL[club.plan ?? 'STARTER']}</span>
               </div>
-            </div>
+              <div className="sa-club-actions">
+                <button className="sa-club-open" onClick={() => navigate(`/super/clubs/${club.id}`)}><Eye size={16} />Chi tiết</button>
+                <ActionMenu label={`Quản lý ${club.name}`} iconOnly items={[
+                  { key: 'payment', label: 'Gia hạn / ghi nhận thanh toán', icon: <CreditCard size={17} />, onClick: () => setPayClub(club) },
+                  { key: 'edit', label: 'Sửa thông tin CLB', icon: <Pencil size={17} />, onClick: () => openEdit(club) },
+                  { key: 'plan', label: 'Đổi gói dịch vụ', icon: <Wallet size={17} />, onClick: () => setPlanClub(club) },
+                  { key: 'roles', label: 'Phân quyền tài khoản', icon: <ShieldCheck size={17} />, onClick: () => openRoles(club) },
+                  { key: 'status', label: club.status === 'active' ? 'Tạm khóa CLB' : 'Mở khóa CLB', icon: club.status === 'active' ? <Lock size={17} /> : <Unlock size={17} />, onClick: () => setPendingAction({ club, kind: 'status' }) },
+                  { key: 'delete', label: 'Xóa CLB', icon: <Trash2 size={17} />, danger: true, onClick: () => setDeleteClub(club) },
+                ]} />
+              </div>
+            </article>
           ))}
         </div>
         {createModal}
@@ -539,6 +529,11 @@ export function SuperClubs() {
         {rolesModal}
         {actionConfirmModal}
         {payModal}
+        <Modal open={!!planClub} onClose={() => setPlanClub(null)} title={`Gói dịch vụ · ${planClub?.name ?? ''}`} size="sm">
+          {planClub && <label className="grid gap-3 text-sm">Chọn gói dịch vụ
+            <PlanSelect club={planClub} onChange={p => { setPlanClub(null); setPendingAction({ club: planClub, kind: 'plan', nextPlan: p }) }} />
+          </label>}
+        </Modal>
       </div>
     )
   }

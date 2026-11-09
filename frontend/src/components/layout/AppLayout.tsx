@@ -95,7 +95,8 @@ export function AppLayout() {
             <PushEnableBanner />
             {/* Page transition (Elite): keyed theo pathname → replay hiệu ứng vào mỗi lần
                 đổi route. Đổi ?tab= KHÔNG replay (chỉ đổi search) — tránh nháy khi chuyển tab. */}
-            <div key={location.pathname} className="pf-page" data-workspace={workspace} data-mod={workspace}>
+            <div key={location.pathname} className="pf-page" data-workspace={workspace} data-mod={workspace}
+              data-super-workspace={user?.role === 'SUPER_ADMIN' ? '' : undefined}>
               {/* Suspense NGAY TRONG khung app: khi chunk của màn con đang tải, header + thanh đáy vẫn hiện (không nháy cả màn). */}
               <Suspense fallback={<div className="flex min-h-[40vh] items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-2 border-[color:var(--pf-border)] border-t-[color:var(--pf-primary-text)]" /></div>}>
                 <Outlet />

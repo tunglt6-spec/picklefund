@@ -145,7 +145,7 @@ export function SuperPayments() {
       {pending.length > 0 && (
         <div className="pf-glass mb-4 rounded-[16px] p-4">
           <p className="mb-3 flex items-center gap-2 text-sm font-semibold [color:var(--pf-text)]"><Clock size={16} className="[color:var(--pf-color-warning)]" />Chờ xác nhận ({pending.length}) — CLB báo đã chuyển khoản</p>
-          <ul className="space-y-2">
+          <ul className="sa-payment-pending space-y-2">
             {pending.map((r) => (
               <li key={r.orderCode} className="grid grid-cols-1 items-center gap-3 rounded-xl border px-4 py-3 [border-color:var(--pf-border)] [background:var(--pf-surface)] md:grid-cols-[minmax(0,1fr)_210px_220px]">
                 <div className="min-w-0">
@@ -191,11 +191,20 @@ export function SuperPayments() {
       </div>
       } />
 
-      <div className="pf-glass rounded-[16px] p-2">
+      <div className="sa-record-list pf-glass rounded-[16px] p-2">
         {loading ? <LoadingState variant="table" rows={6} />
           : error ? <ErrorState onRetry={load} />
           : filtered.length === 0 ? <EmptyState icon={<Receipt size={24} />} title="Chưa có thanh toán" description="Bấm “Ghi nhận thanh toán” để ghi nhận khoản gia hạn gói của CLB." />
-          : <DataTable mobileCards className="pf-compact-table" columns={columns} rows={filtered} rowKey={(r) => r.orderCode} />}
+          : <DataTable mobileCards className="pf-compact-table" columns={columns} rows={filtered} rowKey={(r) => r.orderCode}
+              mobileCardContent={r => <>
+                <div className="sa-person-header">
+                  <div className="min-w-0"><p className="text-sm font-semibold break-words">{r.club.name}</p><p className="sa-record-meta">{r.paidAt ? new Date(r.paidAt).toLocaleDateString('vi-VN') : 'Chưa có ngày thu'} · {r.club.code}</p></div>
+                  {columns.find(c => c.key === 'act')?.render?.(r, 0)}
+                </div>
+                <p className="sa-payment-amount">{formatVND(r.amount)}</p>
+                <div className="sa-record-tags"><StatusBadge tone="info">{PLAN[r.planTier] ?? r.planTier} · {r.months ? `${r.months} tháng` : r.billingCycle === 'YEARLY' ? 'Năm' : 'Tháng'}</StatusBadge><span className="sa-record-meta">{channel(r)}</span></div>
+                <details className="sa-record-reference"><summary>Mã giao dịch & ghi chú</summary><p>{r.orderCode}</p>{r.reference && <p>{r.reference}</p>}{r.note && <p>{r.note}</p>}</details>
+              </>} />}
       </div>
 
       <RecordPlanPaymentModal open={open} onClose={() => setOpen(false)} clubs={clubs} onDone={load} />

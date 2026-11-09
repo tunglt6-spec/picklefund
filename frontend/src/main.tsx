@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
+import './styles/super-mobile.css'
 import App from './App.tsx'
 import { PwaReloadPrompt } from './components/PwaReloadPrompt'
 import { useThemeStore } from './store/themeStore'

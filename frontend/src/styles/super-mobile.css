@@ -1,0 +1,146 @@
+/* Super Admin mobile density. Scoped to the account workspace so club/member
+   screens and desktop retain their existing layout and business controls. */
+@media screen and (max-width: 1023.98px) {
+  [data-super-workspace] .pf-workspace-content { padding: 16px; }
+  [data-super-workspace] .pf-mobile-function-head > div { max-width: none; }
+  [data-super-workspace] .pf-mobile-function-head { margin-bottom: 16px; }
+  [data-super-workspace] .pf-phone-toolbar { gap: 8px; margin-bottom: 16px; }
+  [data-super-workspace] header .pf-phone-toolbar { margin-bottom: 0; }
+  [data-super-workspace] :is(.sa-clubs-page, .sa-club-detail) > .pf-mobile-function-head { margin-bottom: 0; }
+  [data-super-workspace] .sa-club-tools .pf-phone-toolbar { margin-bottom: 0; }
+  [data-super-workspace] .pf-phone-toolbar > button { min-height: 48px; border-radius: 12px; }
+
+  [data-super-workspace] .pf-kpi-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
+  }
+  [data-super-workspace] .pf-kpi-row .pf-stat-card {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto;
+    align-content: start; align-items: start; gap: 4px 8px;
+    min-height: 82px; padding: 12px; border-radius: 16px;
+  }
+  [data-super-workspace] .pf-kpi-row .pf-metric-label {
+    grid-area: 1 / 1; align-self: center; font-size: 12px;
+    line-height: 16px; letter-spacing: 0; text-transform: none;
+  }
+  [data-super-workspace] .pf-kpi-row .pf-metric-icon {
+    display: flex; grid-area: 1 / 2; width: 24px; height: 24px;
+    border-radius: 8px; margin: 0;
+  }
+  [data-super-workspace] .pf-kpi-row .pf-metric-body {
+    grid-area: 2 / 1 / auto / -1; min-height: 0;
+  }
+  [data-super-workspace] .pf-kpi-row .pf-metric-body > p {
+    font-size: clamp(18px, 6.8cqw, 23px); font-weight: 700; line-height: 1.2;
+  }
+  [data-super-workspace] .pf-kpi-row .pf-metric-body > div:empty { display: none; }
+  [data-super-workspace] .pf-kpi-row .pf-metric-body > div * {
+    font-size: 12px; line-height: 16px; letter-spacing: 0;
+  }
+
+  [data-super-workspace] .sa-club-grid { padding-top: 16px; gap: 12px; }
+  [data-super-workspace] .sa-club-card {
+    display: flex; flex-direction: column; min-width: 0; padding: 14px;
+  }
+  [data-super-workspace] .sa-club-title {
+    display: block; min-height: 32px; text-align: left; font-size: 15px;
+    line-height: 20px; padding: 0; margin: -4px 0 0;
+  }
+  [data-super-workspace] .sa-club-title:focus-visible,
+  [data-super-workspace] .sa-club-open:focus-visible {
+    outline: 3px solid var(--pf-focus-ring); outline-offset: 3px; border-radius: 8px;
+  }
+  [data-super-workspace] .sa-club-meta { margin-top: 10px; padding-top: 10px; gap: 12px; }
+  [data-super-workspace] .sa-club-plan {
+    margin-left: auto; font-size: 12px; font-weight: 600;
+    color: var(--pf-primary-text); background: var(--pf-primary-soft);
+    padding: 3px 8px; border-radius: 6px;
+  }
+  [data-super-workspace] .sa-club-actions {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; padding-top: 8px; margin-top: auto;
+  }
+  [data-super-workspace] .sa-club-open {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 6px; min-height: 44px; padding: 0 10px;
+    border-radius: 10px; color: var(--pf-primary-text); font-size: 13px; font-weight: 600;
+  }
+  [data-super-workspace] .sa-club-actions > div > button { border-radius: 10px; }
+  [data-super-workspace] .sa-club-open:active { background: var(--pf-primary-soft); }
+
+  /* The records themselves provide the surface; no redundant outer card. */
+  :root [data-app-shell] [data-super-workspace] .sa-record-list {
+    background: transparent !important; border: 0; box-shadow: none;
+    padding: 0; backdrop-filter: none; -webkit-backdrop-filter: none;
+  }
+  [data-super-workspace] .sa-record-list .pf-cardlist { padding: 0; gap: 12px; }
+  [data-super-workspace] .sa-record-list .pf-rowcard { padding: 14px; min-width: 0; }
+  [data-super-workspace] .sa-record-list .pf-rowcard dl { margin-top: 8px; }
+  [data-super-workspace] .sa-record-list .pf-rowcard dl > div { gap: 8px; padding-block: 4px; }
+  [data-super-workspace] .sa-record-list .pf-rowcard dd { overflow-wrap: anywhere; font-size: 13px; }
+  [data-super-workspace] .sa-record-list .pf-rowcard button { min-width: 44px; min-height: 44px; }
+  [data-super-workspace] .sa-person-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  [data-super-workspace] .sa-person-header > button { flex-shrink: 0; margin-top: -6px; margin-right: -6px; }
+  [data-super-workspace] .sa-record-tags { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-block: 8px; }
+  [data-super-workspace] .sa-record-meta { font-size: 12px; line-height: 18px; color: var(--pf-color-muted); }
+  [data-super-workspace] .sa-payment-amount { margin-top: 8px; font-size: 20px; line-height: 1.3; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--pf-tone-success); }
+  [data-super-workspace] .sa-record-reference { margin-top: 10px; border-top: 1px solid var(--pf-border-soft); padding-top: 4px; font-size: 12px; line-height: 18px; color: var(--pf-color-muted); }
+  [data-super-workspace] .sa-record-reference summary { cursor: pointer; min-height: 36px; align-content: center; color: var(--pf-primary-text); font-weight: 600; }
+  [data-super-workspace] .sa-record-reference p { overflow-wrap: anywhere; margin-block: 4px; }
+  [data-super-workspace] .sa-audit-list .pf-cardlist { padding: 12px; gap: 12px; }
+  [data-super-workspace] .sa-audit-list .pf-rowcard { min-width: 0; padding: 12px; }
+  [data-super-workspace] .sa-audit-list dd { overflow-wrap: anywhere; }
+  [data-super-workspace] .pf-workspace-content > .pf-mobile-function-head + p { margin-top: -4px; }
+
+  [data-super-workspace] .sa-detail-tabs {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px; padding: 4px; border: 1px solid var(--pf-border);
+    border-radius: 12px; background: var(--pf-surface-muted);
+  }
+  [data-super-workspace] .sa-detail-tabs > button {
+    justify-content: center; min-height: 44px; border: 0; padding: 8px;
+    border-radius: 9px; font-size: 13px;
+  }
+  [data-super-workspace] .sa-detail-tabs > button[aria-pressed='true'] {
+    background: var(--pf-surface); box-shadow: 0 1px 4px #17386A14;
+  }
+  [data-super-workspace] .sa-detail-members > div {
+    min-width: 0; align-items: flex-start; flex-wrap: wrap; gap: 8px; padding-block: 12px;
+  }
+  [data-super-workspace] .sa-detail-members > div > div:last-child { flex-wrap: wrap; }
+  [data-super-workspace] .sa-detail-members .truncate { white-space: normal; overflow-wrap: anywhere; }
+  [data-super-workspace] .sa-settings-sections > div > div { padding: 14px; }
+  [data-super-workspace] [data-sa-look] section { margin-top: 20px; }
+  [data-super-workspace] [data-sa-look] section > div:first-child { flex-wrap: wrap; gap: 6px; }
+  [data-super-workspace] [data-sa-look] section > div:first-child > span:last-child { overflow-wrap: anywhere; }
+  [data-super-workspace] [data-sa-look] .pf-stat-card { padding: 12px; border-radius: 16px; }
+  [data-super-workspace] [data-sa-look] .pf-stat-card > p.mt-auto { margin-top: 6px; font-size: 19px; }
+  [data-super-workspace] [data-sa-look] .pf-stat-card > p.mt-0\.5 { font-size: 12px; line-height: 16px; }
+  [data-super-workspace] .sa-kpi-label { font-size: 12px !important; line-height: 16px !important; letter-spacing: 0 !important; text-transform: none !important; }
+  [data-super-workspace] .sa-overview-kpis[data-expanded='false'] > :nth-child(n+7) { display: none; }
+  [data-super-workspace] .sa-more-kpis { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 44px; margin-top: 10px; font-size: 13px; font-weight: 600; color: var(--pf-primary-text); border: 1px solid var(--pf-border); border-radius: 12px; background: var(--pf-surface); }
+  [data-super-workspace] [data-sa-look] section.pf-glass { padding: 14px; }
+  [data-super-workspace] [data-sa-look] section.pf-glass > header { flex-wrap: wrap; gap: 10px; }
+  [data-super-workspace] .sa-agent-card .sa-agent-grid { gap: 6px; }
+  [data-super-workspace] .sa-agent-card .sa-agent-grid > div { padding: 8px; }
+}
+
+@media screen and (min-width: 600px) and (max-width: 1023.98px) {
+  [data-super-workspace] .pf-kpi-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  /* Four metrics stay two by two rather than producing a single orphan. */
+  [data-super-workspace] .pf-kpi-row:has(> :nth-child(4):last-child) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  [data-super-workspace] .pf-phone-toolbar > button { flex-direction: row; gap: 7px; min-height: 44px; }
+  [data-super-workspace] .sa-settings-sections {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px; align-items: start;
+  }
+  [data-super-workspace] .sa-settings-sections > * { margin: 0; min-width: 0; }
+  [data-super-workspace] .sa-bank-fields { grid-template-columns: minmax(0, 1fr); }
+  [data-super-workspace] .sa-settings-sections > :last-child { grid-column: 1 / -1; }
+  [data-super-workspace] .sa-payment-pending { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  [data-super-workspace] .sa-payment-pending > li { margin: 0; grid-template-columns: minmax(0, 1fr); }
+  [data-super-workspace] .sa-payment-pending > li > div:last-child { margin-top: auto; }
+  [data-super-workspace] .sa-detail-members { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+  [data-super-workspace] .sa-detail-members > div { margin: 0; flex-direction: column; }
+}

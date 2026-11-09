@@ -167,7 +167,7 @@ export function AuditLogs() {
       </div>
       } />
 
-      <ChartCard title="Timeline" subtitle={`${rows.length} sự kiện`} className="pf-compact-card" bodyClassName="!p-0">
+      <ChartCard title="Nhật ký gần đây" subtitle={`${rows.length} sự kiện`} className="sa-audit-list pf-compact-card" bodyClassName="!p-0">
         {loading ? (
           <LoadingState variant="table" rows={8} />
         ) : loadError ? (

@@ -164,7 +164,7 @@ export function SuperUsers() {
       </div>
       } />
 
-      <div className="pf-glass rounded-[16px] p-2">
+      <div className="sa-record-list pf-glass rounded-[16px] p-2">
         {loading ? (
           <LoadingState variant="table" rows={6} />
         ) : loadError ? (
@@ -173,7 +173,16 @@ export function SuperUsers() {
           <EmptyState icon={<Users size={24} />} title="Không có tài khoản" description="Không tìm thấy tài khoản phù hợp bộ lọc." />
         ) : (
           <>
-            <DataTable mobileCards className="pf-compact-table" columns={columns} rows={users} rowKey={(u) => u.id} />
+            <DataTable mobileCards className="pf-compact-table" columns={columns} rows={users} rowKey={(u) => u.id}
+              mobileCardContent={u => <>
+                <div className="sa-person-header">
+                  <div className="min-w-0"><p className="font-semibold text-sm [color:var(--pf-text)] break-words">{u.fullName}</p><p className="text-xs [color:var(--pf-color-muted)] break-all">@{u.username}</p></div>
+                  {columns.find(c => c.key === 'actions')?.render?.(u, 0)}
+                </div>
+                <div className="sa-record-tags"><StatusBadge tone={roleTone[u.role]}>{roleLabel[u.role]}</StatusBadge><StatusBadge tone={u.isActive ? 'success' : 'neutral'} dot>{u.isActive ? 'Hoạt động' : 'Đã khóa'}</StatusBadge></div>
+                <p className="sa-record-meta">{u.club ?? 'Tài khoản hệ thống'}</p>
+                <p className="sa-record-meta break-all">{u.email || 'Chưa có email'}</p>
+              </>} />
             {total > PAGE_SIZE && (
               <div className="flex items-center justify-between gap-3 px-3 py-2 text-xs [color:var(--pf-color-muted)]">
                 <span>{total.toLocaleString('vi-VN')} tài khoản · trang {page}/{totalPages}</span>

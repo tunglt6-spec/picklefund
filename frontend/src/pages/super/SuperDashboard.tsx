@@ -61,7 +61,7 @@ function Kpi({ label, value, icon, sub, alert, onClick, money }: { label: string
       {...(alert ? { 'data-hi': '' } : {})}
     >
       <div className="mb-1.5 flex items-start justify-between gap-2">
-        <p style={T_LABEL}>{label}</p>
+        <p className="sa-kpi-label" style={T_LABEL}>{label}</p>
         {icon && (
           <span className="pf-metric-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-xl" style={{ '--chip-bg': `color-mix(in srgb, ${accent} 16%, var(--pf-surface))`, '--chip-fg': accent } as React.CSSProperties}>{icon}</span>
         )}
@@ -318,6 +318,7 @@ function ConclusionBlock({ review }: { review: { sections: any; byAi: boolean } 
 }
 
 function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onSelfTest, onRunBackup }: { data: any; audit: any[]; rangeLabel: string; review: { sections: any; byAi: boolean } | null; reviewLoading: boolean; onRunReview: () => void; onSelfTest: () => void; onRunBackup: () => void }) {
+  const [moreKpis, setMoreKpis] = useState(false)
   const k = data.kpi, biz = data.business, ops = data.operations, fin = data.finance, ai = data.ai, infra = data.infra, lb = data.leaderboards
   const [pendOpen, setPendOpen] = useState(false)
   const [pendList, setPendList] = useState<any[] | null>(null)
@@ -343,7 +344,7 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
   return (
     <>
       {/* 12 KPI — 6 cột × 2 hàng */}
-      <div className={`${GRID} grid-cols-2 sm:grid-cols-3 lg:grid-cols-6`}>
+      <div id="sa-overview-kpis" data-expanded={moreKpis} className={`sa-overview-kpis ${GRID} grid-cols-2 sm:grid-cols-3 lg:grid-cols-6`}>
         <Kpi label="Tổng CLB" value={num(k.totalClubs)} icon={<Building2 size={16} />} />
         <Kpi label="CLB hoạt động" value={num(k.activeClubs)} icon={<Activity size={16} />} />
         <Kpi label="CLB bị khóa" value={num(k.suspendedClubs)} icon={<Lock size={16} />} alert={k.suspendedClubs > 0 ? 'warning' : undefined} />
@@ -357,6 +358,9 @@ function Body({ data, audit, rangeLabel, review, reviewLoading, onRunReview, onS
         <Kpi label="Chi phí AI (ước tính)" value={k.aiCost != null ? `$${Number(k.aiCost).toFixed(4)}` : <NoData hint="Chưa có lượt gọi AI trong kỳ" />} icon={<Cpu size={16} />} />
         <Kpi label="Uptime" value={fmtUptime(k.uptimeSeconds)} icon={<Server size={16} />} />
       </div>
+      <button type="button" className="sa-more-kpis lg:hidden" aria-expanded={moreKpis} aria-controls="sa-overview-kpis" onClick={() => setMoreKpis(v => !v)}>
+        {moreKpis ? 'Thu gọn chỉ số' : 'Thêm 6 chỉ số kinh doanh & vận hành'}
+      </button>
 
       {/* AIDO Executive Summary — full-width, ngay dưới 12 KPI */}
       <div className="mt-4">

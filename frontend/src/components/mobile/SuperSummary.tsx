@@ -19,7 +19,8 @@ export function SuperSummary() {
       if (off) return
       if (c.status === 'fulfilled') {
         const d = c.value.data?.data
-        setClubs(Array.isArray(d) ? d.length : Array.isArray(d?.items) ? d.items.length : null)
+        const list = Array.isArray(d) ? d : d?.clubs ?? d?.items
+        setClubs(Array.isArray(list) ? list.length : null)
       }
       if (u.status === 'fulfilled') {
         const d = u.value.data?.data

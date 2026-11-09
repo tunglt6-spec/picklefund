@@ -28,6 +28,8 @@ interface DataTableProps<T> {
   rowClassName?: (row: T, index: number) => string
   /** Dưới 1024px hiển thị dạng THẺ (cột đầu = tiêu đề, cột có header rỗng = nút thao tác) thay vì bảng cuộn ngang. */
   mobileCards?: boolean
+  /** Optional compact mobile body; desktop columns and actions are unchanged. */
+  mobileCardContent?: (row: T, index: number) => ReactNode
 }
 
 export function DataTable<T>({
@@ -39,6 +41,7 @@ export function DataTable<T>({
   emptyText = 'Không có dữ liệu',
   rowClassName,
   mobileCards = false,
+  mobileCardContent,
 }: DataTableProps<T>) {
   const alignCls = (a?: Column<T>['align']) =>
     a === 'right' ? 'text-right' : a === 'center' ? 'text-center' : 'text-left'
@@ -61,7 +64,7 @@ export function DataTable<T>({
             onClick={onRowClick ? () => onRowClick(row) : undefined}
             className={cn('pf-rowcard p-3.5', onRowClick && 'cursor-pointer', rowClassName?.(row, i))}
           >
-            <div className="flex items-start justify-between gap-3">
+            {mobileCardContent ? mobileCardContent(row, i) : <><div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1 text-sm font-semibold [color:var(--pf-text)]">{titleCol ? cell(titleCol, row, i) : null}</div>
               {actionCols.length > 0 && (
                 <div className="flex shrink-0 items-center gap-1" onClick={(e) => e.stopPropagation()}>
@@ -79,6 +82,7 @@ export function DataTable<T>({
                 ))}
               </dl>
             )}
+            </>}
           </li>
         ))
       )}
