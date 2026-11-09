@@ -109,6 +109,23 @@
   [data-super-workspace] .sa-detail-members > div > div:last-child { flex-wrap: wrap; }
   [data-super-workspace] .sa-detail-members .truncate { white-space: normal; overflow-wrap: anywhere; }
   [data-super-workspace] .sa-settings-sections > div > div { padding: 14px; }
+  [data-super-workspace] .sa-setting-toggle-row { gap: 12px; }
+  [data-super-workspace] .sa-setting-toggle-row > div { flex: 1; min-width: 0; }
+  /* A 44px touch target surrounds a 28px track; the global button minimum
+     must not stretch the track into a circle or squeeze it beside long copy. */
+  [data-super-workspace] .sa-setting-switch {
+    flex: 0 0 52px; width: 52px; height: 44px; min-height: 44px;
+    background: transparent !important; border: 0; border-radius: 12px;
+  }
+  [data-super-workspace] .sa-setting-switch::before {
+    content: ''; position: absolute; left: 2px; top: 8px; width: 48px; height: 28px;
+    border-radius: 999px; background: var(--pf-border); transition: background .2s;
+  }
+  [data-super-workspace] .sa-setting-switch[aria-checked='true']::before { background: var(--pf-primary); }
+  [data-super-workspace] .sa-setting-switch > span { top: 12px; left: 6px; width: 20px; height: 20px; }
+  [data-super-workspace] .sa-setting-switch[aria-checked='true'] > span { transform: translateX(20px); }
+  [data-super-workspace] .sa-setting-switch[aria-checked='false'] > span { transform: translateX(0); }
+  [data-super-workspace] .sa-setting-switch:focus-visible { outline: 3px solid var(--pf-focus-ring); outline-offset: 2px; }
   [data-super-workspace] [data-sa-look] section { margin-top: 20px; }
   [data-super-workspace] [data-sa-look] section > div:first-child { flex-wrap: wrap; gap: 6px; }
   [data-super-workspace] [data-sa-look] section > div:first-child > span:last-child { overflow-wrap: anywhere; }

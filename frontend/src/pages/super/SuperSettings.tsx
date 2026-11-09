@@ -104,13 +104,13 @@ const S = ({ id, label, type = 'text', value, onChange, placeholder = '' }: {
 )
 
 const Toggle = ({ label, desc, value, onChange }: { label: string; desc: string; value: boolean; onChange: (v: boolean) => void }) => (
-  <div className="flex items-center justify-between py-3 border-b border-[color:var(--pf-border)] last:border-0">
+  <div className="sa-setting-toggle-row flex items-center justify-between py-3 border-b border-[color:var(--pf-border)] last:border-0">
     <div>
       <p className="text-sm font-medium [color:var(--pf-text)]">{label}</p>
       <p className="text-xs [color:var(--pf-color-muted)]">{desc}</p>
     </div>
     <button onClick={() => onChange(!value)} role="switch" aria-checked={value} aria-label={label}
-      className={`relative w-11 h-6 rounded-full transition-all duration-300 ${value ? '[background:var(--pf-primary)]' : '[background:var(--pf-border)]'}`}>
+      className={`sa-setting-switch relative w-11 h-6 rounded-full transition-all duration-300 ${value ? '[background:var(--pf-primary)]' : '[background:var(--pf-border)]'}`}>
       <span className={`absolute top-0.5 left-0.5 h-5 w-5 [background:var(--pf-surface)] rounded-full shadow-sm transition-transform duration-300 ${value ? 'translate-x-5' : 'translate-x-0'}`} />
     </button>
   </div>
