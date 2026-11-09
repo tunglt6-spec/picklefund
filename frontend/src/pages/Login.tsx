@@ -11,6 +11,8 @@ import api from '../lib/api'
 import toast from 'react-hot-toast'
 import type { User, Role } from '../types'
 import { landingRoute } from '../components/layout/navConfig'
+import { usePwaInstallStore } from '../store/pwaInstallStore'
+import { Download } from '../components/icons/mobileLucide'
 
 /* ─── Constants ─── */
 // P0-1: demo accounts CHỈ hiện ở dev hoặc khi bật tường minh VITE_SHOW_DEMO_ACCOUNTS=true.
@@ -316,6 +318,8 @@ const badgeStyle: Record<string, string> = {
 
 /* ─── Main Login ─── */
 export function Login() {
+  const pwaInstalled = usePwaInstallStore((s) => s.installed)
+  const openInstall = usePwaInstallStore((s) => s.openInstall)
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPwd, setShowPwd] = useState(false)
@@ -482,7 +486,17 @@ export function Login() {
       {/* ═══════════════════════════════════════
           RIGHT PANEL  40%
       ═══════════════════════════════════════ */}
-      <div className="flex-1 lg:w-[40%] flex flex-col items-center justify-center p-4 lg:px-10 lg:py-6 overflow-y-auto">
+      <div className="relative flex-1 lg:w-[40%] flex flex-col items-center justify-center p-4 lg:px-10 lg:py-6 overflow-y-auto">
+
+        {/* Cài đặt PWA — khách mới cài PickleFund ra màn hình chính ngay từ trang đăng nhập (ẩn khi đã cài) */}
+        {!pwaInstalled && (
+          <button type="button" onClick={openInstall}
+            className="absolute right-4 top-4 z-10 flex min-h-[44px] items-center gap-1.5 rounded-xl px-3 text-sm font-semibold text-white transition-transform active:scale-95"
+            style={{ background: 'var(--pf-grad-brand)', boxShadow: '0 6px 16px -8px rgba(109,93,251,0.7)' }}
+            aria-label="Cài đặt PWA ra màn hình chính">
+            <Download size={15} /> Cài đặt PWA
+          </button>
+        )}
 
         {/* Mobile logo (thu gọn để vừa 1 viewport trên điện thoại) */}
         <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
