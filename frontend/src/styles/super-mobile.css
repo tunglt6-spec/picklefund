@@ -122,7 +122,7 @@
     border-radius: 999px; background: var(--pf-border); transition: background .2s;
   }
   [data-super-workspace] .sa-setting-switch[aria-checked='true']::before { background: var(--pf-primary); }
-  [data-super-workspace] .sa-setting-switch > span { top: 12px; left: 6px; width: 20px; height: 20px; }
+  [data-super-workspace] .sa-setting-switch > span { top: 12px; left: 6px; width: 20px; height: 20px; translate: 0; }
   [data-super-workspace] .sa-setting-switch[aria-checked='true'] > span { transform: translateX(20px); }
   [data-super-workspace] .sa-setting-switch[aria-checked='false'] > span { transform: translateX(0); }
   [data-super-workspace] .sa-setting-switch:focus-visible { outline: 3px solid var(--pf-focus-ring); outline-offset: 2px; }
