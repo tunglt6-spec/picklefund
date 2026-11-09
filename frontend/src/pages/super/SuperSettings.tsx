@@ -398,7 +398,7 @@ export function SuperSettings() {
           </div>
         </Section>
 
-        <div className="[background:var(--pf-color-muted-soft)] rounded-xl p-4 text-xs [color:var(--pf-color-muted)] space-y-1">
+        <div className="sa-build-info [background:var(--pf-color-muted-soft)] rounded-xl p-4 text-xs [color:var(--pf-color-muted)] space-y-1" role="group" aria-label="Thông tin phiên bản hệ thống">
           <div className="flex justify-between"><span>Phiên bản</span><span className="font-mono font-semibold [color:var(--pf-text)]">v{__APP_VERSION__}</span></div>
           <div className="flex justify-between"><span>Môi trường</span><span className="font-mono" style={{ color: 'var(--pf-color-success)' }}>{import.meta.env.PROD ? 'production' : 'development'}</span></div>
           <div className="flex justify-between"><span>Build</span><span className="font-mono [color:var(--pf-color-muted)]">{__BUILD_DATE__}</span></div>
