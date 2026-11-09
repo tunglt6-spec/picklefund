@@ -68,7 +68,7 @@
   [data-super-workspace] .sa-club-open:active { background: var(--pf-primary-soft); }
 
   /* The records themselves provide the surface; no redundant outer card. */
-  :root [data-app-shell] [data-super-workspace] .sa-record-list {
+  :root [data-app-shell] [data-super-workspace] .sa-record-list.pf-glass {
     background: transparent !important; border: 0; box-shadow: none;
     padding: 0; backdrop-filter: none; -webkit-backdrop-filter: none;
   }
