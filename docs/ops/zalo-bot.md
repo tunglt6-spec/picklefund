@@ -72,3 +72,9 @@ All are opt-in per club in Settings → Zalo (default off) and require a confirm
 
 ## Update 2026-11-12 (cuối ngày) — gỡ relay
 Tính năng relay (mục "Updates 2026-11-12 — dùng chung 1 bot với nền tảng khác (relay)") đã bị gỡ; thay bằng chế độ "webhook do nền tảng khác quản lý" (PickleFund chỉ gửi ra) và thiết kế Zalo Hub (xem docs/ops/zalo-hub-club-sports-spec.md).
+
+## Liên kết qua AI-BOT (Zalo Hub, GĐ2)
+- Bật bằng 2 biến môi trường backend (chưa đặt = tính năng ẩn): `AIBOT_HUB_BASE_URL` (URL AI-BOT từ container API, vd. `http://maika-saas-engine:4105`) và `ZALO_HUB_EVENT_BASE` (URL PickleFund mà AI-BOT gọi tới, vd. `http://picklefund-api:3000`).
+- Tab Zalo → "Liên kết từ AI-BOT": dán mã `PF-XXXX-XXXX` (tạo ở AI-BOT). Khóa truy cập + khóa ký được mã hóa trong `zalo_connection_<clubId>`.
+- Sự kiện vào: `POST /api/zalo/hub/<clubId>` (ký HMAC-SHA256 `ts.rawBody`, ±300s, trả `{handled}`); tin ra: `POST {AIBOT_HUB_BASE_URL}/api/hub/v1/messages`.
+- Chưa hỗ trợ ở chế độ hub: nhắc nợ riêng (DM). Cần `rawBody: true` trong `main.ts`.

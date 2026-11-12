@@ -15,7 +15,9 @@ interface ZaloStatus {
   chatId?: string | null; chatName?: string | null; pendingChat?: { id: string; name: string } | null;
   lastSentAt?: string | null; lastError?: string | null;
   externalWebhook?: boolean;
+  mode?: 'direct' | 'hub'; hubBotName?: string; hubAvailable?: boolean;
 }
+interface HubGroup { chatId: string; lastSeen: string | null }
 export function ZaloTab() {
   const [status, setStatus] = useState<ZaloStatus | null>(null)
   const [loadFailed, setLoadFailed] = useState(false)
@@ -32,6 +34,11 @@ export function ZaloTab() {
   const [whInfo, setWhInfo] = useState<{ host: string | null; ours: boolean } | null>(null)
   const [groupId, setGroupId] = useState('')
   const [groupName, setGroupName] = useState('')
+  const [hubCode, setHubCode] = useState('')
+  const [hubGroups, setHubGroups] = useState<HubGroup[] | null>(null)
+  const [hubInfo, setHubInfo] = useState<{ status: string; lastEventAt: string | null; lastError: string | null; forwardOk: number; forwardFail: number } | null>(null)
+  const [hubGroupPick, setHubGroupPick] = useState('')
+  const [unlink, setUnlink] = useState(false)
   // Phân biệt rõ: máy chủ báo lỗi / máy chủ đang cập nhật / không gọi được máy chủ (mạng, proxy). Trước đây mọi trường hợp
   // không có nội dung lỗi đều hiện chung "Không kết nối được Zalo", không biết lỗi nằm ở đâu.
   const describe = (e: any): string => {
@@ -59,6 +66,11 @@ export function ZaloTab() {
     setStatus((await postR('/zalo/preferences', { enabled: !!status?.enabled, intakeEnabled: !!status?.intakeEnabled, commandsEnabled: !!status?.commandsEnabled, paymentReminders: !!status?.paymentReminders, resultImages: !!status?.resultImages, announcements: !!status?.announcements, weeklyReport: !!status?.weeklyReport, reportWeekday: status?.reportWeekday ?? 0, reportTime: status?.reportTime ?? '08:00' })).data.data)
     toast.success('Đã lưu lựa chọn gửi Zalo')
   })
+  const hubLink = () => action(async () => {
+    setStatus((await api.post('/zalo/hub/link', { code: hubCode.trim() })).data.data)
+    setHubCode(''); setPair(null); toast.success('Đã liên kết bot qua AI-BOT. Chọn nhóm nhận thông báo bên dưới.')
+  })
+  const loadHubGroups = () => action(async () => { setHubGroups((await getR('/zalo/hub/groups')).data.data) })
   const test = () => action(async () => { await api.post('/zalo/test'); toast.success('Đã gửi tin kiểm tra vào nhóm đã xác nhận') })
   const showPreview = async () => { setPreviewFailed(false); setPreviewImage(''); try { const data = (await api.get('/zalo/report-preview')).data.data; setPreview(data.text); setPreviewImage(data.imageUrl) } catch (e) { setPreviewFailed(true); error(e) } }
   const tools = [
@@ -78,23 +90,51 @@ export function ZaloTab() {
           {status.configured && <span className={status.canJoinGroups ? 'text-green-700' : 'text-amber-800'}>{status.canJoinGroups ? 'Có quyền tham gia nhóm' : 'Chưa được Zalo cấp quyền nhóm'}</span>}
         </div>
         {status.configured && !status.canJoinGroups && <p className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">Nhóm Zalo Bot đang ở chế độ Beta. Bot này chưa được Zalo cấp quyền tham gia nhóm; app chưa thể gửi vào nhóm. Liên hệ Zalo để được cấp quyền hoặc dùng bot đã được cấp quyền.</p>}
+        {status.mode === 'hub' && <p className="rounded-xl border p-3 text-sm">Đang dùng bot <b>{status.hubBotName}</b> qua AI-BOT: AI-BOT giữ kết nối Zalo, PickleFund nhận lệnh và gửi thông báo thông qua AI-BOT. Không cần dán token ở đây.</p>}
+        {status.mode !== 'hub' && status.hubAvailable && <div className="rounded-xl border p-3 space-y-2">
+          <p className="text-sm font-semibold">Liên kết từ AI-BOT (khuyên dùng khi bot đã có ở AI-BOT)</p>
+          <p className="text-xs [color:var(--pf-color-muted)]">Trong AI-BOT, mở bot “CLB &amp; Thể Thao” → tạo mã liên kết PickleFund (dạng PF-XXXX-XXXX), rồi dán vào đây. Không cần dán token bot.</p>
+          <input id="zalo-hub-code" aria-label="Mã liên kết AI-BOT" type="text" value={hubCode} onChange={e => setHubCode(e.target.value)} maxLength={40} className="input-base w-full" placeholder="PF-XXXX-XXXX" autoComplete="off" />
+          <Button onClick={hubLink} disabled={busy || !hubCode.trim()}><Link size={16} />{busy ? 'Đang xử lý…' : 'Liên kết với AI-BOT'}</Button>
+        </div>}
+        {status.mode !== 'hub' && <>
         <label className="block text-sm font-semibold" htmlFor="zalo-token">{status.configured ? 'Thay token bot' : 'Token từ Zalo Bot Creator'}</label>
         <input id="zalo-token" type="password" autoComplete="new-password" value={token} onChange={e => setToken(e.target.value)} maxLength={512} className="input-base" placeholder="Dán token bot vào đây" />
         <p className="text-xs [color:var(--pf-color-muted)]">Token được mã hóa trên máy chủ, không hiển thị lại sau khi lưu. Không gửi token vào nhóm chat.</p>
         <label className="flex min-h-11 items-start gap-3 text-sm"><input type="checkbox" checked={externalOnRegister} onChange={e => setExternalOnRegister(e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0" /><span>Bot này đã được nền tảng khác (vd. AI-BOT) nhận tin — <b>không đăng ký webhook</b>, PickleFund chỉ gửi thông báo vào nhóm. Nếu không chọn mà bot đang thuộc nền tảng khác, PickleFund sẽ báo và không chiếm webhook.</span></label>
         <Button onClick={register} disabled={busy || !token.trim()}><Link size={16} />{busy ? 'Đang xử lý…' : 'Kiểm tra và đăng ký bot'}</Button>
         <a className="block text-sm underline" href="https://zalo.me/s/botcreator/" target="_blank" rel="noopener noreferrer">Mở Zalo Bot Creator</a>
+        </>}
       </>}
     </section>
     {status?.configured && <section className="pf-glass rounded-2xl p-4 space-y-3">
       <h3 className="font-bold">Kết nối đúng nhóm CLB</h3>
       <p className="text-sm">Thêm bot vào nhóm CLB. Tạo mã, gõ @ và chọn bot từ danh sách Zalo rồi thêm dòng lệnh phía sau trong nhóm đó; mã có hạn 10 phút. Quay lại app bấm Làm mới và xác nhận nhóm nhận được.</p>
-      <Button disabled={busy || !status.canJoinGroups || !status.webhookReady || !!status.externalWebhook} onClick={() => action(async () => { setPair((await api.post('/zalo/pair')).data.data) })}>Tạo mã kết nối nhóm</Button>
-      {status.externalWebhook && <p className="text-xs [color:var(--pf-color-muted)]">Webhook do nền tảng khác giữ nên PickleFund không nhận được mã /ketnoi. Dùng nhóm đã liên kết sẵn bên dưới.</p>}
+      <Button disabled={busy || !status.canJoinGroups || !status.webhookReady || (!!status.externalWebhook && status.mode !== 'hub')} onClick={() => action(async () => { setPair((await api.post('/zalo/pair')).data.data) })}>Tạo mã kết nối nhóm</Button>
+      {status.externalWebhook && status.mode !== 'hub' && <p className="text-xs [color:var(--pf-color-muted)]">Webhook do nền tảng khác giữ nên PickleFund không nhận được mã /ketnoi. Dùng nhóm đã liên kết sẵn bên dưới.</p>}
       {pair && <div className="rounded-xl border p-3 space-y-2"><code className="block break-all select-all text-sm">{pair.command}</code><p className="text-xs">Hết hạn: {new Date(pair.expiresAt).toLocaleTimeString('vi-VN')}</p></div>}
       {status.pendingChat && <div className="rounded-xl border p-3 space-y-2"><p className="break-words font-semibold">Nhóm chờ xác nhận: {status.pendingChat.name}</p><p className="text-xs break-all">ID: {status.pendingChat.id}</p><Button disabled={busy} onClick={() => action(async () => { setStatus((await postR('/zalo/confirm-group')).data.data); setPair(null); toast.success('Đã xác nhận nhóm. Chọn nội dung và bật tự động khi sẵn sàng.') })}>Xác nhận đây là nhóm CLB</Button></div>}
       {status.chatId && <p className="break-all text-sm">Nhóm đã liên kết: <strong>{status.chatName}</strong> · {status.chatId}</p>}
-      {status.externalWebhook && <div className="rounded-xl border p-3 space-y-2">
+      {status.mode === 'hub' && <div className="rounded-xl border p-3 space-y-2">
+        <p className="text-sm font-semibold">Chọn nhóm nhận thông báo (nhóm AI-BOT đã nhận diện)</p>
+        <p className="text-xs [color:var(--pf-color-muted)]">Nếu chưa thấy nhóm: thêm bot vào nhóm, gõ một lệnh PickleFund trong nhóm (vd. tạo mã kết nối ở trên rồi gõ trong nhóm) hoặc nhắn bot trong nhóm, rồi bấm “Tải danh sách nhóm”.</p>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" disabled={busy} onClick={loadHubGroups}>Tải danh sách nhóm</Button>
+          <Button variant="outline" disabled={busy} onClick={() => action(async () => { setHubInfo((await getR('/zalo/hub/status')).data.data) })}>Kiểm tra liên kết</Button>
+        </div>
+        {hubGroups && (hubGroups.length ? <>
+          <label className="block text-sm" htmlFor="zalo-hub-group">Nhóm
+            <select id="zalo-hub-group" className="input-base mt-2 w-full" value={hubGroupPick} onChange={e => setHubGroupPick(e.target.value)}>
+              <option value="">— Chọn nhóm —</option>
+              {hubGroups.map(g => <option key={g.chatId} value={g.chatId}>{g.chatId}{g.lastSeen ? ` · thấy lúc ${new Date(g.lastSeen).toLocaleString('vi-VN')}` : ''}</option>)}
+            </select>
+          </label>
+          <Button disabled={busy || !hubGroupPick} onClick={() => action(async () => { setStatus((await postR('/zalo/group', { chatId: hubGroupPick })).data.data); setHubGroupPick(''); toast.success('Đã lưu nhóm. Bật “Bật gửi tự động” rồi bấm Lưu khi sẵn sàng.') })}>Lưu nhóm này</Button>
+        </> : <p className="text-sm">AI-BOT chưa nhận diện nhóm nào cho liên kết này.</p>)}
+        {hubInfo && <p className="break-words text-sm">Liên kết: <b>{hubInfo.status || 'không rõ'}</b> · chuyển lệnh thành công {hubInfo.forwardOk}, lỗi {hubInfo.forwardFail}{hubInfo.lastEventAt ? ` · sự kiện gần nhất ${new Date(hubInfo.lastEventAt).toLocaleString('vi-VN')}` : ''}{hubInfo.lastError ? ` · lỗi gần nhất: ${hubInfo.lastError}` : ''}</p>}
+        <p className="text-xs [color:var(--pf-color-muted)]">Đổi sang nhóm khác sẽ tự tắt gửi tự động để tránh gửi nhầm.</p>
+      </div>}
+      {status.externalWebhook && status.mode !== 'hub' && <div className="rounded-xl border p-3 space-y-2">
         <p className="text-sm font-semibold">{status.chatId ? 'Đổi nhóm nhận thông báo (nhập mã nhóm Zalo)' : 'Chưa có nhóm nhận thông báo — nhập mã nhóm Zalo để dùng “Gửi thử” và “Báo cáo”'}</p>
         <label className="block text-sm" htmlFor="zalo-group-id">Mã nhóm Zalo (dạng zgr-…)
           <input id="zalo-group-id" type="text" value={groupId} onChange={e => setGroupId(e.target.value)} maxLength={150} className="input-base mt-2 w-full" placeholder="zgr-…" autoComplete="off" />
@@ -107,17 +147,17 @@ export function ZaloTab() {
         {groupCheck && <p className={`break-words text-sm ${groupCheck.ok ? 'text-green-700' : 'text-red-700'}`}>{groupCheck.ok ? `Bot hoạt động được trong nhóm ${groupCheck.chatId}` : `Nhóm ${groupCheck.chatId}: ${groupCheck.message ?? 'không dùng được'}`}</p>}
         <p className="text-xs [color:var(--pf-color-muted)]">Đổi sang nhóm khác sẽ tự tắt gửi tự động để tránh gửi nhầm. Nhóm giữ nguyên thì cấu hình gửi không đổi.</p>
       </div>}
-      <p className="text-sm">Webhook: {status.externalWebhook ? 'Do nền tảng khác (vd. AI-BOT) quản lý — PickleFund chỉ gửi tin ra, không đụng webhook' : status.webhookReady ? 'Đã xác minh' : 'Chưa xác minh — bấm “Kiểm tra lại webhook”; nếu vẫn lỗi, kiểm tra HTTPS và đăng ký lại bot'}</p>
-      <div className="flex flex-wrap gap-2">
+      {status.mode !== 'hub' && <p className="text-sm">Webhook: {status.externalWebhook ? 'Do nền tảng khác (vd. AI-BOT) quản lý — PickleFund chỉ gửi tin ra, không đụng webhook' : status.webhookReady ? 'Đã xác minh' : 'Chưa xác minh — bấm “Kiểm tra lại webhook”; nếu vẫn lỗi, kiểm tra HTTPS và đăng ký lại bot'}</p>}
+      {status.mode !== 'hub' && <div className="flex flex-wrap gap-2">
         {!status.externalWebhook && <Button variant="outline" disabled={busy} onClick={() => action(async () => { const s = (await postR('/zalo/webhook-verify')).data.data; setStatus(s); if (s.webhookReady) toast.success('Webhook đã xác minh'); else toast.error('Webhook vẫn chưa xác minh được') })}>{status.webhookReady ? 'Đặt lại webhook về PickleFund' : 'Kiểm tra lại webhook'}</Button>}
         <Button variant="outline" disabled={busy} onClick={() => action(async () => { const on = !status.externalWebhook; setStatus((await postR('/zalo/external-webhook', { enabled: on })).data.data); toast.success(on ? 'Đã chuyển sang chế độ webhook do nền tảng khác quản lý' : 'Đã tắt chế độ này. Bấm “Kiểm tra lại webhook” để nhận lại webhook') })}>{status.externalWebhook ? 'Tắt chế độ webhook do nền tảng khác' : 'Webhook do nền tảng khác (AI-BOT) quản lý'}</Button>
         <Button variant="outline" disabled={busy} onClick={() => action(async () => { setWhInfo((await getR('/zalo/webhook-info')).data.data) })}>Xem webhook hiện tại của bot</Button>
-      </div>
-      {whInfo && <p className="text-sm">Bot đang gửi tin tới: <strong>{whInfo.host ?? 'chưa đặt webhook'}</strong>{whInfo.host ? (whInfo.ours ? ' — PickleFund' : ' — nền tảng khác') : ''}</p>}
+      </div>}
+      {whInfo && status.mode !== 'hub' && <p className="text-sm">Bot đang gửi tin tới: <strong>{whInfo.host ?? 'chưa đặt webhook'}</strong>{whInfo.host ? (whInfo.ours ? ' — PickleFund' : ' — nền tảng khác') : ''}</p>}
     </section>}
     {status?.configured && <section className="pf-glass rounded-2xl p-4 space-y-3">
       <h3 className="font-bold">Nội dung gửi vào nhóm</h3>
-      {([['enabled','Bật gửi tự động'],['announcements','Lịch hoạt động và thành viên mới'],['intakeEnabled','Nhập thu/chi qua bot (cần liên kết tài khoản)'],['commandsEnabled','Tra cứu & lệnh trong nhóm: /quy /congno /lich /bxh /dangky /huy /diemdanh'],['paymentReminders','Nhắc đóng quỹ riêng từng thành viên đã liên kết (9:00, khi gần/quá hạn)'],['resultImages','Tự gửi ảnh bảng xếp hạng khi giải kết thúc'],['weeklyReport','Báo cáo tài chính hằng tuần']] as const).map(([key,label]) => <label key={key} className="flex min-h-11 items-center justify-between gap-3 border-b py-2 text-sm"><span>{label}</span><input type="checkbox" checked={!!status[key]} disabled={busy || !status.chatId || (!!status.externalWebhook && (key==='intakeEnabled' || key==='commandsEnabled') && !status[key])} onChange={e=>setStatus({...status,[key]:e.target.checked})} className="h-5 w-5 shrink-0" /></label>)}
+      {([['enabled','Bật gửi tự động'],['announcements','Lịch hoạt động và thành viên mới'],['intakeEnabled','Nhập thu/chi qua bot (cần liên kết tài khoản)'],['commandsEnabled','Tra cứu & lệnh trong nhóm: /quy /congno /lich /bxh /dangky /huy /diemdanh'],['paymentReminders','Nhắc đóng quỹ riêng từng thành viên đã liên kết (9:00, khi gần/quá hạn)'],['resultImages','Tự gửi ảnh bảng xếp hạng khi giải kết thúc'],['weeklyReport','Báo cáo tài chính hằng tuần']] as const).map(([key,label]) => <label key={key} className="flex min-h-11 items-center justify-between gap-3 border-b py-2 text-sm"><span>{label}</span><input type="checkbox" checked={!!status[key]} disabled={busy || !status.chatId || (!!status.externalWebhook && status.mode !== 'hub' && (key==='intakeEnabled' || key==='commandsEnabled') && !status[key]) || (status.mode === 'hub' && key==='paymentReminders')} onChange={e=>setStatus({...status,[key]:e.target.checked})} className="h-5 w-5 shrink-0" /></label>)}
       <div className="grid grid-cols-1 gap-3 min-[600px]:grid-cols-2">
         <label className="block min-w-0 text-sm font-semibold" htmlFor="zalo-report-time">Giờ gửi báo cáo
           <input id="zalo-report-time" type="time" step={60} value={status.reportTime ?? '08:00'} disabled={busy || !status.chatId || !status.weeklyReport} onChange={e=>setStatus({...status,reportTime:e.target.value})} onInput={e=>{const value=e.currentTarget.value;setStatus(previous=>previous?{...previous,reportTime:value}:previous)}} className="input-base mt-2 w-full min-w-0" />
@@ -133,10 +173,11 @@ export function ZaloTab() {
       {status.lastSentAt && <p className="text-sm">Gửi thành công gần nhất: {new Date(status.lastSentAt).toLocaleString('vi-VN')}</p>}
       {(status.failStreak ?? 0) >= 3 && <p role="alert" className="rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-800"><b>Cảnh báo:</b> bot đã gửi lỗi {status.failStreak} lần liên tiếp{status.lastErrorAt ? ` (gần nhất ${new Date(status.lastErrorAt).toLocaleString('vi-VN')})` : ''}. Kiểm tra token, quyền bot trong nhóm hoặc đăng ký lại bot.</p>}
       {status.lastError && <p role="alert" className="text-sm text-red-700">{status.lastError}</p>}
-      <Button variant="outline" disabled={busy} onClick={()=>setDisconnect(true)}>Ngắt kết nối Zalo</Button>
+      {status.mode === 'hub' ? <Button variant="outline" disabled={busy} onClick={()=>setUnlink(true)}>Ngắt liên kết AI-BOT</Button> : <Button variant="outline" disabled={busy} onClick={()=>setDisconnect(true)}>Ngắt kết nối Zalo</Button>}
     </section>}
     {status?.intakeEnabled && <p className="text-sm">Phiếu thu/chi từ Zalo xử lý tại <RouterLink className="inline-flex font-semibold underline max-lg:min-h-11 max-lg:items-center" to="/tai-chinh?tab=payments">Tài chính → Xác nhận thu/chi</RouterLink>.</p>}
     <ConfirmDialog open={disconnect} title="Ngắt kết nối Zalo?" message="Dừng gửi tự động và gỡ token bot khỏi CLB. Muốn dùng lại cần đăng ký và xác nhận nhóm lại." confirmLabel="Ngắt kết nối" onCancel={()=>setDisconnect(false)} onConfirm={()=>action(async()=>{await api.post('/zalo/disconnect');setDisconnect(false);setPair(null);setStatus({configured:false})})} />
+    <ConfirmDialog open={unlink} title="Ngắt liên kết AI-BOT?" message="Dừng gửi thông báo qua AI-BOT và gỡ liên kết ở AI-BOT. Bot vẫn hoạt động bình thường ở AI-BOT; muốn dùng lại cần liên kết bằng mã mới." confirmLabel="Ngắt liên kết" onCancel={()=>setUnlink(false)} onConfirm={()=>action(async()=>{const r=(await api.post('/zalo/hub/unlink')).data.data;setUnlink(false);setPair(null);setHubGroups(null);setHubInfo(null);setStatus(r)})} />
     <Modal open={sendReport} title="Báo cáo tài chính gửi vào nhóm" subtitle={status?.chatName ?? undefined} onClose={()=>{setSendReport(false);setPreview('')}} footer={<Button disabled={busy || !preview} onClick={()=>action(async()=>{await api.post('/zalo/report');setSendReport(false);setPreview('');toast.success('Đã gửi báo cáo tài chính')})}>Gửi vào nhóm đã xác nhận</Button>}>
       {previewImage ? <img src={previewImage} referrerPolicy="no-referrer" alt="Báo cáo thu chi và số dư quỹ của CLB, có logo và bảng đối chiếu" className="h-auto w-full rounded-xl" onError={()=>{setPreviewImage('');setPreviewFailed(true)}} /> : <p className="text-sm" role={previewFailed?'alert':'status'}>{previewFailed?'Không tạo được bản xem trước. Đóng và mở lại để thử.':'Đang tạo ảnh báo cáo…'}</p>}
       {preview && <details className="mt-3 text-sm"><summary className="cursor-pointer font-semibold">Đọc nội dung dạng chữ</summary><p className="mt-2 whitespace-pre-wrap break-words leading-relaxed">{preview}</p></details>}

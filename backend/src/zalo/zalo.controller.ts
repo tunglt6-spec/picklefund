@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Headers, HttpCode, Param, Post, Res, StreamableFile } from '@nestjs/common';
-import type { Response } from 'express';
+import { Body, Controller, Get, Headers, HttpCode, Param, Post, Req, Res, StreamableFile } from '@nestjs/common';
+import type { RawBodyRequest } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { IsBoolean, IsOptional, IsString, MaxLength, Matches, IsInt, IsIn } from 'class-validator';
 import { CurrentUser, Public, Roles } from '../common/decorators';
 import type { JwtUser } from '../common/decorators';
@@ -13,6 +14,7 @@ class BotDto {
   /** Vẫn chiếm webhook dù bot đang thuộc nền tảng khác. */
   @IsOptional() @IsBoolean() force?: boolean;
 }
+class HubLinkDto { @IsString() @MaxLength(40) code: string; }
 class ExternalDto { @IsBoolean() enabled: boolean; }
 class GroupCheckDto { @IsOptional() @IsString() @MaxLength(150) chatId?: string; }
 class GroupDto { @IsString() @MaxLength(150) chatId: string; @IsOptional() @IsString() @MaxLength(150) chatName?: string; }
@@ -61,6 +63,27 @@ export class ZaloController {
   /** Chẩn đoán: bot có hoạt động được trong nhóm không (sendChatAction typing; không gửi tin). */
   @Post('group-check') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   async groupCheck(@CurrentUser() user: JwtUser, @Body() body: GroupCheckDto) { return ok(await this.zalo.checkGroup(this.zalo.club(user.clubId), body.chatId)); }
+
+  /** Liên kết bot qua AI-BOT bằng mã PF-XXXX-XXXX (Zalo Hub). */
+  @Post('hub/link') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  async hubLink(@CurrentUser() user: JwtUser, @Body() body: HubLinkDto) { return ok(await this.zalo.hubLink(this.zalo.club(user.clubId), body.code)); }
+
+  @Post('hub/unlink') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  async hubUnlink(@CurrentUser() user: JwtUser) { return ok(await this.zalo.hubUnlink(this.zalo.club(user.clubId))); }
+
+  @Get('hub/status') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  async hubStatus(@CurrentUser() user: JwtUser) { return ok(await this.zalo.hubStatus(this.zalo.club(user.clubId))); }
+
+  /** Nhóm AI-BOT đã nhận diện cho liên kết (chọn nhóm nhận thông báo). */
+  @Get('hub/groups') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  async hubGroups(@CurrentUser() user: JwtUser) { return ok(await this.zalo.hubGroups(this.zalo.club(user.clubId))); }
+
+  /** AI-BOT chuyển lệnh PickleFund tới đây (có chữ ký HMAC trên thân gốc). Trả {handled}. */
+  @Public() @Post('hub/:clubId') @HttpCode(200)
+  async hubEvent(@Param('clubId') clubId: string, @Headers('x-hub-link-id') linkId: string, @Headers('x-hub-timestamp') ts: string,
+    @Headers('x-hub-signature') sig: string, @Req() req: RawBodyRequest<Request>, @Body() body: unknown) {
+    return this.zalo.hubEvent(this.zalo.club(clubId), { linkId, ts, sig }, req.rawBody, body);
+  }
 
   @Post('pair') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   async pair(@CurrentUser() user: JwtUser) { return ok(await this.zalo.pair(this.zalo.club(user.clubId))); }

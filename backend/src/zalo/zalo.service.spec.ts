@@ -272,7 +272,7 @@ describe('Zalo club integration', () => {
   });
   it('does not leak group configuration after disconnect and rejects old webhook secrets', async () => {
     const secret=await paired(); await svc.disconnect(clubId);
-    expect(await svc.status(clubId)).toEqual({configured:false});
+    expect(await svc.status(clubId)).toEqual({configured:false, hubAvailable:false});
     await expect(svc.webhook(clubId,secret,{})).rejects.toThrow();
   });
   it('validates schedule values and preserves the default schedule for existing connections', async () => {
@@ -373,5 +373,113 @@ describe('Zalo club integration', () => {
     const sent = await s2.remindPayments(clubId, c);
     expect(sent).toBe(10);
     expect(fetchMock.mock.calls.filter(x => String(x[0]).endsWith('/sendMessage')).length).toBe(10);
+  });
+
+  describe('Zalo Hub (liên kết qua AI-BOT)', () => {
+    const base = 'http://aibot:4105'; const evBase = 'http://picklefund-api:3000';
+    let hsvc: ZaloService;
+    const hubResp = (status: number, json: any) => ({ ok: status < 400, status, json: async () => json });
+    const sign = (secret: string, ts: string | number, raw: string) => 'v1=' + require('crypto').createHmac('sha256', secret).update(`${ts}.`).update(raw).digest('hex');
+    const exchangeOk = { ok: true, link_id: 'lnk1', access_key: 'KEY-123', signing_secret: 'SECRET-456', bot: { id: 'b1', name: 'Bot The PING' } };
+    const hubCalls = () => fetchMock.mock.calls.filter(c => String(c[0]).startsWith(base));
+    async function linked(extra: Record<string, any> = {}) {
+      fetchMock.mockImplementation(async (url: any) => String(url).endsWith('/links/exchange') ? hubResp(200, exchangeOk) as any : hubResp(200, { ok: true, ...extra }) as any);
+      return hsvc.hubLink(clubId, 'pf-abcd-1234');
+    }
+    const eventOf = (chat: any, text: string) => JSON.stringify({ link_id: 'lnk1', bot_id: 'b1', event: { event_name: 'message.text.received', message: { from: { is_bot: false }, text, chat } } });
+    beforeEach(() => { hsvc = new ZaloService(prisma, new ConfigService({ JWT_SECRET: 'test-encryption-secret', AIBOT_HUB_BASE_URL: base + '/', ZALO_HUB_EVENT_BASE: evBase }), calculator); });
+
+    it('hides the feature until the operator sets AIBOT_HUB_BASE_URL', async () => {
+      expect((await svc.status(clubId)).hubAvailable).toBe(false);
+      await expect(svc.hubLink(clubId, 'PF-ABCD-1234')).rejects.toThrow('chưa bật');
+      expect((await hsvc.status(clubId)).hubAvailable).toBe(true);
+    });
+    it('rejects malformed codes without calling AI-BOT', async () => {
+      await expect(hsvc.hubLink(clubId, 'hello')).rejects.toThrow('PF-XXXX-XXXX');
+      expect(hubCalls().length).toBe(0);
+    });
+    it('exchanges the code, seals key+secret and never exposes them', async () => {
+      const st: any = await linked();
+      expect(st.mode).toBe('hub'); expect(st.hubBotName).toBe('Bot The PING'); expect(st.enabled).toBe(false);
+      const sent = JSON.parse(hubCalls()[0][1]!.body as string);
+      expect(sent).toEqual({ code: 'PF-ABCD-1234', app: 'picklefund', event_url: `${evBase}/api/zalo/hub/${clubId}`, club_ref: clubId });
+      const stored = JSON.stringify([...rows.values()]);
+      expect(stored).not.toContain('KEY-123'); expect(stored).not.toContain('SECRET-456');
+      expect(JSON.stringify(st)).not.toContain('KEY-123');
+    });
+    it('surfaces AI-BOT refusal and does not create a connection', async () => {
+      fetchMock.mockImplementation(async () => hubResp(400, { detail: 'Mã đã dùng hoặc hết hạn' }) as any);
+      await expect(hsvc.hubLink(clubId, 'PF-ABCD-1234')).rejects.toThrow('mã 400');
+      expect(rows.size).toBe(0);
+    });
+    it('maps network failure to a friendly error', async () => {
+      fetchMock.mockImplementation(async () => { throw new Error('ECONNREFUSED'); });
+      await expect(hsvc.hubLink(clubId, 'PF-ABCD-1234')).rejects.toThrow('Không kết nối được AI-BOT');
+    });
+    it('sends messages through the hub API with Bearer key and idempotency key', async () => {
+      await linked({ groups: [{ chat_id: 'zgr-1', last_seen: 1 }] });
+      await hsvc.setGroup(clubId, 'zgr-1');
+      fetchMock.mockClear(); fetchMock.mockImplementation(async () => hubResp(200, { ok: true }) as any);
+      await hsvc.test(clubId);
+      const [url, init] = hubCalls().find(c => String(c[0]).endsWith('/api/hub/v1/messages'))!;
+      expect(String(url)).toBe(`${base}/api/hub/v1/messages`);
+      const h = (init as any).headers; expect(h.Authorization).toBe('Bearer KEY-123'); expect(h['X-Hub-Link-Id']).toBe('lnk1');
+      const b = JSON.parse((init as any).body); expect(b.chat_id).toBe('zgr-1'); expect(b.text).toBeTruthy(); expect(b.idempotency_key).toMatch(/^[a-f0-9]{32}$/);
+      expect(fetchMock.mock.calls.some(c => String(c[0]).includes('bot-api.zaloplatforms.com'))).toBe(false);
+    });
+    it('only accepts groups that AI-BOT has seen', async () => {
+      await linked({ groups: [{ chat_id: 'zgr-1', last_seen: 1 }] });
+      await expect(hsvc.setGroup(clubId, 'zgr-zzz')).rejects.toThrow('chưa nhận diện');
+      expect((await hsvc.hubGroups(clubId)).map(g => g.chatId)).toEqual(['zgr-1']);
+    });
+    it('verifies hub event signature, timestamp, link id and returns handled', async () => {
+      await linked();
+      const raw = eventOf({ id: 'zgr-1', chat_type: 'GROUP' }, 'xin chào');
+      const ts = String(Math.floor(Date.now() / 1000)); const body = JSON.parse(raw); const buf = Buffer.from(raw);
+      const ok = { linkId: 'lnk1', ts, sig: sign('SECRET-456', ts, raw) };
+      expect(await hsvc.hubEvent(clubId, ok, buf, body)).toEqual({ handled: false });
+      await expect(hsvc.hubEvent(clubId, { ...ok, sig: sign('wrong', ts, raw) }, buf, body)).rejects.toThrow('Chữ ký');
+      await expect(hsvc.hubEvent(clubId, { ...ok, linkId: 'other' }, buf, body)).rejects.toThrow();
+      await expect(hsvc.hubEvent(clubId, ok, undefined, body)).rejects.toThrow();
+      const old = String(Math.floor(Date.now() / 1000) - 1000);
+      await expect(hsvc.hubEvent(clubId, { linkId: 'lnk1', ts: old, sig: sign('SECRET-456', old, raw) }, buf, body)).rejects.toThrow('hết hạn');
+      await expect(hsvc.hubEvent('club-b', ok, buf, body)).rejects.toThrow();
+    });
+    it('handles a pairing command via hub event', async () => {
+      await linked({ groups: [] });
+      const pair = await hsvc.pair(clubId);
+      const raw = eventOf({ id: 'zgr-9', chat_type: 'GROUP', title: 'Nhóm' }, pair.command);
+      const ts = String(Math.floor(Date.now() / 1000));
+      const r = await hsvc.hubEvent(clubId, { linkId: 'lnk1', ts, sig: sign('SECRET-456', ts, raw) }, Buffer.from(raw), JSON.parse(raw));
+      expect(r.handled).toBe(true);
+      expect(connection().pendingChat.id).toBe('zgr-9');
+    });
+    it('rejects the direct webhook for hub-mode clubs', async () => {
+      await linked();
+      await expect(hsvc.webhook(clubId, 'anything', {})).rejects.toThrow();
+    });
+    it('blocks enabling DM payment reminders in hub mode', async () => {
+      await linked();
+      await expect(hsvc.preferences(clubId, { paymentReminders: true } as any)).rejects.toThrow();
+    });
+    it('reads link status without leaking secrets', async () => {
+      await linked({ link: { status: 'active', last_event_at: 1700000000, forward_ok: 3, forward_fail: 1 } });
+      const st = await hsvc.hubStatus(clubId);
+      expect(st).toMatchObject({ status: 'active', forwardOk: 3, forwardFail: 1 });
+      expect(JSON.stringify(st)).not.toContain('KEY-123');
+    });
+    it('unlinks: deletes the link at AI-BOT and removes a hub-only connection', async () => {
+      await linked(); fetchMock.mockClear(); fetchMock.mockImplementation(async () => hubResp(200, { ok: true }) as any);
+      const r: any = await hsvc.hubUnlink(clubId);
+      expect(r.configured).toBe(false); expect(rows.has('zalo_connection_club-a')).toBe(false);
+      const del = hubCalls().find(c => (c[1] as any).method === 'DELETE'); expect(String(del![0])).toBe(`${base}/api/hub/v1/links/lnk1`);
+    });
+    it('unlink restores external-webhook mode when a token existed', async () => {
+      await svc.register(clubId, token); fetchMock.mockClear();
+      fetchMock.mockImplementation(async (url: any) => String(url).endsWith('/links/exchange') ? hubResp(200, exchangeOk) as any : hubResp(200, { ok: true }) as any);
+      await hsvc.hubLink(clubId, 'PF-ABCD-1234');
+      const r: any = await hsvc.hubUnlink(clubId);
+      expect(r.configured).toBe(true); expect(r.mode).toBe('direct'); expect(connection().hub).toBeUndefined();
+    });
   });
 });

@@ -22,6 +22,9 @@ interface Connection {
   commandsEnabled?: boolean; paymentReminders?: boolean; resultImages?: boolean; failStreak?: number; lastErrorAt?: string;
   /** Webhook của bot do nền tảng khác (vd. AI-BOT) giữ: PickleFund KHÔNG gọi setWebhook/deleteWebhook, chỉ gửi tin ra. */
   externalWebhook?: boolean;
+  /** 'hub': liên kết qua AI-BOT (Zalo Hub) — gửi tin ra qua API hub của AI-BOT, nhận lệnh do AI-BOT chuyển (có ký HMAC). Không giữ/dùng token bot. */
+  mode?: 'hub';
+  hub?: { linkId: string; key: string; secret: string; botName: string; botId: string };
 }
 interface Job {
   clubId: string; version: string; chatId: string; text: string;
@@ -84,14 +87,15 @@ export class ZaloService {
   }
   async status(clubId: string) {
     const c = await this.read(clubId);
-    if (!c) return { configured: false };
+    if (!c) return { configured: false, hubAvailable: !!this.hubBase() };
     // Never return the encrypted token, webhook secret, pairing hash or queued payload to a client.
     return { configured: true, botName: c.botName, canJoinGroups: c.canJoinGroups, webhookReady: c.webhookReady,
       intakeEnabled: !!c.intakeEnabled, commandsEnabled: !!c.commandsEnabled, paymentReminders: !!c.paymentReminders, resultImages: !!c.resultImages,
       failStreak: c.failStreak ?? 0, lastErrorAt: c.lastErrorAt ?? null, enabled: c.enabled, financialChanges: c.financialChanges, announcements: c.announcements, dailyReport: c.dailyReport,
       chatId: c.chatId ?? null, chatName: c.chatName ?? null, pendingChat: c.pendingChat ?? null,
       reportTime: c.reportTime ?? '08:00', weeklyReport: !!c.weeklyReport, reportWeekday: c.reportWeekday ?? 0,
-      lastSentAt: c.lastSentAt ?? null, lastError: c.lastError ?? null, externalWebhook: !!c.externalWebhook };
+      lastSentAt: c.lastSentAt ?? null, lastError: c.lastError ?? null, externalWebhook: !!c.externalWebhook,
+      mode: c.mode ?? 'direct', hubBotName: c.hub?.botName ?? null, hubAvailable: !!this.hubBase() };
   }
   private async call(token: string, method: string, payload: object): Promise<any> {
     try {
@@ -118,6 +122,7 @@ export class ZaloService {
   async register(clubId: string, raw: string, opts: { external?: boolean; force?: boolean } = {}) {
     const token = raw?.trim();
     if (!token || !/^[A-Za-z0-9_:.=-]{8,512}$/.test(token)) throw new BadRequestException('Token Zalo không hợp lệ.');
+    if ((await this.read(clubId))?.mode === 'hub') throw new BadRequestException('CLB đang liên kết bot qua AI-BOT. Ngắt liên kết AI-BOT trước nếu muốn dùng token trực tiếp.');
     const bot = await this.call(token, 'getMe', {});
     if (!bot?.id) throw new BadRequestException('Zalo chưa trả thông tin bot hợp lệ.');
     // A bot has one webhook. Never steal another club's bot/webhook.
@@ -168,12 +173,18 @@ export class ZaloService {
     const c = await this.required(clubId);
     const id = (chatId ?? c.chatId ?? '').trim();
     if (!/^[A-Za-z0-9_.:-]{1,150}$/.test(id)) throw new BadRequestException('Chưa có mã nhóm hợp lệ để kiểm tra.');
+    if (c.mode === 'hub') {
+      // Qua AI-BOT: nhóm hợp lệ khi AI-BOT đã từng chuyển sự kiện của nhóm đó cho liên kết (chỉ khi đó mới gửi vào được).
+      const known = (await this.hubGroups(clubId)).some((g) => g.chatId === id);
+      return { ok: known, chatId: id, message: known ? null : 'AI-BOT chưa nhận diện nhóm này. Gõ lệnh PickleFund (vd. mã /ketnoi) trong nhóm rồi thử lại.' };
+    }
     try { await this.call(this.unseal(c.token), 'sendChatAction', { chat_id: id, action: 'typing' }); return { ok: true, chatId: id, message: null as string | null }; }
     catch (e) { return { ok: false, chatId: id, message: (e as Error).message }; }
   }
   /** Chẩn đoán: bot đang gửi tin tới đâu (chỉ trả host, không trả đường dẫn/secret). Dùng để biết webhook đang thuộc PickleFund hay nền tảng khác. */
   async webhookInfo(clubId: string) {
     const c = await this.required(clubId);
+    if (c.mode === 'hub') throw new BadRequestException('Đang liên kết qua AI-BOT: webhook do AI-BOT quản lý, PickleFund không đọc webhook của bot.');
     const info = await this.call(this.unseal(c.token), 'getWebhookInfo', {});
     const url = String(info?.url ?? '');
     let host: string | null = null; try { host = url ? new URL(url).host : null; } catch { host = null; }
@@ -184,7 +195,7 @@ export class ZaloService {
   async reverifyWebhook(clubId: string) {
     const c = await this.required(clubId);
     // Chế độ webhook ngoài: tuyệt đối không setWebhook (sẽ đè webhook của nền tảng kia).
-    if (c.externalWebhook) return this.status(clubId);
+    if (c.externalWebhook || c.mode === 'hub') return this.status(clubId);
     const origin = this.config.get<string>('ZALO_PUBLIC_ORIGIN') || 'https://picklefund.vn';
     const url = new URL(origin);
     if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) throw new BadRequestException('Máy chủ chưa cấu hình địa chỉ HTTPS cho Zalo.');
@@ -201,6 +212,7 @@ export class ZaloService {
   /** Bật/tắt chế độ "webhook do nền tảng khác quản lý". Bật: gửi ra được ngay, không đụng webhook. Tắt: cần xác minh lại để nhận webhook về. */
   async setExternalWebhook(clubId: string, enabled: boolean) {
     const c = await this.required(clubId);
+    if (c.mode === 'hub') throw new BadRequestException('Đang liên kết qua AI-BOT: không đổi được chế độ webhook ở đây. Ngắt liên kết AI-BOT trước.');
     c.externalWebhook = enabled;
     if (enabled) { c.webhookReady = true; delete c.lastError; }
     else { c.webhookReady = false; c.lastError = 'Đã tắt chế độ webhook do nền tảng khác quản lý. Bấm “Kiểm tra lại webhook” để PickleFund nhận lại webhook (nền tảng kia sẽ ngừng nhận tin).'; }
@@ -215,13 +227,107 @@ export class ZaloService {
     if (!c.externalWebhook) throw new BadRequestException('Chỉ dùng khi webhook do nền tảng khác quản lý. Chế độ thường dùng mã /ketnoi trong nhóm.');
     const id = (chatId ?? '').trim();
     if (!/^[A-Za-z0-9_.:-]{1,150}$/.test(id)) throw new BadRequestException('Mã nhóm Zalo không hợp lệ.');
+    // Qua AI-BOT chỉ chọn được nhóm AI-BOT đã nhận diện (mới gửi vào được).
+    if (c.mode === 'hub' && !(await this.hubGroups(clubId)).some((g) => g.chatId === id)) throw new BadRequestException('AI-BOT chưa nhận diện nhóm này. Gõ lệnh PickleFund (vd. mã /ketnoi) trong nhóm rồi chọn lại.');
     if (c.chatId !== id) { c.enabled = false; delete c.baseline; }
     c.chatId = id; c.chatName = (chatName?.trim() || `Nhóm ${id}`).slice(0, 150); delete c.pendingChat; delete c.pairHash; delete c.pairExpires;
     await this.save(clubId, c); return this.status(clubId);
   }
+  // ───────────────────────── Zalo Hub: liên kết bot qua AI-BOT ─────────────────────────
+  private hubBase(): string | null { return (this.config.get<string>('AIBOT_HUB_BASE_URL') || '').trim().replace(/\/+$/, '') || null; }
+  private hubEventBase(): string | null { return (this.config.get<string>('ZALO_HUB_EVENT_BASE') || '').trim().replace(/\/+$/, '') || null; }
+  private async hubRequest(path: string, init: { method: 'GET' | 'POST' | 'DELETE'; headers?: Record<string, string>; body?: unknown }): Promise<{ status: number; json: any }> {
+    const base = this.hubBase(); if (!base) throw new BadRequestException('Máy chủ chưa bật liên kết AI-BOT.');
+    try {
+      const res = await fetch(`${base}${path}`, { method: init.method, headers: { 'Content-Type': 'application/json', ...init.headers },
+        body: init.body === undefined ? undefined : JSON.stringify(init.body), signal: AbortSignal.timeout(8000) });
+      let json: any = null; try { json = await res.json(); } catch { json = null; }
+      return { status: res.status, json };
+    } catch { throw new BadRequestException('Không kết nối được AI-BOT. Kiểm tra AI-BOT đang chạy rồi thử lại.'); }
+  }
+  /** Mô tả lỗi của AI-BOT (đã lọc) kèm mã HTTP; không bao giờ chứa khóa. */
+  private hubDetail(r: { status: number; json: any }): string {
+    const d = typeof r.json?.detail === 'string' ? r.json.detail.replace(/[^\p{L}\p{N}\s:.,()-]/gu, '').trim().slice(0, 140) : '';
+    return `${d || 'lỗi không rõ'} (mã ${r.status})`;
+  }
+  private hubAuth(c: Connection): Record<string, string> {
+    if (!c.hub) throw new BadRequestException('CLB chưa liên kết AI-BOT.');
+    return { Authorization: `Bearer ${this.unseal(c.hub.key)}`, 'X-Hub-Link-Id': c.hub.linkId };
+  }
+
+  /** Liên kết bằng mã `PF-XXXX-XXXX` lấy ở AI-BOT. Giữ nhóm/lựa chọn gửi và (nếu có) token cũ để quay lại được. */
+  async hubLink(clubId: string, rawCode: string) {
+    const base = this.hubBase(); const evBase = this.hubEventBase();
+    if (!base || !evBase) throw new BadRequestException('Máy chủ chưa bật liên kết AI-BOT.');
+    const code = String(rawCode ?? '').replace(/\s+/g, '').toUpperCase();
+    if (!/^PF-[A-Z0-9]{4}-[A-Z0-9]{4}$/.test(code)) throw new BadRequestException('Mã liên kết phải có dạng PF-XXXX-XXXX.');
+    const prev = await this.read(clubId);
+    if (prev?.mode === 'hub') throw new BadRequestException('CLB đã liên kết AI-BOT. Ngắt liên kết trước khi liên kết lại.');
+    const r = await this.hubRequest('/api/hub/v1/links/exchange', { method: 'POST', body: { code, app: 'picklefund', event_url: `${evBase}/api/zalo/hub/${clubId}`, club_ref: clubId } });
+    const j = r.json;
+    if (r.status !== 200 || j?.ok !== true || typeof j.link_id !== 'string' || typeof j.access_key !== 'string' || typeof j.signing_secret !== 'string') {
+      throw new BadRequestException(`AI-BOT từ chối liên kết: ${this.hubDetail(r)}.`);
+    }
+    const botName = String(j.bot?.name ?? 'Bot AI-BOT').slice(0, 100); const botId = String(j.bot?.id ?? '').slice(0, 60);
+    const c: Connection = prev ?? { version: randomUUID(), token: '', botId: `aibot:${botId}`, botName, canJoinGroups: true, webhookReady: true, enabled: false,
+      financialChanges: false, announcements: true, dailyReport: false, weeklyReport: true, reportWeekday: 0, scheduleVersion: 2 };
+    c.mode = 'hub'; c.hub = { linkId: j.link_id, key: this.seal(j.access_key), secret: this.seal(j.signing_secret), botName, botId };
+    c.canJoinGroups = true; c.webhookReady = true; c.externalWebhook = true; delete c.lastError;
+    c.paymentReminders = false;      // nhắc riêng (DM) chưa hỗ trợ qua AI-BOT
+    await this.save(clubId, c); return this.status(clubId);
+  }
+  /** Ngắt liên kết AI-BOT: gỡ liên kết phía AI-BOT (nếu được), quay về trạng thái trước (có token → chế độ webhook ngoài; không → xóa kết nối). */
+  async hubUnlink(clubId: string) {
+    const c = await this.required(clubId);
+    if (c.mode !== 'hub' || !c.hub) throw new BadRequestException('CLB chưa liên kết AI-BOT.');
+    try { await this.hubRequest(`/api/hub/v1/links/${encodeURIComponent(c.hub.linkId)}`, { method: 'DELETE', headers: this.hubAuth(c) }); } catch { /* AI-BOT không phản hồi: vẫn gỡ phía PickleFund */ }
+    if (!c.token) { await this.prisma.systemSetting.deleteMany({ where: { key: PREFIX + clubId } }); return { configured: false, hubAvailable: !!this.hubBase() }; }
+    delete c.mode; delete c.hub; c.externalWebhook = true; c.webhookReady = true; delete c.lastError;
+    await this.save(clubId, c); return this.status(clubId);
+  }
+  /** Trạng thái liên kết phía AI-BOT (không lộ khóa). */
+  async hubStatus(clubId: string) {
+    const c = await this.required(clubId);
+    if (c.mode !== 'hub') throw new BadRequestException('CLB chưa liên kết AI-BOT.');
+    const r = await this.hubRequest(`/api/hub/v1/links/${encodeURIComponent(c.hub!.linkId)}`, { method: 'GET', headers: this.hubAuth(c) });
+    if (r.status !== 200 || r.json?.ok !== true) throw new BadRequestException(`Không đọc được liên kết ở AI-BOT: ${this.hubDetail(r)}.`);
+    const l = r.json.link ?? {};
+    return { status: String(l.status ?? ''), lastEventAt: typeof l.last_event_at === 'number' ? new Date(l.last_event_at * 1000).toISOString() : null,
+      lastError: typeof l.last_error === 'string' ? l.last_error.slice(0, 120) : null, forwardOk: Number(l.forward_ok) || 0, forwardFail: Number(l.forward_fail) || 0 };
+  }
+  /** Các nhóm AI-BOT đã nhận diện cho liên kết (mã thật, đã từng chuyển sự kiện). */
+  async hubGroups(clubId: string): Promise<{ chatId: string; lastSeen: string | null }[]> {
+    const c = await this.required(clubId);
+    if (c.mode !== 'hub') throw new BadRequestException('CLB chưa liên kết AI-BOT.');
+    const r = await this.hubRequest(`/api/hub/v1/links/${encodeURIComponent(c.hub!.linkId)}/groups`, { method: 'GET', headers: this.hubAuth(c) });
+    if (r.status !== 200 || !Array.isArray(r.json?.groups)) throw new BadRequestException(`Không đọc được danh sách nhóm ở AI-BOT: ${this.hubDetail(r)}.`);
+    return r.json.groups.filter((g: any) => typeof g?.chat_id === 'string' && /^[A-Za-z0-9_.:-]{1,150}$/.test(g.chat_id))
+      .map((g: any) => ({ chatId: g.chat_id as string, lastSeen: typeof g.last_seen === 'number' ? new Date(g.last_seen * 1000).toISOString() : null }));
+  }
+  /** Sự kiện do AI-BOT chuyển tới (đã ký). Trả `handled` để AI-BOT biết có cần để AI trả lời tiếp hay không. */
+  async hubEvent(clubId: string, hdr: { linkId?: string; ts?: string; sig?: string }, raw: Buffer | undefined, body: any): Promise<{ handled: boolean }> {
+    const c = await this.read(clubId);
+    if (!c || c.mode !== 'hub' || !c.hub) throw new ForbiddenException('Không có liên kết AI-BOT');
+    if (!raw || !hdr.linkId || !hdr.ts || !hdr.sig || hdr.linkId !== c.hub.linkId) throw new ForbiddenException('Thiếu hoặc sai thông tin xác thực');
+    const ts = Number(hdr.ts);
+    if (!Number.isFinite(ts) || Math.abs(Date.now() / 1000 - ts) > 300) throw new ForbiddenException('Yêu cầu đã hết hạn');
+    const expect = 'v1=' + createHmac('sha256', this.unseal(c.hub.secret)).update(`${hdr.ts}.`).update(raw).digest('hex');
+    if (!same(hdr.sig, expect)) throw new ForbiddenException('Chữ ký không hợp lệ');
+    if (body?.link_id !== c.hub.linkId || !body?.event || typeof body.event !== 'object') throw new BadRequestException('Gói sự kiện không hợp lệ');
+    return { handled: await this.processEvent(clubId, c, body.event) };
+  }
+  /** Gửi tin ra: trực tiếp qua Zalo (token) hoặc qua API hub của AI-BOT (không dùng token). */
+  private async out(clubId: string, c: Connection, method: 'sendMessage' | 'sendPhoto', p: { chat_id: string; text?: string; photo?: string; caption?: string }) {
+    if (c.mode !== 'hub') return this.call(this.unseal(c.token), method, p);
+    const body = method === 'sendMessage' ? { chat_id: p.chat_id, text: p.text, idempotency_key: randomUUID().replace(/-/g, '') }
+      : { chat_id: p.chat_id, photo_url: p.photo, caption: p.caption, idempotency_key: randomUUID().replace(/-/g, '') };
+    const r = await this.hubRequest('/api/hub/v1/messages', { method: 'POST', headers: this.hubAuth(c), body });
+    if (r.status !== 200 || r.json?.ok !== true) throw new BadRequestException(`AI-BOT không gửi được tin: ${this.hubDetail(r)}.`);
+    return r.json;
+  }
   async pair(clubId: string) {
     const c = await this.required(clubId);
-    if (c.externalWebhook) throw new BadRequestException('Webhook đang do nền tảng khác quản lý nên PickleFund không nhận được mã /ketnoi. Dùng nhóm đã liên kết sẵn hoặc tắt chế độ này.');
+    if (c.externalWebhook && c.mode !== 'hub') throw new BadRequestException('Webhook đang do nền tảng khác quản lý nên PickleFund không nhận được mã /ketnoi. Dùng nhóm đã liên kết sẵn hoặc tắt chế độ này.');
     if (!c.canJoinGroups) throw new BadRequestException('Zalo chưa cấp quyền tham gia nhóm cho bot này (nhóm đang Beta).');
     if (!c.webhookReady) throw new BadRequestException('Webhook chưa xác minh thành công. Đăng ký lại bot trước.');
     const code = randomBytes(8).toString('hex').toUpperCase();
@@ -230,18 +336,22 @@ export class ZaloService {
   }
   async webhook(clubId: string, secret: string, body: unknown) {
     const c = await this.read(clubId);
-    if (!c || !secret || !same(secret, this.secret(clubId, c.version))) throw new ForbiddenException('Webhook không hợp lệ');
+    if (!c || c.mode === 'hub' || !secret || !same(secret, this.secret(clubId, c.version))) throw new ForbiddenException('Webhook không hợp lệ');
+    await this.processEvent(clubId, c, body);
+  }
+  /** Xử lý 1 sự kiện Zalo đã xác thực (từ webhook trực tiếp hoặc từ AI-BOT). Trả true nếu PickleFund đã xử lý (AI-BOT không nên để AI trả lời). */
+  private async processEvent(clubId: string, c: Connection, body: unknown): Promise<boolean> {
     const data = body as any; const m = data?.message;
     // Zalo có thể gửi lại cùng một tin khi webhook phản hồi chậm: bỏ bản trùng (bộ nhớ tiến trình, giữ 500 tin gần nhất).
     // Dedupe TRƯỚC khi chuyển tiếp để nền tảng kia cũng không nhận bản trùng.
     if (typeof data?.event_name === 'string' && data.event_name.startsWith('message.') && m?.message_id != null) {
       const dedupeKey = `${clubId}:${String(m.message_id)}`;
-      if (this.seenMessages.has(dedupeKey)) return;
+      if (this.seenMessages.has(dedupeKey)) return true;
       this.seenMessages.add(dedupeKey);
       if (this.seenMessages.size > 500) this.seenMessages.delete(this.seenMessages.values().next().value as string);
     }
     // Verification pings and unrelated messages are acknowledged without persisting group content.
-    if (data?.event_name !== 'message.text.received' || !c.canJoinGroups || m?.from?.is_bot === true) return;
+    if (data?.event_name !== 'message.text.received' || !c.canJoinGroups || m?.from?.is_bot === true) return false;
     const text: string = typeof m?.text === 'string' ? m.text : '';
     const intakeOn = !!c.intakeEnabled;
     const linkOn = intakeOn || !!c.commandsEnabled;
@@ -255,21 +365,22 @@ export class ZaloService {
         else if (e instanceof ForbiddenException) reply = 'Tài khoản không còn quyền nhập liệu. Kiểm tra quyền trong app.';
         else throw e;
       }
-      if(reply) await this.call(this.unseal(c.token), 'sendMessage', {chat_id:m.chat.id,text:reply.slice(0,1900)});
-      return;
+      if(reply) await this.out(clubId, c, 'sendMessage', {chat_id:m.chat.id,text:reply.slice(0,1900)});
+      return true;
     }
     if (this.commands && c.commandsEnabled && text) {
       const reply = await this.commands.handle(clubId, c, m, () => this.report(clubId));
-      if (reply) { await this.call(this.unseal(c.token), 'sendMessage', { chat_id: m.chat.id, text: reply.slice(0, 1900) }); return; }
+      if (reply) { await this.out(clubId, c, 'sendMessage', { chat_id: m.chat.id, text: reply.slice(0, 1900) }); return true; }
     }
-    if (m?.chat?.chat_type !== 'GROUP') return;
+    if (m?.chat?.chat_type !== 'GROUP') return false;
     // Group messages may prefix the command with an @mention of the bot.
     // The single-use secret must still be the final argument in the message.
     const code = typeof m?.text === 'string' ? m.text.trim().match(/(?:^|\s)\/ketnoi\s+([A-F0-9]{16})$/i)?.[1]?.toUpperCase() : null;
-    if (!code || !c.pairHash || (c.pairExpires ?? 0) < Date.now() || !same(hash(code), c.pairHash)) return;
-    const id = String(m.chat.id ?? ''); if (!/^[A-Za-z0-9_.:-]{1,150}$/.test(id)) return;
+    if (!code || !c.pairHash || (c.pairExpires ?? 0) < Date.now() || !same(hash(code), c.pairHash)) return false;
+    const id = String(m.chat.id ?? ''); if (!/^[A-Za-z0-9_.:-]{1,150}$/.test(id)) return false;
     c.pendingChat = { id, name: String(m.chat.title || m.chat.display_name || `Nhóm ${id}`).slice(0,150) };
     delete c.pairHash; delete c.pairExpires; await this.save(clubId, c);
+    return true;
   }
   async confirm(clubId: string) {
     const c = await this.required(clubId);
@@ -283,7 +394,8 @@ export class ZaloService {
     const c = await this.required(clubId);
     if ((patch.enabled || patch.intakeEnabled || patch.commandsEnabled || patch.paymentReminders || patch.resultImages) && (!c.chatId || !c.canJoinGroups || !c.webhookReady)) throw new BadRequestException('Kết nối và xác nhận nhóm trước khi bật tự động.');
     // Nhập thu/chi và lệnh trong nhóm cần PickleFund NHẬN tin từ nhóm — không có khi webhook do nền tảng khác giữ.
-    if (c.externalWebhook && ((patch.intakeEnabled && !c.intakeEnabled) || (patch.commandsEnabled && !c.commandsEnabled))) throw new BadRequestException('Tính năng này cần PickleFund nhận tin từ nhóm, chưa dùng được khi webhook do nền tảng khác quản lý.');
+    if (c.mode === 'hub' && patch.paymentReminders && !c.paymentReminders) throw new BadRequestException('Nhắc đóng quỹ riêng từng thành viên (tin nhắn riêng) chưa dùng được khi liên kết qua AI-BOT.');
+    if (c.externalWebhook && c.mode !== 'hub' && ((patch.intakeEnabled && !c.intakeEnabled) || (patch.commandsEnabled && !c.commandsEnabled))) throw new BadRequestException('Tính năng này cần PickleFund nhận tin từ nhóm, chưa dùng được khi webhook do nền tảng khác quản lý.');
     if (patch.reportWeekday !== undefined && (!Number.isInteger(patch.reportWeekday) || patch.reportWeekday < 0 || patch.reportWeekday > 6)) throw new BadRequestException('Ngày báo cáo không hợp lệ.');
     Object.assign(c, patch);
     c.financialChanges = false; c.dailyReport = false;
@@ -295,18 +407,20 @@ export class ZaloService {
     const c = await this.read(clubId);
     // Disable locally before attempting remote cleanup. Queued jobs are fenced by version/chatId.
     await this.prisma.systemSetting.deleteMany({ where: { key: PREFIX + clubId } });
+    // Liên kết qua AI-BOT: gỡ liên kết phía AI-BOT (nếu được).
+    if (c?.mode === 'hub' && c.hub) { try { await this.hubRequest(`/api/hub/v1/links/${encodeURIComponent(c.hub.linkId)}`, { method: 'DELETE', headers: this.hubAuth(c) }); } catch { /* local connection already disabled */ } }
     // Webhook do nền tảng khác giữ thì KHÔNG deleteWebhook (sẽ cắt nền tảng đó).
-    if (c && !c.externalWebhook) { try { await this.call(this.unseal(c.token), 'deleteWebhook', {}); } catch { /* local connection already disabled */ } }
+    if (c && !c.externalWebhook && c.mode !== 'hub') { try { await this.call(this.unseal(c.token), 'deleteWebhook', {}); } catch { /* local connection already disabled */ } }
   }
   private async send(clubId: string, c: Connection, text: string, report?: ZaloFinancialReport, photo?: string) {
     if (!c.chatId || !c.canJoinGroups || !c.webhookReady) throw new BadRequestException('Nhóm Zalo chưa sẵn sàng.');
     if (photo) {
-      await this.call(this.unseal(c.token), 'sendPhoto', { chat_id: c.chatId, photo, caption: text.slice(0, 1900) });
+      await this.out(clubId, c, 'sendPhoto', { chat_id: c.chatId, photo, caption: text.slice(0, 1900) });
     } else if (report) {
       const url = await this.createReportImage(report, clubId, c.version);
-      await this.call(this.unseal(c.token), 'sendPhoto', { chat_id: c.chatId, photo: url,
+      await this.out(clubId, c, 'sendPhoto', { chat_id: c.chatId, photo: url,
         caption: zaloReportText(report).slice(0, 1900) });
-    } else for (const chunk of splitZaloText(text)) await this.call(this.unseal(c.token), 'sendMessage', { chat_id: c.chatId, text: chunk });
+    } else for (const chunk of splitZaloText(text)) await this.out(clubId, c, 'sendMessage', { chat_id: c.chatId, text: chunk });
     // Patch only delivery metadata, never overwrite concurrently edited preferences/group.
     const current = await this.read(clubId);
     if (current?.version === c.version && current.chatId === c.chatId) { current.lastSentAt = new Date().toISOString(); delete current.lastError; delete current.lastErrorAt; current.failStreak = 0; await this.save(clubId, current); }
@@ -404,7 +518,7 @@ export class ZaloService {
   }
   /** Nhắc riêng từng thành viên đã liên kết Zalo mà chưa đóng quỹ kỳ đang mở, khi còn ≤3 ngày hoặc quá hạn; mỗi người tối đa 1 tin/3 ngày. */
   async remindPayments(clubId: string, c: Connection): Promise<number> {
-    if (!this.commands || !c.chatId) return 0;
+    if (!this.commands || !c.chatId || c.mode === 'hub') return 0;     // qua AI-BOT chưa gửi được tin riêng (DM)
     const period = await this.prisma.fundPeriod.findFirst({ where: { clubId, type: 'chung', status: 'active' }, orderBy: { startDate: 'desc' } });
     if (!period?.dueDate) return 0;
     const days = Math.round((period.dueDate.getTime() - vnToday().getTime()) / 86400000);

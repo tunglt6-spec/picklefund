@@ -31,7 +31,7 @@ async function bootstrap() {
     process.exit(1);
   }
 
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, { rawBody: true });
 
   // Mặc định body-parser giới hạn 100kb — quá nhỏ cho POST /bulk-import (Excel CLB
   // mới có thể vài nghìn dòng điểm danh/đăng ký). Nâng lên 15mb cho riêng json/urlencoded.
