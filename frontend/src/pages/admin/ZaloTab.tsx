@@ -28,6 +28,7 @@ export function ZaloTab() {
   const [disconnect, setDisconnect] = useState(false)
   const [sendReport, setSendReport] = useState(false)
   const [externalOnRegister, setExternalOnRegister] = useState(false)
+  const [groupCheck, setGroupCheck] = useState<{ ok: boolean; chatId: string; message: string | null } | null>(null)
   const [whInfo, setWhInfo] = useState<{ host: string | null; ours: boolean } | null>(null)
   const [groupId, setGroupId] = useState('')
   const [groupName, setGroupName] = useState('')
@@ -102,6 +103,8 @@ export function ZaloTab() {
           <input id="zalo-group-name" type="text" value={groupName} onChange={e => setGroupName(e.target.value)} maxLength={150} className="input-base mt-2 w-full" placeholder="CLB The PING" />
         </label>
         <Button disabled={busy || !groupId.trim()} onClick={() => action(async () => { setStatus((await postR('/zalo/group', { chatId: groupId.trim(), ...(groupName.trim() ? { chatName: groupName.trim() } : {}) })).data.data); setGroupId(''); setGroupName(''); toast.success('Đã lưu nhóm. Bật “Bật gửi tự động” rồi bấm Lưu khi sẵn sàng.') })}>Lưu nhóm</Button>
+        <Button variant="outline" disabled={busy || (!groupId.trim() && !status.chatId)} onClick={() => action(async () => { setGroupCheck((await postR('/zalo/group-check', groupId.trim() ? { chatId: groupId.trim() } : {})).data.data) })}>Kiểm tra nhóm (không gửi tin)</Button>
+        {groupCheck && <p className={`break-words text-sm ${groupCheck.ok ? 'text-green-700' : 'text-red-700'}`}>{groupCheck.ok ? `Bot hoạt động được trong nhóm ${groupCheck.chatId}` : `Nhóm ${groupCheck.chatId}: ${groupCheck.message ?? 'không dùng được'}`}</p>}
         <p className="text-xs [color:var(--pf-color-muted)]">Đổi sang nhóm khác sẽ tự tắt gửi tự động để tránh gửi nhầm. Nhóm giữ nguyên thì cấu hình gửi không đổi.</p>
       </div>}
       <p className="text-sm">Webhook: {status.externalWebhook ? 'Do nền tảng khác (vd. AI-BOT) quản lý — PickleFund chỉ gửi tin ra, không đụng webhook' : status.webhookReady ? 'Đã xác minh' : 'Chưa xác minh — bấm “Kiểm tra lại webhook”; nếu vẫn lỗi, kiểm tra HTTPS và đăng ký lại bot'}</p>

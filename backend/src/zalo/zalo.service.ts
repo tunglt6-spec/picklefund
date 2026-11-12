@@ -160,6 +160,17 @@ export class ZaloService {
     } catch (e) { c.lastError = (e as Error).message; }
     await this.save(clubId, c); return this.status(clubId);
   }
+  /**
+   * Chẩn đoán nhóm: gọi sendChatAction("typing") — KHÔNG gửi tin, chỉ hiện "đang soạn tin" vài giây — để biết bot có hoạt động được trong
+   * nhóm không và Zalo báo gì nếu không (mã nhóm sai / bot không còn trong nhóm...). Không đổi cấu hình.
+   */
+  async checkGroup(clubId: string, chatId?: string) {
+    const c = await this.required(clubId);
+    const id = (chatId ?? c.chatId ?? '').trim();
+    if (!/^[A-Za-z0-9_.:-]{1,150}$/.test(id)) throw new BadRequestException('Chưa có mã nhóm hợp lệ để kiểm tra.');
+    try { await this.call(this.unseal(c.token), 'sendChatAction', { chat_id: id, action: 'typing' }); return { ok: true, chatId: id, message: null as string | null }; }
+    catch (e) { return { ok: false, chatId: id, message: (e as Error).message }; }
+  }
   /** Chẩn đoán: bot đang gửi tin tới đâu (chỉ trả host, không trả đường dẫn/secret). Dùng để biết webhook đang thuộc PickleFund hay nền tảng khác. */
   async webhookInfo(clubId: string) {
     const c = await this.required(clubId);

@@ -14,6 +14,7 @@ class BotDto {
   @IsOptional() @IsBoolean() force?: boolean;
 }
 class ExternalDto { @IsBoolean() enabled: boolean; }
+class GroupCheckDto { @IsOptional() @IsString() @MaxLength(150) chatId?: string; }
 class GroupDto { @IsString() @MaxLength(150) chatId: string; @IsOptional() @IsString() @MaxLength(150) chatName?: string; }
 class PreferencesDto {
   @IsOptional() @IsBoolean() intakeEnabled?: boolean;
@@ -56,6 +57,10 @@ export class ZaloController {
   /** Đặt nhóm nhận thông báo bằng mã nhóm — chỉ khi webhook do nền tảng khác quản lý (không dùng được /ketnoi). */
   @Post('group') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   async group(@CurrentUser() user: JwtUser, @Body() body: GroupDto) { return ok(await this.zalo.setGroup(this.zalo.club(user.clubId), body.chatId, body.chatName)); }
+
+  /** Chẩn đoán: bot có hoạt động được trong nhóm không (sendChatAction typing; không gửi tin). */
+  @Post('group-check') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  async groupCheck(@CurrentUser() user: JwtUser, @Body() body: GroupCheckDto) { return ok(await this.zalo.checkGroup(this.zalo.club(user.clubId), body.chatId)); }
 
   @Post('pair') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   async pair(@CurrentUser() user: JwtUser) { return ok(await this.zalo.pair(this.zalo.club(user.clubId))); }
