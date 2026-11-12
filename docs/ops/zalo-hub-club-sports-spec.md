@@ -133,3 +133,27 @@ Quay lại: `HUB_ENABLED=0` + khởi động lại container (AI-BOT về hành 
 Chưa kiểm chứng: gửi tin không cần webhook; `chat.id` sự kiện trùng `chatId` PickleFund đã lưu (đã suy ra, cần thử); thư viện mã hóa trong container AI-BOT; ảnh hưởng của hook lên các bot Zalo khác (hook chỉ chạy với `club_sports`).
 
 Cần anh duyệt: (1) lỗi chuyển sự kiện → AI im lặng (§5.3.5); (2) thêm token đăng nhập cho API mới (§5.4); (3) mạng `hub-net` và đổi cổng 4105 về 127.0.0.1 (§7); (4) thứ tự GĐ0 → GĐ5.
+
+## 12. Nhóm Zalo: link mời, mã nhóm thật và cách liên kết xuyên suốt (cập nhật 2026-11-12)
+
+### 12.1 Những gì đã xác minh
+- Docs Zalo Bot liệt kê đúng 11 API: `getMe, getUpdates, setWebhook, testWebhook, deleteWebhook, getWebhookInfo, sendMessage, sendPhoto, sendSticker, sendVoice, sendChatAction`. **Không có API nào đổi link mời `zalo.me/g/<mã>` ra mã nhóm, hay lấy thông tin/tên nhóm.** [Đọc docs ngày 2026-11-12; API không có tài liệu thì em không thể khẳng định là không tồn tại.]
+- Mã nhóm thật (`chat.id`, dạng `zgr-…`) chỉ xuất hiện trong **sự kiện webhook**. Sự kiện nhóm của bot này không kèm tên nhóm: PickleFund phải dùng tên dự phòng "Nhóm <mã>" lúc ghép.
+- AI-BOT lưu nhóm theo link mời là `zgr-<mã trong link>` (vd. `zgr-sypbqf517` cho `zalo.me/g/sypbqf517`) — mã **tự ghép**, KHÁC mã thật PickleFund học từ sự kiện (`zgr-2f35…`). Hai mã này đã không khớp trên prod; AI-BOT chọn bot theo tên/mention nên chưa lộ ra.
+- ⇒ Link mời chỉ dùng để thêm bot vào nhóm và làm nhãn cho người; không dùng làm khóa kỹ thuật được. Khóa kỹ thuật duy nhất là `chat.id` quan sát từ sự kiện.
+
+### 12.2 Thiết kế: AI-BOT là sổ nhóm duy nhất, PickleFund chọn từ sổ đó
+Sổ nhóm trong AI-BOT: `{link_mời, tên, chat_id_thật, trạng thái: chờ xác nhận | đã gắn}`.
+1. **Khách thêm nhóm một lần ở AI-BOT như hiện nay** (dán link mời + tên). Trạng thái "chờ xác nhận", chưa có `chat_id_thật`.
+2. **Gắn mã nhóm thật không cần gõ mã:** khi bot nhận tin từ một nhóm chưa có trong sổ:
+   - Chỉ có 1 nhóm "chờ xác nhận" và bot chưa có nhóm đã gắn nào khác → AI-BOT hiện gợi ý "Nhóm mới gửi tin — gắn vào 'CLB The PING'?" kèm một đoạn tin mẫu để người dùng nhận ra; bấm **Xác nhận** là xong.
+   - Có nhiều nhóm chờ → danh sách gợi ý để chọn đúng nhóm. Không bao giờ tự gắn khi chưa có người xác nhận (tránh gắn nhầm nhóm khác mà bot đang ở).
+   - Dự phòng: lệnh `/xacnhan MÃ-NHÓM` trong nhóm (mã hiện trên giao diện AI-BOT).
+3. **PickleFund (chế độ qua AI-BOT)** lấy danh sách nhóm **đã gắn** của bot qua API hub (`GET /api/hub/v1/links/{id}/groups` → `{chat_id, tên, link}`), khách chọn từ danh sách; PickleFund lưu `chat_id` thật + tên + link mời để hiển thị (đồng bộ với AI-BOT, không gõ mã). Đổi nhóm/gỡ nhóm ở AI-BOT thì PickleFund thấy trạng thái đã đổi ở lần đồng bộ kế (hoặc qua thông báo hub).
+4. **Chế độ trực tiếp (không có AI-BOT):** giữ `/ketnoi` như hiện nay; link mời có thể điền thêm như nhãn hiển thị, không bắt buộc.
+5. **Sửa lỗi sẵn có của AI-BOT:** ngừng sinh `zgr-<mã link>` làm `chat_id`; nhóm chưa xác nhận hiển thị rõ "chưa xác nhận"; sau khi gắn dùng `chat_id` thật để chọn bot/nhóm thay cho so khớp tên.
+
+### 12.3 Việc phải làm thêm trong kế hoạch
+- AI-BOT: cột `chat_id_thật` + trạng thái trong `linked_groups`, danh sách "nhóm mới phát hiện", nút xác nhận, API `groups` của hub (GĐ1/GĐ3).
+- PickleFund: màn chọn nhóm từ danh sách AI-BOT (GĐ2/GĐ3); trường `groupLink`/tên hiển thị (nhãn).
+- Dữ liệu hiện có: nhóm "CLB The PING" của bot The PING cần được gắn `chat_id_thật = zgr-2f35…` (mã PickleFund đã có) trong GĐ4, không cần khách làm lại.
