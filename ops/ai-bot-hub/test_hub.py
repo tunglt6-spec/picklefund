@@ -14,7 +14,6 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 # Trong container chạy qua stdin (không có __file__): đặt HUB_DIR=/app.
 sys.path.insert(0, os.environ.get("HUB_DIR") or os.path.dirname(os.path.abspath(__file__)))
-from cryptography.fernet import Fernet  # noqa: E402
 from fastapi import FastAPI  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
@@ -58,11 +57,12 @@ class HubTest(unittest.TestCase):
         c.execute("INSERT INTO bots(bot_id,tenant_id,bot_name,platform,bot_token) VALUES('b_club','lethanhtung','Maika The PING','zalo','1:tok')")
         c.execute("INSERT INTO bots(bot_id,tenant_id,bot_name,platform,bot_token) VALUES('b_other','lethanhtung','Bot giúp việc','zalo','2:tok')")
         c.commit(); c.close()
-        os.environ.update({"HUB_ENABLED": "1", "HUB_KEY": Fernet.generate_key().decode(), "AIBOT_SESSION_SECRET": "s" * 40,
+        os.environ.update({"HUB_ENABLED": "1", "HUB_KEY": "k" * 48, "AIBOT_SESSION_SECRET": "s" * 40,
                            "HUB_ALLOWED_EVENT_HOSTS": f"127.0.0.1:{self.port},picklefund-api:3000"})
         os.environ.pop("HUB_SEND_DRY_RUN", None)
         self.app = FastAPI()
         hub._hits.clear()
+        hub._ENV_FILE = os.path.join(self.tmp, 'no-such.env'); hub._file_cache.update(mtime=None, vars={})
         hub.init(self.app, self.db)
         # gắn nhãn mẫu cho bot CLB (sau init vì init thêm cột template_key)
         c = sqlite3.connect(self.db); c.execute("UPDATE bots SET template_key='thethao' WHERE bot_id='b_club'"); c.commit(); c.close()
@@ -235,6 +235,53 @@ class HubTest(unittest.TestCase):
         link = self.make_link(); self.run_hook("/quy", chat="zgr-abc")
         g = self.cl.get(f"/api/hub/v1/links/{link['link_id']}/groups", headers={"Authorization": "Bearer " + link["access_key"]}).json()
         self.assertEqual([x["chat_id"] for x in g["groups"]], ["zgr-abc"])
+
+    # ---- mã hóa / token / tệp cấu hình (thư viện chuẩn) ----
+    def test_seal_roundtrip_and_tamper(self):
+        for plain in ("", "a", "x" * 31, "x" * 32, "x" * 33, "chữ ký bí mật " * 20):
+            self.assertEqual(hub._open(hub._seal(plain)), plain)
+        self.assertNotEqual(hub._seal("abc"), hub._seal("abc"))                  # nonce ngẫu nhiên
+        sealed = hub._seal("secret-value")
+        bad = sealed[:-3] + ("AAA" if not sealed.endswith("AAA") else "BBB")
+        with self.assertRaises(ValueError):
+            hub._open(bad)
+        os.environ["HUB_KEY"] = "z" * 48                                          # sai khóa
+        with self.assertRaises(ValueError):
+            hub._open(sealed)
+        os.environ["HUB_KEY"] = "short"
+        with self.assertRaises(Exception):
+            hub._seal("x")
+
+    def test_session_token_security(self):
+        good = hub.issue_session_token("LeThanhTung", "customer")
+        self.assertEqual(hub._session_user("Bearer " + good), ("lethanhtung", "customer"))
+        head, body, sig = good.split(".")
+        forged_body = hub._b64e(json.dumps({"sub": "superadmin", "role": "superadmin", "exp": time.time() + 999}).encode())
+        for bad in (f"{head}.{forged_body}.{sig}", good + "x", "a.b.c", "", "Bearer"):
+            with self.assertRaises(Exception):
+                hub._session_user("Bearer " + bad)
+        none_head = hub._b64e(json.dumps({"alg": "none", "typ": "JWT"}).encode())
+        with self.assertRaises(Exception):
+            hub._session_user(f"Bearer {none_head}.{body}.")
+        # hết hạn
+        old = hub._decode_token
+        expired = hub._b64e(json.dumps({"sub": "u", "role": "customer", "exp": time.time() - 5}).encode())
+        sig2 = hub._b64e(hmac.new(("s" * 40).encode(), f"{head}.{expired}".encode(), hashlib.sha256).digest())
+        with self.assertRaises(Exception):
+            hub._session_user(f"Bearer {head}.{expired}.{sig2}")
+        self.assertIs(old, hub._decode_token)
+
+    def test_env_file_toggles_without_restart(self):
+        f = os.path.join(self.tmp, "hub.env"); hub._ENV_FILE = f
+        open(f, "w").write("# ghi chú\nHUB_ENABLED=0\nHUB_ALLOWED_EVENT_HOSTS=picklefund-api:3000\n"); hub._file_cache.update(mtime=None, vars={})
+        os.environ["HUB_ENABLED"] = "1"                                           # tệp ưu tiên hơn biến môi trường
+        self.assertFalse(hub.enabled())
+        time.sleep(0.02)
+        open(f, "w").write('HUB_ENABLED="1"\n')
+        os.utime(f, (time.time() + 5, time.time() + 5))
+        self.assertTrue(hub.enabled())
+        os.remove(f)
+        self.assertTrue(hub.enabled())                                            # mất tệp → quay về biến môi trường
 
     def test_migration_idempotent(self):
         hub.init_db(); hub.init_db()

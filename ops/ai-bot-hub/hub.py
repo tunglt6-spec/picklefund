@@ -7,12 +7,13 @@ Thiết kế: docs/ops/zalo-hub-club-sports-spec.md (PickleFund repo). Module n�
   - PickleFund gửi tin ra qua API /api/hub/v1/messages (không bao giờ thấy token bot).
 TẮT MẶC ĐỊNH: chỉ hoạt động khi biến môi trường HUB_ENABLED=1. Khi tắt, hook trả False ngay → hành vi AI-BOT không đổi.
 
-Biến môi trường:
+Cấu hình: đọc từ tệp /app/.env.hub (dạng KEY=VALUE; thay đổi có hiệu lực NGAY, không cần khởi động lại) rồi mới tới biến môi trường:
   HUB_ENABLED=1            bật
-  HUB_KEY                  khóa Fernet (base64 url-safe 32 byte) mã hóa signing_secret trong DB
+  HUB_KEY                  chuỗi bí mật ngẫu nhiên (>=32 ký tự) để mã hóa signing_secret trong DB
   AIBOT_SESSION_SECRET     khóa HS256 cho token phiên đăng nhập (dùng cho API tạo mã)
   HUB_ALLOWED_EVENT_HOSTS  danh sách host[:cổng] cho phép làm event_url (vd. picklefund-api:3000) — chặn SSRF
   HUB_SEND_DRY_RUN=1       (thử nghiệm) không gọi Zalo thật khi gửi tin
+Chỉ dùng thư viện chuẩn + fastapi/pydantic/httpx (đã có trong image) — KHÔNG thêm phụ thuộc, vì gói cài tay vào container sẽ mất khi container bị tạo lại.
 """
 from __future__ import annotations
 
@@ -29,9 +30,9 @@ from collections import defaultdict, deque
 from typing import Any, Optional
 from urllib.parse import urlparse
 
+import base64
+
 import httpx
-import jwt
-from cryptography.fernet import Fernet, InvalidToken
 from fastapi import APIRouter, FastAPI, Header, HTTPException, Request
 from pydantic import BaseModel
 
@@ -62,12 +63,36 @@ _hits: dict[str, deque] = defaultdict(deque)
 
 
 # ───────────────────────── cấu hình / tiện ích ─────────────────────────
+_ENV_FILE = os.environ.get("HUB_ENV_FILE", "/app/.env.hub")
+_file_cache: dict[str, Any] = {"mtime": None, "vars": {}}
+
+
+def _file_vars() -> dict[str, str]:
+    """Đọc .env.hub; nạp lại khi tệp đổi (mtime) để bật/tắt hub tức thời mà không phải khởi động lại container."""
+    try:
+        m = os.stat(_ENV_FILE).st_mtime_ns
+    except OSError:
+        _file_cache.update(mtime=None, vars={})
+        return {}
+    if m != _file_cache["mtime"]:
+        out: dict[str, str] = {}
+        with open(_ENV_FILE, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    out[k.strip()] = v.strip().strip('"').strip("'")
+        _file_cache.update(mtime=m, vars=out)
+    return _file_cache["vars"]
+
+
+def _env(name: str, default: str = "") -> str:
+    fv = _file_vars()
+    return fv[name] if name in fv else os.environ.get(name, default)
+
+
 def enabled() -> bool:
-    return os.environ.get("HUB_ENABLED", "0") == "1"
-
-
-def _env(name: str) -> str:
-    return os.environ.get(name, "")
+    return _env("HUB_ENABLED", "0") == "1"
 
 
 def _conn() -> sqlite3.Connection:
@@ -82,11 +107,42 @@ def _sha(s: str) -> str:
     return hashlib.sha256(s.encode()).hexdigest()
 
 
-def _fernet() -> Fernet:
-    key = _env("HUB_KEY")
-    if not key:
-        raise HTTPException(status_code=503, detail="Hub chưa cấu hình khóa")
-    return Fernet(key.encode())
+def _b64e(b: bytes) -> str:
+    return base64.urlsafe_b64encode(b).rstrip(b"=").decode()
+
+
+def _b64d(s: str) -> bytes:
+    return base64.urlsafe_b64decode(s + "=" * (-len(s) % 4))
+
+
+def _keys() -> tuple[bytes, bytes]:
+    master = _env("HUB_KEY")
+    if len(master) < 32:
+        raise HTTPException(status_code=503, detail="Hub chưa cấu hình khóa (HUB_KEY >= 32 ký tự)")
+    root = hashlib.sha256(master.encode()).digest()
+    return hmac.new(root, b"enc", hashlib.sha256).digest(), hmac.new(root, b"mac", hashlib.sha256).digest()
+
+
+def _seal(plain: str) -> str:
+    """Mã hóa có xác thực bằng thư viện chuẩn: nonce(16) || (plain XOR dòng khóa HMAC-SHA256) || tag(32)."""
+    enc, mac = _keys()
+    nonce = secrets.token_bytes(16)
+    data = plain.encode()
+    stream = b"".join(hmac.new(enc, nonce + i.to_bytes(4, "big"), hashlib.sha256).digest() for i in range((len(data) + 31) // 32))
+    ct = bytes(a ^ b for a, b in zip(data, stream))
+    return _b64e(nonce + ct + hmac.new(mac, nonce + ct, hashlib.sha256).digest())
+
+
+def _open(sealed: str) -> str:
+    enc, mac = _keys()
+    raw = _b64d(sealed)
+    if len(raw) < 48:
+        raise ValueError("dữ liệu mã hóa không hợp lệ")
+    nonce, ct, tag = raw[:16], raw[16:-32], raw[-32:]
+    if not hmac.compare_digest(tag, hmac.new(mac, nonce + ct, hashlib.sha256).digest()):
+        raise ValueError("sai khóa hoặc dữ liệu bị sửa")
+    stream = b"".join(hmac.new(enc, nonce + i.to_bytes(4, "big"), hashlib.sha256).digest() for i in range((len(ct) + 31) // 32))
+    return bytes(a ^ b for a, b in zip(ct, stream)).decode()
 
 
 def _rate(key: str, limit: int, window: float = 60.0) -> bool:
@@ -150,7 +206,27 @@ def issue_session_token(username: str, role: str) -> str:
     if not secret:
         raise RuntimeError("thiếu AIBOT_SESSION_SECRET")
     now = int(time.time())
-    return jwt.encode({"sub": (username or "").strip().lower(), "role": role, "iat": now, "exp": now + SESSION_TTL}, secret, algorithm="HS256")
+    head = _b64e(json.dumps({"alg": "HS256", "typ": "JWT"}, separators=(",", ":")).encode())
+    body = _b64e(json.dumps({"sub": (username or "").strip().lower(), "role": role, "iat": now, "exp": now + SESSION_TTL}, separators=(",", ":")).encode())
+    sig = _b64e(hmac.new(secret.encode(), f"{head}.{body}".encode(), hashlib.sha256).digest())
+    return f"{head}.{body}.{sig}"
+
+
+def _decode_token(token: str, secret: str) -> dict[str, Any]:
+    """Xác minh token HS256 (chỉ nhận alg HS256, kiểm tra chữ ký và hạn). Ném ValueError nếu sai."""
+    try:
+        head_b, body_b, sig_b = token.split(".")
+        if json.loads(_b64d(head_b)).get("alg") != "HS256":
+            raise ValueError("alg")
+        good = hmac.new(secret.encode(), f"{head_b}.{body_b}".encode(), hashlib.sha256).digest()
+        if not hmac.compare_digest(good, _b64d(sig_b)):
+            raise ValueError("sig")
+        payload = json.loads(_b64d(body_b))
+        if not isinstance(payload, dict) or float(payload.get("exp", 0)) < time.time():
+            raise ValueError("exp")
+        return payload
+    except (ValueError, KeyError, TypeError, json.JSONDecodeError) as e:
+        raise ValueError("token không hợp lệ") from e
 
 
 def _session_user(authorization: Optional[str]) -> tuple[str, str]:
@@ -158,8 +234,8 @@ def _session_user(authorization: Optional[str]) -> tuple[str, str]:
     if not secret or not authorization or not authorization.lower().startswith("bearer "):
         raise HTTPException(status_code=401, detail="Cần đăng nhập")
     try:
-        p = jwt.decode(authorization[7:].strip(), secret, algorithms=["HS256"])
-    except jwt.PyJWTError:
+        p = _decode_token(authorization[7:].strip(), secret)
+    except ValueError:
         raise HTTPException(status_code=401, detail="Phiên không hợp lệ hoặc đã hết hạn")
     return str(p.get("sub", "")), str(p.get("role", ""))
 
@@ -253,7 +329,7 @@ async def exchange(req: ExchangeReq, request: Request):
     if not _host_allowed(req.event_url):
         raise HTTPException(status_code=400, detail="Địa chỉ nhận sự kiện không nằm trong danh sách cho phép")
     code = re.sub(r"\s+", "", req.code).upper()
-    f = _fernet()
+    _keys()  # báo 503 sớm nếu chưa có khóa
     link_id, access_key, signing_secret = "lnk_" + secrets.token_hex(6), "hak_" + secrets.token_urlsafe(32), secrets.token_urlsafe(32)
     now = time.time()
     with _conn() as db:
@@ -271,7 +347,7 @@ async def exchange(req: ExchangeReq, request: Request):
             "INSERT INTO hub_links(link_id,bot_id,tenant_id,app,club_ref,event_url,access_key_hash,signing_secret_enc,status,created_at) "
             "VALUES(?,?,?,?,?,?,?,?, 'active', ?)",
             (link_id, row["bot_id"], row["tenant_id"], req.app, (req.club_ref or "")[:80], req.event_url,
-             _sha(access_key), f.encrypt(signing_secret.encode()).decode(), now))
+             _sha(access_key), _seal(signing_secret), now))
     return {"ok": True, "link_id": link_id, "access_key": access_key, "signing_secret": signing_secret,
             "bot": {"id": bot["bot_id"], "name": bot["bot_name"], "platform": bot["platform"]}}
 
@@ -336,7 +412,7 @@ async def send_message(req: MessageReq, authorization: Optional[str] = Header(No
         except sqlite3.IntegrityError:
             return {"ok": True, "duplicate": True}
         bot = db.execute("SELECT bot_token FROM bots WHERE bot_id=?", (link["bot_id"],)).fetchone()
-    if os.environ.get("HUB_SEND_DRY_RUN") == "1":
+    if _env("HUB_SEND_DRY_RUN") == "1":
         return {"ok": True, "dry_run": True}
     token = (bot["bot_token"] or "").strip() if bot else ""
     if not token:
@@ -389,8 +465,8 @@ async def hub_try_forward(bot_id: str, data: dict, text: str, chat_id: str) -> b
     if not link:
         return False
     try:
-        secret = _fernet().decrypt(link["signing_secret_enc"].encode()).decode()
-    except (InvalidToken, HTTPException):
+        secret = _open(link["signing_secret_enc"])
+    except (ValueError, HTTPException):
         _record(link["link_id"], False, "không giải mã được khóa ký", chat_id)
         return True
     body = json.dumps({"link_id": link["link_id"], "bot_id": bot_id, "event": data}, ensure_ascii=False, separators=(",", ":")).encode()
