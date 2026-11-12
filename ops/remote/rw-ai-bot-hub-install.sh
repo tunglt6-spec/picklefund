@@ -19,7 +19,7 @@ cd "$AB"
 
 echo "== 1. Kiểm tra gói trong container =="
 docker exec -i "$C" python - <<'PY'
-import importlib, sys
+import importlib.util, sys
 need = ["fastapi", "pydantic", "httpx"]
 nice = ["markitdown", "docx", "fitz"]
 bad = [m for m in need if importlib.util.find_spec(m) is None]
