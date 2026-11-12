@@ -43,7 +43,7 @@ echo "--- thẻ bot: nơi vẽ danh sách bot:"
 grep -n -E 'function (renderBots|renderBotCards|loadBots|renderMyBots)' "$AB/static/index.html" | cut -c1-170 | head
 
 sec "AI-BOT: cấu trúc DB (chỉ tên bảng/cột)"
-docker exec maika-saas-engine python - <<'PY' 2>&1 | head -60
+docker exec -i maika-saas-engine python - <<'PY' 2>&1 | head -60
 import sqlite3, glob
 for p in ("/app/data/saas_bots.sqlite",):
     try:
@@ -67,3 +67,4 @@ cd /opt/picklefund && docker compose config --services 2>/dev/null | tr '\n' ' '
 echo "--- ip gateway các mạng (để biết đường từ container ra host):"
 for n in picklefund_picklefund-net ai-bot-saas_default; do echo -n "$n: "; docker network inspect "$n" --format '{{range .IPAM.Config}}{{.Gateway}} {{end}}' 2>/dev/null; done
 echo "=== xong ==="
+exit 0

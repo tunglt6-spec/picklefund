@@ -1,0 +1,2 @@
+# Script chạy trên VPS phải dùng LF (CRLF làm bash lỗi).
+*.sh text eol=lf
