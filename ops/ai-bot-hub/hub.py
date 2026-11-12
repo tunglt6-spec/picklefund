@@ -383,6 +383,94 @@ async def link_groups(link_id: str, authorization: Optional[str] = Header(None))
     return {"ok": True, "groups": [{"chat_id": c["chat_id"], "first_seen": c["first_seen"], "last_seen": c["last_seen"]} for c in chats]}
 
 
+# ───────────────────────── GĐ3: API cho CHỦ BOT (đăng nhập AI-BOT), dùng bởi bảng "PickleFund" trong giao diện ─────────────────────────
+class ConfirmGroupReq(BaseModel):
+    chat_id: str
+
+
+def _owned_bot(db: sqlite3.Connection, bot_id: str, authorization: Optional[str]) -> sqlite3.Row:
+    sub, role = _session_user(authorization)
+    bot = db.execute("SELECT bot_id, bot_name, tenant_id, platform, template_key FROM bots WHERE bot_id=?", (bot_id,)).fetchone()
+    if not bot or (str(bot["tenant_id"]).lower() != sub and not _is_super(role, sub)):
+        raise HTTPException(status_code=404, detail="Không tìm thấy bot")
+    return bot
+
+
+def _eligible(bot: sqlite3.Row) -> bool:
+    return (bot["platform"] or "").lower() == "zalo" and bot["template_key"] in TEMPLATE_KEYS
+
+
+def _seen_groups(db: sqlite3.Connection, bot_id: str) -> list[dict[str, Any]]:
+    """Nhóm Zalo (mã thật `zgr-…`) bot đã nhận tin, lấy từ lịch sử trò chuyện nhóm; không đọc nội dung tin."""
+    try:
+        rows = db.execute("SELECT chat_id, COUNT(*) n, MAX(created_at) last FROM group_chat_history WHERE bot_id=? AND chat_id LIKE 'zgr-%' "
+                          "GROUP BY chat_id ORDER BY MAX(created_at) DESC LIMIT 50", (bot_id,)).fetchall()
+    except sqlite3.OperationalError:
+        return []
+    return [{"chat_id": r["chat_id"], "messages": r["n"], "last_message_at": str(r["last"] or "")[:25]} for r in rows]
+
+
+@router.get("/bots/{bot_id}/overview")
+async def bot_overview(bot_id: str, authorization: Optional[str] = Header(None)):
+    """Trạng thái liên kết PickleFund của bot + nhóm bot đã thấy (kèm trạng thái đã xác nhận cho liên kết)."""
+    with _conn() as db:
+        bot = _owned_bot(db, bot_id, authorization)
+        out: dict[str, Any] = {"ok": True, "enabled": enabled(), "eligible": _eligible(bot), "links": [], "groups": []}
+        if not _eligible(bot):
+            return out
+        links = db.execute("SELECT * FROM hub_links WHERE bot_id=? AND status='active' ORDER BY created_at DESC", (bot_id,)).fetchall()
+        confirmed: dict[str, set[str]] = {}
+        for l in links:
+            confirmed[l["link_id"]] = {r["chat_id"] for r in db.execute("SELECT chat_id FROM hub_link_chats WHERE link_id=?", (l["link_id"],)).fetchall()}
+            d = _public_link(l); d["club_ref"] = l["club_ref"]
+            out["links"].append(d)
+        groups = _seen_groups(db, bot_id)
+        for g in groups:
+            g["confirmed_for"] = [lid for lid, chats in confirmed.items() if g["chat_id"] in chats]
+        out["groups"] = groups
+    return out
+
+
+@router.post("/bots/{bot_id}/links/{link_id}/groups")
+async def confirm_group(bot_id: str, link_id: str, req: ConfirmGroupReq, authorization: Optional[str] = Header(None)):
+    """Chủ bot XÁC NHẬN nhóm cho PickleFund: chỉ nhóm bot đã thật sự nhận tin mới được xác nhận (không tự nghĩ ra mã)."""
+    _require_enabled()
+    with _conn() as db:
+        bot = _owned_bot(db, bot_id, authorization)
+        if not _eligible(bot):
+            raise HTTPException(status_code=400, detail="Bot không thuộc mẫu CLB & Thể Thao")
+        link = db.execute("SELECT link_id FROM hub_links WHERE link_id=? AND bot_id=? AND status='active'", (link_id, bot_id)).fetchone()
+        if not link:
+            raise HTTPException(status_code=404, detail="Không tìm thấy liên kết")
+        if req.chat_id not in {g["chat_id"] for g in _seen_groups(db, bot_id)}:
+            raise HTTPException(status_code=400, detail="Bot chưa nhận tin từ nhóm này; nhắn một tin trong nhóm rồi thử lại")
+        now = time.time()
+        db.execute("INSERT INTO hub_link_chats(link_id,chat_id,first_seen,last_seen) VALUES(?,?,?,?) "
+                   "ON CONFLICT(link_id,chat_id) DO UPDATE SET last_seen=excluded.last_seen", (link_id, req.chat_id, now, now))
+    return {"ok": True}
+
+
+@router.delete("/bots/{bot_id}/links/{link_id}/groups/{chat_id}")
+async def unconfirm_group(bot_id: str, link_id: str, chat_id: str, authorization: Optional[str] = Header(None)):
+    _require_enabled()
+    with _conn() as db:
+        _owned_bot(db, bot_id, authorization)
+        db.execute("DELETE FROM hub_link_chats WHERE link_id=? AND chat_id=? AND link_id IN (SELECT link_id FROM hub_links WHERE bot_id=?)",
+                   (link_id, chat_id, bot_id))
+    return {"ok": True}
+
+
+@router.delete("/bots/{bot_id}/links/{link_id}")
+async def owner_revoke_link(bot_id: str, link_id: str, authorization: Optional[str] = Header(None)):
+    _require_enabled()
+    with _conn() as db:
+        _owned_bot(db, bot_id, authorization)
+        cur = db.execute("UPDATE hub_links SET status='revoked' WHERE link_id=? AND bot_id=? AND status='active'", (link_id, bot_id))
+        if cur.rowcount != 1:
+            raise HTTPException(status_code=404, detail="Không tìm thấy liên kết")
+    return {"ok": True}
+
+
 async def _zalo_post(token: str, method: str, payload: dict) -> dict:
     async with httpx.AsyncClient(timeout=15) as cl:
         r = await cl.post(f"https://bot-api.zaloplatforms.com/bot{token}/{method}", json=payload)

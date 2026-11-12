@@ -236,6 +236,52 @@ class HubTest(unittest.TestCase):
         g = self.cl.get(f"/api/hub/v1/links/{link['link_id']}/groups", headers={"Authorization": "Bearer " + link["access_key"]}).json()
         self.assertEqual([x["chat_id"] for x in g["groups"]], ["zgr-abc"])
 
+    # ---- GĐ3: API cho chủ bot ----
+    def seed_history(self, bot="b_club", chats=("zgr-real1",)):
+        c = sqlite3.connect(self.db)
+        c.execute("CREATE TABLE IF NOT EXISTS group_chat_history (id INTEGER PRIMARY KEY, bot_id TEXT, chat_id TEXT, content TEXT, created_at TEXT)")
+        for ch in chats:
+            c.execute("INSERT INTO group_chat_history(bot_id,chat_id,content,created_at) VALUES(?,?,?,?)", (bot, ch, "bí mật không được lộ", "2026-11-12T10:00:00"))
+        c.commit(); c.close()
+
+    def test_owner_overview_and_confirm_group(self):
+        link = self.make_link(); lid = link["link_id"]; self.seed_history(chats=("zgr-real1", "user-dm-1"))
+        a = self.auth()
+        ov = self.cl.get("/api/hub/v1/bots/b_club/overview", headers=a).json()
+        self.assertTrue(ov["eligible"]); self.assertEqual([l["link_id"] for l in ov["links"]], [lid])
+        self.assertEqual([g["chat_id"] for g in ov["groups"]], ["zgr-real1"])                 # chỉ nhóm zgr-, không lộ chat riêng
+        self.assertNotIn("bí mật", json.dumps(ov, ensure_ascii=False))                         # không lộ nội dung tin
+        self.assertEqual(ov["groups"][0]["confirmed_for"], [])
+        self.assertEqual(self.cl.post(f"/api/hub/v1/bots/b_club/links/{lid}/groups", json={"chat_id": "zgr-made-up"}, headers=a).status_code, 400)
+        self.assertEqual(self.cl.post(f"/api/hub/v1/bots/b_club/links/{lid}/groups", json={"chat_id": "zgr-real1"}, headers=a).status_code, 200)
+        self.assertEqual(self.cl.get("/api/hub/v1/bots/b_club/overview", headers=a).json()["groups"][0]["confirmed_for"], [lid])
+        key = {"Authorization": "Bearer " + link["access_key"]}
+        self.assertEqual([x["chat_id"] for x in self.cl.get(f"/api/hub/v1/links/{lid}/groups", headers=key).json()["groups"]], ["zgr-real1"])
+        self.assertEqual(self.cl.delete(f"/api/hub/v1/bots/b_club/links/{lid}/groups/zgr-real1", headers=a).status_code, 200)
+        self.assertEqual(self.cl.get(f"/api/hub/v1/links/{lid}/groups", headers=key).json()["groups"], [])
+
+    def test_owner_endpoints_scope(self):
+        link = self.make_link(); lid = link["link_id"]; self.seed_history()
+        self.assertEqual(self.cl.get("/api/hub/v1/bots/b_club/overview").status_code, 401)
+        other = self.auth("khachkhac")
+        self.assertEqual(self.cl.get("/api/hub/v1/bots/b_club/overview", headers=other).status_code, 404)
+        self.assertEqual(self.cl.post(f"/api/hub/v1/bots/b_club/links/{lid}/groups", json={"chat_id": "zgr-real1"}, headers=other).status_code, 404)
+        self.assertEqual(self.cl.delete(f"/api/hub/v1/bots/b_club/links/{lid}", headers=other).status_code, 404)
+        # bot không thuộc mẫu CLB: eligible=false, không xác nhận được
+        self.assertFalse(self.cl.get("/api/hub/v1/bots/b_other/overview", headers=self.auth()).json()["eligible"])
+
+    def test_owner_revoke_link(self):
+        link = self.make_link(); lid = link["link_id"]
+        a = self.auth()
+        self.assertEqual(self.cl.delete(f"/api/hub/v1/bots/b_club/links/{lid}", headers=a).status_code, 200)
+        self.assertEqual(self.cl.get("/api/hub/v1/bots/b_club/overview", headers=a).json()["links"], [])
+        self.assertEqual(self.cl.get(f"/api/hub/v1/links/{lid}", headers={"Authorization": "Bearer " + link["access_key"]}).status_code, 403)
+        self.assertEqual(self.cl.delete(f"/api/hub/v1/bots/b_club/links/{lid}", headers=a).status_code, 404)
+
+    def test_overview_without_history_table(self):
+        self.make_link()
+        self.assertEqual(self.cl.get("/api/hub/v1/bots/b_club/overview", headers=self.auth()).json()["groups"], [])
+
     # ---- mã hóa / token / tệp cấu hình (thư viện chuẩn) ----
     def test_seal_roundtrip_and_tamper(self):
         for plain in ("", "a", "x" * 31, "x" * 32, "x" * 33, "chữ ký bí mật " * 20):
@@ -273,11 +319,11 @@ class HubTest(unittest.TestCase):
 
     def test_env_file_toggles_without_restart(self):
         f = os.path.join(self.tmp, "hub.env"); hub._ENV_FILE = f
-        open(f, "w").write("# ghi chú\nHUB_ENABLED=0\nHUB_ALLOWED_EVENT_HOSTS=picklefund-api:3000\n"); hub._file_cache.update(mtime=None, vars={})
+        open(f, "w", encoding="utf-8").write("# ghi chú\nHUB_ENABLED=0\nHUB_ALLOWED_EVENT_HOSTS=picklefund-api:3000\n"); hub._file_cache.update(mtime=None, vars={})
         os.environ["HUB_ENABLED"] = "1"                                           # tệp ưu tiên hơn biến môi trường
         self.assertFalse(hub.enabled())
         time.sleep(0.02)
-        open(f, "w").write('HUB_ENABLED="1"\n')
+        open(f, "w", encoding="utf-8").write('HUB_ENABLED="1"\n')
         os.utime(f, (time.time() + 5, time.time() + 5))
         self.assertTrue(hub.enabled())
         os.remove(f)
