@@ -83,7 +83,7 @@ if "UPDATE bots SET template_key" not in s:
 if '"template_key": _tk.get(r[0])' not in s:
     a, b = within(s, "async def list_bots(", "\n@app.", )
     seg = s[a:b]
-    OLD1 = "    rows = c.fetchall()\n    conn.close()\n    result = []\n"
+    OLD1 = "    rows = c.fetchall()\n    conn.close()\n"
     assert seg.count(OLD1) == 1, "list_bots rows: thực tế %d" % seg.count(OLD1)
     NEW1 = ("    rows = c.fetchall()\n"
             "    try:\n"
@@ -91,7 +91,7 @@ if '"template_key": _tk.get(r[0])' not in s:
             "        _tk = {r_[0]: r_[1] for r_ in c.fetchall()}\n"
             "    except Exception:\n"
             "        _tk = {}\n"
-            "    conn.close()\n    result = []\n")
+            "    conn.close()\n")
     seg = seg.replace(OLD1, NEW1, 1)
     OLD2 = '            "webhook_url": f"/webhook/{r[3]}/{r[0]}"\n        })'
     assert seg.count(OLD2) == 1, "list_bots webhook_url: thực tế %d" % seg.count(OLD2)
