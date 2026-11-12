@@ -84,12 +84,13 @@ jobs:
                 -e 's/eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/<jwt-redacted>/g' \
                 -e 's/((PASSWORD|PASSWD|SECRET|TOKEN|API_?KEY|PRIVATE_?KEY)[A-Za-z0-9_]*[ ]*[=:][ ]*["\x27]?)[^ ,"\x27]+/\1<redacted>/Ig'
             }
-            echo "=== ops-remote: ${OPS_SCRIPT} ${OPS_ARGS} (sha ${OPS_SHA:0:8}) ==="
+            echo "=== ops-remote: ${OPS_SCRIPT} ${OPS_ARGS} (sha ${OPS_SHA:0:8}) shell=${BASH_VERSION:-không-phải-bash} ==="
             set +e
+            # Lấy mã thoát qua file (không dựa vào PIPESTATUS) và tách stdin khỏi kênh SSH.
             # shellcheck disable=SC2086
-            bash "$TMP" ${OPS_ARGS} 2>&1 | redact
-            RC=${PIPESTATUS[0]}
+            { bash "$TMP" ${OPS_ARGS} < /dev/null 2>&1; echo $? > "$TMP.rc"; } | redact
+            RC=$(cat "$TMP.rc" 2>/dev/null || echo 99)
             set -e
-            rm -f "$TMP"
+            rm -f "$TMP" "$TMP.rc"
             echo "=== exit code: ${RC} ==="
             exit "$RC"
