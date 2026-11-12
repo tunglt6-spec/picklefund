@@ -17,6 +17,11 @@ gh run view <id> --log                # đọc kết quả
 - Mỗi lần chạy ghi một dòng vào `/var/log/ops-remote.log` trên VPS (thời điểm, người dispatch, sha, script, tham số).
 - Mỗi lần chỉ chạy một job (`concurrency: ops-remote`), tối đa 15 phút.
 
+## ⚠ Repo công khai ⇒ log Actions công khai
+- Ai trên internet cũng đọc được log của các lần chạy. **Script không được in mã nguồn nhạy cảm, mật khẩu, khóa, token, địa chỉ nội bộ chi tiết.** Bước che khóa tự động chỉ bắt được vài mẫu, không thay thế việc tự kiểm.
+- Thông tin bí mật cần trao cho người vận hành (vd. mật khẩu tạm) phải ghi vào file `chmod 600` trên VPS, không in ra log.
+- Sau khi đọc xong một lần chạy có nội dung đáng ngại, xóa run: `gh run delete <id>`.
+
 ## Giới hạn
 - Không tương tác (không gõ tay giữa chừng); script phải tự chạy hết.
 - Dùng cùng khóa SSH/secret `VPS_*` với workflow deploy; ai có quyền ghi vào repo đều có thể đưa script mới vào — giữ nhánh `main` được bảo vệ như deploy.
