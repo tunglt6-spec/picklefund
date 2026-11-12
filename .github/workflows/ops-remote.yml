@@ -1,0 +1,95 @@
+# Chạy một script CÓ TRONG REPO (ops/remote/) trên VPS qua SSH; log trả về trong Actions.
+# Thay cho việc copy/dán lệnh vào console VPS (dễ sai). Chạy: Actions → Ops remote, hoặc
+#   gh workflow run ops-remote.yml -f script=ro-ai-bot-inspect.sh
+# Quy tắc (xem ops/remote/README.md):
+#   - ro-*.sh : CHỈ ĐỌC, chạy ngay.
+#   - rw-*.sh : có thể sửa VPS; bắt buộc nhập confirm=APPLY và phải được người vận hành duyệt trước khi dispatch.
+#   - Script luôn lấy đúng từ commit đang chạy (github.sha), không lấy từ file tự do trên VPS.
+#   - Đầu ra được che token/khóa/mật khẩu; mọi lần chạy được ghi vào /var/log/ops-remote.log trên VPS.
+name: Ops remote
+on:
+  workflow_dispatch:
+    inputs:
+      script:
+        description: 'Tên file trong ops/remote/ (ro-*.sh chỉ đọc | rw-*.sh có thể sửa)'
+        required: true
+        type: string
+      args:
+        description: 'Tham số (chỉ ký tự an toàn: chữ, số, khoảng trắng và _ . / : = , @ -)'
+        required: false
+        default: ''
+        type: string
+      confirm:
+        description: 'Gõ APPLY để chạy script rw-*'
+        required: false
+        default: ''
+        type: string
+
+concurrency:
+  group: ops-remote
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate inputs
+        env:
+          OPS_SCRIPT: ${{ inputs.script }}
+          OPS_ARGS: ${{ inputs.args }}
+          OPS_CONFIRM: ${{ inputs.confirm }}
+        run: |
+          set -euo pipefail
+          [[ "$OPS_SCRIPT" =~ ^(ro|rw)-[a-z0-9][a-z0-9_.-]{0,60}\.sh$ ]] || { echo "Tên script không hợp lệ (cần ro-*.sh hoặc rw-*.sh)"; exit 1; }
+          [ -f "ops/remote/$OPS_SCRIPT" ] || { echo "Không có ops/remote/$OPS_SCRIPT trong commit này"; exit 1; }
+          [[ "$OPS_ARGS" =~ ^[A-Za-z0-9_\ ./:=,@-]{0,200}$ ]] || { echo "Tham số chứa ký tự không cho phép"; exit 1; }
+          if [[ "$OPS_SCRIPT" == rw-* && "$OPS_CONFIRM" != "APPLY" ]]; then
+            echo "Script rw-* có thể sửa VPS: cần confirm=APPLY"; exit 1
+          fi
+          echo "OK: $OPS_SCRIPT args='$OPS_ARGS' sha=${GITHUB_SHA}"
+
+      - name: Run on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          OPS_SCRIPT: ${{ inputs.script }}
+          OPS_ARGS: ${{ inputs.args }}
+          OPS_SHA: ${{ github.sha }}
+          OPS_ACTOR: ${{ github.actor }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          port: ${{ secrets.VPS_PORT || 22 }}
+          envs: OPS_SCRIPT,OPS_ARGS,OPS_SHA,OPS_ACTOR
+          script_stop: true
+          command_timeout: 15m
+          script: |
+            set -eo pipefail
+            cd /opt/picklefund
+            git fetch -q origin main
+            git cat-file -e "${OPS_SHA}^{commit}"
+            echo "$(date -Is) actor=${OPS_ACTOR} sha=${OPS_SHA} script=${OPS_SCRIPT} args=${OPS_ARGS}" >> /var/log/ops-remote.log
+            TMP=$(mktemp /tmp/ops-remote.XXXXXX.sh)
+            git show "${OPS_SHA}:ops/remote/${OPS_SCRIPT}" > "$TMP"
+            redact() {
+              sed -E \
+                -e 's/sk-[A-Za-z0-9_-]{16,}/sk-<redacted>/g' \
+                -e 's/[0-9]{8,}:[A-Za-z0-9_-]{25,}/<bot-token-redacted>/g' \
+                -e 's/eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}/<jwt-redacted>/g' \
+                -e 's/((PASSWORD|PASSWD|SECRET|TOKEN|API_?KEY|PRIVATE_?KEY)[A-Za-z0-9_]*[ ]*[=:][ ]*["\x27]?)[^ ,"\x27]+/\1<redacted>/Ig'
+            }
+            echo "=== ops-remote: ${OPS_SCRIPT} ${OPS_ARGS} (sha ${OPS_SHA:0:8}) ==="
+            set +e
+            # shellcheck disable=SC2086
+            bash "$TMP" ${OPS_ARGS} 2>&1 | redact
+            RC=${PIPESTATUS[0]}
+            set -e
+            rm -f "$TMP"
+            echo "=== exit code: ${RC} ==="
+            exit "$RC"
