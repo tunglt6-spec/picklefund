@@ -19,6 +19,14 @@ services:
       - /opt/ai-commerce/deploy/nginx-commerce.conf:/etc/nginx/conf.d/commerce.conf:ro
     networks:
       - commerce-net
+  # Zalo Hub: backend gọi AI-BOT (maika-saas-engine:4105) và AI-BOT gọi lại backend qua mạng dùng chung hub-net.
+  # Hai biến môi trường chỉ chứa địa chỉ nội bộ (không bí mật). Thiếu AI-BOT thì chỉ ẩn tính năng "Liên kết từ AI-BOT".
+  backend:
+    networks:
+      - hub-net
+    environment:
+      AIBOT_HUB_BASE_URL: http://maika-saas-engine:4105
+      ZALO_HUB_EVENT_BASE: http://picklefund-api:3000
 
 networks:
   # KHÔNG dùng external:true — nếu stack ai-commerce chưa chạy (commerce-net chưa tồn
@@ -26,4 +34,8 @@ networks:
   # cố định, PickleFund tự tạo nếu vắng và dùng chung nếu ai-commerce đã tạo.
   commerce-net:
     name: commerce-net
+    driver: bridge
+  # Mạng chung với AI-BOT (cùng mẫu với commerce-net: khai báo name:, không external).
+  hub-net:
+    name: hub-net
     driver: bridge
