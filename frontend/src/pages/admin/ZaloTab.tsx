@@ -28,6 +28,7 @@ export function ZaloTab() {
   const [disconnect, setDisconnect] = useState(false)
   const [sendReport, setSendReport] = useState(false)
   const [externalOnRegister, setExternalOnRegister] = useState(false)
+  const [whInfo, setWhInfo] = useState<{ host: string | null; ours: boolean } | null>(null)
   const [groupId, setGroupId] = useState('')
   const [groupName, setGroupName] = useState('')
   // Phân biệt rõ: máy chủ báo lỗi / máy chủ đang cập nhật / không gọi được máy chủ (mạng, proxy). Trước đây mọi trường hợp
@@ -107,7 +108,9 @@ export function ZaloTab() {
       <div className="flex flex-wrap gap-2">
         {!status.externalWebhook && <Button variant="outline" disabled={busy} onClick={() => action(async () => { const s = (await postR('/zalo/webhook-verify')).data.data; setStatus(s); if (s.webhookReady) toast.success('Webhook đã xác minh'); else toast.error('Webhook vẫn chưa xác minh được') })}>{status.webhookReady ? 'Đặt lại webhook về PickleFund' : 'Kiểm tra lại webhook'}</Button>}
         <Button variant="outline" disabled={busy} onClick={() => action(async () => { const on = !status.externalWebhook; setStatus((await postR('/zalo/external-webhook', { enabled: on })).data.data); toast.success(on ? 'Đã chuyển sang chế độ webhook do nền tảng khác quản lý' : 'Đã tắt chế độ này. Bấm “Kiểm tra lại webhook” để nhận lại webhook') })}>{status.externalWebhook ? 'Tắt chế độ webhook do nền tảng khác' : 'Webhook do nền tảng khác (AI-BOT) quản lý'}</Button>
+        <Button variant="outline" disabled={busy} onClick={() => action(async () => { setWhInfo((await getR('/zalo/webhook-info')).data.data) })}>Xem webhook hiện tại của bot</Button>
       </div>
+      {whInfo && <p className="text-sm">Bot đang gửi tin tới: <strong>{whInfo.host ?? 'chưa đặt webhook'}</strong>{whInfo.host ? (whInfo.ours ? ' — PickleFund' : ' — nền tảng khác') : ''}</p>}
     </section>}
     {status?.configured && <section className="pf-glass rounded-2xl p-4 space-y-3">
       <h3 className="font-bold">Nội dung gửi vào nhóm</h3>

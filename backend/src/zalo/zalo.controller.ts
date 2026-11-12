@@ -46,6 +46,10 @@ export class ZaloController {
   @Post('external-webhook') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   async externalWebhook(@CurrentUser() user: JwtUser, @Body() body: ExternalDto) { return ok(await this.zalo.setExternalWebhook(this.zalo.club(user.clubId), body.enabled)); }
 
+  /** Chẩn đoán: webhook của bot đang trỏ tới host nào (PickleFund hay nền tảng khác). Chỉ đọc. */
+  @Get('webhook-info') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  async webhookInfo(@CurrentUser() user: JwtUser) { return ok(await this.zalo.webhookInfo(this.zalo.club(user.clubId))); }
+
   @Post('webhook-verify') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   async verifyWebhook(@CurrentUser() user: JwtUser) { return ok(await this.zalo.reverifyWebhook(this.zalo.club(user.clubId))); }
 

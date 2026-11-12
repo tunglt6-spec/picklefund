@@ -103,6 +103,16 @@ describe('Zalo club integration', () => {
     const err: any = await svc.test(clubId).catch(e => e);
     expect(err.message).toContain('CONNECTION_FAILED'); expect(err.message).not.toContain(token);
   });
+  it('webhookInfo chỉ trả host và cờ "ours", không lộ đường dẫn/secret', async () => {
+    await paired();
+    const info = (url: string) => fetchMock.mockImplementation(async (u: any) => response(String(u).endsWith('/getWebhookInfo') ? { url, updated_at: 123 } : { verification: { ok: true } }) as any);
+    info('https://ai-bot.example.com/webhook/zalo/bot_secret_path');
+    expect(await svc.webhookInfo(clubId)).toEqual({ host: 'ai-bot.example.com', ours: false, updatedAt: 123 });
+    info('https://picklefund.vn/api/zalo/webhook/club-a');
+    expect(await svc.webhookInfo(clubId)).toMatchObject({ host: 'picklefund.vn', ours: true });
+    info('');
+    expect(await svc.webhookInfo(clubId)).toMatchObject({ host: null, ours: false });
+  });
   it('sanitizes upstream failures so token-bearing URLs cannot leak', async () => {
     fetchMock.mockRejectedValue(new Error(`request failed https://bot-api.zaloplatforms.com/bot${token}/getMe`));
     await expect(svc.register(clubId, token)).rejects.not.toThrow(token);

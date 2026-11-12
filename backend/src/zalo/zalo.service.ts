@@ -160,6 +160,15 @@ export class ZaloService {
     } catch (e) { c.lastError = (e as Error).message; }
     await this.save(clubId, c); return this.status(clubId);
   }
+  /** Chẩn đoán: bot đang gửi tin tới đâu (chỉ trả host, không trả đường dẫn/secret). Dùng để biết webhook đang thuộc PickleFund hay nền tảng khác. */
+  async webhookInfo(clubId: string) {
+    const c = await this.required(clubId);
+    const info = await this.call(this.unseal(c.token), 'getWebhookInfo', {});
+    const url = String(info?.url ?? '');
+    let host: string | null = null; try { host = url ? new URL(url).host : null; } catch { host = null; }
+    const origin = new URL(this.config.get<string>('ZALO_PUBLIC_ORIGIN') || 'https://picklefund.vn').origin;
+    return { host, ours: !!url && url.startsWith(`${origin}/api/zalo/webhook/${clubId}`), updatedAt: info?.updated_at ?? null };
+  }
   /** Xác minh lại webhook bằng token đã lưu (không cần nhập lại token): dùng khi lần đăng ký trước hỏng do mạng/máy chủ tạm ngưng. */
   async reverifyWebhook(clubId: string) {
     const c = await this.required(clubId);
