@@ -175,6 +175,30 @@ describe('Zalo club integration', () => {
       fetchMock.mockClear(); await svc.disconnect(clubId);
       expect(calls('/deleteWebhook')).toHaveLength(0);
     });
+    it('đăng ký lại CÙNG bot (đổi token/chế độ) giữ nhóm và lựa chọn gửi, không bắt ghép nhóm lại', async () => {
+      await paired(); await svc.preferences(clubId, { enabled: true, resultImages: true });
+      const st: any = await svc.register(clubId, token, { external: true });
+      expect(st).toMatchObject({ chatId: 'group-a', enabled: true, resultImages: true, externalWebhook: true, webhookReady: true });
+      expect(st.intakeEnabled).toBe(false); expect(st.commandsEnabled).toBe(false);
+    });
+    it('đăng ký BOT KHÁC thì không thừa hưởng nhóm cũ', async () => {
+      await paired();
+      fetchMock.mockImplementation(async (u: any) => response(String(u).endsWith('/getMe') ? { id: 'bot-other', can_join_groups: true } : { verification: { ok: true } }) as any);
+      expect((await svc.register(clubId, token) as any).chatId).toBeNull();
+    });
+    it('setGroup: chỉ ở chế độ webhook ngoài; kiểm tra mã nhóm; đổi nhóm thì tắt gửi tự động', async () => {
+      await svc.register(clubId, token);
+      await expect(svc.setGroup(clubId, 'zgr-abc')).rejects.toThrow('nền tảng khác');
+      await svc.setExternalWebhook(clubId, true);
+      await expect(svc.setGroup(clubId, 'bad id!')).rejects.toThrow('không hợp lệ');
+      expect(await svc.setGroup(clubId, ' zgr-abc ', 'CLB The PING')).toMatchObject({ chatId: 'zgr-abc', chatName: 'CLB The PING', enabled: false });
+      await svc.preferences(clubId, { enabled: true });
+      expect(await svc.setGroup(clubId, 'zgr-abc')).toMatchObject({ enabled: true });         // cùng nhóm: giữ nguyên
+      expect(await svc.setGroup(clubId, 'zgr-other')).toMatchObject({ chatId: 'zgr-other', enabled: false });
+      await svc.setGroup(clubId, 'zgr-abc'); fetchMock.mockClear();
+      await svc.test(clubId);                                                                    // gửi ra hoạt động không cần webhook
+      expect(JSON.parse(fetchMock.mock.calls[0][1]!.body as string).chat_id).toBe('zgr-abc');
+    });
     it('kết nối bình thường: disconnect vẫn deleteWebhook', async () => {
       await paired(); fetchMock.mockClear(); await svc.disconnect(clubId);
       expect(calls('/deleteWebhook')).toHaveLength(1);

@@ -129,6 +129,13 @@ export class ZaloService {
       canJoinGroups: bot.can_join_groups === true, webhookReady: false, enabled: false, financialChanges: false, announcements: true, dailyReport: false, weeklyReport: true, reportWeekday: 0, scheduleVersion: 2 };
     // Giữ cấu hình chuyển tiếp khi đăng ký lại bot (nếu không, nền tảng AI dùng chung bot sẽ mất tin).
     const prev = await this.read(clubId); if (prev?.relay) c.relay = prev.relay;
+    // Đăng ký lại CÙNG một bot (đổi token, đổi chế độ): giữ nhóm đã liên kết và lựa chọn gửi — không bắt ghép nhóm lại.
+    // (Ghép lại cần PickleFund nhận /ketnoi, mà chế độ webhook ngoài thì không nhận được.)
+    if (prev && prev.botId === c.botId) {
+      Object.assign(c, { chatId: prev.chatId, chatName: prev.chatName, enabled: prev.enabled, announcements: prev.announcements,
+        weeklyReport: prev.weeklyReport, reportWeekday: prev.reportWeekday, reportTime: prev.reportTime, paymentReminders: prev.paymentReminders,
+        resultImages: prev.resultImages, intakeEnabled: prev.intakeEnabled, commandsEnabled: prev.commandsEnabled, lastSentAt: prev.lastSentAt });
+    }
     const external = opts.external ?? prev?.externalWebhook ?? false;
     if (!external && !opts.force) {
       // Guard: bot đang trỏ webhook tới nơi khác (vd. AI-BOT) thì không chiếm âm thầm — sẽ làm nền tảng kia mất tin.
@@ -141,7 +148,7 @@ export class ZaloService {
     }
     if (external) {
       // Không đụng webhook: nền tảng khác giữ nó. PickleFund chỉ gửi tin ra nên coi như sẵn sàng.
-      c.externalWebhook = true; c.webhookReady = true;
+      c.externalWebhook = true; c.webhookReady = true; c.intakeEnabled = false; c.commandsEnabled = false;
       await this.save(clubId, c); return this.status(clubId);
     }
     // Save first: Zalo verifies our public callback synchronously during setWebhook.
@@ -177,6 +184,19 @@ export class ZaloService {
     c.externalWebhook = enabled;
     if (enabled) { c.webhookReady = true; delete c.lastError; }
     else { c.webhookReady = false; c.lastError = 'Đã tắt chế độ webhook do nền tảng khác quản lý. Bấm “Kiểm tra lại webhook” để PickleFund nhận lại webhook (nền tảng kia sẽ ngừng nhận tin).'; }
+    await this.save(clubId, c); return this.status(clubId);
+  }
+  /**
+   * Chế độ webhook ngoài: PickleFund không nhận được /ketnoi nên đặt nhóm nhận thông báo bằng mã nhóm (chat id Zalo, dạng zgr-…).
+   * Đổi sang nhóm khác thì tự tắt gửi tự động để không gửi nhầm cho tới khi quản trị bật lại.
+   */
+  async setGroup(clubId: string, chatId: string, chatName?: string) {
+    const c = await this.required(clubId);
+    if (!c.externalWebhook) throw new BadRequestException('Chỉ dùng khi webhook do nền tảng khác quản lý. Chế độ thường dùng mã /ketnoi trong nhóm.');
+    const id = (chatId ?? '').trim();
+    if (!/^[A-Za-z0-9_.:-]{1,150}$/.test(id)) throw new BadRequestException('Mã nhóm Zalo không hợp lệ.');
+    if (c.chatId !== id) { c.enabled = false; delete c.baseline; }
+    c.chatId = id; c.chatName = (chatName?.trim() || `Nhóm ${id}`).slice(0, 150); delete c.pendingChat; delete c.pairHash; delete c.pairExpires;
     await this.save(clubId, c); return this.status(clubId);
   }
   async pair(clubId: string) {

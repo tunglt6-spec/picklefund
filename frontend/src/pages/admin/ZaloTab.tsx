@@ -32,6 +32,8 @@ export function ZaloTab() {
   const [relaySecret, setRelaySecret] = useState('')
   const [relayMode, setRelayMode] = useState<'unhandled' | 'all'>('unhandled')
   const [externalOnRegister, setExternalOnRegister] = useState(false)
+  const [groupId, setGroupId] = useState('')
+  const [groupName, setGroupName] = useState('')
   const error = (e: any) => toast.error(e?.response?.data?.message ?? 'Không kết nối được Zalo. Thử lại sau.')
   const reload = async () => { try { setStatus((await api.get('/zalo/status')).data.data); setLoadFailed(false) } catch (e) { setLoadFailed(true); error(e) } }
   useEffect(() => { void reload() }, [])
@@ -80,6 +82,17 @@ export function ZaloTab() {
       {pair && <div className="rounded-xl border p-3 space-y-2"><code className="block break-all select-all text-sm">{pair.command}</code><p className="text-xs">Hết hạn: {new Date(pair.expiresAt).toLocaleTimeString('vi-VN')}</p></div>}
       {status.pendingChat && <div className="rounded-xl border p-3 space-y-2"><p className="break-words font-semibold">Nhóm chờ xác nhận: {status.pendingChat.name}</p><p className="text-xs break-all">ID: {status.pendingChat.id}</p><Button disabled={busy} onClick={() => action(async () => { setStatus((await api.post('/zalo/confirm-group')).data.data); setPair(null); toast.success('Đã xác nhận nhóm. Chọn nội dung và bật tự động khi sẵn sàng.') })}>Xác nhận đây là nhóm CLB</Button></div>}
       {status.chatId && <p className="break-all text-sm">Nhóm đã liên kết: <strong>{status.chatName}</strong> · {status.chatId}</p>}
+      {status.externalWebhook && <div className="rounded-xl border p-3 space-y-2">
+        <p className="text-sm font-semibold">{status.chatId ? 'Đổi nhóm nhận thông báo (nhập mã nhóm Zalo)' : 'Chưa có nhóm nhận thông báo — nhập mã nhóm Zalo để dùng “Gửi thử” và “Báo cáo”'}</p>
+        <label className="block text-sm" htmlFor="zalo-group-id">Mã nhóm Zalo (dạng zgr-…)
+          <input id="zalo-group-id" type="text" value={groupId} onChange={e => setGroupId(e.target.value)} maxLength={150} className="input-base mt-2 w-full" placeholder="zgr-…" autoComplete="off" />
+        </label>
+        <label className="block text-sm" htmlFor="zalo-group-name">Tên hiển thị (tùy chọn)
+          <input id="zalo-group-name" type="text" value={groupName} onChange={e => setGroupName(e.target.value)} maxLength={150} className="input-base mt-2 w-full" placeholder="CLB The PING" />
+        </label>
+        <Button disabled={busy || !groupId.trim()} onClick={() => action(async () => { setStatus((await api.post('/zalo/group', { chatId: groupId.trim(), ...(groupName.trim() ? { chatName: groupName.trim() } : {}) })).data.data); setGroupId(''); setGroupName(''); toast.success('Đã lưu nhóm. Bật “Bật gửi tự động” rồi bấm Lưu khi sẵn sàng.') })}>Lưu nhóm</Button>
+        <p className="text-xs [color:var(--pf-color-muted)]">Đổi sang nhóm khác sẽ tự tắt gửi tự động để tránh gửi nhầm. Nhóm giữ nguyên thì cấu hình gửi không đổi.</p>
+      </div>}
       <p className="text-sm">Webhook: {status.externalWebhook ? 'Do nền tảng khác (vd. AI-BOT) quản lý — PickleFund chỉ gửi tin ra, không đụng webhook' : status.webhookReady ? 'Đã xác minh' : 'Chưa xác minh — bấm “Kiểm tra lại webhook”; nếu vẫn lỗi, kiểm tra HTTPS và đăng ký lại bot'}</p>
       <div className="flex flex-wrap gap-2">
         {!status.externalWebhook && <Button variant="outline" disabled={busy} onClick={() => action(async () => { const s = (await api.post('/zalo/webhook-verify')).data.data; setStatus(s); if (s.webhookReady) toast.success('Webhook đã xác minh'); else toast.error('Webhook vẫn chưa xác minh được') })}>{status.webhookReady ? 'Đặt lại webhook về PickleFund' : 'Kiểm tra lại webhook'}</Button>}

@@ -14,6 +14,7 @@ class BotDto {
   @IsOptional() @IsBoolean() force?: boolean;
 }
 class ExternalDto { @IsBoolean() enabled: boolean; }
+class GroupDto { @IsString() @MaxLength(150) chatId: string; @IsOptional() @IsString() @MaxLength(150) chatName?: string; }
 class RelayDto {
   @IsOptional() @IsString() @MaxLength(500) url?: string;
   @IsOptional() @IsString() @MaxLength(256) secret?: string;
@@ -56,6 +57,10 @@ export class ZaloController {
   /** Chuyển tiếp webhook sang nền tảng khác dùng chung bot (vd. AI-BOT): 1 bot Zalo chỉ có 1 webhook. */
   @Post('relay') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   async relay(@CurrentUser() user: JwtUser, @Body() body: RelayDto) { return ok(await this.zalo.setRelay(this.zalo.club(user.clubId), body)); }
+
+  /** Đặt nhóm nhận thông báo bằng mã nhóm — chỉ khi webhook do nền tảng khác quản lý (không dùng được /ketnoi). */
+  @Post('group') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  async group(@CurrentUser() user: JwtUser, @Body() body: GroupDto) { return ok(await this.zalo.setGroup(this.zalo.club(user.clubId), body.chatId, body.chatName)); }
 
   @Post('pair') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   async pair(@CurrentUser() user: JwtUser) { return ok(await this.zalo.pair(this.zalo.club(user.clubId))); }
