@@ -122,6 +122,64 @@ describe('Zalo club integration', () => {
     await svc.notifyAction(clubId, 'act-1', 'T', 'B');
     expect([...rows.keys()].filter(k => k.startsWith('zalo_job_'))).toHaveLength(0);
   });
+  describe('webhook do nền tảng khác (AI-BOT) quản lý', () => {
+    const calls = (suffix: string) => fetchMock.mock.calls.filter(c => String(c[0]).endsWith(suffix));
+    const withWebhookInfo = (url: string) => fetchMock.mockImplementation(async (u: any) => {
+      const s = String(u);
+      if (s.endsWith('/getMe')) return response({ id: 'bot-a', account_name: 'Bot CLB', can_join_groups: true }) as any;
+      if (s.endsWith('/getWebhookInfo')) return response({ url }) as any;
+      return response({ verification: { ok: true } }) as any;
+    });
+    it('guard: bot đang trỏ webhook sang nơi khác → từ chối, không gọi setWebhook', async () => {
+      withWebhookInfo('https://ai-bot.example.com/webhook/zalo/bot_x');
+      await expect(svc.register(clubId, token)).rejects.toThrow('ai-bot.example.com');
+      expect(calls('/setWebhook')).toHaveLength(0);
+    });
+    it('guard: webhook đang là của chính PickleFund hoặc chưa có → đăng ký bình thường', async () => {
+      withWebhookInfo('https://picklefund.vn/api/zalo/webhook/club-a');
+      expect((await svc.register(clubId, token)).webhookReady).toBe(true);
+      expect(calls('/setWebhook')).toHaveLength(1);
+      withWebhookInfo('');
+      await svc.register(clubId, token); expect(calls('/setWebhook')).toHaveLength(2);
+    });
+    it('force=true vẫn chiếm webhook khi cố ý', async () => {
+      withWebhookInfo('https://ai-bot.example.com/webhook/zalo/bot_x');
+      await svc.register(clubId, token, { force: true }); expect(calls('/setWebhook')).toHaveLength(1);
+    });
+    it('external=true: không getWebhookInfo, không setWebhook, sẵn sàng gửi ra', async () => {
+      withWebhookInfo('https://ai-bot.example.com/webhook/zalo/bot_x');
+      const st: any = await svc.register(clubId, token, { external: true });
+      expect(st).toMatchObject({ externalWebhook: true, webhookReady: true });
+      expect(calls('/setWebhook')).toHaveLength(0); expect(calls('/getWebhookInfo')).toHaveLength(0);
+    });
+    it('đăng ký lại token vẫn giữ chế độ external; reverify không bao giờ setWebhook', async () => {
+      await svc.register(clubId, token, { external: true });
+      await svc.register(clubId, 'another-token-456'); fetchMock.mockClear();
+      expect((await svc.status(clubId) as any).externalWebhook).toBe(true);
+      await svc.reverifyWebhook(clubId); expect(calls('/setWebhook')).toHaveLength(0);
+    });
+    it('bật external cho kết nối cũ đang hỏng webhook → gửi ra được; tắt → phải xác minh lại', async () => {
+      fetchMock.mockImplementation(async (u: any) => response(String(u).endsWith('/getMe') ? { id: 'bot-a', can_join_groups: true } : { verification: { ok: false } }) as any);
+      await svc.register(clubId, token);
+      expect((await svc.status(clubId) as any).webhookReady).toBe(false);
+      expect(await svc.setExternalWebhook(clubId, true)).toMatchObject({ externalWebhook: true, webhookReady: true, lastError: null });
+      expect(await svc.setExternalWebhook(clubId, false)).toMatchObject({ externalWebhook: false, webhookReady: false });
+    });
+    it('pair bị từ chối; không bật được lệnh/nhập thu-chi mới; ngắt kết nối không deleteWebhook', async () => {
+      await svc.register(clubId, token, { external: true });
+      await expect(svc.pair(clubId)).rejects.toThrow('nền tảng khác');
+      setConnection({ chatId: 'group-a' });
+      await expect(svc.preferences(clubId, { commandsEnabled: true })).rejects.toThrow('nhận tin');
+      await expect(svc.preferences(clubId, { intakeEnabled: true })).rejects.toThrow('nhận tin');
+      await svc.preferences(clubId, { enabled: true, announcements: true });   // gửi ra vẫn bật được
+      fetchMock.mockClear(); await svc.disconnect(clubId);
+      expect(calls('/deleteWebhook')).toHaveLength(0);
+    });
+    it('kết nối bình thường: disconnect vẫn deleteWebhook', async () => {
+      await paired(); fetchMock.mockClear(); await svc.disconnect(clubId);
+      expect(calls('/deleteWebhook')).toHaveLength(1);
+    });
+  });
   describe('relay sang nền tảng khác dùng chung bot', () => {
     const relayUrl = 'https://ai-bot.example.com/zalo/webhook';
     const flush = async () => { for (let i = 0; i < 5; i++) await new Promise(r => setImmediate(r)); };

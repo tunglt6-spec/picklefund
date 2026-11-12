@@ -6,7 +6,14 @@ import type { JwtUser } from '../common/decorators';
 import { ok } from '../common/response';
 import { ZaloService } from './zalo.service';
 
-class BotDto { @IsString() @MaxLength(512) token: string; }
+class BotDto {
+  @IsString() @MaxLength(512) token: string;
+  /** Webhook do nền tảng khác (vd. AI-BOT) quản lý — PickleFund không đăng ký webhook. */
+  @IsOptional() @IsBoolean() external?: boolean;
+  /** Vẫn chiếm webhook dù bot đang thuộc nền tảng khác. */
+  @IsOptional() @IsBoolean() force?: boolean;
+}
+class ExternalDto { @IsBoolean() enabled: boolean; }
 class RelayDto {
   @IsOptional() @IsString() @MaxLength(500) url?: string;
   @IsOptional() @IsString() @MaxLength(256) secret?: string;
@@ -36,8 +43,12 @@ export class ZaloController {
 
   @Post('bot') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   async bot(@CurrentUser() user: JwtUser, @Body() body: BotDto) {
-    return ok(await this.zalo.register(this.zalo.club(user.clubId), body.token));
+    return ok(await this.zalo.register(this.zalo.club(user.clubId), body.token, { external: body.external, force: body.force }));
   }
+
+  /** Bật/tắt chế độ "webhook do nền tảng khác quản lý" (không đăng ký/xóa webhook của bot). */
+  @Post('external-webhook') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  async externalWebhook(@CurrentUser() user: JwtUser, @Body() body: ExternalDto) { return ok(await this.zalo.setExternalWebhook(this.zalo.club(user.clubId), body.enabled)); }
 
   @Post('webhook-verify') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   async verifyWebhook(@CurrentUser() user: JwtUser) { return ok(await this.zalo.reverifyWebhook(this.zalo.club(user.clubId))); }

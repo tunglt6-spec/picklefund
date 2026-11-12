@@ -24,6 +24,8 @@ interface Connection {
   commandsEnabled?: boolean; paymentReminders?: boolean; resultImages?: boolean; failStreak?: number; lastErrorAt?: string;
   /** Chuyển tiếp webhook sang nền tảng khác dùng chung bot (1 bot chỉ có 1 webhook). `secret` đã mã hóa. */
   relay?: { url: string; secret?: string; mode: RelayMode };
+  /** Webhook của bot do nền tảng khác (vd. AI-BOT) giữ: PickleFund KHÔNG gọi setWebhook/deleteWebhook, chỉ gửi tin ra. */
+  externalWebhook?: boolean;
 }
 interface Job {
   clubId: string; version: string; chatId: string; text: string;
@@ -94,7 +96,7 @@ export class ZaloService {
       failStreak: c.failStreak ?? 0, lastErrorAt: c.lastErrorAt ?? null, enabled: c.enabled, financialChanges: c.financialChanges, announcements: c.announcements, dailyReport: c.dailyReport,
       chatId: c.chatId ?? null, chatName: c.chatName ?? null, pendingChat: c.pendingChat ?? null,
       reportTime: c.reportTime ?? '08:00', weeklyReport: !!c.weeklyReport, reportWeekday: c.reportWeekday ?? 0,
-      lastSentAt: c.lastSentAt ?? null, lastError: c.lastError ?? null,
+      lastSentAt: c.lastSentAt ?? null, lastError: c.lastError ?? null, externalWebhook: !!c.externalWebhook,
       relay: c.relay ? { host: new URL(c.relay.url).host, mode: c.relay.mode, hasSecret: !!c.relay.secret, last: this.relayStatus.get(clubId) ?? null } : null };
   }
   private async call(token: string, method: string, payload: object): Promise<any> {
@@ -111,7 +113,8 @@ export class ZaloService {
       throw new BadRequestException(`Zalo ${code}. Kiểm tra token, quyền bot và kết nối rồi thử lại.`);
     }
   }
-  async register(clubId: string, raw: string) {
+  /** `external`: webhook do nền tảng khác giữ (không setWebhook). `force`: vẫn chiếm webhook dù bot đang thuộc nơi khác. */
+  async register(clubId: string, raw: string, opts: { external?: boolean; force?: boolean } = {}) {
     const token = raw?.trim();
     if (!token || !/^[A-Za-z0-9_:.=-]{8,512}$/.test(token)) throw new BadRequestException('Token Zalo không hợp lệ.');
     const bot = await this.call(token, 'getMe', {});
@@ -126,6 +129,21 @@ export class ZaloService {
       canJoinGroups: bot.can_join_groups === true, webhookReady: false, enabled: false, financialChanges: false, announcements: true, dailyReport: false, weeklyReport: true, reportWeekday: 0, scheduleVersion: 2 };
     // Giữ cấu hình chuyển tiếp khi đăng ký lại bot (nếu không, nền tảng AI dùng chung bot sẽ mất tin).
     const prev = await this.read(clubId); if (prev?.relay) c.relay = prev.relay;
+    const external = opts.external ?? prev?.externalWebhook ?? false;
+    if (!external && !opts.force) {
+      // Guard: bot đang trỏ webhook tới nơi khác (vd. AI-BOT) thì không chiếm âm thầm — sẽ làm nền tảng kia mất tin.
+      let current = '';
+      try { current = String((await this.call(token, 'getWebhookInfo', {}))?.url ?? ''); } catch { /* không đọc được thì coi như chưa có webhook */ }
+      if (current && !current.startsWith(`${url.origin}/api/zalo/webhook/`)) {
+        let host = 'nền tảng khác'; try { host = new URL(current).host; } catch { /* giữ mặc định */ }
+        throw new BadRequestException(`Bot này đang được nền tảng khác nhận tin (${host}). Đăng ký bình thường sẽ chiếm webhook và làm nền tảng đó ngừng hoạt động. Chọn “Webhook do nền tảng khác quản lý” để PickleFund chỉ gửi tin ra.`);
+      }
+    }
+    if (external) {
+      // Không đụng webhook: nền tảng khác giữ nó. PickleFund chỉ gửi tin ra nên coi như sẵn sàng.
+      c.externalWebhook = true; c.webhookReady = true;
+      await this.save(clubId, c); return this.status(clubId);
+    }
     // Save first: Zalo verifies our public callback synchronously during setWebhook.
     await this.save(clubId, c);
     try {
@@ -138,6 +156,8 @@ export class ZaloService {
   /** Xác minh lại webhook bằng token đã lưu (không cần nhập lại token): dùng khi lần đăng ký trước hỏng do mạng/máy chủ tạm ngưng. */
   async reverifyWebhook(clubId: string) {
     const c = await this.required(clubId);
+    // Chế độ webhook ngoài: tuyệt đối không setWebhook (sẽ đè webhook của nền tảng kia).
+    if (c.externalWebhook) return this.status(clubId);
     const origin = this.config.get<string>('ZALO_PUBLIC_ORIGIN') || 'https://picklefund.vn';
     const url = new URL(origin);
     if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) throw new BadRequestException('Máy chủ chưa cấu hình địa chỉ HTTPS cho Zalo.');
@@ -151,8 +171,17 @@ export class ZaloService {
     } catch (e) { c.webhookReady = false; c.lastError = (e as Error).message; }
     await this.save(clubId, c); return this.status(clubId);
   }
+  /** Bật/tắt chế độ "webhook do nền tảng khác quản lý". Bật: gửi ra được ngay, không đụng webhook. Tắt: cần xác minh lại để nhận webhook về. */
+  async setExternalWebhook(clubId: string, enabled: boolean) {
+    const c = await this.required(clubId);
+    c.externalWebhook = enabled;
+    if (enabled) { c.webhookReady = true; delete c.lastError; }
+    else { c.webhookReady = false; c.lastError = 'Đã tắt chế độ webhook do nền tảng khác quản lý. Bấm “Kiểm tra lại webhook” để PickleFund nhận lại webhook (nền tảng kia sẽ ngừng nhận tin).'; }
+    await this.save(clubId, c); return this.status(clubId);
+  }
   async pair(clubId: string) {
     const c = await this.required(clubId);
+    if (c.externalWebhook) throw new BadRequestException('Webhook đang do nền tảng khác quản lý nên PickleFund không nhận được mã /ketnoi. Dùng nhóm đã liên kết sẵn hoặc tắt chế độ này.');
     if (!c.canJoinGroups) throw new BadRequestException('Zalo chưa cấp quyền tham gia nhóm cho bot này (nhóm đang Beta).');
     if (!c.webhookReady) throw new BadRequestException('Webhook chưa xác minh thành công. Đăng ký lại bot trước.');
     const code = randomBytes(8).toString('hex').toUpperCase();
@@ -254,6 +283,8 @@ export class ZaloService {
     if (patch.financialIntervalMinutes !== undefined && ![1,5,15,30,60].includes(patch.financialIntervalMinutes)) throw new BadRequestException('Tần suất biến động không hợp lệ.');
     const c = await this.required(clubId);
     if ((patch.enabled || patch.intakeEnabled || patch.commandsEnabled || patch.paymentReminders || patch.resultImages) && (!c.chatId || !c.canJoinGroups || !c.webhookReady)) throw new BadRequestException('Kết nối và xác nhận nhóm trước khi bật tự động.');
+    // Nhập thu/chi và lệnh trong nhóm cần PickleFund NHẬN tin từ nhóm — không có khi webhook do nền tảng khác giữ.
+    if (c.externalWebhook && ((patch.intakeEnabled && !c.intakeEnabled) || (patch.commandsEnabled && !c.commandsEnabled))) throw new BadRequestException('Tính năng này cần PickleFund nhận tin từ nhóm, chưa dùng được khi webhook do nền tảng khác quản lý.');
     if (patch.reportWeekday !== undefined && (!Number.isInteger(patch.reportWeekday) || patch.reportWeekday < 0 || patch.reportWeekday > 6)) throw new BadRequestException('Ngày báo cáo không hợp lệ.');
     Object.assign(c, patch);
     c.financialChanges = false; c.dailyReport = false;
@@ -265,7 +296,8 @@ export class ZaloService {
     const c = await this.read(clubId);
     // Disable locally before attempting remote cleanup. Queued jobs are fenced by version/chatId.
     await this.prisma.systemSetting.deleteMany({ where: { key: PREFIX + clubId } });
-    if (c) { try { await this.call(this.unseal(c.token), 'deleteWebhook', {}); } catch { /* local connection already disabled */ } }
+    // Webhook do nền tảng khác giữ thì KHÔNG deleteWebhook (sẽ cắt nền tảng đó).
+    if (c && !c.externalWebhook) { try { await this.call(this.unseal(c.token), 'deleteWebhook', {}); } catch { /* local connection already disabled */ } }
   }
   private async send(clubId: string, c: Connection, text: string, report?: ZaloFinancialReport, photo?: string) {
     if (!c.chatId || !c.canJoinGroups || !c.webhookReady) throw new BadRequestException('Nhóm Zalo chưa sẵn sàng.');
