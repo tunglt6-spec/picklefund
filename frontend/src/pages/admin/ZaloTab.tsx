@@ -34,8 +34,22 @@ export function ZaloTab() {
   const [externalOnRegister, setExternalOnRegister] = useState(false)
   const [groupId, setGroupId] = useState('')
   const [groupName, setGroupName] = useState('')
-  const error = (e: any) => toast.error(e?.response?.data?.message ?? 'Không kết nối được Zalo. Thử lại sau.')
-  const reload = async () => { try { setStatus((await api.get('/zalo/status')).data.data); setLoadFailed(false) } catch (e) { setLoadFailed(true); error(e) } }
+  // Phân biệt rõ: máy chủ báo lỗi / máy chủ đang cập nhật / không gọi được máy chủ (mạng, proxy). Trước đây mọi trường hợp
+  // không có nội dung lỗi đều hiện chung "Không kết nối được Zalo", không biết lỗi nằm ở đâu.
+  const describe = (e: any): string => {
+    const r = e?.response
+    const m = r?.data?.message
+    if (m) return Array.isArray(m) ? m.join('; ') : String(m)
+    if (r) return `Máy chủ trả lỗi ${r.status}${r.status >= 500 ? ' (có thể đang cập nhật — thử lại sau ít giây)' : ''}.`
+    return 'Không gọi được máy chủ PickleFund (mạng hoặc lớp proxy bị ngắt/chuyển hướng). Thử lại; nếu lặp lại, báo kèm giờ và thao tác vừa làm.'
+  }
+  const error = (e: any) => toast.error(describe(e))
+  // Thao tác idempotent: tự thử lại 1 lần khi mất kết nối hoặc 502/503/504 (vd. đúng lúc máy chủ đang khởi động lại).
+  const retryable = (e: any) => !e?.response || [502, 503, 504].includes(e.response.status)
+  const wait = (ms: number) => new Promise(res => setTimeout(res, ms))
+  const postR = async (url: string, body?: unknown) => { try { return await api.post(url, body) } catch (e) { if (!retryable(e)) throw e; await wait(1500); return api.post(url, body) } }
+  const getR = async (url: string) => { try { return await api.get(url) } catch (e) { if (!retryable(e)) throw e; await wait(1500); return api.get(url) } }
+  const reload = async () => { try { setStatus((await getR('/zalo/status')).data.data); setLoadFailed(false) } catch (e) { setLoadFailed(true); error(e) } }
   useEffect(() => { void reload() }, [])
   const action = async (fn: () => Promise<void>) => { if (busy) return; setBusy(true); try { await fn() } catch (e) { error(e) } finally { setBusy(false) } }
   const register = () => action(async () => {
@@ -44,7 +58,7 @@ export function ZaloTab() {
   })
   const save = () => action(async () => {
     if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(status?.reportTime ?? '08:00')) { toast.error('Chọn giờ báo cáo hợp lệ'); return }
-    setStatus((await api.post('/zalo/preferences', { enabled: !!status?.enabled, intakeEnabled: !!status?.intakeEnabled, commandsEnabled: !!status?.commandsEnabled, paymentReminders: !!status?.paymentReminders, resultImages: !!status?.resultImages, announcements: !!status?.announcements, weeklyReport: !!status?.weeklyReport, reportWeekday: status?.reportWeekday ?? 0, reportTime: status?.reportTime ?? '08:00' })).data.data)
+    setStatus((await postR('/zalo/preferences', { enabled: !!status?.enabled, intakeEnabled: !!status?.intakeEnabled, commandsEnabled: !!status?.commandsEnabled, paymentReminders: !!status?.paymentReminders, resultImages: !!status?.resultImages, announcements: !!status?.announcements, weeklyReport: !!status?.weeklyReport, reportWeekday: status?.reportWeekday ?? 0, reportTime: status?.reportTime ?? '08:00' })).data.data)
     toast.success('Đã lưu lựa chọn gửi Zalo')
   })
   const test = () => action(async () => { await api.post('/zalo/test'); toast.success('Đã gửi tin kiểm tra vào nhóm đã xác nhận') })
@@ -80,7 +94,7 @@ export function ZaloTab() {
       <Button disabled={busy || !status.canJoinGroups || !status.webhookReady || !!status.externalWebhook} onClick={() => action(async () => { setPair((await api.post('/zalo/pair')).data.data) })}>Tạo mã kết nối nhóm</Button>
       {status.externalWebhook && <p className="text-xs [color:var(--pf-color-muted)]">Webhook do nền tảng khác giữ nên PickleFund không nhận được mã /ketnoi. Dùng nhóm đã liên kết sẵn bên dưới.</p>}
       {pair && <div className="rounded-xl border p-3 space-y-2"><code className="block break-all select-all text-sm">{pair.command}</code><p className="text-xs">Hết hạn: {new Date(pair.expiresAt).toLocaleTimeString('vi-VN')}</p></div>}
-      {status.pendingChat && <div className="rounded-xl border p-3 space-y-2"><p className="break-words font-semibold">Nhóm chờ xác nhận: {status.pendingChat.name}</p><p className="text-xs break-all">ID: {status.pendingChat.id}</p><Button disabled={busy} onClick={() => action(async () => { setStatus((await api.post('/zalo/confirm-group')).data.data); setPair(null); toast.success('Đã xác nhận nhóm. Chọn nội dung và bật tự động khi sẵn sàng.') })}>Xác nhận đây là nhóm CLB</Button></div>}
+      {status.pendingChat && <div className="rounded-xl border p-3 space-y-2"><p className="break-words font-semibold">Nhóm chờ xác nhận: {status.pendingChat.name}</p><p className="text-xs break-all">ID: {status.pendingChat.id}</p><Button disabled={busy} onClick={() => action(async () => { setStatus((await postR('/zalo/confirm-group')).data.data); setPair(null); toast.success('Đã xác nhận nhóm. Chọn nội dung và bật tự động khi sẵn sàng.') })}>Xác nhận đây là nhóm CLB</Button></div>}
       {status.chatId && <p className="break-all text-sm">Nhóm đã liên kết: <strong>{status.chatName}</strong> · {status.chatId}</p>}
       {status.externalWebhook && <div className="rounded-xl border p-3 space-y-2">
         <p className="text-sm font-semibold">{status.chatId ? 'Đổi nhóm nhận thông báo (nhập mã nhóm Zalo)' : 'Chưa có nhóm nhận thông báo — nhập mã nhóm Zalo để dùng “Gửi thử” và “Báo cáo”'}</p>
@@ -90,13 +104,13 @@ export function ZaloTab() {
         <label className="block text-sm" htmlFor="zalo-group-name">Tên hiển thị (tùy chọn)
           <input id="zalo-group-name" type="text" value={groupName} onChange={e => setGroupName(e.target.value)} maxLength={150} className="input-base mt-2 w-full" placeholder="CLB The PING" />
         </label>
-        <Button disabled={busy || !groupId.trim()} onClick={() => action(async () => { setStatus((await api.post('/zalo/group', { chatId: groupId.trim(), ...(groupName.trim() ? { chatName: groupName.trim() } : {}) })).data.data); setGroupId(''); setGroupName(''); toast.success('Đã lưu nhóm. Bật “Bật gửi tự động” rồi bấm Lưu khi sẵn sàng.') })}>Lưu nhóm</Button>
+        <Button disabled={busy || !groupId.trim()} onClick={() => action(async () => { setStatus((await postR('/zalo/group', { chatId: groupId.trim(), ...(groupName.trim() ? { chatName: groupName.trim() } : {}) })).data.data); setGroupId(''); setGroupName(''); toast.success('Đã lưu nhóm. Bật “Bật gửi tự động” rồi bấm Lưu khi sẵn sàng.') })}>Lưu nhóm</Button>
         <p className="text-xs [color:var(--pf-color-muted)]">Đổi sang nhóm khác sẽ tự tắt gửi tự động để tránh gửi nhầm. Nhóm giữ nguyên thì cấu hình gửi không đổi.</p>
       </div>}
       <p className="text-sm">Webhook: {status.externalWebhook ? 'Do nền tảng khác (vd. AI-BOT) quản lý — PickleFund chỉ gửi tin ra, không đụng webhook' : status.webhookReady ? 'Đã xác minh' : 'Chưa xác minh — bấm “Kiểm tra lại webhook”; nếu vẫn lỗi, kiểm tra HTTPS và đăng ký lại bot'}</p>
       <div className="flex flex-wrap gap-2">
-        {!status.externalWebhook && <Button variant="outline" disabled={busy} onClick={() => action(async () => { const s = (await api.post('/zalo/webhook-verify')).data.data; setStatus(s); if (s.webhookReady) toast.success('Webhook đã xác minh'); else toast.error('Webhook vẫn chưa xác minh được') })}>{status.webhookReady ? 'Đặt lại webhook về PickleFund' : 'Kiểm tra lại webhook'}</Button>}
-        <Button variant="outline" disabled={busy} onClick={() => action(async () => { const on = !status.externalWebhook; setStatus((await api.post('/zalo/external-webhook', { enabled: on })).data.data); toast.success(on ? 'Đã chuyển sang chế độ webhook do nền tảng khác quản lý' : 'Đã tắt chế độ này. Bấm “Kiểm tra lại webhook” để nhận lại webhook') })}>{status.externalWebhook ? 'Tắt chế độ webhook do nền tảng khác' : 'Webhook do nền tảng khác (AI-BOT) quản lý'}</Button>
+        {!status.externalWebhook && <Button variant="outline" disabled={busy} onClick={() => action(async () => { const s = (await postR('/zalo/webhook-verify')).data.data; setStatus(s); if (s.webhookReady) toast.success('Webhook đã xác minh'); else toast.error('Webhook vẫn chưa xác minh được') })}>{status.webhookReady ? 'Đặt lại webhook về PickleFund' : 'Kiểm tra lại webhook'}</Button>}
+        <Button variant="outline" disabled={busy} onClick={() => action(async () => { const on = !status.externalWebhook; setStatus((await postR('/zalo/external-webhook', { enabled: on })).data.data); toast.success(on ? 'Đã chuyển sang chế độ webhook do nền tảng khác quản lý' : 'Đã tắt chế độ này. Bấm “Kiểm tra lại webhook” để nhận lại webhook') })}>{status.externalWebhook ? 'Tắt chế độ webhook do nền tảng khác' : 'Webhook do nền tảng khác (AI-BOT) quản lý'}</Button>
       </div>
     </section>}
     {status?.configured && <section className="pf-glass rounded-2xl p-4 space-y-3">
@@ -116,8 +130,8 @@ export function ZaloTab() {
         </select>
       </label>
       <div className="flex flex-wrap gap-2">
-        <Button disabled={busy || (!relayUrl.trim() && !status.relay)} onClick={() => action(async () => { setStatus((await api.post('/zalo/relay', { ...(relayUrl.trim() ? { url: relayUrl.trim() } : {}), ...(relaySecret ? { secret: relaySecret } : {}), mode: relayMode })).data.data); setRelayUrl(''); setRelaySecret(''); toast.success('Đã lưu cấu hình chuyển tiếp') })}>Lưu chuyển tiếp</Button>
-        {status.relay && <Button variant="outline" disabled={busy} onClick={() => action(async () => { setStatus((await api.post('/zalo/relay', { url: '' })).data.data); toast.success('Đã tắt chuyển tiếp') })}>Tắt chuyển tiếp</Button>}
+        <Button disabled={busy || (!relayUrl.trim() && !status.relay)} onClick={() => action(async () => { setStatus((await postR('/zalo/relay', { ...(relayUrl.trim() ? { url: relayUrl.trim() } : {}), ...(relaySecret ? { secret: relaySecret } : {}), mode: relayMode })).data.data); setRelayUrl(''); setRelaySecret(''); toast.success('Đã lưu cấu hình chuyển tiếp') })}>Lưu chuyển tiếp</Button>
+        {status.relay && <Button variant="outline" disabled={busy} onClick={() => action(async () => { setStatus((await postR('/zalo/relay', { url: '' })).data.data); toast.success('Đã tắt chuyển tiếp') })}>Tắt chuyển tiếp</Button>}
       </div>
       <p className="text-xs [color:var(--pf-color-muted)]">Sau khi lưu, bấm “Kiểm tra lại webhook” (nếu hiện) để PickleFund giành lại webhook; nền tảng kia không được tự đặt lại webhook cho cùng bot, nếu không PickleFund sẽ mất tin. Chỉ chấp nhận địa chỉ HTTPS công khai. Địa chỉ trycloudflare “quick tunnel” đổi mỗi lần khởi động lại, nên dùng tunnel/tên miền cố định.</p>
     </section>}
