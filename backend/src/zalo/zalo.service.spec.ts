@@ -91,6 +91,18 @@ describe('Zalo club integration', () => {
     const body = JSON.parse(fetchMock.mock.calls[0][1]!.body as string);
     expect(body.chat_id).toBe('group-a'); expect(body.text).not.toContain('1.000.000');
   });
+  it('đưa mô tả lỗi của Zalo (đã lọc) vào thông báo để biết nguyên nhân, không lộ token', async () => {
+    await paired();
+    fetchMock.mockImplementation(async () => ({ ok: false, status: 422, json: async () => ({ ok: false, error_code: 422, description: 'Bad Request: chat not found <script>https://x/bot123' }) }) as any);
+    const err: any = await svc.test(clubId).catch(e => e);
+    expect(err.message).toContain('API_422'); expect(err.message).toContain('chat not found');
+    expect(err.message).not.toContain('<script>'); expect(err.message).not.toContain('/'); expect(err.message).not.toContain(token);
+  });
+  it('lỗi mạng vẫn chỉ trả CONNECTION_FAILED', async () => {
+    await paired(); fetchMock.mockRejectedValue(new Error(`boom https://bot-api.zaloplatforms.com/bot${token}/sendMessage`));
+    const err: any = await svc.test(clubId).catch(e => e);
+    expect(err.message).toContain('CONNECTION_FAILED'); expect(err.message).not.toContain(token);
+  });
   it('sanitizes upstream failures so token-bearing URLs cannot leak', async () => {
     fetchMock.mockRejectedValue(new Error(`request failed https://bot-api.zaloplatforms.com/bot${token}/getMe`));
     await expect(svc.register(clubId, token)).rejects.not.toThrow(token);

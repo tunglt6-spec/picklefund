@@ -99,12 +99,19 @@ export class ZaloService {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: AbortSignal.timeout(12000),
       });
       const data = await response.json() as any;
-      if (!response.ok || data?.ok !== true) throw new Error(`API_${Number(data?.error_code) || response.status}`);
+      if (!response.ok || data?.ok !== true) {
+        // `description` do Zalo trả cho biết nguyên nhân (vd. không tìm thấy nhóm / bot không ở trong nhóm). Chỉ giữ chữ-số-dấu câu cơ bản,
+        // cắt ngắn; token chỉ nằm trong URL nên không thể lọt vào mô tả.
+        const desc = typeof data?.description === 'string' ? data.description.replace(/[^\p{L}\p{N}\s:.,_()-]/gu, '').trim().slice(0, 160) : '';
+        throw new Error(`API_${Number(data?.error_code) || response.status}|${desc}`);
+      }
       return data.result;
     } catch (e) {
-      // Fetch errors can contain the URL and bot token. Only sanitized codes leave this boundary.
-      const code = e instanceof Error && /^API_\d+$/.test(e.message) ? e.message : 'CONNECTION_FAILED';
-      throw new BadRequestException(`Zalo ${code}. Kiểm tra token, quyền bot và kết nối rồi thử lại.`);
+      // Fetch errors can contain the URL and bot token. Only sanitized codes (and Zalo's own description) leave this boundary.
+      const m = e instanceof Error ? /^(API_\d+)\|(.*)$/.exec(e.message) : null;
+      const code = m ? m[1] : 'CONNECTION_FAILED';
+      const desc = m?.[2] ? ` — Zalo báo: ${m[2]}` : '';
+      throw new BadRequestException(`Zalo ${code}${desc}. Kiểm tra token, quyền bot và kết nối rồi thử lại.`);
     }
   }
   /** `external`: webhook do nền tảng khác giữ (không setWebhook). `force`: vẫn chiếm webhook dù bot đang thuộc nơi khác. */
