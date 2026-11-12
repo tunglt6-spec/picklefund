@@ -5,6 +5,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Reflector } from '@nestjs/core';
 import { renderHtmlToPng } from '../executive-report/render-pdf';
 jest.mock('../executive-report/render-pdf', () => ({ renderHtmlToPng: jest.fn(async () => Buffer.from('png-preview')) }));
+jest.mock('./zalo-relay', () => ({ ...jest.requireActual('./zalo-relay'), isHostPublic: jest.fn(async (h: string) => !/^(localhost|internal\.test)$/.test(h)) }));
 
 describe('Zalo club integration', () => {
   let svc: ZaloService; let rows: Map<string, any>; let fetchMock: jest.SpyInstance;
@@ -120,6 +121,60 @@ describe('Zalo club integration', () => {
     await paired(); await svc.preferences(clubId, { enabled: false });
     await svc.notifyAction(clubId, 'act-1', 'T', 'B');
     expect([...rows.keys()].filter(k => k.startsWith('zalo_job_'))).toHaveLength(0);
+  });
+  describe('relay sang nền tảng khác dùng chung bot', () => {
+    const relayUrl = 'https://ai-bot.example.com/zalo/webhook';
+    const flush = async () => { for (let i = 0; i < 5; i++) await new Promise(r => setImmediate(r)); };
+    const relayCalls = () => fetchMock.mock.calls.filter(c => String(c[0]) === relayUrl);
+    const msg = (text: string, id: string, extra: object = {}) => ({ event_name: 'message.text.received', message: { message_id: id, from: { is_bot: false }, text, chat: { id: 'group-a', chat_type: 'GROUP' }, ...extra } });
+    it('từ chối địa chỉ không an toàn và không bao giờ lưu secret dạng rõ', async () => {
+      await svc.register(clubId, token);
+      await expect(svc.setRelay(clubId, { url: 'http://ai-bot.example.com/x' })).rejects.toThrow('HTTPS');
+      await expect(svc.setRelay(clubId, { url: 'https://localhost/x' })).rejects.toThrow('công khai');
+      await expect(svc.setRelay(clubId, { url: 'https://internal.test/x' })).rejects.toThrow('công khai');
+      await expect(svc.setRelay(clubId, { url: 'https://picklefund.vn/api/zalo/webhook/club-a' })).rejects.toThrow('chính webhook');
+      await expect(svc.setRelay(clubId, { url: relayUrl, secret: 'short' })).rejects.toThrow('8–256');
+      const st: any = await svc.setRelay(clubId, { url: relayUrl, secret: 'ai-platform-secret-xyz' });
+      expect(st.relay).toMatchObject({ host: 'ai-bot.example.com', mode: 'unhandled', hasSecret: true });
+      expect(JSON.stringify([...rows.values()])).not.toContain('ai-platform-secret-xyz');
+    });
+    it('chuyển tiếp tin KHÔNG thuộc lệnh PickleFund, giữ nguyên body + secret của nền tảng kia', async () => {
+      const secret = await paired(); await svc.preferences(clubId, { commandsEnabled: true });
+      await svc.setRelay(clubId, { url: relayUrl, secret: 'ai-platform-secret-xyz' }); fetchMock.mockClear();
+      const chat = msg('@Bot PickleFund xin chào', 'm1');
+      await svc.webhook(clubId, secret, chat); await flush();
+      expect(relayCalls()).toHaveLength(1);
+      const [, init]: any = relayCalls()[0];
+      expect(init.headers['X-Bot-Api-Secret-Token']).toBe('ai-platform-secret-xyz');
+      expect(JSON.parse(init.body)).toEqual(chat);
+      expect(init.redirect).toBe('manual');
+    });
+    it('không chuyển tiếp mã /ketnoi hay lệnh đang bật; lệnh bị tắt thì chuyển tiếp', async () => {
+      const secret = await paired(); await svc.setRelay(clubId, { url: relayUrl }); fetchMock.mockClear();
+      await svc.webhook(clubId, secret, msg('/ketnoi ' + 'A'.repeat(16), 'm1'));
+      await svc.webhook(clubId, secret, msg('/quy', 'm2')); await flush();   // commandsEnabled đang tắt → AI nhận
+      expect(relayCalls()).toHaveLength(1);
+      expect(JSON.parse((relayCalls()[0][1] as any).body).message.text).toBe('/quy');
+      await svc.preferences(clubId, { commandsEnabled: true }); fetchMock.mockClear();
+      await svc.webhook(clubId, secret, msg('/quy', 'm3')); await flush();
+      expect(relayCalls()).toHaveLength(0);
+    });
+    it("chế độ 'all' chuyển tiếp cả lệnh; tin trùng message_id không chuyển tiếp lần 2; tin không phải message thì bỏ qua", async () => {
+      const secret = await paired(); await svc.preferences(clubId, { commandsEnabled: true });
+      await svc.setRelay(clubId, { url: relayUrl, mode: 'all' }); fetchMock.mockClear();
+      await svc.webhook(clubId, secret, msg('/quy', 'm1')); await svc.webhook(clubId, secret, msg('/quy', 'm1'));
+      await svc.webhook(clubId, secret, { event_name: 'webhook.verify' }); await flush();
+      expect(relayCalls()).toHaveLength(1);
+    });
+    it('lỗi relay không làm hỏng webhook; trạng thái lưu để hiển thị; đăng ký lại bot giữ cấu hình relay; url rỗng = tắt', async () => {
+      const secret = await paired(); await svc.setRelay(clubId, { url: relayUrl });
+      fetchMock.mockImplementation(async (url: any) => { if (String(url) === relayUrl) throw new Error('boom'); return response({ verification: { ok: true }, id: 'bot-a', can_join_groups: true }) as any; });
+      await expect(svc.webhook(clubId, secret, msg('hello', 'm1'))).resolves.toBeUndefined(); await flush();
+      expect((await svc.status(clubId) as any).relay.last).toMatchObject({ ok: false, error: 'CONNECTION_FAILED' });
+      await svc.register(clubId, token);
+      expect((await svc.status(clubId) as any).relay.host).toBe('ai-bot.example.com');
+      expect((await svc.setRelay(clubId, { url: '' }) as any).relay).toBeNull();
+    });
   });
   it('drops queued messages when group is replaced or automatic delivery disabled', async () => {
     await paired(); await svc.preferences(clubId, { enabled: true });

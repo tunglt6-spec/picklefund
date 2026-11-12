@@ -7,6 +7,11 @@ import { ok } from '../common/response';
 import { ZaloService } from './zalo.service';
 
 class BotDto { @IsString() @MaxLength(512) token: string; }
+class RelayDto {
+  @IsOptional() @IsString() @MaxLength(500) url?: string;
+  @IsOptional() @IsString() @MaxLength(256) secret?: string;
+  @IsOptional() @IsIn(['unhandled', 'all']) mode?: 'unhandled' | 'all';
+}
 class PreferencesDto {
   @IsOptional() @IsBoolean() intakeEnabled?: boolean;
   @IsOptional() @IsBoolean() commandsEnabled?: boolean;
@@ -36,6 +41,10 @@ export class ZaloController {
 
   @Post('webhook-verify') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   async verifyWebhook(@CurrentUser() user: JwtUser) { return ok(await this.zalo.reverifyWebhook(this.zalo.club(user.clubId))); }
+
+  /** Chuyển tiếp webhook sang nền tảng khác dùng chung bot (vd. AI-BOT): 1 bot Zalo chỉ có 1 webhook. */
+  @Post('relay') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
+  async relay(@CurrentUser() user: JwtUser, @Body() body: RelayDto) { return ok(await this.zalo.setRelay(this.zalo.club(user.clubId), body)); }
 
   @Post('pair') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   async pair(@CurrentUser() user: JwtUser) { return ok(await this.zalo.pair(this.zalo.club(user.clubId))); }

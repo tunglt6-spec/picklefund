@@ -14,6 +14,7 @@ interface ZaloStatus {
   reportTime?: string; weeklyReport?: boolean; reportWeekday?: number;
   chatId?: string | null; chatName?: string | null; pendingChat?: { id: string; name: string } | null;
   lastSentAt?: string | null; lastError?: string | null;
+  relay?: { host: string; mode: 'unhandled' | 'all'; hasSecret: boolean; last: { at: string; ok: boolean; status?: number; error?: string } | null } | null;
 }
 export function ZaloTab() {
   const [status, setStatus] = useState<ZaloStatus | null>(null)
@@ -26,6 +27,9 @@ export function ZaloTab() {
   const [previewFailed, setPreviewFailed] = useState(false)
   const [disconnect, setDisconnect] = useState(false)
   const [sendReport, setSendReport] = useState(false)
+  const [relayUrl, setRelayUrl] = useState('')
+  const [relaySecret, setRelaySecret] = useState('')
+  const [relayMode, setRelayMode] = useState<'unhandled' | 'all'>('unhandled')
   const error = (e: any) => toast.error(e?.response?.data?.message ?? 'Không kết nối được Zalo. Thử lại sau.')
   const reload = async () => { try { setStatus((await api.get('/zalo/status')).data.data); setLoadFailed(false) } catch (e) { setLoadFailed(true); error(e) } }
   useEffect(() => { void reload() }, [])
@@ -73,7 +77,29 @@ export function ZaloTab() {
       {status.pendingChat && <div className="rounded-xl border p-3 space-y-2"><p className="break-words font-semibold">Nhóm chờ xác nhận: {status.pendingChat.name}</p><p className="text-xs break-all">ID: {status.pendingChat.id}</p><Button disabled={busy} onClick={() => action(async () => { setStatus((await api.post('/zalo/confirm-group')).data.data); setPair(null); toast.success('Đã xác nhận nhóm. Chọn nội dung và bật tự động khi sẵn sàng.') })}>Xác nhận đây là nhóm CLB</Button></div>}
       {status.chatId && <p className="break-all text-sm">Nhóm đã liên kết: <strong>{status.chatName}</strong> · {status.chatId}</p>}
       <p className="text-sm">Webhook: {status.webhookReady ? 'Đã xác minh' : 'Chưa xác minh — bấm “Kiểm tra lại webhook”; nếu vẫn lỗi, kiểm tra HTTPS và đăng ký lại bot'}</p>
-      {!status.webhookReady && <Button variant="outline" disabled={busy} onClick={() => action(async () => { const s = (await api.post('/zalo/webhook-verify')).data.data; setStatus(s); if (s.webhookReady) toast.success('Webhook đã xác minh'); else toast.error('Webhook vẫn chưa xác minh được') })}>Kiểm tra lại webhook</Button>}
+      <Button variant="outline" disabled={busy} onClick={() => action(async () => { const s = (await api.post('/zalo/webhook-verify')).data.data; setStatus(s); if (s.webhookReady) toast.success('Webhook đã xác minh'); else toast.error('Webhook vẫn chưa xác minh được') })}>{status.webhookReady ? 'Đặt lại webhook về PickleFund' : 'Kiểm tra lại webhook'}</Button>
+    </section>}
+    {status?.configured && <section className="pf-glass rounded-2xl p-4 space-y-3">
+      <h3 className="font-bold">Dùng chung bot với nền tảng AI khác</h3>
+      <p className="text-sm">Một bot Zalo chỉ có <b>một</b> webhook nên PickleFund và nền tảng AI-BOT không thể cùng nhận tin trực tiếp. PickleFund giữ webhook và <b>chuyển tiếp</b> tin sang địa chỉ webhook của nền tảng kia; lệnh của PickleFund (/ketnoi, /quy, /thu…) do PickleFund xử lý, tin còn lại do nền tảng kia trả lời.</p>
+      {status.relay && <p className="break-all text-sm">Đang chuyển tiếp tới: <strong>{status.relay.host}</strong> · {status.relay.mode === 'all' ? 'tất cả tin' : 'tin không phải lệnh PickleFund'}{status.relay.last ? ` · lần gần nhất ${new Date(status.relay.last.at).toLocaleString('vi-VN')}: ${status.relay.last.ok ? 'thành công' : `lỗi ${status.relay.last.status ?? status.relay.last.error ?? ''}`}` : ''}</p>}
+      <label className="block text-sm font-semibold" htmlFor="zalo-relay-url">Địa chỉ webhook của nền tảng kia (HTTPS)
+        <input id="zalo-relay-url" type="url" value={relayUrl} onChange={e => setRelayUrl(e.target.value)} maxLength={500} className="input-base mt-2 w-full" placeholder={status.relay ? 'Để trống để giữ nguyên địa chỉ hiện tại' : 'https://…'} />
+      </label>
+      <label className="block text-sm font-semibold" htmlFor="zalo-relay-secret">Secret nền tảng kia đang kiểm tra (nếu có)
+        <input id="zalo-relay-secret" type="password" autoComplete="new-password" value={relaySecret} onChange={e => setRelaySecret(e.target.value)} maxLength={256} className="input-base mt-2 w-full" placeholder={status.relay?.hasSecret ? 'Đã lưu — để trống để giữ nguyên' : 'Gửi trong header X-Bot-Api-Secret-Token'} />
+      </label>
+      <label className="block text-sm font-semibold" htmlFor="zalo-relay-mode">Chuyển tiếp
+        <select id="zalo-relay-mode" className="input-base mt-2 w-full" value={relayMode} onChange={e => setRelayMode(e.target.value as 'unhandled' | 'all')}>
+          <option value="unhandled">Chỉ tin không phải lệnh PickleFund (khuyến nghị)</option>
+          <option value="all">Tất cả tin (nền tảng kia cũng thấy lệnh PickleFund)</option>
+        </select>
+      </label>
+      <div className="flex flex-wrap gap-2">
+        <Button disabled={busy || (!relayUrl.trim() && !status.relay)} onClick={() => action(async () => { setStatus((await api.post('/zalo/relay', { ...(relayUrl.trim() ? { url: relayUrl.trim() } : {}), ...(relaySecret ? { secret: relaySecret } : {}), mode: relayMode })).data.data); setRelayUrl(''); setRelaySecret(''); toast.success('Đã lưu cấu hình chuyển tiếp') })}>Lưu chuyển tiếp</Button>
+        {status.relay && <Button variant="outline" disabled={busy} onClick={() => action(async () => { setStatus((await api.post('/zalo/relay', { url: '' })).data.data); toast.success('Đã tắt chuyển tiếp') })}>Tắt chuyển tiếp</Button>}
+      </div>
+      <p className="text-xs [color:var(--pf-color-muted)]">Sau khi lưu, bấm “Kiểm tra lại webhook” (nếu hiện) để PickleFund giành lại webhook; nền tảng kia không được tự đặt lại webhook cho cùng bot, nếu không PickleFund sẽ mất tin. Chỉ chấp nhận địa chỉ HTTPS công khai. Địa chỉ trycloudflare “quick tunnel” đổi mỗi lần khởi động lại, nên dùng tunnel/tên miền cố định.</p>
     </section>}
     {status?.configured && <section className="pf-glass rounded-2xl p-4 space-y-3">
       <h3 className="font-bold">Nội dung gửi vào nhóm</h3>
