@@ -50,6 +50,7 @@ export class ZaloService {
   private readonly logger = new Logger(ZaloService.name);
   private working = false;
   private readonly seenMessages = new Set<string>();
+  private readonly hubReplay = new Map<string, number>();
   private scanning = false;
   constructor(private readonly prisma: PrismaService, private readonly config: ConfigService, private readonly calculator: FinancialCalculatorService, @Optional() private readonly intake?: ZaloIntakeService, @Optional() private readonly commands?: ZaloCommandService) {}
 
@@ -280,10 +281,15 @@ export class ZaloService {
   async hubUnlink(clubId: string) {
     const c = await this.required(clubId);
     if (c.mode !== 'hub' || !c.hub) throw new BadRequestException('CLB chưa liên kết AI-BOT.');
-    try { await this.hubRequest(`/api/hub/v1/links/${encodeURIComponent(c.hub.linkId)}`, { method: 'DELETE', headers: this.hubAuth(c) }); } catch { /* AI-BOT không phản hồi: vẫn gỡ phía PickleFund */ }
-    if (!c.token) { await this.prisma.systemSetting.deleteMany({ where: { key: PREFIX + clubId } }); return { configured: false, hubAvailable: !!this.hubBase() }; }
+    // Vẫn gỡ phía PickleFund dù AI-BOT không phản hồi, nhưng PHẢI báo: nếu liên kết bên AI-BOT còn "active", AI-BOT vẫn chuyển lệnh sang PickleFund (bị từ chối) và nhóm không được trả lời.
+    let hubUnlinkWarning: string | undefined;
+    try {
+      const r = await this.hubRequest(`/api/hub/v1/links/${encodeURIComponent(c.hub.linkId)}`, { method: 'DELETE', headers: this.hubAuth(c) });
+      if (!(r.status >= 200 && r.status < 300) && r.status !== 403 && r.status !== 404) hubUnlinkWarning = 'AI-BOT chưa xác nhận gỡ liên kết. Hãy vào AI-BOT, bấm "Gỡ liên kết" ở bảng Liên kết PickleFund để lệnh trong nhóm trở về AI.';
+    } catch { hubUnlinkWarning = 'Không kết nối được AI-BOT để gỡ liên kết. Hãy vào AI-BOT, bấm "Gỡ liên kết" ở bảng Liên kết PickleFund để lệnh trong nhóm trở về AI.'; }
+    if (!c.token) { await this.prisma.systemSetting.deleteMany({ where: { key: PREFIX + clubId } }); return { configured: false, hubAvailable: !!this.hubBase(), hubUnlinkWarning }; }
     delete c.mode; delete c.hub; c.externalWebhook = true; c.webhookReady = true; delete c.lastError;
-    await this.save(clubId, c); return this.status(clubId);
+    await this.save(clubId, c); return { ...(await this.status(clubId)), hubUnlinkWarning };
   }
   /** Trạng thái liên kết phía AI-BOT (không lộ khóa). */
   async hubStatus(clubId: string) {
@@ -314,7 +320,13 @@ export class ZaloService {
     const expect = 'v1=' + createHmac('sha256', this.unseal(c.hub.secret)).update(`${hdr.ts}.`).update(raw).digest('hex');
     if (!same(hdr.sig, expect)) throw new ForbiddenException('Chữ ký không hợp lệ');
     if (body?.link_id !== c.hub.linkId || !body?.event || typeof body.event !== 'object') throw new BadRequestException('Gói sự kiện không hợp lệ');
-    return { handled: await this.processEvent(clubId, c, body.event) };
+    // Chống phát lại: một chữ ký hợp lệ chỉ được xử lý 1 lần trong cửa sổ 300s (bộ nhớ tiến trình; mất khi restart nhưng cửa sổ chỉ 5 phút).
+    const now = Date.now(); const rk = `${clubId}:${hdr.sig}`;
+    if ((this.hubReplay.get(rk) ?? 0) > now) return { handled: true };
+    this.hubReplay.set(rk, now + 310_000);
+    if (this.hubReplay.size > 1000) for (const [k, exp] of this.hubReplay) if (exp <= now) this.hubReplay.delete(k);
+    try { return { handled: await this.processEvent(clubId, c, body.event) }; }
+    catch (e) { this.hubReplay.delete(rk); throw e; }
   }
   /** Gửi tin ra: trực tiếp qua Zalo (token) hoặc qua API hub của AI-BOT (không dùng token). */
   private async out(clubId: string, c: Connection, method: 'sendMessage' | 'sendPhoto', p: { chat_id: string; text?: string; photo?: string; caption?: string }) {
@@ -342,14 +354,21 @@ export class ZaloService {
   /** Xử lý 1 sự kiện Zalo đã xác thực (từ webhook trực tiếp hoặc từ AI-BOT). Trả true nếu PickleFund đã xử lý (AI-BOT không nên để AI trả lời). */
   private async processEvent(clubId: string, c: Connection, body: unknown): Promise<boolean> {
     const data = body as any; const m = data?.message;
+    let dedupeKey: string | null = null;
     // Zalo có thể gửi lại cùng một tin khi webhook phản hồi chậm: bỏ bản trùng (bộ nhớ tiến trình, giữ 500 tin gần nhất).
     // Dedupe TRƯỚC khi chuyển tiếp để nền tảng kia cũng không nhận bản trùng.
     if (typeof data?.event_name === 'string' && data.event_name.startsWith('message.') && m?.message_id != null) {
-      const dedupeKey = `${clubId}:${String(m.message_id)}`;
+      dedupeKey = `${clubId}:${String(m.message_id)}`;
       if (this.seenMessages.has(dedupeKey)) return true;
       this.seenMessages.add(dedupeKey);
       if (this.seenMessages.size > 500) this.seenMessages.delete(this.seenMessages.values().next().value as string);
     }
+    // Xử lý lỗi thì bỏ dấu "đã thấy" để lần Zalo/AI-BOT gửi lại không bị coi là trùng và nuốt mất.
+    try { return await this.processEventCore(clubId, c, data); }
+    catch (e) { if (dedupeKey) this.seenMessages.delete(dedupeKey); throw e; }
+  }
+  private async processEventCore(clubId: string, c: Connection, data: any): Promise<boolean> {
+    const m = data?.message;
     // Verification pings and unrelated messages are acknowledged without persisting group content.
     if (data?.event_name !== 'message.text.received' || !c.canJoinGroups || m?.from?.is_bot === true) return false;
     const text: string = typeof m?.text === 'string' ? m.text : '';

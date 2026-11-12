@@ -121,7 +121,7 @@ class HubTest(unittest.TestCase):
         self.assertEqual(raw[0], hashlib.sha256(body["access_key"].encode()).hexdigest())
         # đã có liên kết → mã mới không đổi được (409)
         code2 = self.cl.post("/api/hub/v1/links/code", json={"bot_id": "b_club"}, headers=self.auth()).json()["code"]
-        self.assertEqual(self.cl.post("/api/hub/v1/links/exchange", json={"code": code2, "event_url": "http://picklefund-api:3000/x"}).status_code, 409)
+        self.assertEqual(self.cl.post("/api/hub/v1/links/exchange", json={"code": code2, "event_url": "http://picklefund-api:3000/api/zalo/hub/c"}).status_code, 409)
 
     def test_expired_code_and_rate_limit(self):
         code = self.cl.post("/api/hub/v1/links/code", json={"bot_id": "b_club"}, headers=self.auth()).json()["code"]
@@ -131,6 +131,34 @@ class HubTest(unittest.TestCase):
         self.assertIn(429, codes)
 
     # ---- hook chuyển sự kiện ----
+    def confirm(self, link, chat):
+        c = sqlite3.connect(self.db)
+        c.execute("INSERT OR IGNORE INTO hub_link_chats(link_id,chat_id,first_seen,last_seen) VALUES(?,?,?,?)", (link["link_id"], chat, time.time(), time.time()))
+        c.commit(); c.close()
+
+    def test_event_url_path_and_token_hardening(self):
+        code = self.cl.post("/api/hub/v1/links/code", json={"bot_id": "b_club"}, headers=self.auth()).json()["code"]
+        for u in ("http://picklefund-api:3000/api/auth/login", "http://picklefund-api:3000/api/zalo/hub/c?x=1", "http://picklefund-api:3000/api/zalo/hub/", "http://picklefund-api:99999/api/zalo/hub/c", "http://picklefund-api:3000/api/zalo/hub/c/../x"):
+            self.assertEqual(self.cl.post("/api/hub/v1/links/exchange", json={"code": code, "event_url": u}).status_code, 400, u)
+        # token có header là mảng JSON → 401 (không 500)
+        import base64
+        b = lambda x: base64.urlsafe_b64encode(x).rstrip(b"=").decode()
+        bad = b"[1]"; tok = f"{b(bad)}.{b(b'{}')}.{b(b'x')}"
+        self.assertEqual(self.cl.post("/api/hub/v1/links/code", json={"bot_id": "b_club"}, headers={"Authorization": "Bearer " + tok}).status_code, 401)
+
+    def test_photo_url_must_be_https(self):
+        link = self.make_link(); self.confirm(link, "zgr-1"); os.environ["HUB_SEND_DRY_RUN"] = "1"
+        H = {"Authorization": "Bearer " + link["access_key"], "X-Hub-Link-Id": link["link_id"]}
+        for i, u in enumerate(("http://x/y.png", "file:///etc/passwd", "https://x/" + "a" * 600)):
+            self.assertEqual(self.cl.post("/api/hub/v1/messages", json={"chat_id": "zgr-1", "photo_url": u, "idempotency_key": f"ph{i}"}, headers=H).status_code, 400, u)
+
+    def test_client_ip_only_trusts_cf_header_from_loopback(self):
+        class R:
+            def __init__(s, host, hdr): s.client = type("C", (), {"host": host})(); s.headers = hdr
+        self.assertEqual(hub._client_ip(R("127.0.0.1", {"cf-connecting-ip": "1.2.3.4"})), "1.2.3.4")
+        self.assertEqual(hub._client_ip(R("172.18.0.5", {"cf-connecting-ip": "1.2.3.4"})), "172.18.0.5")
+        self.assertEqual(hub._client_ip(R("127.0.0.1", {"cf-connecting-ip": "<script>"})), "127.0.0.1")
+
     def test_command_matching(self):
         yes = ["/quy", "@Bot PickleFund The Ping /quy", "/congno", "/lich", "/bxh", "/dangky", "/dangky 2", "/huy 3", "/huydangky", "/diemdanh", "/no",
                "/help", "/lenh", "/lienket ABC123", "/thu Nguyễn Văn A 300k", "/chi tiền sân 600k", "@Bot /ketnoi " + "A1" * 8, "/QUY"]
@@ -152,8 +180,8 @@ class HubTest(unittest.TestCase):
         self.assertAlmostEqual(int(h["x-hub-timestamp"]), int(time.time()), delta=5)
         payload = json.loads(call["body"])
         self.assertEqual(payload["bot_id"], "b_club"); self.assertEqual(payload["event"]["message"]["text"], "@Bot /quy")
-        # nhóm được ghi nhận để giới hạn nơi gửi
-        self.assertEqual(sqlite3.connect(self.db).execute("select chat_id from hub_link_chats").fetchall(), [("zgr-1",)])
+        # nhóm KHÔNG tự được xác nhận chỉ vì có lệnh (chủ bot phải bấm xác nhận)
+        self.assertEqual(sqlite3.connect(self.db).execute("select chat_id from hub_link_chats").fetchall(), [])
         st = self.cl.get(f"/api/hub/v1/links/{link['link_id']}", headers={"Authorization": "Bearer " + link["access_key"]}).json()["link"]
         self.assertEqual((st["forward_ok"], st["forward_fail"]), (1, 0))
 
@@ -163,6 +191,20 @@ class HubTest(unittest.TestCase):
         self.assertFalse(self.run_hook("xin chào cả nhà"))            # không phải lệnh
         self.assertFalse(self.run_hook("/quy", bot="b_other"))       # bot không thuộc mẫu/không có liên kết
         self.assertEqual(Receiver.calls, [])
+
+    def test_forward_failure_notifies_group_once(self):
+        self.make_link(); Receiver.mode = "fail"
+        os.environ.pop("HUB_SEND_DRY_RUN", None)
+        sent = []
+
+        async def fake(token, method, payload):
+            sent.append((method, payload["chat_id"])); return {"ok": True}
+        old = hub._zalo_post; hub._zalo_post = fake
+        try:
+            self.assertTrue(self.run_hook("/quy")); self.assertTrue(self.run_hook("/quy"))
+        finally:
+            hub._zalo_post = old
+        self.assertEqual(sent, [("sendMessage", "zgr-1")])   # lần 2 trong 90s không báo lại
 
     def test_pickelfund_not_handled_falls_back_to_ai(self):
         self.make_link(); Receiver.mode = "not_handled"
@@ -185,8 +227,10 @@ class HubTest(unittest.TestCase):
         os.environ["HUB_SEND_DRY_RUN"] = "1"
         self.assertEqual(self.cl.post("/api/hub/v1/messages", json=body).status_code, 401)
         self.assertEqual(self.cl.post("/api/hub/v1/messages", json=body, headers={**H, "Authorization": "Bearer sai"}).status_code, 401)
-        self.assertEqual(self.cl.post("/api/hub/v1/messages", json=body, headers=H).status_code, 403)   # nhóm chưa từng chuyển sự kiện
+        self.assertEqual(self.cl.post("/api/hub/v1/messages", json=body, headers=H).status_code, 403)   # nhóm chưa được xác nhận
         self.run_hook("/quy", chat="zgr-1")
+        self.assertEqual(self.cl.post("/api/hub/v1/messages", json=body, headers=H).status_code, 403)   # có lệnh vẫn KHÔNG tự xác nhận
+        self.confirm(link, "zgr-1")
         self.assertEqual(self.cl.post("/api/hub/v1/messages", json=body, headers=H).json(), {"ok": True, "dry_run": True})
         self.assertEqual(self.cl.post("/api/hub/v1/messages", json=body, headers=H).json(), {"ok": True, "duplicate": True})
         self.assertEqual(self.cl.post("/api/hub/v1/messages", json={**body, "chat_id": "zgr-khac", "idempotency_key": "k2"}, headers=H).status_code, 403)
@@ -196,7 +240,7 @@ class HubTest(unittest.TestCase):
 
     def test_messages_real_send_path_and_failure_allows_retry(self):
         link = self.make_link()
-        self.run_hook("/quy", chat="zgr-1")
+        self.confirm(link, "zgr-1")
         H = {"Authorization": "Bearer " + link["access_key"], "X-Hub-Link-Id": link["link_id"]}
         sent = []
 
@@ -213,7 +257,7 @@ class HubTest(unittest.TestCase):
         self.assertEqual(sent[2][1], "sendPhoto"); self.assertTrue(r3.json()["ok"])
 
     def test_send_rate_limit(self):
-        link = self.make_link(); self.run_hook("/quy")
+        link = self.make_link(); self.confirm(link, "zgr-1")
         os.environ["HUB_SEND_DRY_RUN"] = "1"
         H = {"Authorization": "Bearer " + link["access_key"], "X-Hub-Link-Id": link["link_id"]}
         codes = [self.cl.post("/api/hub/v1/messages", json={"chat_id": "zgr-1", "text": "a", "idempotency_key": f"r{i}"}, headers=H).status_code for i in range(hub.SEND_LIMIT_PER_MIN + 3)]
@@ -233,6 +277,9 @@ class HubTest(unittest.TestCase):
 
     def test_groups_endpoint(self):
         link = self.make_link(); self.run_hook("/quy", chat="zgr-abc")
+        g0 = self.cl.get(f"/api/hub/v1/links/{link['link_id']}/groups", headers={"Authorization": "Bearer " + link["access_key"]}).json()
+        self.assertEqual(g0["groups"], [])
+        self.confirm(link, "zgr-abc")
         g = self.cl.get(f"/api/hub/v1/links/{link['link_id']}/groups", headers={"Authorization": "Bearer " + link["access_key"]}).json()
         self.assertEqual([x["chat_id"] for x in g["groups"]], ["zgr-abc"])
 

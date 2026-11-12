@@ -20,7 +20,7 @@ docker run --rm --entrypoint python ai-bot-saas:latest -c "import markitdown, do
 
 echo "== 3. Đổi cổng + tạo lại container từ image mới =="
 sed -i 's|"4105:4105"|"127.0.0.1:4105:4105"|' docker-compose.yml
-docker compose -f docker-compose.yml config -q
+docker compose -f docker-compose.yml config -q || { echo "compose không hợp lệ — hoàn tác cổng"; cp -p "docker-compose.yml.bak_pre_gd5_${TS}" docker-compose.yml; exit 1; }
 rollback() {
   echo "LỖI: $1 — trả cổng cũ (giữ image mới)"
   sed -i 's|"127.0.0.1:4105:4105"|"4105:4105"|' docker-compose.yml

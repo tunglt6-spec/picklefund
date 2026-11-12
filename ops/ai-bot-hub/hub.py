@@ -45,7 +45,7 @@ CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"   # bỏ ký tự dễ nhầm
 SESSION_TTL = 12 * 3600
 SEND_LIMIT_PER_MIN = 30
 EXCHANGE_LIMIT_PER_MIN = 10
-FORWARD_TIMEOUT = 3.0
+FORWARD_TIMEOUT = 15.0  # PickleFund xử lý lệnh rồi gọi ngược /messages (tới ~8s) nên không đặt quá ngắn
 MAX_TEXT = 2000
 
 # Lệnh của PickleFund (giữ ĐỒNG BỘ với backend/src/zalo/zalo-commands.ts và zalo.service.ts):
@@ -148,6 +148,9 @@ def _open(sealed: str) -> str:
 def _rate(key: str, limit: int, window: float = 60.0) -> bool:
     """True nếu còn hạn mức; ghi nhận lượt gọi."""
     now = time.time()
+    if len(_hits) > 5000:
+        for k in [k for k, v in _hits.items() if not v or now - v[-1] > window]:
+            _hits.pop(k, None)
     q = _hits[key]
     while q and now - q[0] > window:
         q.popleft()
@@ -216,7 +219,8 @@ def _decode_token(token: str, secret: str) -> dict[str, Any]:
     """Xác minh token HS256 (chỉ nhận alg HS256, kiểm tra chữ ký và hạn). Ném ValueError nếu sai."""
     try:
         head_b, body_b, sig_b = token.split(".")
-        if json.loads(_b64d(head_b)).get("alg") != "HS256":
+        head = json.loads(_b64d(head_b))
+        if not isinstance(head, dict) or head.get("alg") != "HS256":
             raise ValueError("alg")
         good = hmac.new(secret.encode(), f"{head_b}.{body_b}".encode(), hashlib.sha256).digest()
         if not hmac.compare_digest(good, _b64d(sig_b)):
@@ -225,7 +229,7 @@ def _decode_token(token: str, secret: str) -> dict[str, Any]:
         if not isinstance(payload, dict) or float(payload.get("exp", 0)) < time.time():
             raise ValueError("exp")
         return payload
-    except (ValueError, KeyError, TypeError, json.JSONDecodeError) as e:
+    except (ValueError, KeyError, TypeError, AttributeError, json.JSONDecodeError) as e:
         raise ValueError("token không hợp lệ") from e
 
 
@@ -257,15 +261,31 @@ def _link_by_key(link_id: Optional[str], authorization: Optional[str]) -> sqlite
     return row
 
 
+EVENT_PATH_RE = re.compile(r"/api/zalo/hub/[A-Za-z0-9_-]{1,64}")
+
+
+def _client_ip(request: Request) -> str:
+    """IP người gọi. Sau tunnel cloudflared (nguồn loopback) mới tin CF-Connecting-IP; còn lại dùng IP kết nối."""
+    host = request.client.host if request.client else "?"
+    if host in ("127.0.0.1", "::1"):
+        fwd = (request.headers.get("cf-connecting-ip") or "").strip()
+        if fwd and len(fwd) <= 45 and re.fullmatch(r"[0-9a-fA-F:.]+", fwd):
+            return fwd
+    return host
+
+
 def _host_allowed(url: str) -> bool:
     allowed = [h.strip().lower() for h in _env("HUB_ALLOWED_EVENT_HOSTS").split(",") if h.strip()]
     try:
         u = urlparse(url)
+        port = u.port
     except ValueError:
         return False
-    if u.scheme not in ("http", "https") or not u.hostname or u.username or u.password or u.fragment or len(url) > 300:
+    if u.scheme not in ("http", "https") or not u.hostname or u.username or u.password or u.fragment or u.query or u.params or len(url) > 300:
         return False
-    hostport = f"{u.hostname}:{u.port}" if u.port else u.hostname
+    if not EVENT_PATH_RE.fullmatch(u.path or ""):
+        return False  # chỉ cho đúng đường dẫn nhận sự kiện của PickleFund
+    hostport = f"{u.hostname}:{port}" if port else u.hostname
     return hostport.lower() in allowed or u.hostname.lower() in [a for a in allowed if ":" not in a]
 
 
@@ -321,7 +341,7 @@ async def create_code(req: CodeReq, authorization: Optional[str] = Header(None))
 @router.post("/links/exchange")
 async def exchange(req: ExchangeReq, request: Request):
     _require_enabled()
-    ip = request.client.host if request.client else "?"
+    ip = _client_ip(request)
     if not _rate(f"ex:{ip}", EXCHANGE_LIMIT_PER_MIN):
         raise HTTPException(status_code=429, detail="Thử quá nhiều lần")
     if req.app not in APPS:
@@ -488,6 +508,8 @@ async def send_message(req: MessageReq, authorization: Optional[str] = Header(No
         raise HTTPException(status_code=429, detail="Gửi quá nhanh")
     if bool(req.text) == bool(req.photo_url):
         raise HTTPException(status_code=400, detail="Cần đúng một trong text hoặc photo_url")
+    if req.photo_url and (len(req.photo_url) > 500 or not re.match(r"https://[^\s]+$", req.photo_url)):
+        raise HTTPException(status_code=400, detail="photo_url phải là địa chỉ https hợp lệ (≤500 ký tự)")
     if req.text is not None and not (1 <= len(req.text) <= MAX_TEXT):
         raise HTTPException(status_code=400, detail=f"text dài 1–{MAX_TEXT} ký tự")
     if not re.fullmatch(r"[A-Za-z0-9_.:-]{1,150}", req.chat_id) or not re.fullmatch(r"[\w.:-]{1,100}", req.idempotency_key):
@@ -495,6 +517,7 @@ async def send_message(req: MessageReq, authorization: Optional[str] = Header(No
     with _conn() as db:
         if not db.execute("SELECT 1 FROM hub_link_chats WHERE link_id=? AND chat_id=?", (link["link_id"], req.chat_id)).fetchone():
             raise HTTPException(status_code=403, detail="Nhóm này chưa từng chuyển sự kiện cho liên kết")
+        db.execute("DELETE FROM hub_messages WHERE created_at < ?", (time.time() - 7 * 86400,))
         try:
             db.execute("INSERT INTO hub_messages(link_id,idem_key,created_at) VALUES(?,?,?)", (link["link_id"], req.idempotency_key, time.time()))
         except sqlite3.IntegrityError:
@@ -527,12 +550,33 @@ def _record(link_id: str, ok: bool, err: Optional[str], chat_id: Optional[str] =
     now = time.time()
     with _conn() as db:
         if chat_id:
-            db.execute("INSERT INTO hub_link_chats(link_id,chat_id,first_seen,last_seen) VALUES(?,?,?,?) "
-                       "ON CONFLICT(link_id,chat_id) DO UPDATE SET last_seen=excluded.last_seen", (link_id, chat_id, now, now))
+            # CHỈ cập nhật nhóm đã được chủ bot xác nhận; KHÔNG tự thêm (xác nhận là việc của nút ở AI-BOT)
+            db.execute("UPDATE hub_link_chats SET last_seen=? WHERE link_id=? AND chat_id=?", (now, link_id, chat_id))
         if ok:
             db.execute("UPDATE hub_links SET fwd_ok=fwd_ok+1, last_event_at=?, last_error=NULL WHERE link_id=?", (now, link_id))
         else:
             db.execute("UPDATE hub_links SET fwd_fail=fwd_fail+1, last_error=? WHERE link_id=?", ((err or "lỗi")[:120], link_id))
+
+
+NOTICE_COOLDOWN = 90.0
+
+
+async def _notify_failure(bot_id: str, chat_id: str, kind: str) -> None:
+    """Báo ngắn vào nhóm khi chuyển lệnh lỗi (tránh lệnh biến mất im lặng). Tối đa 1 lần/nhóm/90 giây; mọi lỗi đều nuốt."""
+    try:
+        if not _rate(f"notice:{bot_id}:{chat_id}", 1, NOTICE_COOLDOWN):
+            return
+        with _conn() as db:
+            bot = db.execute("SELECT bot_token FROM bots WHERE bot_id=?", (bot_id,)).fetchone()
+        token = (bot["bot_token"] or "").strip() if bot else ""
+        if not token or _env("HUB_SEND_DRY_RUN") == "1":
+            return
+        text = ("PickleFund đang bảo trì hoặc tạm thời không phản hồi. Vui lòng gửi lại lệnh sau ít phút."
+                if kind == "down" else
+                "Liên kết PickleFund không còn hiệu lực. Nhờ quản trị bot kiểm tra lại ở AI-BOT (Gỡ liên kết rồi liên kết lại).")
+        await _zalo_post(token, "sendMessage", {"chat_id": chat_id, "text": text})
+    except Exception:  # noqa: BLE001
+        pass
 
 
 async def hub_try_forward(bot_id: str, data: dict, text: str, chat_id: str) -> bool:
@@ -565,6 +609,7 @@ async def hub_try_forward(bot_id: str, data: dict, text: str, chat_id: str) -> b
             r = await cl.post(link["event_url"], content=body, headers=headers)
         if r.status_code // 100 != 2:
             _record(link["link_id"], False, f"HTTP {r.status_code}", chat_id)
+            await _notify_failure(bot_id, chat_id, "down" if r.status_code >= 500 else "revoked")
             return True
         handled = True
         try:
@@ -575,4 +620,5 @@ async def hub_try_forward(bot_id: str, data: dict, text: str, chat_id: str) -> b
         return handled
     except Exception as e:  # noqa: BLE001 — mọi lỗi mạng đều xử lý như nhau
         _record(link["link_id"], False, type(e).__name__, chat_id)
+        await _notify_failure(bot_id, chat_id, "down")
         return True

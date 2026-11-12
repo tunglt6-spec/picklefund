@@ -10,7 +10,7 @@ cp -p main.py "main.py.bak_pre_secretsenv_${TS}"
 cp -p docker-compose.yml "docker-compose.yml.bak_pre_secretsenv_${TS}"
 [ -f .env.secrets ] && cp -p .env.secrets ".env.secrets.bak_${TS}" || true
 
-python3 - <<'PY'
+OUT=$(python3 - <<'PY'
 import re, os, ast
 p = "/opt/ai-bot-saas/main.py"; envp = "/opt/ai-bot-saas/.env.secrets"
 s = open(p, encoding="utf-8").read()
@@ -40,6 +40,9 @@ os.chmod(envp, 0o600)
 open(p + ".new", "w", encoding="utf-8").write(s); os.replace(p + ".new", p)
 print("đã chuyển", len(found), "khóa sang .env.secrets:", ", ".join(sorted(found)))
 PY
+)
+echo "$OUT"
+case "$OUT" in *"bỏ qua"*) echo "không có gì để đổi — không tạo lại container"; exit 0;; esac
 [ -f .env.secrets ] || { echo "không có khóa để chuyển — kết thúc"; exit 0; }
 chmod 600 .env.secrets
 grep -q 'env_file' docker-compose.yml || python3 - <<'PY'
@@ -62,7 +65,7 @@ for i in $(seq 1 40); do [ "$(curl -s -m 5 -o /dev/null -w '%{http_code}' http:/
 
 echo "== Kiểm tra =="
 for v in DEEPSEEK_API_KEY ZALO_SECRET_TOKEN; do
-  n=$(docker exec "$C" printenv "$v" 2>/dev/null | tr -d '\n' | wc -c)
+  n=$(docker exec "$C" printenv "$v" 2>/dev/null | tr -d '\n' | wc -c) || n=0
   [ "$n" -ge 8 ] && echo "$v nạp được từ env ($n ký tự)" || rollback "$v không nạp được từ env"
 done
 code() { curl -s -m 15 -o /dev/null -w '%{http_code}' "$@"; }

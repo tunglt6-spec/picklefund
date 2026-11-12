@@ -445,6 +445,16 @@ describe('Zalo club integration', () => {
       await expect(hsvc.hubEvent(clubId, { linkId: 'lnk1', ts: old, sig: sign('SECRET-456', old, raw) }, buf, body)).rejects.toThrow('hết hạn');
       await expect(hsvc.hubEvent('club-b', ok, buf, body)).rejects.toThrow();
     });
+    it('does not process the same signed hub event twice (replay)', async () => {
+      await linked({ groups: [] });
+      const pair = await hsvc.pair(clubId);
+      const raw = eventOf({ id: 'zgr-9', chat_type: 'GROUP', title: 'Nhóm' }, pair.command);
+      const ts = String(Math.floor(Date.now() / 1000)); const hdr = { linkId: 'lnk1', ts, sig: sign('SECRET-456', ts, raw) };
+      expect((await hsvc.hubEvent(clubId, hdr, Buffer.from(raw), JSON.parse(raw))).handled).toBe(true);
+      const before = JSON.stringify(connection());
+      expect(await hsvc.hubEvent(clubId, hdr, Buffer.from(raw), JSON.parse(raw))).toEqual({ handled: true });
+      expect(JSON.stringify(connection())).toBe(before);
+    });
     it('handles a pairing command via hub event', async () => {
       await linked({ groups: [] });
       const pair = await hsvc.pair(clubId);

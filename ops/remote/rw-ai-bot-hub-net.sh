@@ -33,15 +33,26 @@ src = sqlite3.connect("/app/data/saas_bots.sqlite"); dst = sqlite3.connect(f"/ap
 src.backup(dst); dst.close(); src.close(); print("đã sao lưu DB: saas_bots_pre_hubnet_" + sys.argv[1] + ".sqlite")
 PY
 
+# Trạng thái TRƯỚC lượt chạy: rollback chỉ hoàn tác phần lượt này đã đổi (chạy lại khi hệ thống đang sống không được phá liên kết)
+PRE_ENABLED=$(grep -c '^HUB_ENABLED=1' "$AB/.env.hub" || true)
+PRE_NET=0; docker inspect "$C" --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}' | grep -qw hub-net && PRE_NET=1
+PRE_TK=$(docker exec -i "$C" python - "$BOT" <<'PY' || true
+import sqlite3, sys
+r = sqlite3.connect("/app/data/saas_bots.sqlite").execute("SELECT template_key FROM bots WHERE bot_id=?", (sys.argv[1],)).fetchone()
+print(r[0] if r and r[0] else "")
+PY
+)
 rollback() {
-  echo "LỖI ở bước $1: ${2:-không rõ} — QUAY LẠI"
-  sed -i 's/^HUB_ENABLED=.*/HUB_ENABLED=0/' "$AB/.env.hub" || true
-  docker network disconnect hub-net "$C" >/dev/null 2>&1 || true
+  echo "LỖI ở bước $1: ${2:-không rõ} — QUAY LẠI (chỉ phần lượt này đã đổi)"
+  [ "$PRE_ENABLED" = 1 ] || sed -i 's/^HUB_ENABLED=.*/HUB_ENABLED=0/' "$AB/.env.hub" || true
+  [ "$PRE_NET" = 1 ] || docker network disconnect hub-net "$C" >/dev/null 2>&1 || true
   cp -p "docker-compose.yml.bak_pre_hubnet_${TS}" docker-compose.yml || true
-  docker exec -i "$C" python - "$BOT" <<'PY' || true
+  if [ -z "$PRE_TK" ]; then
+    docker exec -i "$C" python - "$BOT" <<'PY' || true
 import sqlite3, sys
 c = sqlite3.connect("/app/data/saas_bots.sqlite"); c.execute("UPDATE bots SET template_key=NULL WHERE bot_id=?", (sys.argv[1],)); c.commit()
 PY
+  fi
   exit 1
 }
 
