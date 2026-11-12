@@ -11,8 +11,6 @@ import type { HermesEvent } from '../hermes/hermes.types';
 import { renderHtmlToPng } from '../executive-report/render-pdf';
 import { defaultZaloLogo, readZaloLogo, zaloReportHtml, zaloReportText } from './zalo-report';
 import type { ZaloFinancialReport } from './zalo-report';
-import { isHostPublic, isPickleOwned } from './zalo-relay';
-import type { RelayMode } from './zalo-relay';
 
 interface Connection {
   version: string; token: string; botId: string; botName: string; canJoinGroups: boolean;
@@ -22,8 +20,6 @@ interface Connection {
   lastSentAt?: string; lastError?: string;
   reportTime?: string; financialIntervalMinutes?: number; weeklyReport?: boolean; reportWeekday?: number; scheduleVersion?: number; intakeEnabled?: boolean;
   commandsEnabled?: boolean; paymentReminders?: boolean; resultImages?: boolean; failStreak?: number; lastErrorAt?: string;
-  /** Chuyển tiếp webhook sang nền tảng khác dùng chung bot (1 bot chỉ có 1 webhook). `secret` đã mã hóa. */
-  relay?: { url: string; secret?: string; mode: RelayMode };
   /** Webhook của bot do nền tảng khác (vd. AI-BOT) giữ: PickleFund KHÔNG gọi setWebhook/deleteWebhook, chỉ gửi tin ra. */
   externalWebhook?: boolean;
 }
@@ -51,7 +47,6 @@ export class ZaloService {
   private readonly logger = new Logger(ZaloService.name);
   private working = false;
   private readonly seenMessages = new Set<string>();
-  private readonly relayStatus = new Map<string, { at: string; ok: boolean; status?: number; error?: string }>();
   private scanning = false;
   constructor(private readonly prisma: PrismaService, private readonly config: ConfigService, private readonly calculator: FinancialCalculatorService, @Optional() private readonly intake?: ZaloIntakeService, @Optional() private readonly commands?: ZaloCommandService) {}
 
@@ -96,8 +91,7 @@ export class ZaloService {
       failStreak: c.failStreak ?? 0, lastErrorAt: c.lastErrorAt ?? null, enabled: c.enabled, financialChanges: c.financialChanges, announcements: c.announcements, dailyReport: c.dailyReport,
       chatId: c.chatId ?? null, chatName: c.chatName ?? null, pendingChat: c.pendingChat ?? null,
       reportTime: c.reportTime ?? '08:00', weeklyReport: !!c.weeklyReport, reportWeekday: c.reportWeekday ?? 0,
-      lastSentAt: c.lastSentAt ?? null, lastError: c.lastError ?? null, externalWebhook: !!c.externalWebhook,
-      relay: c.relay ? { host: new URL(c.relay.url).host, mode: c.relay.mode, hasSecret: !!c.relay.secret, last: this.relayStatus.get(clubId) ?? null } : null };
+      lastSentAt: c.lastSentAt ?? null, lastError: c.lastError ?? null, externalWebhook: !!c.externalWebhook };
   }
   private async call(token: string, method: string, payload: object): Promise<any> {
     try {
@@ -127,8 +121,7 @@ export class ZaloService {
     if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash) throw new BadRequestException('Máy chủ chưa cấu hình địa chỉ HTTPS cho Zalo.');
     const c: Connection = { version: randomUUID(), token: this.seal(token), botId: String(bot.id), botName: String(bot.account_name || 'Zalo Bot'),
       canJoinGroups: bot.can_join_groups === true, webhookReady: false, enabled: false, financialChanges: false, announcements: true, dailyReport: false, weeklyReport: true, reportWeekday: 0, scheduleVersion: 2 };
-    // Giữ cấu hình chuyển tiếp khi đăng ký lại bot (nếu không, nền tảng AI dùng chung bot sẽ mất tin).
-    const prev = await this.read(clubId); if (prev?.relay) c.relay = prev.relay;
+    const prev = await this.read(clubId);
     // Đăng ký lại CÙNG một bot (đổi token, đổi chế độ): giữ nhóm đã liên kết và lựa chọn gửi — không bắt ghép nhóm lại.
     // (Ghép lại cần PickleFund nhận /ketnoi, mà chế độ webhook ngoài thì không nhận được.)
     if (prev && prev.botId === c.botId) {
@@ -220,7 +213,6 @@ export class ZaloService {
       this.seenMessages.add(dedupeKey);
       if (this.seenMessages.size > 500) this.seenMessages.delete(this.seenMessages.values().next().value as string);
     }
-    this.relayToPlatform(clubId, c, data);
     // Verification pings and unrelated messages are acknowledged without persisting group content.
     if (data?.event_name !== 'message.text.received' || !c.canJoinGroups || m?.from?.is_bot === true) return;
     const text: string = typeof m?.text === 'string' ? m.text : '';
@@ -251,46 +243,6 @@ export class ZaloService {
     const id = String(m.chat.id ?? ''); if (!/^[A-Za-z0-9_.:-]{1,150}$/.test(id)) return;
     c.pendingChat = { id, name: String(m.chat.title || m.chat.display_name || `Nhóm ${id}`).slice(0,150) };
     delete c.pairHash; delete c.pairExpires; await this.save(clubId, c);
-  }
-  /** Chuyển tiếp tin sang nền tảng khác dùng chung bot (không chặn phản hồi cho Zalo). */
-  private relayToPlatform(clubId: string, c: Connection, data: any) {
-    const r = c.relay;
-    if (!r?.url || typeof data?.event_name !== 'string' || !data.event_name.startsWith('message.')) return;
-    const text = typeof data?.message?.text === 'string' ? data.message.text : '';
-    if (r.mode !== 'all' && isPickleOwned(text, c)) return;
-    void this.forwardRelay(clubId, r, data);
-  }
-  private async forwardRelay(clubId: string, r: NonNullable<Connection['relay']>, body: unknown) {
-    try {
-      const u = new URL(r.url);
-      if (!(await isHostPublic(u.hostname))) throw new Error('RELAY_BLOCKED');
-      const headers: Record<string, string> = { 'Content-Type': 'application/json', 'X-Forwarded-By': 'picklefund' };
-      if (r.secret) headers['X-Bot-Api-Secret-Token'] = this.unseal(r.secret);
-      const res = await fetch(r.url, { method: 'POST', headers, body: JSON.stringify(body), signal: AbortSignal.timeout(8000), redirect: 'manual' });
-      const okStatus = res.status >= 200 && res.status < 300;
-      this.relayStatus.set(clubId, { at: new Date().toISOString(), ok: okStatus, status: res.status });
-      if (!okStatus) this.logger.warn(`Zalo relay trả HTTP ${res.status}`);
-    } catch (e) {
-      const code = e instanceof Error && e.message === 'RELAY_BLOCKED' ? 'RELAY_BLOCKED' : 'CONNECTION_FAILED';
-      this.relayStatus.set(clubId, { at: new Date().toISOString(), ok: false, error: code });
-      this.logger.warn(`Zalo relay lỗi: ${code}`);
-    }
-  }
-  /** Cấu hình chuyển tiếp: url rỗng = tắt; secret undefined = giữ nguyên, '' = xóa. */
-  async setRelay(clubId: string, patch: { url?: string; secret?: string; mode?: RelayMode }) {
-    const c = await this.required(clubId);
-    const url = (patch.url ?? c.relay?.url ?? '').trim();
-    if (!url) { delete c.relay; this.relayStatus.delete(clubId); await this.save(clubId, c); return this.status(clubId); }
-    let u: URL;
-    try { u = new URL(url); } catch { throw new BadRequestException('Địa chỉ chuyển tiếp không hợp lệ.'); }
-    if (u.protocol !== 'https:' || u.username || u.password || u.hash || url.length > 500) throw new BadRequestException('Địa chỉ chuyển tiếp phải là HTTPS, không kèm tài khoản hay #.');
-    const own = new URL(this.config.get<string>('ZALO_PUBLIC_ORIGIN') || 'https://picklefund.vn');
-    if (u.hostname === own.hostname && u.pathname.startsWith('/api/zalo/webhook')) throw new BadRequestException('Không thể chuyển tiếp về chính webhook của PickleFund.');
-    if (!(await isHostPublic(u.hostname))) throw new BadRequestException('Địa chỉ chuyển tiếp phải là máy chủ công khai.');
-    if (patch.secret !== undefined && patch.secret !== '' && (patch.secret.length < 8 || patch.secret.length > 256)) throw new BadRequestException('Secret chuyển tiếp dài 8–256 ký tự.');
-    const secret = patch.secret === undefined ? c.relay?.secret : patch.secret === '' ? undefined : this.seal(patch.secret);
-    c.relay = { url: u.toString(), mode: patch.mode ?? c.relay?.mode ?? 'unhandled', ...(secret ? { secret } : {}) };
-    await this.save(clubId, c); return this.status(clubId);
   }
   async confirm(clubId: string) {
     const c = await this.required(clubId);

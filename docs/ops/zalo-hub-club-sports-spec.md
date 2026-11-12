@@ -109,9 +109,9 @@ Cách khai báo — **dùng đúng mẫu đã chạy ổn trong repo** (`docker-
 - Danh sách `event_url` hợp lệ do người vận hành đặt (chống SSRF).
 - **Việc riêng, ngoài phạm vi nhưng nên làm sớm:** (a) khóa DeepSeek viết cứng trong `main.py` dòng 181 → đổi khóa, chuyển sang env; (b) API không xác thực theo `account_id`; (c) webhook Zalo không kiểm tra secret (`ZALO_SECRET_TOKEN` viết cứng); (d) bot chỉ nên nhận `chat_id` từ sự kiện hợp lệ.
 
-## 9. Việc xử lý bản relay đã deploy (commit `3f30e0f8`)
+## 9. Bản relay (commit `3f30e0f8`) — ĐÃ GỠ (2026-11-12)
 
-Relay (PickleFund giữ webhook, chuyển tiếp sang AI-BOT) vẫn hoạt động nhưng bắt AI-BOT bỏ `setWebhook` và cần địa chỉ ổn định — **không dùng trong thiết kế này**. Đề xuất: ẩn khỏi giao diện sau khi Zalo Hub chạy, giữ mã một thời gian rồi gỡ.
+Relay (PickleFund giữ webhook, chuyển tiếp sang AI-BOT) không còn phù hợp thiết kế (bắt AI-BOT bỏ `setWebhook`, cần địa chỉ ổn định) và chưa từng được cấu hình dùng. Đã xóa khỏi giao diện (khung "Dùng chung bot với nền tảng AI khác"), backend (`POST /zalo/relay`, hook trong `webhook()`, `zalo-relay.ts`) và test. Dữ liệu `relay` còn sót trong cấu hình (nếu có) bị bỏ qua, không gây lỗi.
 
 ## 10. Kế hoạch, kiểm thử, quay lại
 

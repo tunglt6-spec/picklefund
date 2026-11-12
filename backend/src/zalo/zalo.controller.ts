@@ -15,11 +15,6 @@ class BotDto {
 }
 class ExternalDto { @IsBoolean() enabled: boolean; }
 class GroupDto { @IsString() @MaxLength(150) chatId: string; @IsOptional() @IsString() @MaxLength(150) chatName?: string; }
-class RelayDto {
-  @IsOptional() @IsString() @MaxLength(500) url?: string;
-  @IsOptional() @IsString() @MaxLength(256) secret?: string;
-  @IsOptional() @IsIn(['unhandled', 'all']) mode?: 'unhandled' | 'all';
-}
 class PreferencesDto {
   @IsOptional() @IsBoolean() intakeEnabled?: boolean;
   @IsOptional() @IsBoolean() commandsEnabled?: boolean;
@@ -53,10 +48,6 @@ export class ZaloController {
 
   @Post('webhook-verify') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
   async verifyWebhook(@CurrentUser() user: JwtUser) { return ok(await this.zalo.reverifyWebhook(this.zalo.club(user.clubId))); }
-
-  /** Chuyển tiếp webhook sang nền tảng khác dùng chung bot (vd. AI-BOT): 1 bot Zalo chỉ có 1 webhook. */
-  @Post('relay') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
-  async relay(@CurrentUser() user: JwtUser, @Body() body: RelayDto) { return ok(await this.zalo.setRelay(this.zalo.club(user.clubId), body)); }
 
   /** Đặt nhóm nhận thông báo bằng mã nhóm — chỉ khi webhook do nền tảng khác quản lý (không dùng được /ketnoi). */
   @Post('group') @Roles('CLUB_ADMIN', 'SUPER_ADMIN')
