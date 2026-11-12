@@ -1,21 +1,19 @@
 #!/usr/bin/env bash
-# CHỈ ĐỌC. Liệt kê các nhóm Zalo mà bot đã nhận tin (mã nhóm thật chat_id, số tin, lần cuối) từ bảng group_chat_history của AI-BOT.
-# Không in nội dung tin nhắn, tên người gửi hay token.
+# CHỈ ĐỌC. Với bot The PING (bot_7be4d5962d80): các nhóm Zalo nó đã nhận tin (mã nhóm thật chat_id, số tin, số người gửi khác nhau, đầu/cuối).
+# Không in nội dung tin, tên người gửi hay thông tin nhóm của khách khác.
 set -uo pipefail
-docker exec -i maika-saas-engine python - <<'PY' 2>&1 | head -40
+docker exec -i maika-saas-engine python - <<'PY' 2>&1 | head -30
 import sqlite3
 c = sqlite3.connect("file:/app/data/saas_bots.sqlite?mode=ro", uri=True)
 rows = c.execute("""
-  select channel, chat_id, group_name, count(*), min(created_at), max(created_at)
+  select chat_id, count(*), count(distinct sender_id), min(created_at), max(created_at)
   from group_chat_history
-  where lower(channel)='zalo' and chat_id like 'zgr-%'
-  group by channel, chat_id, group_name
-  order by max(created_at) desc limit 15
+  where bot_id='bot_7be4d5962d80' and lower(channel)='zalo'
+  group by chat_id order by max(created_at) desc limit 12
 """).fetchall()
-print("nhóm Zalo có tin trong lịch sử AI-BOT (chat_id | tên đã lưu | số tin | đầu | cuối):")
+print("bot_7be4d5962d80 — chat_id | số tin | số người gửi | đầu | cuối:")
 for r in rows:
-    print(" ", r[1], "|", r[2], "|", r[3], "|", (r[4] or "")[:16], "|", (r[5] or "")[:16])
-print("tổng số nhóm:", len(rows))
+    print(" ", r[0], "|", r[1], "|", r[2], "|", (r[3] or "")[:16], "|", (r[4] or "")[:16])
 PY
 echo "=== xong ==="
 exit 0
