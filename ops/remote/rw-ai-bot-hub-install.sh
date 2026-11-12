@@ -93,7 +93,12 @@ else:
 PY
 
 rollback() {
-  echo "LỖI ở bước $1 — khôi phục main.py + compose"
+  echo "LỖI ở bước $1: ${2:-không rõ}"
+  echo "--- log container gần nhất (trước khi khôi phục):"
+  docker logs --tail 40 maika-saas-engine 2>&1 | cut -c1-200 | tail -40 || true
+  echo "--- trạng thái container:"
+  docker ps -a --filter name=maika-saas-engine --format '{{.Names}} | {{.Status}}' || true
+  echo "--- khôi phục main.py + compose"
   cp -p "main.py.bak_pre_hub_${TS}" main.py
   cp -p "docker-compose.yml.bak_pre_hub_${TS}" docker-compose.yml
   docker compose -p ai-bot-saas -f /opt/ai-bot-saas/docker-compose.yml up -d --force-recreate >/dev/null 2>&1 || true
@@ -101,28 +106,28 @@ rollback() {
 }
 
 echo "== 6. Tạo lại container và kiểm tra hành vi cũ =="
-docker compose -p ai-bot-saas -f /opt/ai-bot-saas/docker-compose.yml up -d --force-recreate >/dev/null 2>&1 || rollback 6
+docker compose -p ai-bot-saas -f /opt/ai-bot-saas/docker-compose.yml up -d --force-recreate 2>&1 | cut -c1-200 | tail -8 || true
 ok=0
 for i in $(seq 1 40); do
   curl -sf -m 5 http://127.0.0.1:4105/healthz >/dev/null 2>&1 && { ok=1; break; }
   sleep 2
 done
-[ "$ok" = 1 ] || rollback 6
+[ "$ok" = 1 ] || rollback 6 "container không khỏe sau 80 giây"
 code() { curl -s -m 15 -o /dev/null -w '%{http_code}' "$@"; }
 HUBH=$(curl -s -m 10 http://127.0.0.1:4105/api/hub/v1/health)
 echo "hub/health: $HUBH"
-echo "$HUBH" | grep -q '"enabled":false' || rollback 6
-[ "$(code http://127.0.0.1:4105/)" = 200 ] || rollback 6
-[ "$(code http://127.0.0.1:4105/webhook/zalo/bot_7be4d5962d80)" = 200 ] || rollback 6
-[ "$(code -X POST -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:4105/webhook/zalo/bot_7be4d5962d80)" = 200 ] || rollback 6
-[ "$(code -X POST -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:4105/webhook/telegram/bot_maika_openclaw_telegram)" = 200 ] || rollback 6
-[ "$(code -X POST -H 'Content-Type: application/json' -d '{"bot_id":"x"}' http://127.0.0.1:4105/api/hub/v1/links/code)" = 404 ] || rollback 6
+echo "$HUBH" | grep -q '"enabled":false' || rollback 6 "hub/health không báo enabled=false"
+[ "$(code http://127.0.0.1:4105/)" = 200 ] || rollback 6 "trang chủ không 200"
+[ "$(code http://127.0.0.1:4105/webhook/zalo/bot_7be4d5962d80)" = 200 ] || rollback 6 "GET webhook Zalo không 200"
+[ "$(code -X POST -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:4105/webhook/zalo/bot_7be4d5962d80)" = 200 ] || rollback 6 "POST webhook Zalo không 200"
+[ "$(code -X POST -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:4105/webhook/telegram/bot_maika_openclaw_telegram)" = 200 ] || rollback 6 "POST webhook Telegram không 200"
+[ "$(code -X POST -H 'Content-Type: application/json' -d '{"bot_id":"x"}' http://127.0.0.1:4105/api/hub/v1/links/code)" = 404 ] || rollback 6 "API hub không trả 404 khi tắt"
 echo "OK: trang chủ, webhook Zalo/Telegram vẫn 200; API hub báo tắt (404 khi chưa bật)"
-docker exec maika-saas-engine sh -c 'test -n "$HUB_KEY" && test -n "$AIBOT_SESSION_SECRET" && echo "biến môi trường hub có trong container (không in giá trị)"' || rollback 6
+docker exec maika-saas-engine sh -c 'test -n "$HUB_KEY" && test -n "$AIBOT_SESSION_SECRET" && echo "biến môi trường hub có trong container (không in giá trị)"' || rollback 6 "thiếu biến môi trường hub trong container"
 
 echo "== 7. Bộ kiểm thử hub trong container (DB tạm, không đụng dữ liệu thật) =="
-docker exec -i -e HUB_DIR=/app maika-saas-engine python - < /tmp/test_hub.py 2>&1 | tail -6 || rollback 7
-docker exec -i -e HUB_DIR=/app maika-saas-engine python - < /tmp/test_hub.py >/dev/null 2>&1 || rollback 7
+docker exec -i -e HUB_DIR=/app maika-saas-engine python - < /tmp/test_hub.py > /tmp/test_hub.out 2>&1 && tail -4 /tmp/test_hub.out || { tail -25 /tmp/test_hub.out; rollback 7 "bộ kiểm thử hub lỗi trong container"; }
+rm -f /tmp/test_hub.out
 rm -f /tmp/test_hub.py
 
 echo "== 8. Commit vào git cục bộ =="
