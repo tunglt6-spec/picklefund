@@ -8,10 +8,18 @@ AB = os.environ.get("AB", "/opt/ai-bot-saas")
 p = os.path.join(AB, "static", "index.html")
 js = open(os.path.join(AB, "tasks_ui.js"), encoding="utf-8").read()
 t = open(p, encoding="utf-8").read()
-if 'id="tasks-crud-ui"' in t:
-    print("nút sửa/xóa đã có — bỏ qua")
-    raise SystemExit(0)
 assert "</script" not in js.lower() and "window.rowActions" in js, "tasks_ui.js không đúng"
+if 'id="tasks-crud-ui"' in t:
+    # đã chèn trước đó → chỉ làm mới nội dung script (cập nhật bản JS), không đụng các mẫu thẻ
+    pat = re.compile(r'<script id="tasks-crud-ui">\n.*?\n</script>\n', re.S)
+    assert len(pat.findall(t)) == 1, "script tasks-crud-ui: kỳ vọng đúng 1 khối"
+    nt = pat.sub(lambda m: '<script id="tasks-crud-ui">\n' + js + "\n</script>\n", t, count=1)
+    if nt != t:
+        open(p, "w", encoding="utf-8").write(nt)
+        print("đã làm mới script sửa/xóa")
+    else:
+        print("script sửa/xóa đã là bản mới nhất — bỏ qua")
+    raise SystemExit(0)
 assert 'id="qc-select-recur"' in t, "cần patch_html.py (ô Lặp lại) trước"
 done = []
 

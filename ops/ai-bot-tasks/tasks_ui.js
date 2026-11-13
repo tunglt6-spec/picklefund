@@ -14,10 +14,10 @@
 
   async function api(method, url, body) {
     var t = token();
-    if (!t) throw new Error('Phiên đăng nhập này chưa hỗ trợ sửa/xóa. Hãy đăng xuất rồi đăng nhập lại.');
+    if (!t) { var ne = new Error('Phiên đăng nhập này chưa hỗ trợ sửa/xóa. Hãy đăng nhập lại rồi thử lại.'); ne.auth = true; throw ne; }
     var r = await fetch(url, { method: method, headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t }, body: body ? JSON.stringify(body) : undefined });
     var j = {}; try { j = await r.json(); } catch (e) { j = {}; }
-    if (r.status === 401) throw new Error('Phiên đã hết hạn. Hãy đăng xuất rồi đăng nhập lại.');
+    if (r.status === 401) { var ae = new Error('Phiên đăng nhập đã hết hạn nên chưa lưu được. Hãy đăng nhập lại rồi thử lại.'); ae.auth = true; throw ae; }
     if (r.status === 404) throw new Error('Mục này không còn tồn tại (có thể đã bị xóa).');
     if (!r.ok) throw new Error(typeof j.detail === 'string' ? j.detail : ('Lỗi ' + r.status));
     return j;
@@ -26,6 +26,13 @@
     var r = await fetch(KIND[kind].list + '?account_id=' + encodeURIComponent(acc()));
     var j = await r.json();
     return (j[KIND[kind].key] || []).filter(function (x) { return String(x.id) === String(id); })[0] || null;
+  }
+  // Lỗi do phiên hết hạn: toast dễ bị bỏ lỡ → hỏi thẳng có đăng nhập lại không (giữ nguyên khung đang sửa).
+  function fail(err) {
+    toast(err.message, false);
+    if (err && err.auth) {
+      try { if (typeof handleLogout === 'function' && window.confirm(err.message + '\n\nĐăng xuất để đăng nhập lại ngay bây giờ?')) handleLogout(); } catch (e) { /* bỏ qua */ }
+    }
   }
   async function refresh() {
     try { if (typeof loadDashboardStats === 'function') await loadDashboardStats(); } catch (e) { /* bỏ qua */ }
@@ -78,7 +85,7 @@
     var ok = await confirmDialog({ title: 'Xóa ' + k.vi + '?', message: 'Thao tác này không thể hoàn tác.', detail: (rec && rec.title) || ('#' + id) });
     if (!ok) return;
     try { await api('DELETE', k.api + encodeURIComponent(id)); toast('Đã xóa ' + k.vi); }
-    catch (e) { toast(e.message, false); }
+    catch (e) { fail(e); }
     await refresh();
   };
 
@@ -141,7 +148,7 @@
       toast('Đã lưu thay đổi ' + KIND[edit.kind].vi);
       closeModal('saas-quick-create-modal');
       await refresh();
-    } catch (err) { toast(err.message, false); }
+    } catch (err) { fail(err); }
     finally { if (btn) btn.disabled = false; }
   }
 
