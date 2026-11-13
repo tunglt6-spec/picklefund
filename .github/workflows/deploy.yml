@@ -77,6 +77,12 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    # Chỉ MỘT lượt deploy chạy tại một thời điểm: lượt sau xếp hàng chờ lượt trước xong.
+    # Không có dòng này, hai commit đẩy liên tiếp làm hai lượt chạy chồng nhau; lượt sau gặp lúc lượt trước đang
+    # `docker compose down/up` nên postgres tạm tắt và bước sao lưu DB báo `service "postgres" is not running`.
+    concurrency:
+      group: picklefund-prod-deploy
+      cancel-in-progress: false
     steps:
       - name: Deploy to VPS (pull prebuilt images)
         uses: appleboy/ssh-action@v1.0.3
