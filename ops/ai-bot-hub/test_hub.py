@@ -206,6 +206,30 @@ class HubTest(unittest.TestCase):
             hub._zalo_post = old
         self.assertEqual(sent, [("sendMessage", "zgr-1")])   # lần 2 trong 90s không báo lại
 
+    def test_unverified_zalo_secret_is_not_forwarded(self):
+        self.make_link()
+        ev = {"event_name": "message.text.received", "message": {"text": "/chi 5000000 gia", "chat": {"id": "zgr-1"}}}
+        r = asyncio.run(hub.hub_try_forward("b_club", ev, "/chi 5000000 gia", "zgr-1", secret_ok=False))
+        self.assertTrue(r); self.assertEqual(Receiver.calls, [])          # nuốt, không chuyển, AI cũng không trả lời
+        # tắt cờ bắt buộc → hành vi cũ (chuyển)
+        os.environ["HUB_REQUIRE_ZALO_SECRET"] = "0"
+        try:
+            asyncio.run(hub.hub_try_forward("b_club", ev, "/chi 5000000 gia", "zgr-1", secret_ok=False))
+        finally:
+            os.environ.pop("HUB_REQUIRE_ZALO_SECRET", None)
+        self.assertEqual(len(Receiver.calls), 1)
+
+    def test_fake_short_group_ids_are_hidden(self):
+        c = sqlite3.connect(self.db)
+        c.execute("CREATE TABLE IF NOT EXISTS group_chat_history (id INTEGER PRIMARY KEY, bot_id TEXT, chat_id TEXT, content TEXT, created_at TEXT)")
+        for ch in ("zgr-sypbqf517", "zgr-d6bd97da8ebb67e53eaa"):
+            c.execute("INSERT INTO group_chat_history(bot_id,chat_id,content,created_at) VALUES('b_club',?,'x','2026-11-13 10:00:00')", (ch,))
+        c.commit(); c.close()
+        link = self.make_link(); lid = link["link_id"]
+        ov = self.cl.get("/api/hub/v1/bots/b_club/overview", headers=self.auth()).json()
+        self.assertEqual([g["chat_id"] for g in ov["groups"]], ["zgr-d6bd97da8ebb67e53eaa"])
+        self.assertEqual(self.cl.post(f"/api/hub/v1/bots/b_club/links/{lid}/groups", json={"chat_id": "zgr-sypbqf517"}, headers=self.auth()).status_code, 400)
+
     def test_pickelfund_not_handled_falls_back_to_ai(self):
         self.make_link(); Receiver.mode = "not_handled"
         self.assertFalse(self.run_hook("/quy"))
@@ -284,7 +308,7 @@ class HubTest(unittest.TestCase):
         self.assertEqual([x["chat_id"] for x in g["groups"]], ["zgr-abc"])
 
     # ---- GĐ3: API cho chủ bot ----
-    def seed_history(self, bot="b_club", chats=("zgr-real1",)):
+    def seed_history(self, bot="b_club", chats=("zgr-real1aaaaaaaaaaaaaaaa",)):
         c = sqlite3.connect(self.db)
         c.execute("CREATE TABLE IF NOT EXISTS group_chat_history (id INTEGER PRIMARY KEY, bot_id TEXT, chat_id TEXT, content TEXT, created_at TEXT)")
         for ch in chats:
@@ -292,19 +316,19 @@ class HubTest(unittest.TestCase):
         c.commit(); c.close()
 
     def test_owner_overview_and_confirm_group(self):
-        link = self.make_link(); lid = link["link_id"]; self.seed_history(chats=("zgr-real1", "user-dm-1"))
+        link = self.make_link(); lid = link["link_id"]; self.seed_history(chats=("zgr-real1aaaaaaaaaaaaaaaa", "user-dm-1"))
         a = self.auth()
         ov = self.cl.get("/api/hub/v1/bots/b_club/overview", headers=a).json()
         self.assertTrue(ov["eligible"]); self.assertEqual([l["link_id"] for l in ov["links"]], [lid])
-        self.assertEqual([g["chat_id"] for g in ov["groups"]], ["zgr-real1"])                 # chỉ nhóm zgr-, không lộ chat riêng
+        self.assertEqual([g["chat_id"] for g in ov["groups"]], ["zgr-real1aaaaaaaaaaaaaaaa"])                 # chỉ nhóm zgr-, không lộ chat riêng
         self.assertNotIn("bí mật", json.dumps(ov, ensure_ascii=False))                         # không lộ nội dung tin
         self.assertEqual(ov["groups"][0]["confirmed_for"], [])
         self.assertEqual(self.cl.post(f"/api/hub/v1/bots/b_club/links/{lid}/groups", json={"chat_id": "zgr-made-up"}, headers=a).status_code, 400)
-        self.assertEqual(self.cl.post(f"/api/hub/v1/bots/b_club/links/{lid}/groups", json={"chat_id": "zgr-real1"}, headers=a).status_code, 200)
+        self.assertEqual(self.cl.post(f"/api/hub/v1/bots/b_club/links/{lid}/groups", json={"chat_id": "zgr-real1aaaaaaaaaaaaaaaa"}, headers=a).status_code, 200)
         self.assertEqual(self.cl.get("/api/hub/v1/bots/b_club/overview", headers=a).json()["groups"][0]["confirmed_for"], [lid])
         key = {"Authorization": "Bearer " + link["access_key"]}
-        self.assertEqual([x["chat_id"] for x in self.cl.get(f"/api/hub/v1/links/{lid}/groups", headers=key).json()["groups"]], ["zgr-real1"])
-        self.assertEqual(self.cl.delete(f"/api/hub/v1/bots/b_club/links/{lid}/groups/zgr-real1", headers=a).status_code, 200)
+        self.assertEqual([x["chat_id"] for x in self.cl.get(f"/api/hub/v1/links/{lid}/groups", headers=key).json()["groups"]], ["zgr-real1aaaaaaaaaaaaaaaa"])
+        self.assertEqual(self.cl.delete(f"/api/hub/v1/bots/b_club/links/{lid}/groups/zgr-real1aaaaaaaaaaaaaaaa", headers=a).status_code, 200)
         self.assertEqual(self.cl.get(f"/api/hub/v1/links/{lid}/groups", headers=key).json()["groups"], [])
 
     def test_owner_endpoints_scope(self):
@@ -312,7 +336,7 @@ class HubTest(unittest.TestCase):
         self.assertEqual(self.cl.get("/api/hub/v1/bots/b_club/overview").status_code, 401)
         other = self.auth("khachkhac")
         self.assertEqual(self.cl.get("/api/hub/v1/bots/b_club/overview", headers=other).status_code, 404)
-        self.assertEqual(self.cl.post(f"/api/hub/v1/bots/b_club/links/{lid}/groups", json={"chat_id": "zgr-real1"}, headers=other).status_code, 404)
+        self.assertEqual(self.cl.post(f"/api/hub/v1/bots/b_club/links/{lid}/groups", json={"chat_id": "zgr-real1aaaaaaaaaaaaaaaa"}, headers=other).status_code, 404)
         self.assertEqual(self.cl.delete(f"/api/hub/v1/bots/b_club/links/{lid}", headers=other).status_code, 404)
         # bot không thuộc mẫu CLB: eligible=false, không xác nhận được
         self.assertFalse(self.cl.get("/api/hub/v1/bots/b_other/overview", headers=self.auth()).json()["eligible"])

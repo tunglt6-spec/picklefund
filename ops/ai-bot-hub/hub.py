@@ -420,6 +420,9 @@ def _eligible(bot: sqlite3.Row) -> bool:
     return (bot["platform"] or "").lower() == "zalo" and bot["template_key"] in TEMPLATE_KEYS
 
 
+REAL_GROUP_RE = re.compile(r"zgr-[A-Za-z0-9]{16,}")
+
+
 def _seen_groups(db: sqlite3.Connection, bot_id: str) -> list[dict[str, Any]]:
     """Nhóm Zalo (mã thật `zgr-…`) bot đã nhận tin, lấy từ lịch sử trò chuyện nhóm; không đọc nội dung tin."""
     try:
@@ -427,7 +430,8 @@ def _seen_groups(db: sqlite3.Connection, bot_id: str) -> list[dict[str, Any]]:
                           "GROUP BY chat_id ORDER BY MAX(created_at) DESC LIMIT 50", (bot_id,)).fetchall()
     except sqlite3.OperationalError:
         return []
-    return [{"chat_id": r["chat_id"], "messages": r["n"], "last_message_at": str(r["last"] or "")[:25]} for r in rows]
+    # AI-BOT từng lưu mã nhóm GIẢ `zgr-<mã link mời ngắn>`; mã nhóm thật dài (≥16 ký tự sau `zgr-`) → bỏ mã giả để không xác nhận nhầm "nhóm ma"
+    return [{"chat_id": r["chat_id"], "messages": r["n"], "last_message_at": str(r["last"] or "")[:25]} for r in rows if REAL_GROUP_RE.fullmatch(r["chat_id"] or "")]
 
 
 @router.get("/bots/{bot_id}/overview")
@@ -579,7 +583,7 @@ async def _notify_failure(bot_id: str, chat_id: str, kind: str) -> None:
         pass
 
 
-async def hub_try_forward(bot_id: str, data: dict, text: str, chat_id: str) -> bool:
+async def hub_try_forward(bot_id: str, data: dict, text: str, chat_id: str, secret_ok: bool = True) -> bool:
     """
     Gọi từ webhook_zalo sau khi chọn được bot. Trả True = đã xử lý (AI KHÔNG trả lời), False = để AI xử lý như cũ.
     Chỉ chuyển khi: hub bật, bot thuộc mẫu CLB & Thể Thao có liên kết active, và tin khớp lệnh PickleFund.
@@ -596,6 +600,10 @@ async def hub_try_forward(bot_id: str, data: dict, text: str, chat_id: str) -> b
             (bot_id, *TEMPLATE_KEYS)).fetchone()
     if not link:
         return False
+    if not secret_ok and _env("HUB_REQUIRE_ZALO_SECRET", "1") != "0":
+        # Sự kiện không mang secret webhook đúng của Zalo → có thể là giả mạo: KHÔNG chuyển cho PickleFund, không để AI trả lời lệnh.
+        print(f"[HUB] bỏ sự kiện thiếu/sai secret webhook Zalo bot={bot_id}", flush=True)
+        return True
     try:
         secret = _open(link["signing_secret_enc"])
     except (ValueError, HTTPException):
