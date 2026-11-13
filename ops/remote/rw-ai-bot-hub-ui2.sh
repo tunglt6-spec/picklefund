@@ -70,8 +70,8 @@ echo "== Kiểm tra =="
 code() { curl -s -m 15 -o /dev/null -w '%{http_code}' "$@"; }
 [ "$(code http://127.0.0.1:4105/)" = 200 ] || rollback "trang chủ không 200"
 P=$(curl -s -m 10 http://127.0.0.1:4105/)
-for k in 'id="cust-hub-option"' 'id="cust-hub-link"' 'window.hubOpen' 'hubChip(bot)'; do echo "$P" | grep -qF "$k" || rollback "trang chủ thiếu: $k"; done
-echo "$P" | grep -q 'id="hub-pf-panel"' && rollback "vẫn còn panel riêng" || true
+for k in 'id="cust-hub-option"' 'id="cust-hub-link"' 'window.hubOpen' 'hubChip(bot)'; do grep -qF "$k" <<<"$P" || rollback "trang chủ thiếu: $k"; done
+if grep -qF 'id="hub-pf-panel"' <<<"$P"; then rollback "vẫn còn panel riêng"; fi
 [ "$(code http://127.0.0.1:4105/webhook/zalo/bot_7be4d5962d80)" = 200 ] || rollback "webhook Zalo không 200"
 [ "$(code http://127.0.0.1:4105/api/bots?account_id=superadmin)" = 200 ] || rollback "GET /api/bots không 200"
 echo "OK: tùy chọn trong khung tạo bot, nút trên thẻ bot, không còn panel riêng"
