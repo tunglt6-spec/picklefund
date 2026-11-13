@@ -15,9 +15,12 @@ done = []
 
 
 def one(a, b, what):
+    """Thay đúng 1 chỗ; mọi khoảng trắng/xuống dòng trong neo khớp linh hoạt (file thật có thể thừa dấu cách cuối dòng)."""
     global t
-    assert t.count(a) == 1, f"{what}: kỳ vọng 1 khớp, thực tế {t.count(a)}"
-    t = t.replace(a, b, 1)
+    pat = re.compile(r"\s+".join(re.escape(tok) for tok in a.split()))
+    found = pat.findall(t)
+    assert len(found) == 1, f"{what}: kỳ vọng 1 khớp, thực tế {len(found)}"
+    t = pat.sub(lambda m: b.strip(), t, count=1)
     done.append(what)
 
 
